@@ -40,7 +40,7 @@
 //         <div className="min-h-screen bg-[#FFFDF5] max-w-[1366px] mx-auto px-2 pb-32">
 //             {/* Top Bar */}
 //             <div className="w-full bg-[#FFF86B] py-2 flex flex-col items-center">
-//                 <span className="text-[24px] font-bold text-[#B57CF6] tracking-widest">RBMS-MAS-DIVIN</span>
+//                 <span className="text-[24px] font-bold text-[#B57CF6] tracking-widest">RBMS-MDU-DIVIN</span>
 //             </div>
 //             <div className="w-full bg-[#D6F3FF] py-3 flex flex-col items-center border-b-2 border-black">
 //                 <span className="text-[24px] md:text-3xl font-bold text-black text-center">Block Summary Report</span>
@@ -446,7 +446,7 @@ const formatDisplayDate = (dateStr: string) => {
       {/* RBMS Header */}
       <div className="w-full bg-[#fff35c] flex flex-col items-center py-2 rounded-t-2xl">
         <span className="text-3xl font-extrabold text-[#b07be0] tracking-wide">
-          RBMS-MAS-DIVIN
+          RBMS-MDU-DIVIN
         </span>
       </div>
       {/* Block Summary Report Title */}
