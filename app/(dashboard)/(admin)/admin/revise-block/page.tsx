@@ -125,7 +125,7 @@ export default function ReviseBlockPage() {
             {/* Top Yellow Bar */}
             <div className="w-full bg-[#FFF86B] py-2 flex flex-col items-center">
                 <span className="text-[24px] font-bold text-[#B57CF6] tracking-widest">
-          RBMS-MAS-DIVI
+          RBMS-TVC-DIVI
                 </span>
             </div>
             {/* Main Title on Light Blue */}
