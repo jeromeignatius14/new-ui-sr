@@ -58,7 +58,7 @@ const hasInProgressBlock = requestsData?.data?.requests?.find(
         {/* RBMS badge */}
         <div className="w-full flex justify-center mt-4">
           <div className="bg-[#8ed974] px-8 py-2">
-            <span className="text-[9vw] min-[430px]:text-4xl text-nowrap font-extrabold text-[#b07be0] tracking-wide">RBMS-MAS-DIVN</span>
+            <span className="text-[9vw] min-[430px]:text-4xl text-nowrap font-extrabold text-[#b07be0] tracking-wide">RBMS-MDU-DIVN</span>
           </div>
         </div>
         {/* Designation bar */}
