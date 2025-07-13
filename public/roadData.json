@@ -1,33 +1,39 @@
 {
-      "AJJ-RU-Up": { "from": "01:30", "to": "04:30" },
-      "AJJ-RU-Down": { "from": "00:30", "to": "03:30" },
-      "AJJ-RU-Both": { "from": "01:30", "to": "04:30" },
+  "SRR-CHTS-Up": { "from": "18:30", "to": "21:30" },
+  "SRR-CHTS-Down": { "from": "18:30", "to": "21:30"},
+  "SRR-CHTS-Both": { "from": "18:30", "to": "21:30" },
 
-      "MAS-AJJ-Up": { "from": "00:05", "to": "03:05" },
-      "MAS-AJJ-Down": { "from": "00:30", "to": "03:30" },
-      "MAS-AJJ-Both": { "from": "00:05", "to": "03:05" },
+  "TCR-GUV-Up": { "from": "00:00", "to": "04:00" },
+  "TCR-GUV-Down": {"from": "00:00", "to": "04:00" },
+  "TCR-GUV-Both": { "from": "00:00", "to": "04:00"},
 
-      "AJJ-KPD-Up": { "from": "21:15", "to": "00:15" },
-      "AJJ-KPD-Down": { "from": "11:00", "to": "14:00" },
-      "AJJ-KPD-Both": { "from": "21:15", "to": "00:15" },
+  "ERS-KTYM-KYJ-Up": { "from": "23:30", "to": "02:30" },
+  "ERS-KTYM-KYJ-Down": { "from": "20:30", "to": "23:30" },
+  "ERS-KTYM-KYJ-Both": { "from": "23:30", "to": "02:30" },
 
-      "KPD-JTJ-Up": { "from": "22:30", "to": "00:45" },
-      "KPD-JTJ-Down": { "from": "12:45", "to": "15:15" },
-      "KPD-JTJ-Both": { "from": "22:30", "to": "00:45" },
+  "ERS-ALLP-KYJ-Up": { "from": "13:00", "to": "16:00" },
+  "ERS-ALLP-KYJ-Down": { "from": "13:00", "to": "16:00" },
+  "ERS-ALLP-KYJ-Both": { "from": "13:00", "to": "16:00" },
 
-      "AJJ-CGL-Up": { "from": "01:00", "to": "04:00" },
-      "AJJ-CGL-Down": { "from": "01:00", "to": "04:00" },
-      "AJJ-CGL-Both": { "from": "01:00", "to": "04:00" },
+  "KYJ-QLN-Up": { "from": "22:25", "to": "01:45" },
+  "KYJ-QLN-Down": {  "from": "23:35", "to": "02:35" },
+  "KYJ-QLN-Both": { "from": "22:25", "to": "01:45" },
 
-      "MAS-GDR-Up": { "from": "00:20", "to": "03:20" },
-      "MAS-GDR-Down": { "from": "23:30", "to": "01:30" },
-      "MAS-GDR-Both": { "from": "00:20", "to": "03:20" },
+  "QLN-TVC-Up": {"from": "22:25", "to": "01:45" },
+  "QLN-TVC-Down": {  "from": "22:40", "to": "01:40" },
+  "QLN-TVC-Both": {"from": "22:25", "to": "01:45" },
 
-      "MSB-VM-Up": { "from": "21:15", "to": "00:15" },
-      "MSB-VM-Down": { "from": "01:30", "to": "04:30" },
-      "MSB-VM-Both": { "from": "21:15", "to": "00:15" },
+  "TVC-NCJ-Up": { "from": "23:30", "to": "02:20" },
+  "TVC-NCJ-Down": { "from": "23:30", "to": "02:20" " },
+  "TVC-NCJ-Both": { "from": "23:00", "to": "02:20" },
 
-      "MSB-VLCY-Up": { "from": "00:30", "to": "03:30" },
-      "MSB-VLCY-Down": { "from": "00:30", "to": "03:30" },
-      "MSB-VLCY-Both": { "from": "00:30", "to": "03:30" }
-    }
+  "NCJ-TEN-Up": { "from": "13:00", "to": "16:00" },
+  "NCJ-TEN-Down": { "from": "13:00", "to": "16:00" },
+  "NCJ-TEN-Both": { "from": "13:00", "to": "16:00" },
+
+  "NCJ-CAPE-Up": { "from": "00:00", "to": "03:00" },
+  "NCJ-CAPE-Down": { "from": "00:00", "to": "03:00" },
+  "NCJ-CAPE-Both": {"from": "00:00", "to": "03:00" }
+}
+
+
