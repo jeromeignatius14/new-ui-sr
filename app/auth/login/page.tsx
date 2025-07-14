@@ -2,8 +2,11 @@
 
 import AddToHomeScreenPrompt from "@/app/components/AddToHomeScreenPrompt";
 import LoginForm from "@/app/components/auth/LoginForm";
+import { useSession } from "next-auth/react";
 
 export default function LoginPage() {
+    const { data: session } = useSession();
+  
   return (
     <div className="min-h-screen flex flex-col items-center justify-between bg-[#c6f5d6] p-2">
       <AddToHomeScreenPrompt /> 
@@ -20,7 +23,7 @@ export default function LoginPage() {
             <br />
             Management System
             <br />
-            <span className="text-2xl sm:text-3xl font-extrabold">(RBMS)</span>
+            <span className="text-2xl sm:text-3xl font-extrabold">(RBMS-{session?.user?.location}-DIVN)</span>
           </h1>
         </div>
       </div>
