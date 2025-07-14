@@ -38,7 +38,7 @@ export const useAuth = () => {
       const user = await handleAuthSuccess(data);
       
       // Handle redirection based on user role
-      if (user.role === "BRANCH_OFFICER" && user.email === "b@mail.com") {
+      if (user.role === "DEPT_CONTROLLER") {
         router.push("/manage/request-table");
       } else if (user.role === "ADMIN") {
         router.push("/admin/request-table");
