@@ -231,7 +231,9 @@ export default function GenerateReportPage() {
   return (
     <div className="max-w-7xl mx-auto bg-white">
       <div className="bg-yellow-100 text-center pt-3 rounded-t-md">
-        <h1 className="text-3xl font-bold text-purple-600">RBMS</h1>
+        <h1 className="text-3xl font-bold text-purple-600">
+            RBMS-{session?.user?.location}-DIVN
+        </h1>
         <div className="flex flex-col bg-green-200">
         <h2 className="text-xl font-semibold text-black">Block Summary(Past/Upcoming)</h2>
         <div className="text-md text-black font-bold">Headquarter</div>
