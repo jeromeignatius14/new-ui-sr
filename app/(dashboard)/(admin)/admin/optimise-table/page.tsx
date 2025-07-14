@@ -1141,7 +1141,7 @@ const nonCorridorRequestsFiltered = pendingRequests
                             </button>
                               <button
                                 className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
-                                onClick={() => handleEditClick(request)}
+                                onClick={() => setModifyReturnOpenId(request.id)}
                               >
                                 Modify/Return
                               </button>
@@ -1357,7 +1357,7 @@ const nonCorridorRequestsFiltered = pendingRequests
                             </button>
                               <button
                                 className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
-                                onClick={() => handleEditClick(request)}
+                                onClick={() => setModifyReturnOpenId(request.id)}
                               >
                                 Modify/Return
                               </button>
@@ -1554,7 +1554,7 @@ const nonCorridorRequestsFiltered = pendingRequests
                             </button>
                               <button
                                 className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
-                                onClick={() => handleEditClick(request)}
+                                onClick={() => setModifyReturnOpenId(request.id)}
                               >
                                 Modify/Return
                               </button>
