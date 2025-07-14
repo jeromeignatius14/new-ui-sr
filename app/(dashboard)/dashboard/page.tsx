@@ -275,7 +275,7 @@ if (session?.user?.role === "SM") {
           <a href={`https://mobile-bms.plattrtechstudio.com/?cugNumber=${session?.user?.phone}&section=MAS-GDR`}>
 
             <button className="w-72 bg-[#E6E6FA] py-6 rounded-2xl border-4 border-black text-2xl font-bold text-[#13529e] shadow-lg hover:bg-[#B57CF6] hover:text-white transition-colors">
-              VIEW BLOCK DETAILS
+              AVAIL BLOCK AT SITE
             </button>
           </a>
         </div>
