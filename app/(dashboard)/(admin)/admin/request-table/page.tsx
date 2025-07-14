@@ -459,7 +459,7 @@ const TotalRequests = allRequests.filter((r: UserRequest) => {
       {/* Top Yellow Bar */}
       <div className="w-full bg-[#FFF86B] py-2 flex flex-col items-center">
         <span className="text-[24px] font-bold text-[#B57CF6] tracking-widest">
-          RBMS-MAS-DIVIN
+          RBMS-{session?.user?.location}-DIVN
         </span>
       </div>
       {/* Main Title on Light Blue */}
