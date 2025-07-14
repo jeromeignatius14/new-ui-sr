@@ -327,7 +327,7 @@ export default function GenerateReportPage() {
       {/* RBMS Header */}
       <div className="w-full bg-[#fff35c] flex flex-col items-center py-2 rounded-t-2xl">
         <span className="text-[24px] font-extrabold text-[#b07be0] tracking-wide">
-          RBMS-MAS-DIVN
+                      RBMS-{session?.user?.location}-DIVN
         </span>
       </div>
       {/* Block Summary Report Title */}

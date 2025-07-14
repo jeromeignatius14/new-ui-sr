@@ -317,7 +317,7 @@ const handleDeleteSection = (indexToRemove: number) => {
       <div className="max-w-md mx-auto p-2">
         <div className="bg-yellow-100 rounded-t-xl p-2 border-b-2 border-teal-200 text-center">
           <span className="text-[24px] font-extrabold text-purple-600 tracking-wide">
-            RBMS-MAS-DIVN
+            RBMS-{session?.user?.location}-DIVN
           </span>
         </div>
 
