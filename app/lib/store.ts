@@ -3458,7 +3458,7 @@ export let streamData = {
   "AVD-YD": {
     "Up Direction Affected": ["Rd 3"],
     "Down Direction Affected": ["Rd 1", "Rd 2"],
-    "Both Direction Affected": ["Rd 4"],
+    "Both Direction Affected": ["Rd 4","Rd 5","Rd 6","Rd 7"],
     "Both Direction Not Affected": []
   },
   "PAB-YD": {
