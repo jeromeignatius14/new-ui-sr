@@ -11,7 +11,7 @@ export default function UserLayout({
 }) {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const allowedRoles = ["BRANCH_OFFICER", "JUNIOR_OFFICER", "SENIOR_OFFICER"];
+  const allowedRoles = ["BRANCH_OFFICER", "JUNIOR_OFFICER", "SENIOR_OFFICER","DEPT_CONTROLLER"];
 
   useEffect(() => {
     if (
