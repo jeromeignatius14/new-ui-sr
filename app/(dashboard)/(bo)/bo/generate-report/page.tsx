@@ -310,7 +310,7 @@ useEffect(() => {
       {/* RBMS Header */}
       <div className="w-full bg-[#fff35c] flex flex-col items-center py-2 rounded-t-2xl">
         <span className="text-5xl font-extrabold text-[#b07be0] tracking-wide">
-          RBMS
+        RBMS-{session?.user?.location}-DIVN
         </span>
       </div>
       {/* Block Summary Report Title */}

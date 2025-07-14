@@ -58,7 +58,7 @@ const hasInProgressBlock = requestsData?.data?.requests?.find(
         {/* RBMS badge */}
         <div className="w-full flex justify-center mt-4">
           <div className="bg-[#8ed974] px-8 py-2">
-            <span className="text-[9vw] min-[430px]:text-4xl text-nowrap font-extrabold text-[#b07be0] tracking-wide">RBMS-MAS-DIVN</span>
+            <span className="text-[9vw] min-[430px]:text-4xl text-nowrap font-extrabold text-[#b07be0] tracking-wide">RBMS-{session?.user?.location}-DIVN</span>
           </div>
         </div>
         {/* Designation bar */}
@@ -116,7 +116,7 @@ const hasInProgressBlock = requestsData?.data?.requests?.find(
         {/* RBMS badge */}
         <div className="w-full flex justify-center mt-4">
           <div className="bg-green-200 rounded-2xl px-8 py-2">
-            <span className="text-4xl font-extrabold text-[#b07be0] tracking-wide">RBMS</span>
+            <span className="text-4xl font-extrabold text-[#b07be0] tracking-wide">RBMS-{session?.user?.location}-DIVN</span>
           </div>
         </div>
         {/* Designation bar */}
@@ -208,7 +208,7 @@ if (session?.user?.role === "SM") {
         {/* RBMS badge */}
         <div className="w-full flex justify-center mt-4">
           <div className="bg-green-200 rounded-2xl px-8 py-2">
-            <span className="text-4xl font-extrabold text-[#b07be0] tracking-wide">RBMS</span>
+            <span className="text-4xl font-extrabold text-[#b07be0] tracking-wide">RBMS-{session?.user?.location}-DIVN</span>
           </div>
         </div>
         {/* Designation bar */}
@@ -261,7 +261,7 @@ if (session?.user?.role === "SM") {
         {/* RBMS badge */}
         <div className="w-full flex justify-center mt-4">
           <div className="bg-green-200 rounded-2xl px-8 py-2">
-            <span className="text-4xl font-extrabold text-[#b07be0] tracking-wide">RBMS</span>
+            <span className="text-4xl font-extrabold text-[#b07be0] tracking-wide">RBMS-{session?.user?.location}-DIVN</span>
           </div>
         </div>
         {/* Designation bar */}
@@ -313,7 +313,7 @@ if (session?.user?.role === "SM") {
         <div className="w-full flex justify-center mt-4">
           <div className="bg-green-200 rounded-2xl px-8 py-2">
             <span className="text-4xl font-extrabold text-[#b07be0] tracking-wide">
-              RBMS
+              RBMS-{session?.user?.location}-DIVN
             </span>
           </div>
         </div>
@@ -367,7 +367,7 @@ if (session?.user?.role === "SM") {
         <div className="w-full flex justify-center mt-4">
           <div className="bg-green-200 rounded-2xl px-8 py-2">
             <span className="text-4xl font-extrabold text-[#b07be0] tracking-wide">
-              RBMS
+              RBMS-{session?.user?.location}-DIVN
             </span>
           </div>
         </div>

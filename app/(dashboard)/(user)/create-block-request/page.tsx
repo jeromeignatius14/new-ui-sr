@@ -2232,7 +2232,7 @@ export default function CreateBlockRequestPage() {
         <div className="w-full max-w-2xl mx-auto mt-4">
           <div className=" text-center bg-[#f7f7a1] rounded-t-2xl p-4 border-b-2 border-[#b6f7e6]">
             <div className="font-extrabold text-[9vw] min-[430px]:text-4xl   text-[#b07be0]">
-              RBMS-MAS-DIVN
+           RBMS-{session?.user?.location}-DIVN
             </div>
           </div>
           <div className="bg-[#fffaf0] rounded-b-2xl p-4 sm:p-6 w-full max-w-2xl overflow-auto">
@@ -2397,7 +2397,7 @@ export default function CreateBlockRequestPage() {
             fontFamily: "Arial Black, Arial, sans-serif",
           }}
         >
-          RBMS-MAS-DIVN
+            RBMS-{session?.user?.location}-DIVN
         </span>
       </div>
       {/* Sub-header */}
