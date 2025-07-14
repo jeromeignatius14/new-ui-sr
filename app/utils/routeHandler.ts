@@ -8,7 +8,7 @@ type User = {
 export const handleUserRedirect = (user: User | undefined) => {
   if (!user) return;
 
-  if (user.role === "BRANCH_OFFICER" && user.email === "b@mail.com") {
+  if (user.role === "DEPT_CONTROLLER") {
     window.location.href = "/manage/request-table";
   }
   else if (user.role === "ADMIN") {
