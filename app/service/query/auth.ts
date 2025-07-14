@@ -40,7 +40,14 @@ export const useAuth = () => {
       // Handle redirection based on user role
       if (user.role === "DEPT_CONTROLLER") {
         router.push("/manage/request-table");
-      } else if (user.role === "ADMIN") {
+      } 
+      
+      else if(user.role==="SM"){
+    window.location.href = `https://smr-dashboard.plattorian.tech/?cugNumber=${user.phone ?? ""}&section=MAS-GDR`;
+ 
+  }
+      
+      else if (user.role === "ADMIN") {
         router.push("/admin/request-table");
       } else {
         router.push("/dashboard");
