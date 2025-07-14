@@ -183,7 +183,7 @@ const hasInProgressBlock = requestsData?.data?.requests?.find(
   //     </div>
   //   );
   // }
-if (session?.user?.role === "BRANCH_OFFICER" && session?.user.email === "b@mail.com") {
+if (session?.user?.role === "DEPT_CONTROLLER") {
 
     window.location.href = "/manage/request-table";
  
