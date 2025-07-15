@@ -58,7 +58,7 @@ const hasInProgressBlock = requestsData?.data?.requests?.find(
         {/* RBMS badge */}
         <div className="w-full flex justify-center mt-4">
           <div className="bg-[#8ed974] px-8 py-2">
-            <span className="text-[9vw] min-[430px]:text-4xl text-nowrap font-extrabold text-[#b07be0] tracking-wide">RBMS-MAS-DIVN</span>
+            <span className="text-[9vw] min-[430px]:text-4xl text-nowrap font-extrabold text-[#b07be0] tracking-wide">RBMS-{session?.user?.location}-DIVN</span>
           </div>
         </div>
         {/* Designation bar */}
@@ -116,7 +116,7 @@ const hasInProgressBlock = requestsData?.data?.requests?.find(
         {/* RBMS badge */}
         <div className="w-full flex justify-center mt-4">
           <div className="bg-green-200 rounded-2xl px-8 py-2">
-            <span className="text-4xl font-extrabold text-[#b07be0] tracking-wide">RBMS</span>
+            <span className="text-4xl font-extrabold text-[#b07be0] tracking-wide">RBMS-{session?.user?.location}-DIVN</span>
           </div>
         </div>
         {/* Designation bar */}
@@ -202,7 +202,7 @@ if (session?.user?.role === "DEPT_CONTROLLER") {
         {/* RBMS badge */}
         <div className="w-full flex justify-center mt-4">
           <div className="bg-green-200 rounded-2xl px-8 py-2">
-            <span className="text-4xl font-extrabold text-[#b07be0] tracking-wide">RBMS</span>
+            <span className="text-4xl font-extrabold text-[#b07be0] tracking-wide">RBMS-{session?.user?.location}-DIVN</span>
           </div>
         </div>
         {/* Designation bar */}
@@ -255,7 +255,7 @@ if (session?.user?.role === "DEPT_CONTROLLER") {
         {/* RBMS badge */}
         <div className="w-full flex justify-center mt-4">
           <div className="bg-green-200 rounded-2xl px-8 py-2">
-            <span className="text-4xl font-extrabold text-[#b07be0] tracking-wide">RBMS</span>
+            <span className="text-4xl font-extrabold text-[#b07be0] tracking-wide">RBMS-{session?.user?.location}-DIVN</span>
           </div>
         </div>
         {/* Designation bar */}
@@ -269,7 +269,7 @@ if (session?.user?.role === "DEPT_CONTROLLER") {
           <a href={`https://mobile-bms.plattrtechstudio.com/?cugNumber=${session?.user?.phone}&section=MAS-GDR`}>
 
             <button className="w-72 bg-[#E6E6FA] py-6 rounded-2xl border-4 border-black text-2xl font-bold text-[#13529e] shadow-lg hover:bg-[#B57CF6] hover:text-white transition-colors">
-              VIEW BLOCK DETAILS
+              AVAIL BLOCK AT SITE
             </button>
           </a>
         </div>
@@ -307,7 +307,7 @@ if (session?.user?.role === "DEPT_CONTROLLER") {
         <div className="w-full flex justify-center mt-4">
           <div className="bg-green-200 rounded-2xl px-8 py-2">
             <span className="text-4xl font-extrabold text-[#b07be0] tracking-wide">
-              RBMS
+              RBMS-{session?.user?.location}-DIVN
             </span>
           </div>
         </div>
@@ -361,7 +361,7 @@ if (session?.user?.role === "DEPT_CONTROLLER") {
         <div className="w-full flex justify-center mt-4">
           <div className="bg-green-200 rounded-2xl px-8 py-2">
             <span className="text-4xl font-extrabold text-[#b07be0] tracking-wide">
-              RBMS
+              RBMS-{session?.user?.location}-DIVN
             </span>
           </div>
         </div>

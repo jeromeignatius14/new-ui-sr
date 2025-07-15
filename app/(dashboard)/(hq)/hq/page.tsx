@@ -1,9 +1,10 @@
 "use client";
 import { FaHome } from "react-icons/fa";
 import Link from "next/link";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 
 export default function AdminDashboardPage() {
+    const { data: session } = useSession();
   return (
     <div className="min-h-screen w-full flex flex-col items-center bg-[#fffbe9]">
       {/* Header */}
@@ -20,7 +21,7 @@ export default function AdminDashboardPage() {
       <div className="w-full flex justify-center mt-4">
         <div className="bg-green-200 rounded-2xl px-8 py-2">
           <span className="text-4xl font-extrabold text-[#b07be0] tracking-wide">
-            RBMS
+            RBMS-{session?.user?.location}-DIVN
           </span>
         </div>
       </div>
