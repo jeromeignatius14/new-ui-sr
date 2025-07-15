@@ -1036,14 +1036,55 @@ const nonCorridorRequestsFiltered = pendingRequests
                 )}
                 {urgentRequestDate.map((request: UserRequest) => (
                   <tr key={`request-${request.id}-${request.date}`} className={`hover:bg-blue-50 transition-colors ${request.optimizeTimeFrom && request.optimizeTimeTo ? "bg-green-50" : ""}`}>
-                    <td className="border border-black p-2 text-[24px]">{dayjs(request.date).format("DD-MM-YY")}</td>
+                     <td className="border border-black p-2 text-[24px]">
+                      {editingId === request.id ? (
+                        <input
+                          type="date"
+                          value={editDate}
+                          onChange={(e) => setEditDate(e.target.value)}
+                          className="w-28 border p-1 text-sm rounded"
+                        />
+                      ) : (
+                        dayjs(request.date).format("DD-MM-YY")
+                      )}
+                    </td>
                     <td className="border border-black p-2 text-[24px]">{request.selectedDepartment}</td>
                     <td className="border border-black p-2 text-[24px]">{request.selectedSection}</td>
                     <td className="border border-black p-2 text-[24px]">{request.selectedDepo}</td>
                     <td className="border border-black p-2 text-[24px]">{request.missionBlock}</td>
                     <td className="border border-black p-2 text-[24px]">{getLineOrRoad(request)}</td>
                     <td className="border border-black p-2 text-[24px]">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
-                    <td className="border border-black p-2 text-[24px]">{request.optimizeTimeFrom && request.optimizeTimeFrom !== "WrongRequest" ? formatTime(request.optimizeTimeFrom) : "N/A"} - {request.optimizeTimeTo && request.optimizeTimeTo !== "WrongRequest" ? formatTime(request.optimizeTimeTo) : "N/A"}</td>
+                    <td className="border border-black p-2 text-[24px]">
+                      {editingId === request.id ? (
+                        <div className="flex gap-1 items-center">
+                          <input
+                            type="time"
+                            value={timeFrom}
+                            onChange={(e) => setTimeFrom(e.target.value)}
+                            className="w-20 border p-1 text-sm rounded"
+                          />
+                          <span>-</span>
+                          <input
+                            type="time"
+                            value={timeTo}
+                            onChange={(e) => setTimeTo(e.target.value)}
+                            className="w-20 border p-1 text-[24px] rounded"
+                          />
+                        </div>
+                      ) : (
+                        <>
+                          {request.optimizeTimeFrom &&
+                            request.optimizeTimeFrom !== "WrongRequest"
+                            ? formatTime(request.optimizeTimeFrom)
+                            : "N/A"}{" "}
+                          -{" "}
+                          {request.optimizeTimeTo &&
+                            request.optimizeTimeTo !== "WrongRequest"
+                            ? formatTime(request.optimizeTimeTo)
+                            : "N/A"}
+                        </>
+                      )}
+                    </td>
                     <td className="border border-black p-2 text-[24px]">{request.activity}</td>
                     <td className="border border-black p-2 text-[24px]">
                       <div className="flex gap-2">
