@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useGenerateReport } from "@/app/service/query/drm";
+import { useSession } from "next-auth/react";
 
 interface OptionType {
   value: string;
@@ -98,6 +99,7 @@ export default function GenerateReportPage() {
     department: ["Engineering"],
     blockType: ["All"],
   });
+    const { data: session } = useSession();
 
   // Use the react-query hook with enabled: false initially
   const {
@@ -223,7 +225,11 @@ export default function GenerateReportPage() {
   return (
     <div className="max-w-7xl mx-auto bg-white">
       <div className="bg-yellow-100 text-center pt-3 rounded-t-md">
-        <h1 className="text-3xl font-bold text-purple-600">RBMS</h1>
+        <h1 className="text-3xl font-bold text-purple-600">
+
+            RBMS-{session?.user?.location}-DIVN
+
+        </h1>
         <div className="flex flex-col bg-green-200">
           <h2 className="text-xl font-semibold text-black">
             Block Summary(Past/Upcoming)
