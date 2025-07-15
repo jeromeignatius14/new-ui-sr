@@ -1030,7 +1030,7 @@ export default function ManagerRequestTablePage() {
       {/* Top Yellow Bar */}
       <div className="w-full bg-[#FFF86B] py-2 flex flex-col items-center">
         <span className="text-[9vw] min-[430px]:text-4xl font-bold text-[#B57CF6] tracking-widest">
-          RBMS-MAS-DIVN
+            RBMS-{session?.user?.location}-DIVN
         </span>
       </div>
 

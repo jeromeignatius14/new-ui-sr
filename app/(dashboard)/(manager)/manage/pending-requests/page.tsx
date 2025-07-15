@@ -611,7 +611,9 @@ export default function PendingRequestsPage() {
         <div className="min-h-screen bg-[#FFFDF5]">
             {/* Top Yellow Bar */}
             <div className="w-full bg-[#FFF86B] py-2 flex flex-col items-center">
-                <span className="text-[9vw] min-[430px]:text-4xl  font-bold text-[#B57CF6] tracking-widest">RBMS-MAS-DIVN</span>
+                <span className="text-[9vw] min-[430px]:text-4xl  font-bold text-[#B57CF6] tracking-widest">
+            RBMS-{session?.user?.location}-DIVN
+                </span>
             </div>
 
             {/* Main Title on Light Blue */}
