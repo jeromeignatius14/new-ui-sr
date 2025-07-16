@@ -1034,7 +1034,7 @@ const nonCorridorRequestsFiltered = pendingRequests
                     <td colSpan={11} className="border border-black p-2 text-[24px] text-left">No requests found.</td>
                   </tr>
                 )}
-                {urgentRequestDate.map((request: UserRequest) => (
+                {urgentRequestDate.filter((request:UserRequest)=>!request.isSanctioned).map((request: UserRequest) => (
                   <tr key={`request-${request.id}-${request.date}`} className={`hover:bg-blue-50 transition-colors ${request.optimizeTimeFrom && request.optimizeTimeTo ? "bg-green-50" : ""}`}>
                      <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (
