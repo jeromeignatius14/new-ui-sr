@@ -1233,6 +1233,7 @@ export default function ManagerRequestTablePage() {
                 <th className="border-2 border-[#B57CF6] p-2">Block Section</th>
                 <th className="border-2 border-[#B57CF6] p-2">Line/Road</th>
                 <th className="border-2 border-[#B57CF6] p-2">Demanded</th>
+                <th className="border-2 border-[#B57CF6] p-2">Sanctioned</th>
                 <th className="border-2 border-[#B57CF6] p-2">Activity</th>
                 <th className="border-2 border-[#B57CF6] p-2 sticky right-0 z-10 bg-[#E8D6FF]">
                   Status
@@ -1275,6 +1276,13 @@ export default function ManagerRequestTablePage() {
               {formatTime(request.demandTimeFrom)} -{" "}
               {formatTime(request.demandTimeTo)}
             </td>
+  <td className="border border-[#B57CF6] p-2 text-center">
+  {request.sanctionedTimeFrom && request.sanctionedTimeTo
+    ? `${formatTime(request.sanctionedTimeFrom)} - ${formatTime(request.sanctionedTimeTo)}`
+    : `${formatTime(request.optimizeTimeFrom!)} - ${formatTime(request.optimizeTimeTo!)}`}
+</td>
+
+
             <td className="border border-[#B57CF6] p-2">
               {request.activity}
             </td>
