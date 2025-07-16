@@ -2315,7 +2315,10 @@ export default function CreateBlockRequestPage() {
               <button
                 className="w-full rounded-2xl bg-[#e6e6fa] text-black font-bold text-[24px] py-4 tracking-wider border border-[#b7b7d1] hover:bg-[#f0eaff] transition"
                 onClick={() => {
-                  setFormData(initialFormData);
+                  setFormData({
+      ...initialFormData,
+      selectedDepartment: session?.user?.department || ""
+    });
                   setBlockSectionValue([]);
                   setProcessedLineSections([]);
                   setSelectedActivities([]);
