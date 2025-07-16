@@ -320,9 +320,10 @@ const TotalRequests = allRequests.filter((r: UserRequest) => {
         "Line/Road",
         "Activity",
         "Status",
-        "Start Time (HH:MM)",
-        "End Time (HH:MM)",
+        "Optimize From Time (HH:MM)",
+        "Optimize To Time (HH:MM)",
         "Corridor Type",
+        "Department", 
         "SSE Name",
         "Work Location",
         "Remarks",
@@ -348,6 +349,7 @@ const TotalRequests = allRequests.filter((r: UserRequest) => {
           startTime,
           endTime,
           request.corridorType,
+          request.user?.department || request.selectedDepartment || "N/A",
           request.user?.name || "N/A",
           request.workLocationFrom,
           request.requestremarks,
@@ -770,7 +772,7 @@ const handlePendingBlockTypeChange = (value: string) => {
           </span>
         </h3>
                 <button
-          onClick={() => handleDownloadExcel(summaryFilteredRequests)}
+          onClick={() => handleDownloadExcel(sanctionedRequests)}
           className="w-fit bg-[#FFA07A] hover:bg-[#FFBFAE] px-12 py-3 rounded-[50%] border-2 border-[#FF6B6B] font-bold text-[24px] text-[#5D3587] shadow transition"
         >
           Download
