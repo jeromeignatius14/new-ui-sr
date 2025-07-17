@@ -1184,7 +1184,7 @@ export const depot: DepotStructure = {
     },
    "MEJ-TN": {
       "TRD": ["TN"],
-      "S&T": ["TEN"],
+      "S&T": ["TEN","TN"],
       "ENGG": ["TN", "TEN"]
     },
   
