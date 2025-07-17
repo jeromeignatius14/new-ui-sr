@@ -1613,13 +1613,13 @@ const nonCorridorRequestsFiltered = pendingRequests
       <div>
         <div className="flex justify-center gap-3 mb-2 mt-8">
           
-          <button
-            onClick={() => window.history.back()}
-            className="flex items-center gap-1 bg-[#E6E6FA] border border-black px-8 py-1.5 rounded-[50%] text-[24px] font-bold"
-            style={{ color: "black" }}
-          >
-            Back
-          </button>
+         <a
+  href="/admin/request-table"
+  className="flex items-center gap-1 bg-[#E6E6FA] border border-black px-8 py-1.5 rounded-[50%] text-[24px] font-bold"
+  style={{ color: "black" }}
+>
+  Back
+</a>
         </div>
 
         <div className="text-[10px] text-gray-600 mt-2 border-t border-black pt-1 text-right">
