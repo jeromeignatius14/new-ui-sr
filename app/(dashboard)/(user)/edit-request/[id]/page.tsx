@@ -924,109 +924,147 @@ const handleDeleteSection = (indexToRemove: number) => {
    
      
 
-        <div>
-          <span className="block text-lg font-bold text-black mb-2">Points</span>
-          {formData.sntDisconnectionRequirements?.map((point, index) => (
-            <div key={index} className="flex items-center gap-2 mb-2">
-              <input
-                type="text"
-                value={point}
-                onChange={(e) => {
-                  const newPoints = [...formData.sntDisconnectionRequirements];
-                  newPoints[index] = e.target.value;
-                  setFormData(prev => ({
-                    ...prev,
-                    sntDisconnectionRequirements: newPoints
-                  }));
-                }}
-                placeholder={`Point ${index + 1}`}
-                className="border border-gray-500 rounded p-1 w-full text-black"
-              />
-              {formData.sntDisconnectionRequirements.length > 1 && (
-                <button
-                  type="button"
-                  className="text-red-600 font-bold"
-                  onClick={() => {
-                    const newPoints = formData.sntDisconnectionRequirements
-                      .filter((_, i) => i !== index);
-                    setFormData(prev => ({
-                      ...prev,
-                      sntDisconnectionRequirements: newPoints
-                    }));
-                  }}
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-          ))}
-          <button
-            type="button"
-            className="text-blue-600 text-sm mt-1"
-            onClick={() => {
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  {/* Points Section */}
+  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+    <h3 className="text-lg font-bold text-gray-800 mb-3">Points</h3>
+    <div className="space-y-2">
+      {formData.sntDisconnectionRequirements?.[0]?.split(',')?.map((point, index, arr) => (
+        <div key={`point-${index}`} className="flex items-center gap-2">
+          <input
+            type="text"
+            value={point}
+            onChange={(e) => {
+              const points = formData.sntDisconnectionRequirements[0]?.split(',') || [];
+              points[index] = e.target.value;
+              const newRequirements = [...formData.sntDisconnectionRequirements];
+              newRequirements[0] = points.join(',');
               setFormData(prev => ({
                 ...prev,
-                sntDisconnectionRequirements: [
-                  ...(prev.sntDisconnectionRequirements || []),
-                  ""
-                ]
+                sntDisconnectionRequirements: newRequirements
               }));
             }}
-          >
-            + Add Point
-          </button>
+            placeholder={`Point ${index + 1}`}
+            className="border border-gray-300 rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {arr.length > 1 && (
+            <button
+              type="button"
+              onClick={() => {
+                const points = formData.sntDisconnectionRequirements[0]?.split(',') || [];
+                const newPoints = points.filter((_, i) => i !== index);
+                const newRequirements = [...formData.sntDisconnectionRequirements];
+                newRequirements[0] = newPoints.join(',');
+                setFormData(prev => ({
+                  ...prev,
+                  sntDisconnectionRequirements: newRequirements
+                }));
+              }}
+              className="text-red-500 hover:text-red-700 font-bold px-2"
+            >
+              ×
+            </button>
+          )}
         </div>
+      )) || (
+        <input
+          type="text"
+          placeholder="Point 1"
+          className="border border-gray-300 rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+      )}
+      <button
+        type="button"
+        onClick={() => {
+          const currentPoints = formData.sntDisconnectionRequirements?.[0]?.split(',') || [];
+          const newPoints = [...currentPoints, ''];
+          const newRequirements = [...formData.sntDisconnectionRequirements];
+          newRequirements[0] = newPoints.join(',');
+          if (newRequirements.length < 2) {
+            newRequirements.push(''); // Ensure signals array exists
+          }
+          setFormData(prev => ({
+            ...prev,
+            sntDisconnectionRequirements: newRequirements
+          }));
+        }}
+        className="mt-2 text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1"
+      >
+        <span>+</span> Add Point
+      </button>
+    </div>
+  </div>
 
-        {/* Signals - using sntDisconnectionSignalNo data */}
-        <div>
-          <span className="block text-lg font-bold text-black mb-2">Signals</span>
-          {(formData.sntDisconnectionSignalNo?.split(',') || ['']).map((signal : any, index :any, arr:any) => (
-            <div key={index} className="flex items-center gap-2 mb-2">
-              <input
-                type="text"
-                value={signal}
-                onChange={(e) => {
-                  const newSignals = [...arr];
-                  newSignals[index] = e.target.value;
-                  setFormData(prev => ({
-                    ...prev,
-                    sntDisconnectionSignalNo: newSignals.join(',')
-                  }));
-                }}
-                placeholder={`Signal ${index + 1}`}
-                className="border border-gray-500 rounded p-1 w-full text-black"
-              />
-              {arr.length > 1 && (
-                <button
-                  type="button"
-                  className="text-red-600 font-bold"
-                  onClick={() => {
-                    const newSignals = arr.filter((_: any, i: any) => i !== index);
-                    setFormData(prev => ({
-                      ...prev,
-                      sntDisconnectionSignalNo: newSignals.join(',')
-                    }));
-                  }}
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-          ))}
-          <button
-            type="button"
-            className="text-blue-600 text-sm mt-1"
-            onClick={() => {
-              const currentSignals = formData.sntDisconnectionSignalNo?.split(',') || [''];
+  {/* Signals Section */}
+  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+    <h3 className="text-lg font-bold text-gray-800 mb-3">Signals</h3>
+    <div className="space-y-2">
+      {formData.sntDisconnectionRequirements?.[1]?.split(',')?.map((signal, index, arr) => (
+        <div key={`signal-${index}`} className="flex items-center gap-2">
+          <input
+            type="text"
+            value={signal}
+            onChange={(e) => {
+              const signals = formData.sntDisconnectionRequirements[1]?.split(',') || [];
+              signals[index] = e.target.value;
+              const newRequirements = [...formData.sntDisconnectionRequirements];
+              newRequirements[1] = signals.join(',');
               setFormData(prev => ({
                 ...prev,
-                sntDisconnectionSignalNo: [...currentSignals, ''].join(',')
+                sntDisconnectionRequirements: newRequirements
               }));
             }}
-          >
-            + Add Signal
-          </button>
+            placeholder={`Signal ${index + 1}`}
+            className="border border-gray-300 rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {arr.length > 1 && (
+            <button
+              type="button"
+              onClick={() => {
+                const signals = formData.sntDisconnectionRequirements[1]?.split(',') || [];
+                const newSignals = signals.filter((_, i) => i !== index);
+                const newRequirements = [...formData.sntDisconnectionRequirements];
+                newRequirements[1] = newSignals.join(',');
+                setFormData(prev => ({
+                  ...prev,
+                  sntDisconnectionRequirements: newRequirements
+                }));
+              }}
+              className="text-red-500 hover:text-red-700 font-bold px-2"
+            >
+              ×
+            </button>
+          )}
         </div>
+      )) || (
+        <input
+          type="text"
+          placeholder="Signal 1"
+          className="border border-gray-300 rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      )}
+      <button
+        type="button"
+        onClick={() => {
+          const currentSignals = formData.sntDisconnectionRequirements?.[1]?.split(',') || [];
+          const newSignals = [...currentSignals, ''];
+          const newRequirements = [...formData.sntDisconnectionRequirements];
+          newRequirements[1] = newSignals.join(',');
+          if (newRequirements.length < 1) {
+            newRequirements.unshift(''); // Ensure points array exists
+          }
+          setFormData(prev => ({
+            ...prev,
+            sntDisconnectionRequirements: newRequirements
+          }));
+        }}
+        className="mt-2 text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1"
+      >
+        <span>+</span> Add Signal
+      </button>
+    </div>
+  </div>
+</div>
       </div>
     )}
   </td>

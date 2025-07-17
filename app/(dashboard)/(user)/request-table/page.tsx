@@ -903,7 +903,7 @@ const handleDownload = () => {
                       {request.missionBlock}
                     </td>
                     <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
-                      {request.processedLineSections[0].lineName || "N/A"}
+                      {request.processedLineSections[0].lineName ||request.processedLineSections[0].road|| "N/A"}
                     </td>
                     <td className="border border-black px-2 py-1 text-black">
                       {request.activity}
