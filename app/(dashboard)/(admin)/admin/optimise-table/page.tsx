@@ -1034,16 +1034,57 @@ const nonCorridorRequestsFiltered = pendingRequests
                     <td colSpan={11} className="border border-black p-2 text-[24px] text-left">No requests found.</td>
                   </tr>
                 )}
-                {urgentRequestDate.map((request: UserRequest) => (
+                {urgentRequestDate.filter((request:UserRequest)=>!request.isSanctioned).map((request: UserRequest) => (
                   <tr key={`request-${request.id}-${request.date}`} className={`hover:bg-blue-50 transition-colors ${request.optimizeTimeFrom && request.optimizeTimeTo ? "bg-green-50" : ""}`}>
-                    <td className="border border-black p-2 text-[24px]">{dayjs(request.date).format("DD-MM-YY")}</td>
+                     <td className="border border-black p-2 text-[24px]">
+                      {editingId === request.id ? (
+                        <input
+                          type="date"
+                          value={editDate}
+                          onChange={(e) => setEditDate(e.target.value)}
+                          className="w-28 border p-1 text-sm rounded"
+                        />
+                      ) : (
+                        dayjs(request.date).format("DD-MM-YY")
+                      )}
+                    </td>
                     <td className="border border-black p-2 text-[24px]">{request.selectedDepartment}</td>
                     <td className="border border-black p-2 text-[24px]">{request.selectedSection}</td>
                     <td className="border border-black p-2 text-[24px]">{request.selectedDepo}</td>
                     <td className="border border-black p-2 text-[24px]">{request.missionBlock}</td>
                     <td className="border border-black p-2 text-[24px]">{getLineOrRoad(request)}</td>
                     <td className="border border-black p-2 text-[24px]">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
-                    <td className="border border-black p-2 text-[24px]">{request.optimizeTimeFrom && request.optimizeTimeFrom !== "WrongRequest" ? formatTime(request.optimizeTimeFrom) : "N/A"} - {request.optimizeTimeTo && request.optimizeTimeTo !== "WrongRequest" ? formatTime(request.optimizeTimeTo) : "N/A"}</td>
+                    <td className="border border-black p-2 text-[24px]">
+                      {editingId === request.id ? (
+                        <div className="flex gap-1 items-center">
+                          <input
+                            type="time"
+                            value={timeFrom}
+                            onChange={(e) => setTimeFrom(e.target.value)}
+                            className="w-20 border p-1 text-sm rounded"
+                          />
+                          <span>-</span>
+                          <input
+                            type="time"
+                            value={timeTo}
+                            onChange={(e) => setTimeTo(e.target.value)}
+                            className="w-20 border p-1 text-[24px] rounded"
+                          />
+                        </div>
+                      ) : (
+                        <>
+                          {request.optimizeTimeFrom &&
+                            request.optimizeTimeFrom !== "WrongRequest"
+                            ? formatTime(request.optimizeTimeFrom)
+                            : "N/A"}{" "}
+                          -{" "}
+                          {request.optimizeTimeTo &&
+                            request.optimizeTimeTo !== "WrongRequest"
+                            ? formatTime(request.optimizeTimeTo)
+                            : "N/A"}
+                        </>
+                      )}
+                    </td>
                     <td className="border border-black p-2 text-[24px]">{request.activity}</td>
                     <td className="border border-black p-2 text-[24px]">
                       <div className="flex gap-2">
@@ -1100,7 +1141,7 @@ const nonCorridorRequestsFiltered = pendingRequests
                             </button>
                               <button
                                 className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
-                                onClick={() => handleEditClick(request)}
+                                onClick={() => setModifyReturnOpenId(request.id)}
                               >
                                 Modify/Return
                               </button>
@@ -1316,7 +1357,7 @@ const nonCorridorRequestsFiltered = pendingRequests
                             </button>
                               <button
                                 className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
-                                onClick={() => handleEditClick(request)}
+                                onClick={() => setModifyReturnOpenId(request.id)}
                               >
                                 Modify/Return
                               </button>
@@ -1513,7 +1554,7 @@ const nonCorridorRequestsFiltered = pendingRequests
                             </button>
                               <button
                                 className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
-                                onClick={() => handleEditClick(request)}
+                                onClick={() => setModifyReturnOpenId(request.id)}
                               >
                                 Modify/Return
                               </button>
@@ -1572,13 +1613,13 @@ const nonCorridorRequestsFiltered = pendingRequests
       <div>
         <div className="flex justify-center gap-3 mb-2 mt-8">
           
-          <button
-            onClick={() => window.history.back()}
-            className="flex items-center gap-1 bg-[#E6E6FA] border border-black px-8 py-1.5 rounded-[50%] text-[24px] font-bold"
-            style={{ color: "black" }}
-          >
-            Back
-          </button>
+         <a
+  href="/admin/request-table"
+  className="flex items-center gap-1 bg-[#E6E6FA] border border-black px-8 py-1.5 rounded-[50%] text-[24px] font-bold"
+  style={{ color: "black" }}
+>
+  Back
+</a>
         </div>
 
         <div className="text-[10px] text-gray-600 mt-2 border-t border-black pt-1 text-right">
