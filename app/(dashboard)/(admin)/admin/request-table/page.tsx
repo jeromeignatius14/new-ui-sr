@@ -111,6 +111,7 @@ export default function AdminRequestTablePage() {
     )
   );
   const blockTypeOptions = [
+    { label: "All", value: "ALL" },
     { label: "Corridor (C)", value: "Corridor" },
     { label: "Non-corridor(NC)", value: "Outside Corridor" },
     { label: "Emergency (E)", value: "Urgent Block" },
@@ -379,14 +380,42 @@ const TotalRequests = allRequests.filter((r: UserRequest) => {
     setPendingSummaryFilters((prev) => ({ ...prev, [field]: value }));
   };
   // Block Type
-  const handlePendingBlockTypeChange = (value: string) => {
-    setPendingSummaryFilters((prev) => ({
-      ...prev,
-      blockType: prev.blockType.includes(value)
-        ? prev.blockType.filter((v) => v !== value)
-        : [...prev.blockType, value],
-    }));
-  };
+  // const handlePendingBlockTypeChange = (value: string) => {
+  //   setPendingSummaryFilters((prev) => ({
+  //     ...prev,
+  //     blockType: prev.blockType.includes(value)
+  //       ? prev.blockType.filter((v) => v !== value)
+  //       : [...prev.blockType, value],
+  //   }));
+  // };
+  
+const handlePendingBlockTypeChange = (value: string) => {
+  setPendingSummaryFilters((prev) => {
+    const allBlockTypeValues = blockTypeOptions.slice(1).map(opt => opt.value); // All values except "ALL"
+    
+    if (value === "ALL") {
+      // Toggle between selecting all and selecting none
+      const shouldSelectAll = prev.blockType.length < allBlockTypeValues.length;
+      return {
+        ...prev,
+        blockType: shouldSelectAll ? [...allBlockTypeValues] : []
+      };
+    } else {
+      // Normal selection logic for individual types
+      let newBlockTypes;
+      if (prev.blockType.includes(value)) {
+        newBlockTypes = prev.blockType.filter(v => v !== value);
+      } else {
+        newBlockTypes = [...prev.blockType, value];
+      }
+      
+      return {
+        ...prev,
+        blockType: newBlockTypes
+      };
+    }
+  });
+}
   // Section
   const handlePendingSectionChange = (value: string) => {
     setPendingSummaryFilters((prev) => ({
@@ -421,9 +450,15 @@ const TotalRequests = allRequests.filter((r: UserRequest) => {
     summaryFilteredRequests = summaryFilteredRequests.filter((r) => r.date <= activeSummaryFilters.end);
   }
   // Block type
-  if (activeSummaryFilters.blockType.length > 0) {
-    summaryFilteredRequests = summaryFilteredRequests.filter((r) => activeSummaryFilters.blockType.includes(r.corridorType));
+ if (activeSummaryFilters.blockType.length > 0) {
+  // Only filter if not all types are selected
+  const allTypesSelected = activeSummaryFilters.blockType.length === blockTypeOptions.length - 1;
+  if (!allTypesSelected) {
+    summaryFilteredRequests = summaryFilteredRequests.filter((r) => 
+      activeSummaryFilters.blockType.includes(r.corridorType)
+    );
   }
+}
   // Section
   if (activeSummaryFilters.section.length > 0) {
     summaryFilteredRequests = summaryFilteredRequests.filter((r) => activeSummaryFilters.section.includes(r.selectedSection));
@@ -549,28 +584,35 @@ const TotalRequests = allRequests.filter((r: UserRequest) => {
                   Type
                   <span className="ml-1 text-sm">▼</span>
                 </button>
-                {blockTypeDropdownOpen && (
-                  <div className="absolute z-10 mt-2 w-40 bg-white border-2 border-[#00B4D8] rounded shadow-lg">
-                    {blockTypeOptions.map((opt) => (
-                      <label
-                        key={opt.value}
-                        className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-[20px]"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={pendingSummaryFilters.blockType.includes(
-                            opt.value
-                          )}
-                          onChange={() =>
-                            handlePendingBlockTypeChange(opt.value)
-                          }
-                          className="mr-2 accent-[#B57CF6]"
-                        />
-                        {opt.label}
-                      </label>
-                    ))}
-                  </div>
-                )}
+              {blockTypeDropdownOpen && (
+  <div className="absolute z-10 mt-2 w-40 bg-white border-2 border-[#00B4D8] rounded shadow-lg">
+    {blockTypeOptions.map((opt) => {
+      const allBlockTypeValues = blockTypeOptions.slice(1).map(o => o.value);
+      const allSelected = allBlockTypeValues.every(val => 
+        pendingSummaryFilters.blockType.includes(val)
+      );
+      
+      return (
+        <label
+          key={opt.value}
+          className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-[20px]"
+        >
+          <input
+            type="checkbox"
+            checked={
+              opt.value === "ALL" 
+                ? allSelected
+                : pendingSummaryFilters.blockType.includes(opt.value)
+            }
+            onChange={() => handlePendingBlockTypeChange(opt.value)}
+            className="mr-2 accent-[#B57CF6]"
+          />
+          {opt.label}
+        </label>
+      );
+    })}
+  </div>
+)}
               </div>
               {/* Section Dropdown (Multi-select) */}
               <div className="relative inline-block">
