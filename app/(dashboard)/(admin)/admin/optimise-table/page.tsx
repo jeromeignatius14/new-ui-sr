@@ -630,6 +630,7 @@ const nonCorridorRequestsFiltered = pendingRequests
       );
       if (response.success) {
         alert("Optimization status updated successfully!");
+        refetch();
       } else {
         alert("Failed to update optimization status");
       }
@@ -668,6 +669,7 @@ const nonCorridorRequestsFiltered = pendingRequests
       );
       if (response.success) {
         alert("Optimization status updated successfully!");
+        refetch();
       } else {
         alert("Failed to update optimization status");
       }
