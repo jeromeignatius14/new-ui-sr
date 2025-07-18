@@ -183,7 +183,7 @@ export default function AdminRequestTablePage() {
   // console.log(allRequests);
 
 const TotalRequests = allRequests.filter((r: UserRequest) => {
-    if (r.status !== "APPROVED" || r.isSanctioned) return false;
+    if (r.isSanctioned) return false;
     if (!r.date) return false;
     if (pendingDept ) return false;
     const reqDate = new Date(r.date);
@@ -192,7 +192,7 @@ const TotalRequests = allRequests.filter((r: UserRequest) => {
   }).length;
 
   const ENGGRequest = allRequests.filter((r: UserRequest) => {
-    if (r.status !== "APPROVED" || r.isSanctioned) return false;
+    if ( r.isSanctioned) return false;
     if (!r.date) return false;
     if ( r.selectedDepartment !== "ENGG") return false;
     const reqDate = new Date(r.date);
@@ -202,7 +202,7 @@ const TotalRequests = allRequests.filter((r: UserRequest) => {
 
 
   const SandTRequest = allRequests.filter((r: UserRequest) => {
-    if (r.status !== "APPROVED" || r.isSanctioned) return false;
+    if (r.isSanctioned) return false;
     if (!r.date) return false;
     if ( r.selectedDepartment !== "S&T") return false;
     const reqDate = new Date(r.date);
@@ -211,7 +211,7 @@ const TotalRequests = allRequests.filter((r: UserRequest) => {
   }).length;
 
   const TRDRequest = allRequests.filter((r: UserRequest) => {
-    if (r.status !== "APPROVED" || r.isSanctioned) return false;
+    if (r.isSanctioned) return false;
     if (!r.date) return false;
     if ( r.selectedDepartment !== "TRD") return false;
     const reqDate = new Date(r.date);
@@ -460,9 +460,16 @@ const handlePendingBlockTypeChange = (value: string) => {
   }
 }
   // Section
-  if (activeSummaryFilters.section.length > 0) {
-    summaryFilteredRequests = summaryFilteredRequests.filter((r) => activeSummaryFilters.section.includes(r.selectedSection));
+// In the filtering section, modify the section filter part:
+if (activeSummaryFilters.section.length > 0) {
+  // Only filter if not all sections are selected
+  const allSectionsSelected = activeSummaryFilters.section.length === sectionOptions.length;
+  if (!allSectionsSelected) {
+    summaryFilteredRequests = summaryFilteredRequests.filter((r) => 
+      activeSummaryFilters.section.includes(r.selectedSection)
+    );
   }
+}
   // Dept
   if (activeSummaryFilters.dept) {
     summaryFilteredRequests = summaryFilteredRequests.filter((r) => r.selectedDepartment === activeSummaryFilters.dept);
@@ -623,26 +630,63 @@ const handlePendingBlockTypeChange = (value: string) => {
                   Section
                   <span className="ml-1 text-sm">▼</span>
                 </button>
-                {sectionDropdownOpen && (
-                  <div className="absolute z-50 mt-2 w-40 bg-white border-2 border-[#00B4D8] rounded shadow-lg max-h-60 overflow-y-auto">
-                    {sectionOptions.map((section) => (
-                      <label
-                        key={section}
-                        className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-[20px]"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={pendingSummaryFilters.section.includes(
-                            section
-                          )}
-                          onChange={() => handlePendingSectionChange(section)}
-                          className="mr-2 accent-[#B57CF6]"
-                        />
-                        {section}
-                      </label>
-                    ))}
-                  </div>
-                )}
+            {sectionDropdownOpen && (
+  <div className="absolute z-50 mt-2 w-40 bg-white border-2 border-[#00B4D8] rounded shadow-lg max-h-60 overflow-y-auto">
+    {/* Add ALL option at the top */}
+    <label className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-[20px] border-b border-gray-200">
+      <input
+        type="checkbox"
+        checked={
+          pendingSummaryFilters.section.length === sectionOptions.length ||
+          (sectionOptions.length === 0 && pendingSummaryFilters.section.length > 0)
+        }
+        onChange={() => {
+          if (pendingSummaryFilters.section.length === sectionOptions.length) {
+            // If all are selected, deselect all
+            setPendingSummaryFilters(prev => ({
+              ...prev,
+              section: []
+            }));
+          } else {
+            // Select all available sections
+            setPendingSummaryFilters(prev => ({
+              ...prev,
+              section: [...sectionOptions]
+            }));
+          }
+        }}
+        className="mr-2 accent-[#B57CF6]"
+      />
+      ALL
+    </label>
+    
+    {sectionOptions.map((section) => (
+      <label
+        key={section}
+        className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-[20px]"
+      >
+        <input
+          type="checkbox"
+          checked={pendingSummaryFilters.section.includes(section)}
+          onChange={() => {
+            setPendingSummaryFilters(prev => {
+              const newSections = prev.section.includes(section)
+                ? prev.section.filter(s => s !== section)
+                : [...prev.section, section];
+              
+              return {
+                ...prev,
+                section: newSections
+              };
+            });
+          }}
+          className="mr-2 accent-[#B57CF6]"
+        />
+        {section}
+      </label>
+    ))}
+  </div>
+)}
               </div>
               {/* Dept Dropdown */}
               <div className="relative inline-block">
