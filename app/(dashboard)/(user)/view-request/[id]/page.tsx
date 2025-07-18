@@ -188,7 +188,7 @@ export default function ViewRequestPage() {
             <tbody>
               <tr>
                 <td className="py-1 font-medium">Request ID:</td>
-                <td className="py-1">{request.id}</td>
+                <td className="py-1">{request.divisionId||request.id}</td>
               </tr>
               <tr>
                 <td className="py-1 font-medium">Date:</td>
@@ -290,14 +290,15 @@ export default function ViewRequestPage() {
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-2">
-                      <div>
+                      {section.stream && (<div>
                         <span className="text-xs font-medium">Stream:</span>
                         <div className="py-1">{section.stream || "N/A"}</div>
-                      </div>
-                      <div>
+                      </div>)}
+                      {section.road && ( <div>
                         <span className="text-xs font-medium">Road:</span>
                         <div className="py-1">{section.road || "N/A"}</div>
-                      </div>
+                      </div>)}
+                     
                       {section.otherRoads && (
                         <div className="col-span-2">
                           <span className="text-xs font-medium">
