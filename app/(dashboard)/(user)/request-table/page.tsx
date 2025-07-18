@@ -1319,14 +1319,12 @@ const handleDownload = () => {
             >
                Home
             </Link> */}
-            <button
-              onClick={() => window.history.back()}
-              className="text-center w-full max-w-60 rounded-[50%] bg-cyan-200 text-black font-bold text-[24px] py-4 tracking-wider border border-[#b7b7d1] hover:bg-[#baffc9] transition"
-
-              
-            >
-               Back
-            </button>
+          <button
+  onClick={() => window.location.href = '/dashboard'}
+  className="text-center w-full max-w-60 rounded-[50%] bg-cyan-200 text-black font-bold text-[24px] py-4 tracking-wider border border-[#b7b7d1] hover:bg-[#baffc9] transition"
+>
+  Back
+</button>
             {/* <Link href="/logout" className="bg-[#FFB74D] border border-black px-6 py-1.5 max-w-6 rounded-[50%] text-lg font-bold text-black">
               Logout
             </Link> */}
