@@ -188,6 +188,12 @@ if (session?.user?.role === "DEPT_CONTROLLER") {
     window.location.href = "/manage/request-table";
  
 }
+
+if (session?.user?.role === "SM") {
+
+    window.location.href = "https://smr-dashboard.plattorian.tech/?cugNumber=${session?.user?.phone}&section=MAS-GDR";
+ 
+}
   // Custom admin dashboard UI (match manager dashboard style)
   if (session?.user?.role === "ADMIN") {
     return (
