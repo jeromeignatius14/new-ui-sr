@@ -768,21 +768,25 @@ export default function GenerateReportPage() {
                 ) : (
                   filteredUpcomingBlocks
                     .slice(0, 200)
-                    .map((block: DetailedData, idx: number) => {
+                    .map((block: any, idx: number) => {
                       // Status color logic
                       let statusLabel = "";
                       let statusStyle = { background: "#fff", color: "#222" };
-                      if (block.Status === "APPROVED") {
-                        statusLabel = "Pending with Optg";
+                      if (block.overAllStatus === "Sanctioned") {
+                        statusLabel = "Sanctioned";
                         statusStyle = { background: "#fff86b", color: "#222" };
-                      } else if (block.Status === "PENDING") {
+                      }else if (block.overAllStatus === "with optg.") {
+                        statusLabel = "with optg.";
+                        statusStyle = { background: "#d47ed4", color: "#222" };
+                      } 
+                       else if (block.Status === "PENDING") {
                         statusLabel = "Pending with dept control";
                         statusStyle = { background: "#d47ed4", color: "#222" };
                       } else if (block.Status === "REJECTED") {
                         statusLabel = "Returned by Optg";
                         statusStyle = { background: "#ff4e36", color: "#fff" };
                       } else {
-                        statusLabel = block.Status;
+                        statusLabel = block.overAllStatus||block.Status;
                       }
 
                       // Row background alternates between pink and white
