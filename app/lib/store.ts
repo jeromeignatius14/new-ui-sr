@@ -2071,7 +2071,7 @@ export const location = {
 
 export const depot: DepotStructure = {
   "PTJ-SRR": {
-    'ENGG': ["PTJ/W","PGT/E","PGT/W","SRR"],
+    'ENGG': ["PTJ/W","PGT/E","PGT/W","SRR","PGT"],
     'S&T': ["PGT", "SRR","MDKI"],
     'TRD': ["PGT","SRR"]
   },
@@ -2079,43 +2079,43 @@ export const depot: DepotStructure = {
   "SRR-CLT": {
     'TRD': ["SRR", "TIR", "QLD"],
     'S&T': ["SRR","TIR","CLT"],
-    'ENGG': ["SRR","TIR","CLT"]
+    'ENGG': ["SRR","TIR","CLT","PGT"]
   },
 
   "CLT-CAN": {
     'TRD': ["QLD", "CS"],
     'S&T': ["CLT", "CAN"],
-    'ENGG': ["CLT","QLD","CAN"]
+    'ENGG': ["CLT","QLD","CAN","PGT"]
   },
 
   "CAN-MAQ-MAJN": {
     'TRD': ["CS","CS","CHV","ULL"],
     'S&T': ["CAN","MAQ"],
-    'ENGG': ["CAN","PAY","KGQ","MAQ"]
+    'ENGG': ["CAN","PAY","KGQ","MAQ","PGT"]
   },
 
   "MAQ-MAJN-PADIL-TOK": {
     'TRD': ["ULL"],
     'S&T': ["MAQ"],
-    'ENGG': ["MAQ"]
+    'ENGG': ["MAQ","PGT"]
   },
 
   "SRR-NIL": {
     'TRD': ["NIL"],
     'S&T': ["SRR"],
-    'ENGG': ["AAM"]
+    'ENGG': ["AAM","PGT"]
   },
 
   "PGT-PGTN-POY": {
     'TRD': ["POY"],
     'S&T': ["PGTN"],
-    'ENGG': ["KLGD","PGT/E"]
+    'ENGG': ["KLGD","PGT/E","PGT"]
   },
 
   "POY-CNV": {
     'TRD': ["POY"],
     'S&T': ["PGTN"],
-    'ENGG': ["KLGD",]
+    'ENGG': ["KLGD","PGT"]
   }
 };
 
