@@ -1096,7 +1096,7 @@ const nonCorridorRequestsFiltered = pendingRequests
                             type="time"
                             value={timeTo}
                             onChange={(e) => setTimeTo(e.target.value)}
-                            className="w-20 border p-1 text-[24px] rounded"
+                            className="w-20 border p-1 text-sm rounded"
                           />
                         </div>
                       ) : (
@@ -1308,7 +1308,7 @@ const nonCorridorRequestsFiltered = pendingRequests
                             type="time"
                             value={timeTo}
                             onChange={(e) => setTimeTo(e.target.value)}
-                            className="w-20 border p-1 text-[24px] rounded"
+                            className="w-20 border p-1 text-sm rounded"
                           />
                         </div>
                       ) : (
@@ -1498,14 +1498,14 @@ const nonCorridorRequestsFiltered = pendingRequests
                             type="time"
                             value={timeFrom}
                             onChange={(e) => setTimeFrom(e.target.value)}
-                            className="w-20 border p-1 text-[24px] rounded"
+                            className="w-20 border p-1 text-sm rounded"
                           />
                           <span>-</span>
                           <input
                             type="time"
                             value={timeTo}
                             onChange={(e) => setTimeTo(e.target.value)}
-                            className="w-20 border p-1 text-[24px] rounded"
+                            className="w-20 border p-1 text-sm rounded"
                           />
                         </div>
                       ) : (
