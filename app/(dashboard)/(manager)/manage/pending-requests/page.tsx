@@ -127,23 +127,57 @@ export default function PendingRequestsPage() {
         setSelectedRequests(newSelected);
     };
 
-  const handleBulkAccept = async () => {
+//   const handleBulkAccept = async () => {
+//   if (selectedRequests.size === 0) return;
+
+//   if (!confirm(`Are you sure you want to forward ${selectedRequests.size} requests?`)) return;
+
+//   setIsAccepting(true);
+//   try {
+//     for (const id of selectedRequests) {
+//       await acceptMutation.mutateAsync({
+//         id,
+//         isAccept: true,
+//         remark: "",
+//         mobileView: true,
+//       });
+//     }
+//     setSelectedRequests(new Set());
+//     toast.success("All selected requests forwarded successfully!");
+//   } catch (error) {
+//     console.error("Error forwarding requests:", error);
+//     toast.error("Some requests failed. Check logs.");
+//   } finally {
+//     setIsAccepting(false);
+//   }
+// };
+
+
+
+const handleBulkAccept = async () => {
   if (selectedRequests.size === 0) return;
 
   if (!confirm(`Are you sure you want to forward ${selectedRequests.size} requests?`)) return;
 
   setIsAccepting(true);
   try {
-    for (const id of selectedRequests) {
-      await acceptMutation.mutateAsync({
+    // Process all requests first
+    const promises = Array.from(selectedRequests).map(id => 
+      acceptMutation.mutateAsync({
         id,
         isAccept: true,
         remark: "",
         mobileView: true,
-      });
-    }
+      })
+    );
+    
+    await Promise.all(promises);
+    
+    // Clear selection
     setSelectedRequests(new Set());
-    toast.success("All selected requests forwarded successfully!");
+    
+    // Show success only once after all are done
+    setShowSuccessModal(`${selectedRequests.size} requests forwarded successfully!`);
   } catch (error) {
     console.error("Error forwarding requests:", error);
     toast.error("Some requests failed. Check logs.");
@@ -151,8 +185,6 @@ export default function PendingRequestsPage() {
     setIsAccepting(false);
   }
 };
-
-
     const handleBulkReject = async () => {
         setRequestToReject('bulk');
         setShowRejectModal(true);
@@ -199,9 +231,23 @@ export default function PendingRequestsPage() {
         notFound();
     }
 
+    // if (!isLoading && !error && pendingRequests.length === 0) {
+    //     notFound();
+    // }
+
     if (!isLoading && !error && pendingRequests.length === 0) {
-        notFound();
-    }
+    return (
+        <div className="min-h-screen text-black bg-white p-3 border border-black flex flex-col items-center justify-center gap-4">
+            <div className="text-center text-xl font-bold">No pending requests found</div>
+            <Link 
+                href="/manage/request-table" 
+                className="bg-[#90EE90] px-8 py-2 rounded-[50%] border-2 border-black font-bold"
+            >
+                Back to Requests
+            </Link>
+        </div>
+    );
+}
     const handleDownloadExcel = async () => {
     try {
       if (!pendingRequests || pendingRequests.length === 0) {
@@ -441,7 +487,7 @@ export default function PendingRequestsPage() {
                 </div>
             )}
 
-            {showSuccessModal && (
+            {/* {showSuccessModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-lg p-6 max-w-xs w-full flex flex-col items-center">
                         <div className="text-lg font-bold mb-4 text-center">{showSuccessModal}</div>
@@ -453,7 +499,20 @@ export default function PendingRequestsPage() {
                         </button>
                     </div>
                 </div>
-            )}
+            )} */}
+            {showSuccessModal && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="bg-white rounded-lg p-6 max-w-xs w-full flex flex-col items-center">
+      <div className="text-lg font-bold mb-4 text-center">{showSuccessModal}</div>
+      <button
+        onClick={() => setShowSuccessModal(null)}
+        className="px-6 py-2 text-base bg-green-600 text-white rounded hover:bg-green-700 mt-2 font-bold"
+      >
+        OK
+      </button>
+    </div>
+  </div>
+)}
         </div>
     );
 }
