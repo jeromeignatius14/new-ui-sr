@@ -358,9 +358,24 @@ export default function OptimiseTablePage() {
   );
   // console.log(minDate, maxDate);
   // const [selectedDate, setSelectedDate] = useState<Date>(minDate);
-  const [selectedDate, setSelectedDate] = useState<Date>(
-    startOfWeek(currentWeekStart, { weekStartsOn: 1 })
-  );
+  // const [selectedDate, setSelectedDate] = useState<Date>(
+  //   startOfWeek(currentWeekStart, { weekStartsOn: 1 })
+  // );
+
+
+
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+  // Try to get saved date from localStorage
+  const savedDate = localStorage.getItem("urgentSelectedDate");
+  if (savedDate) {
+    const parsedDate = new Date(savedDate);
+    if (!isNaN(parsedDate.getTime())) {
+      return parsedDate;
+    }
+  }
+  // Fallback to the start of week if no saved date
+  return startOfWeek(currentWeekStart, { weekStartsOn: 1 });
+});
   // Set selectedDate only when minDate is ready
   useEffect(() => {
     if (minDate && !selectedDate) {
@@ -1009,11 +1024,21 @@ const nonCorridorRequestsFiltered = pendingRequests
             </button>
           </div>
           <DaySwitcher
+  currentDate={selectedDate}
+  onDateChange={(newDate) => {
+    setSelectedDate(newDate);
+    // No need to manually save here - the DaySwitcher handles it
+  }}
+  minDate={startOfWeek(currentWeekStart, { weekStartsOn: 1 })}
+  maxDate={addDays(weekStart, 7)}
+  storageKey="urgentSelectedDate" // Unique key for urgent block
+/>
+          {/* <DaySwitcher
             currentDate={selectedDate}
             onDateChange={(newDate) => setSelectedDate(newDate)}
             minDate={startOfWeek(currentWeekStart, { weekStartsOn: 1 })}
             maxDate={addDays(weekStart, 7)}
-          />
+          /> */}
           <div className="overflow-x-auto max-h-[70vh] overflow-y-auto rounded-lg border border-gray-300 shadow-sm mt-4">
             <table className="w-full border-collapse text-black bg-white">
               <thead className={`sticky top-0 ${showRejectionModal ? "z-0" : "z-10"} bg-gray-100 shadow`}>
