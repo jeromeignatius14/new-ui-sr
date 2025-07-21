@@ -503,7 +503,7 @@ const handleBulkAccept = async () => {
             {showSuccessModal && (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
     <div className="bg-white rounded-lg p-6 max-w-xs w-full flex flex-col items-center">
-      <div className="text-lg font-bold mb-4 text-center">{showSuccessModal}</div>
+      <div className="text-lg font-bold mb-4 text-center text-black">{showSuccessModal}</div>
       <button
         onClick={() => setShowSuccessModal(null)}
         className="px-6 py-2 text-base bg-green-600 text-white rounded hover:bg-green-700 mt-2 font-bold"
