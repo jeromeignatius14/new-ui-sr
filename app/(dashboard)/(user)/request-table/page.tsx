@@ -340,7 +340,7 @@ const TimePeriodDisplay = ({
 export default function RequestTablePage() {
   // State for pagination and view type
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(10);
+  const [pageSize] = useState(100);
   const [dateRange, setDateRange] = useState({
     startDate: new Date(),
     endDate: addDays(new Date(), 9),
