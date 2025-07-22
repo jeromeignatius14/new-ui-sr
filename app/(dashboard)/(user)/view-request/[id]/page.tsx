@@ -101,13 +101,14 @@ export default function ViewRequestPage() {
   }
 
   if (error) {
-    return (
-      <div className="min-h-screen bg-white p-3 border border-black flex items-center justify-center">
-        <div className="text-center py-5 text-red-600">
-          Error loading approved requests. Please try again.
-        </div>
-      </div>
-    );
+     router.push('/auth/login');
+    // return (
+    //   <div className="min-h-screen bg-white p-3 border border-black flex items-center justify-center">
+    //     <div className="text-center py-5 text-red-600">
+    //       Error loading approved requests. Please try again.
+    //     </div>
+    //   </div>
+    // );
   }
 
   const request = data?.data;
@@ -139,7 +140,7 @@ export default function ViewRequestPage() {
             Back
           </Link> */}
 <Link
-  href={data?.data ? getBackUrl(data.data) : '/request-table'}
+  href= '/request-table'
   className="px-3 py-1 text-sm bg-white text-[#13529e] border border-black flex items-center gap-1"
 >
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
@@ -188,7 +189,7 @@ export default function ViewRequestPage() {
             <tbody>
               <tr>
                 <td className="py-1 font-medium">Request ID:</td>
-                <td className="py-1">{request.id}</td>
+                <td className="py-1">{request.divisionId||request.id}</td>
               </tr>
               <tr>
                 <td className="py-1 font-medium">Date:</td>
@@ -290,14 +291,15 @@ export default function ViewRequestPage() {
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-2">
-                      <div>
+                      {section.stream && (<div>
                         <span className="text-xs font-medium">Stream:</span>
                         <div className="py-1">{section.stream || "N/A"}</div>
-                      </div>
-                      <div>
+                      </div>)}
+                      {section.road && ( <div>
                         <span className="text-xs font-medium">Road:</span>
                         <div className="py-1">{section.road || "N/A"}</div>
-                      </div>
+                      </div>)}
+                     
                       {section.otherRoads && (
                         <div className="col-span-2">
                           <span className="text-xs font-medium">

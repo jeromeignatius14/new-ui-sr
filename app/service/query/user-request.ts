@@ -148,7 +148,7 @@ export function useGetWeeklyUserRequests(weekRange: DateRangeFilter) {
 export function useGetOtherRequests(
   selectedDepo: string, 
   page = 1, 
-  limit = 10,
+  limit = 100,
   startDate?: string,
   endDate?: string,
   userDepartement?:string

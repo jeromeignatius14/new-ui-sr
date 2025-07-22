@@ -100,7 +100,7 @@ export const userRequestService = {
   getOtherRequests: async (
     selectedDepo: string,
     page: number = 1,
-    limit: number = 10,
+    limit: number = 100,
     startDate?: string,
     endDate?: string,
     userDepartement?:string

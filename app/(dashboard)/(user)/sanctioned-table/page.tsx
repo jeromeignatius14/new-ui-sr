@@ -6,6 +6,7 @@ import { adminService } from "@/app/service/api/admin";
 import { addDays, endOfWeek, format, parseISO, startOfWeek, subDays } from "date-fns";
 import { WeeklySwitcher } from "@/app/components/ui/WeeklySwitcher";
 import { useUrgentMode } from "@/app/context/UrgentModeContext";
+import { useRouter } from "next/navigation";
 
 // Header icons for tables
 const HeaderIcon = ({ type }: { type: string }) => {
@@ -83,6 +84,7 @@ const ColumnHeader = ({ icon, title, showFilter = false }: { icon: string; title
 };
 
 export default function OptimiseTablePage() {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const { isUrgentMode } = useUrgentMode();
   const [page, setPage] = useState(1);
@@ -235,13 +237,14 @@ export default function OptimiseTablePage() {
   }
 
   if (error) {
-    return (
-      <div className="min-h-screen bg-white p-3 border border-black flex items-center justify-center">
-        <div className="text-center py-5 text-red-600">
-          Error loading approved requests. Please try again.
-        </div>
-      </div>
-    );
+    router.push('/auth/login');
+    // return (
+    //   <div className="min-h-screen bg-white p-3 border border-black flex items-center justify-center">
+    //     <div className="text-center py-5 text-red-600">
+    //       Error loading approved requests. Please try again.
+    //     </div>
+    //   </div>
+    // );
   }
   // Filter optimized requests that are sanctioned
   const sanctionedOptimizedRequests = data?.data.requests?.filter(
