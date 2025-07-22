@@ -101,13 +101,14 @@ export default function ViewRequestPage() {
   }
 
   if (error) {
-    return (
-      <div className="min-h-screen bg-white p-3 border border-black flex items-center justify-center">
-        <div className="text-center py-5 text-red-600">
-          Error loading approved requests. Please try again.
-        </div>
-      </div>
-    );
+     router.push('/auth/login');
+    // return (
+    //   <div className="min-h-screen bg-white p-3 border border-black flex items-center justify-center">
+    //     <div className="text-center py-5 text-red-600">
+    //       Error loading approved requests. Please try again.
+    //     </div>
+    //   </div>
+    // );
   }
 
   const request = data?.data;
@@ -139,7 +140,7 @@ export default function ViewRequestPage() {
             Back
           </Link> */}
 <Link
-  href={data?.data ? getBackUrl(data.data) : '/request-table'}
+  href= '/request-table'
   className="px-3 py-1 text-sm bg-white text-[#13529e] border border-black flex items-center gap-1"
 >
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">

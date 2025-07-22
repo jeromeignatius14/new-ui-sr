@@ -358,9 +358,24 @@ export default function OptimiseTablePage() {
   );
   // console.log(minDate, maxDate);
   // const [selectedDate, setSelectedDate] = useState<Date>(minDate);
-  const [selectedDate, setSelectedDate] = useState<Date>(
-    startOfWeek(currentWeekStart, { weekStartsOn: 1 })
-  );
+  // const [selectedDate, setSelectedDate] = useState<Date>(
+  //   startOfWeek(currentWeekStart, { weekStartsOn: 1 })
+  // );
+
+
+
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+  // Try to get saved date from localStorage
+  const savedDate = localStorage.getItem("urgentSelectedDate");
+  if (savedDate) {
+    const parsedDate = new Date(savedDate);
+    if (!isNaN(parsedDate.getTime())) {
+      return parsedDate;
+    }
+  }
+  // Fallback to the start of week if no saved date
+  return startOfWeek(currentWeekStart, { weekStartsOn: 1 });
+});
   // Set selectedDate only when minDate is ready
   useEffect(() => {
     if (minDate && !selectedDate) {
@@ -630,6 +645,7 @@ const nonCorridorRequestsFiltered = pendingRequests
       );
       if (response.success) {
         alert("Optimization status updated successfully!");
+        refetch();
       } else {
         alert("Failed to update optimization status");
       }
@@ -668,6 +684,7 @@ const nonCorridorRequestsFiltered = pendingRequests
       );
       if (response.success) {
         alert("Optimization status updated successfully!");
+        refetch();
       } else {
         alert("Failed to update optimization status");
       }
@@ -903,13 +920,14 @@ const nonCorridorRequestsFiltered = pendingRequests
   }
 
   if (error) {
-    return (
-      <div className="min-h-screen bg-white p-3 border border-black flex items-center justify-center">
-        <div className="text-center py-5 text-red-600">
-          Error loading approved requests. Please try again.
-        </div>
-      </div>
-    );
+    router.push('/auth/login');
+    // return (
+    //   <div className="min-h-screen bg-white p-3 border border-black flex items-center justify-center">
+    //     <div className="text-center py-5 text-red-600">
+    //       Error loading approved requests. Please try again.
+    //     </div>
+    //   </div>
+    // );
   }
 
 
@@ -1007,11 +1025,21 @@ const nonCorridorRequestsFiltered = pendingRequests
             </button>
           </div>
           <DaySwitcher
+  currentDate={selectedDate}
+  onDateChange={(newDate) => {
+    setSelectedDate(newDate);
+    // No need to manually save here - the DaySwitcher handles it
+  }}
+  minDate={startOfWeek(currentWeekStart, { weekStartsOn: 1 })}
+  maxDate={addDays(weekStart, 7)}
+  storageKey="urgentSelectedDate" // Unique key for urgent block
+/>
+          {/* <DaySwitcher
             currentDate={selectedDate}
             onDateChange={(newDate) => setSelectedDate(newDate)}
             minDate={startOfWeek(currentWeekStart, { weekStartsOn: 1 })}
             maxDate={addDays(weekStart, 7)}
-          />
+          /> */}
           <div className="overflow-x-auto max-h-[70vh] overflow-y-auto rounded-lg border border-gray-300 shadow-sm mt-4">
             <table className="w-full border-collapse text-black bg-white">
               <thead className={`sticky top-0 ${showRejectionModal ? "z-0" : "z-10"} bg-gray-100 shadow`}>
@@ -1068,7 +1096,7 @@ const nonCorridorRequestsFiltered = pendingRequests
                             type="time"
                             value={timeTo}
                             onChange={(e) => setTimeTo(e.target.value)}
-                            className="w-20 border p-1 text-[24px] rounded"
+                            className="w-20 border p-1 text-sm rounded"
                           />
                         </div>
                       ) : (
@@ -1280,7 +1308,7 @@ const nonCorridorRequestsFiltered = pendingRequests
                             type="time"
                             value={timeTo}
                             onChange={(e) => setTimeTo(e.target.value)}
-                            className="w-20 border p-1 text-[24px] rounded"
+                            className="w-20 border p-1 text-sm rounded"
                           />
                         </div>
                       ) : (
@@ -1470,14 +1498,14 @@ const nonCorridorRequestsFiltered = pendingRequests
                             type="time"
                             value={timeFrom}
                             onChange={(e) => setTimeFrom(e.target.value)}
-                            className="w-20 border p-1 text-[24px] rounded"
+                            className="w-20 border p-1 text-sm rounded"
                           />
                           <span>-</span>
                           <input
                             type="time"
                             value={timeTo}
                             onChange={(e) => setTimeTo(e.target.value)}
-                            className="w-20 border p-1 text-[24px] rounded"
+                            className="w-20 border p-1 text-sm rounded"
                           />
                         </div>
                       ) : (

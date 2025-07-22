@@ -1017,13 +1017,14 @@ export default function ManagerRequestTablePage() {
   }
 
   if (error) {
-    return (
-      <div className="min-h-screen bg-white p-3 border border-black flex items-center justify-center">
-        <div className="text-center py-5 text-red-600">
-          Error loading approved requests. Please try again.
-        </div>
-      </div>
-    );
+    router.push('/auth/login');
+    // return (
+    //   <div className="min-h-screen bg-white p-3 border border-black flex items-center justify-center">
+    //     <div className="text-center py-5 text-red-600">
+    //       Error loading approved requests. Please try again.
+    //     </div>
+    //   </div>
+    // );
   }
   return (
     <div className="min-h-screen bg-[#FFFDF5]">
