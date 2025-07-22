@@ -340,7 +340,7 @@ const TimePeriodDisplay = ({
 export default function RequestTablePage() {
   // State for pagination and view type
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(10);
+  const [pageSize] = useState(100);
   const [dateRange, setDateRange] = useState({
     startDate: new Date(),
     endDate: addDays(new Date(), 9),
@@ -903,7 +903,7 @@ const handleDownload = () => {
                       {request.missionBlock}
                     </td>
                     <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
-                      {request.processedLineSections[0].lineName || "N/A"}
+                      {request.processedLineSections[0].lineName ||request.processedLineSections[0].road|| "N/A"}
                     </td>
                     <td className="border border-black px-2 py-1 text-black">
                       {request.activity}
@@ -1319,14 +1319,12 @@ const handleDownload = () => {
             >
                Home
             </Link> */}
-            <button
-              onClick={() => window.history.back()}
-              className="text-center w-full max-w-60 rounded-[50%] bg-cyan-200 text-black font-bold text-[24px] py-4 tracking-wider border border-[#b7b7d1] hover:bg-[#baffc9] transition"
-
-              
-            >
-               Back
-            </button>
+          <button
+  onClick={() => window.location.href = '/dashboard'}
+  className="text-center w-full max-w-60 rounded-[50%] bg-cyan-200 text-black font-bold text-[24px] py-4 tracking-wider border border-[#b7b7d1] hover:bg-[#baffc9] transition"
+>
+  Back
+</button>
             {/* <Link href="/logout" className="bg-[#FFB74D] border border-black px-6 py-1.5 max-w-6 rounded-[50%] text-lg font-bold text-black">
               Logout
             </Link> */}
