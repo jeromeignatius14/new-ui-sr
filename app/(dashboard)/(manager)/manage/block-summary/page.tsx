@@ -830,11 +830,11 @@ const formatDisplayDate = (dateStr: string) => {
                 ) : (
                   filteredUpcomingBlocks
                     .slice(0, 200)
-                    .map((block: DetailedData, idx: number) => {
+                    .map((block: any, idx: number) => {
                       // Status color logic
                       let statusLabel = "";
                       let statusStyle = { background: "#fff", color: "#222" };
-                      if (block.Status === "APPROVED") {
+                      if (block.overAllStatus === "with optg.") {
                         statusLabel = "Pending with Optg";
                         statusStyle = { background: "#fff86b", color: "#222" };
                       } else if (block.Status === "PENDING") {
@@ -844,7 +844,7 @@ const formatDisplayDate = (dateStr: string) => {
                         statusLabel = "Returned by Optg";
                         statusStyle = { background: "#ff4e36", color: "#fff" };
                       } else {
-                        statusLabel = block.Status;
+                        statusLabel =block.overAllStatus || block.Status;
                       }
 
                       // Row background alternates between pink and white
