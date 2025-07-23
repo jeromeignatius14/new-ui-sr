@@ -43,7 +43,9 @@ export const useAuth = () => {
       } 
       
       else if(user.role==="SM"){
-    window.location.href = `https://smr-dashboard.plattorian.tech/?cugNumber=${user.phone ?? ""}&section=MAS-GDR`;
+    // window.location.href = `https://smr-dashboard.plattorian.tech/?cugNumber=${user.phone ?? ""}&section=MAS-GDR`;
+    window.location.href=`https://smr-dashboard.plattorian.tech/?cugNumber=${user?.phone}&stationCode=${user?.depot}=SM&token=W1IU66ZFEBFBF6C1dGmouN6PVyHARQJg`
+
  
   }
       
