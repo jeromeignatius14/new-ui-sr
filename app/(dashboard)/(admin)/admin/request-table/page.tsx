@@ -611,7 +611,10 @@ if (activeSummaryFilters.section.length > 0) {
                 ? allSelected
                 : pendingSummaryFilters.blockType.includes(opt.value)
             }
-            onChange={() => handlePendingBlockTypeChange(opt.value)}
+          onChange={() => {
+  handlePendingBlockTypeChange(opt.value);
+  setBlockTypeDropdownOpen(false); 
+}}
             className="mr-2 accent-[#B57CF6]"
           />
           {opt.label}
@@ -654,6 +657,7 @@ if (activeSummaryFilters.section.length > 0) {
               section: [...sectionOptions]
             }));
           }
+          setSectionDropdownOpen(false);
         }}
         className="mr-2 accent-[#B57CF6]"
       />
@@ -679,6 +683,7 @@ if (activeSummaryFilters.section.length > 0) {
                 section: newSections
               };
             });
+            setSectionDropdownOpen(false);
           }}
           className="mr-2 accent-[#B57CF6]"
         />
