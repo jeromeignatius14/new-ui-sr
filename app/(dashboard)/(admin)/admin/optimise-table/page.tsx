@@ -790,6 +790,8 @@ const nonCorridorRequestsFiltered = pendingRequests
         });
         setOptimizedData(processedOptimizedData);
         setIsOptimizeDialogOpen(false);
+        await refetch();
+
       } else {
         alert("Failed to optimize requests");
       }
