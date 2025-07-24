@@ -1245,6 +1245,7 @@ export default function ManagerRequestTablePage() {
   {filteredRequests.filter((request: UserRequest) => request.isSanctioned === true).length > 0 ? (
     filteredRequests
       .filter((request: UserRequest) => request.isSanctioned === true)
+      .sort((a,b)=>new Date(b.date).getTime() - new Date(a.date).getTime())
       .map((request: UserRequest, index: number) => {
         const status = getDisplayStatus(request);
         const rowBgColor = index % 2 === 0 ? "bg-[#F5EEFF]" : "bg-white";

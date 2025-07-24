@@ -38,7 +38,6 @@ export default function PendingRequestsPage() {
  const pendingRequests = (Array.isArray(data?.data?.requests) ? data.data.requests : [])
     .filter((r: UserRequest) => r.status === 'PENDING' && r.managerAcceptance === false)
     .sort((a: UserRequest, b: UserRequest) => {
-        // Convert dates to timestamps for comparison
         const dateA = new Date(a.date).getTime();
         const dateB = new Date(b.date).getTime();
         return dateB - dateA;
