@@ -3820,13 +3820,6 @@ export const streamData = {
     "down direction affected": [],
     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
     "both direction not affected": []
-  }
-  ,
-  'CUP J-YD': {
-    "up direction affected": [],
-    "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-    "both direction not affected": []
   },
   'KJKPD-YD': {
     "up direction affected": [],
