@@ -2089,7 +2089,7 @@ export const depot: DepotStructure = {
   },
 
   "CAN-MAQ-MAJN": {
-    'TRD': ["CS","CS","CHV","ULL"],
+    'TRD': ["CS","CHV","ULL"],
     'S&T': ["CAN","MAQ"],
     'ENGG': ["CAN","PAY","KGQ","MAQ","PGT"]
   },
