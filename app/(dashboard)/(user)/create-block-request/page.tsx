@@ -261,9 +261,9 @@ function ReviewBlockRequestModal({
                 {formData.nonCorridorReason}
               </div>
             )}
-            {formData.remarks && (
+            {formData.requestremarks && (
               <div className="mb-2">
-                <b>Remarks:</b> {formData.remarks}
+                <b>Remarks:</b> {formData.requestremarks}
               </div>
             )}
             <div className="mt-4 mb-2 p-3 rounded-xl border-2 border-[#f7d6f7] bg-[#f7d6f7]">
@@ -3912,8 +3912,8 @@ export default function CreateBlockRequestPage() {
           <div className="flex flex-row flex-wrap gap-1">
             <span className="text-black font-bold text-[24px]">Remarks:</span>
             <textarea
-              name="remarks"
-              value={formData.remarks || ""}
+              name="requestremarks"
+              value={formData.requestremarks || ""}
               onChange={handleInputChange}
               placeholder="Enter any additional remarks"
               rows={1}
