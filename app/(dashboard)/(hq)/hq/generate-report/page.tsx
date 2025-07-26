@@ -49,7 +49,7 @@ interface DetailedData {
 const locationOptions: OptionType[] = [
   { value: "MAS", label: "MAS" },
   { value: "SA", label: "SA" },
-  { value: "MCU", label: "MCU" },
+  { value: "MDU", label: "MDU" },
   { value: "TPJ", label: "TPJ" },
   { value: "PGT", label: "PGT" },
   { value: "TVC", label: "TVC" },
@@ -332,16 +332,16 @@ export default function GenerateReportPage() {
               <button
                 type="button"
                 className={`px-3 py-1.5 text-sm rounded-full text-black ${
-                  selectedLocations.includes("MCU")
+                  selectedLocations.includes("MDU")
                     ? "bg-orange-300"
                     : "bg-orange-100"
                 } border border-orange-400`}
-                onClick={() => toggleLocation("MCU")}
+                onClick={() => toggleLocation("MDU")}
               >
-                {selectedLocations.includes("MCU") && (
+                {selectedLocations.includes("MDU") && (
                   <span className="mr-1">✓</span>
                 )}
-                MCU
+                MDU
               </button>
               <button
                 type="button"
