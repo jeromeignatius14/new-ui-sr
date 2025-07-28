@@ -1161,7 +1161,7 @@ export const depot: DepotStructure = {
     },
    "DG-MDU": {
       "TRD": ["DG", "MDU"],
-      "S&T": ["North/MDU"],
+      "S&T": ["North-MDU"],
       "ENGG": ["DG", "MG/MDU", "BG/MDU"]
     },
   
@@ -1196,7 +1196,7 @@ export const depot: DepotStructure = {
   
     "MDU-MNM": {
       "TRD": ["MDU", "MNM"],
-      "S&T": ["North/MDU"],
+      "S&T": ["North-MDU"],
       "ENGG": ["MG/MDU", "MNM"]
     },
   
@@ -1256,7 +1256,7 @@ export const depot: DepotStructure = {
 export const depotOnLocation = {
   "MDU": [
     "DG",
-    "North/MDU",
+    "North-MDU",
     "MDU",
     "MG/MDU",
     "BG/MDU",
