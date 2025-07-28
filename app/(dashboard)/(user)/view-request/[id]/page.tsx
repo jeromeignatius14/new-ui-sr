@@ -338,6 +338,15 @@ export default function ViewRequestPage() {
                 </tr>
               )}
               <tr>
+                    <td className="py-1 font-medium">
+                      SelectedDepot For Power Block:
+                    </td>
+                    <td className="py-1">
+                      {request.powerBlockDisconnectionAssignTo ||
+                        "N/A"}
+                    </td>
+                  </tr>
+              <tr>
                 <td className="py-1 font-medium">Elementary Section:</td>
                 <td className="py-1">
                   {request.elementarySection}
@@ -363,6 +372,15 @@ export default function ViewRequestPage() {
                     </td>
                   </tr>
                 )}
+                 <tr>
+                    <td className="py-1 font-medium">
+                      SelectedDepot For S&T Disconnection:
+                    </td>
+                    <td className="py-1">
+                      {request.sntDisconnectionAssignTo ||
+                        "N/A"}
+                    </td>
+                  </tr>
               <tr>
                 <td className="py-1 font-medium">S&T Lines:</td>
                 {/* <td className="py-1">
