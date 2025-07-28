@@ -32,7 +32,10 @@ import { userRequestService } from "@/app/service/api/user-request";
 import { WeeklySwitcher } from "@/app/components/ui/WeeklySwitcher";
 import { managerService } from "@/app/service/api/manager";
 import dayjs from "dayjs";
+import isBetween from "dayjs/plugin/isBetween";
 import formatTime from "@/app/utils/formatTime";
+
+dayjs.extend(isBetween);
 
 // Components
 const Pagination = ({
@@ -552,11 +555,14 @@ const [requestToReject, setRequestToReject] = useState<{
     const today = new Date();
     const tenDaysLater = new Date();
     tenDaysLater.setDate(today.getDate() + 9);
-    filteredRequests =
-      data?.data?.requests?.filter((request: any) => {
-        const reqDate = new Date(request.date);
-        return reqDate >= today && reqDate <= tenDaysLater;
-      }) || [];
+
+filteredRequests = data?.data?.requests?.filter((request: any) => {
+    const reqDate = dayjs(request.date).startOf('day');
+    const today = dayjs().startOf('day');
+    const tenDaysLater = dayjs().add(10, 'day').endOf('day');
+    
+    return reqDate.isBetween(today, tenDaysLater, null, '[]'); // [] = inclusive
+}) || [];
   }
 
   // Handle date range navigation
