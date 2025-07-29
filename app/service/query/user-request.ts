@@ -17,6 +17,8 @@ export interface RequestResponse {
 }
 
 export interface RequestItem {
+    powerBlockDisconnectionAssignTo: string;
+    sntDisconnectionAssignTo: any;
     divisionId:any,
     isSanctioned: boolean;
     remarkByManager: string;
