@@ -832,11 +832,11 @@ if (activeSummaryFilters.section.length > 0) {
       </div>
 
       
-      <Link href="/admin/revise-block"  className="mb-8">
+      {/* <Link href="/admin/revise-block"  className="mb-8">
             <button className="w-fit px-10 rounded-full bg-[#ffd180] border border-black py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
               REVISE THE BLOCK FOR THE DAY
             </button>
-          </Link>
+          </Link> */}
           <Link href="/admin/sanction-table-data"  className="mb-8">
             <button className="w-fit px-10 rounded-full bg-[#c7c7f7] border border-black py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
               BLOCK SUMMARY REPORT
