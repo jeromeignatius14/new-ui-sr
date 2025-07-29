@@ -191,7 +191,9 @@ if (session?.user?.role === "DEPT_CONTROLLER") {
 
 if (session?.user?.role === "SM") {
 
-    window.location.href = "https://smr-dashboard.plattorian.tech/?cugNumber=${session?.user?.phone}&section=MAS-GDR";
+    // window.location.href = "https://smr-dashboard.plattorian.tech/?cugNumber=${session?.user?.phone}&section=MAS-GDR";
+        window.location.href=`https://smr-dashboard.plattorian.tech/?cugNumber=${session?.user?.phone}&stationCode=${session?.user?.depot}&user=SM&token=W1IU66ZFEBFBF6C1dGmouN6PVyHARQJg`
+
  
 }
   // Custom admin dashboard UI (match manager dashboard style)
