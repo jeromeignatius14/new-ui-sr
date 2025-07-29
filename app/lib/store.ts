@@ -3986,7 +3986,7 @@ export const depot: DepotStructure = {
     "TRD": ["TCR"]
   },
  "ERS-KTYM-KYJ": {
-    "S&T": ["ERS", "KYTM", "KYJ"],
+    "S&T": ["ERS", "KYTM", "KYJ","PVRD"],
     "ENGG": ["ERS", "PVRD", "KTYM", "MVLK"],
     "TRD": ["ERS", "KTYM", "KYJ"]
   },
