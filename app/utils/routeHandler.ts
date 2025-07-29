@@ -3,6 +3,7 @@ type User = {
   role: string;
   email: string;
   phone?:any;
+  depot?: string;
 };
 
 // Changed from useUserRedirect hook to a regular function
