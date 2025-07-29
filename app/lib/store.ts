@@ -5316,7 +5316,7 @@ export let lineData = {
 
 export const depot: DepotStructure = {
   "TPJ-VM": {
-    'ENGG': ["TPJ","LLI","ALU","A/VRI"],
+    'ENGG': ["TPJ","LLI","ALU","A/VRI","VM"],
     'S&T': ["RRI","Lines","VRI/A","VRI/B","VM"],
     'TRD': ["TPJ", "ALU","VRI","VM"]
   },
