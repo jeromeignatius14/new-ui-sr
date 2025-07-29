@@ -469,7 +469,7 @@ const formatDisplayDate = (dateStr: string) => {
         <div className="w-full bg-[#fffbe9] px-2 py-2">
           <div className="flex flex-row gap-8 items-end w-full flex-wrap">
             {/* Choose Section Dropdown */}
-            <div className="flex flex-col flex-1 min-w-[90px] max-w-[110px] w-full">
+            {/* <div className="flex flex-col flex-1 min-w-[90px] max-w-[110px] w-full">
               <span className="text-[24px] font-bold text-black mb-1 whitespace-nowrap">
                 Choose Section
               </span>
@@ -531,7 +531,91 @@ const formatDisplayDate = (dateStr: string) => {
                 }
                 menuPosition="fixed"
               />
-            </div>
+            </div> */}
+                     <div className="flex flex-col flex-1 min-w-[90px] max-w-[110px] w-full">
+                  <span className="text-[24px] font-bold text-black mb-1 whitespace-nowrap">
+                    Choose Section
+                  </span>
+                  <Select
+                    options={majorSectionOptions}
+                    isMulti={true}
+                    value={majorSectionOptions.filter((opt) =>
+                      selectedMajorSections.includes(opt.value)
+                    )}
+                    onChange={(opts) => handleMajorSectionChange(opts)}
+                    classNamePrefix="section-select"
+                    styles={{
+                      container: (base) => ({
+                        ...base,
+                        width: "100%",
+                        maxWidth: "110px",
+                        minWidth: "90px",
+                      }),
+                      control: (base, state) => ({
+                        ...base,
+                        borderColor: "#00bfff",
+                        borderWidth: 2,
+                        borderRadius: 0,
+                        minHeight: 32,
+                        fontSize: 24,
+                        width: "100%",
+                        maxWidth: "110px",
+                        minWidth: "90px",
+                        // Show only the count in the input
+                        "&:after": selectedMajorSections.length > 0 ? {
+                          content: `"${selectedMajorSections.length}"`,
+                          position: 'absolute',
+                          left: 8,
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          color: '#000',
+                          fontWeight: 'bold',
+                          pointerEvents: 'none',
+                        } : {},
+                      }),
+                      input: (base) => ({
+                        ...base,
+                        opacity: 0, // Hide the default input
+                        width: 0,
+                      }),
+                      placeholder: (base) => ({
+                        ...base,
+                        display: selectedMajorSections.length > 0 ? 'none' : 'block',
+                      }),
+                      option: (base, state) => ({
+                        ...base,
+                        backgroundColor: state.isSelected ? "#b7e3ee" : "#fff",
+                        color: "#000",
+                        fontWeight: "bold",
+                        fontSize: 24,
+                      }),
+                      menu: (base) => ({ ...base, zIndex: 50 }),
+                      multiValue: (base) => ({
+                        ...base,
+                        backgroundColor: "#e0e0ff",
+                        color: "#000",
+                        display: 'none', // Hide the chips in the input
+                      }),
+                      multiValueLabel: (base) => ({
+                        ...base,
+                        color: "#000",
+                        fontWeight: "bold",
+                      }),
+                      multiValueRemove: (base) => ({
+                        ...base,
+                        color: "#b07be0",
+                        ":hover": { backgroundColor: "#b07be0", color: "white" },
+                      }),
+                    }}
+                    placeholder="Section"
+                    closeMenuOnSelect={false}
+                    hideSelectedOptions={false}
+                    menuPortalTarget={
+                      typeof window !== "undefined" ? document.body : undefined
+                    }
+                    menuPosition="fixed"
+                  />
+                </div>
             {/* Select Period */}
             <div className="flex flex-col flex-1 min-w-[180px] w-full">
               <div className="flex justify-center w-full mb-1">
