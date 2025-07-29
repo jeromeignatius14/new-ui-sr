@@ -1134,8 +1134,7 @@ export default function CreateBlockRequestPage() {
 
       if (hasUnavailedSanctionedBlock && !proceedAnyway) {
         const link = `https://mobile-bms.plattrtechstudio.com/?cugNumber=${
-          session?.user?.phone
-        }&section=${formData.missionBlock || "MAS-GDR"}`;
+          session?.user?.phone}`;
         setPopupLink(link);
         setShowPopup(true);
         setFormSubmitting(false);
@@ -3953,7 +3952,7 @@ export default function CreateBlockRequestPage() {
                     You already have a sanctioned block for which availing is pending.
                   </p>
                   <div className="flex justify-center gap-3">
-                    <button
+                    {/* <button
                       onClick={() => {
                         setShowPopup(false);
                         setProceedAnyway(true);
@@ -3963,7 +3962,7 @@ export default function CreateBlockRequestPage() {
                       className="bg-gray-300 text-black px-4 py-1 rounded hover:bg-gray-400"
                     >
                       Proceed
-                    </button>
+                    </button> */}
                     <button
                       onClick={() => {
                         window.open(popupLink, "_blank");
@@ -3974,10 +3973,10 @@ export default function CreateBlockRequestPage() {
                       Go to Avail Page
                     </button>
                   </div>
-                  <div className="text-sm text-orange-700 mt-4">
+                  {/* <div className="text-sm text-orange-700 mt-4">
                     Proceed is available only because the Rolling Block
                     Authorization app is under construction.{" "}
-                  </div>
+                  </div> */}
                 </div>
               </div>
             )}
