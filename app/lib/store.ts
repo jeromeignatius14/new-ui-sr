@@ -8,13 +8,13 @@
 
 // // export let MajorSection = {
 // //  " MAS": ["MAS-GDR","MAS-AJJ","AJJ-KPD", "KPD-JTJ", "AJJ-RU","AJJ-CGL","MSB-VM","MSB-VLCY"],
-// // "TPJ": ["TPJ-VM", "VM-MV", "TPJ-MV","TJ-KIK","MV-TVR","NMJ- MQ","VM-PDY","KPD-VM","CUPJ-VRI","TPJ-TP","NGT-VLNK","TVR- KKDI","TTP-AGX"],
+// // "TPJ": ["TPJ-VM", "VM-MV", "TPJ-MV","TJ-KIK","MV-TVR","NMJ- MQ","VM-PDY","KPD-VM","CUP J-VRI","TPJ-TP","NGT-VLNK","TVR- KKDI","TTP-AGX"],
 // // "SA":["JTJ-ED","ED-PTJ","ED-TPJ","KRR-DG","SA-VRI","SA-MTDM","SA-KRR","CBE-MTP","MTP-UAM","PTJ-CNV"]
 // // };
 
 // export let MajorSection = {
 //   MAS: ["MAS-GDR", "MAS-AJJ", "AJJ-KPD", "KPD-JTJ", "AJJ-RU", "AJJ-CGL", "MSB-VM", "MSB-VLCY"],
-//   TPJ: ["TPJ-VM", "VM-MV", "TPJ-MV", "TJ-KIK", "MV-TVR", "NMJ-MQ", "VM-PDY", "KPD-VM", "CUPJ-VRI", "TPJ-TP", "NGT-VLNK", "TVR-KKDI", "TTP-AGX"],
+//   TPJ: ["TPJ-VM", "VM-MV", "TPJ-MV", "TJ-KIK", "MV-TVR", "NMJ-MQ", "VM-PDY", "KPD-VM", "CUP J-VRI", "TPJ-TP", "NGT-VLNK", "TVR-KKDI", "TTP-AGX"],
 //   SA: ["JTJ-ED", "ED-PTJ", "ED-TP", "KRR-DG", "SA-VRI", "SA-MTDM", "SA-KRR", "CBE-MTP", "MTP-UAM", "PTJ-CNV"],
 //   PGT: ["PTJ-SRR", "SRR-CLT", "CLT-CAN", "CAN-MAQ-MAJN", "MAQ-MAJN-PADIL-TOK", "SRR-NIL", "PGT-PGTN-POY", "POY-CNV"]
 // };
@@ -34,11 +34,11 @@
 // //   ],
 // //   'VM-MV': [
 // //     "VM-SXR", "SXR-TUY", "TUY-PRT", "PRT-MBU", "MBU-NPM", "NPM-VKP",
-// //     "VKP-TDPR", "TDPR-CUPJ", "CUPJ-CQS", "CQS-ALP", "ALP-PUC",
+// //     "VKP-TDPR", "TDPR-CUP J", "CUP J-CQS", "CQS-ALP", "ALP-PUC",
 // //     "PUC-PO", "PO-KII", "KII-CDM", "CDM-VMP", "VMP-CLN", "CLN-SY",
 // //     "SY-VDL", "VDL-ANP", "ANP-NID", "NID-MV",
 // //     "VM-YD", "SXR-YD", "TUY-YD", "PRT-YD", "MBU-YD", "NPM-YD",
-// //     "VKP-YD", "TDPR-YD", "CUPJ-YD", "CQS-YD", "ALP-YD", "PUC-YD",
+// //     "VKP-YD", "TDPR-YD", "CUP J-YD", "CQS-YD", "ALP-YD", "PUC-YD",
 // //     "PO-YD", "KII-YD", "CDM-YD", "VMP-YD", "CLN-YD", "SY-YD",
 // //     "VDL-YD", "ANP-YD", "NID-YD", "MV-YD"
 // //   ],
@@ -81,9 +81,9 @@
 // //     "ARV-YD", "MCL-YD", "PRL-YD", "AGM-YD", "TJM-YD", "TNM-YD", "TNI-YD", "AND-YD",
 // //     "ACN-YD", "TRK-YD", "AYD-YD", "MMP-YD", "VKM-YD", "VM-YD"
 // //   ],
-// //   'CUPJ-VRI': [
-// //     "CUPJ-KJKPD", "KJKPD-VLU", "VLU-NVL", "NVL-UMG", "UMG-VRI",
-// //     "CUPJ-YD", "KJKPD-YD", "VLU-YD", "NVL-YD", "UMG-YD", "VRI-YD"
+// //   'CUP J-VRI': [
+// //     "CUP J-KJKPD", "KJKPD-VLU", "VLU-NVL", "NVL-UMG", "UMG-VRI",
+// //     "CUP J-YD", "KJKPD-YD", "VLU-YD", "NVL-YD", "UMG-YD", "VRI-YD"
 // //   ],
 // //   'TPJ-TP': [
 // //     "TPJ-TPE", "TPE-TP",
@@ -121,10 +121,10 @@
 //     "TVNL-YD", "KDMD-YD", "VM-YD"
 //   ],
 //   'VM-MV': [
-//     "VM-SXR", "SXR-TUY", "TUY-PRT", "PRT-MBU", "MBU-NPM", "NPM-TDPR", "TDPR-CUPJ", "CUPJ-ALP", "ALP-PUC",
+//     "VM-SXR", "SXR-TUY", "TUY-PRT", "PRT-MBU", "MBU-NPM", "NPM-TDPR", "TDPR-CUP J", "CUP J-ALP", "ALP-PUC",
 //     "PUC-KII", "KII-CDM", "CDM-CLN", "CLN-SY",
 //     "SY-VDL", "VDL-ANP", "ANP-MV", "VM-YD", "SXR-YD", "TUY-YD", "PRT-YD", "MBU-YD", "NPM-YD", "TDPR-YD",
-//     "CUPJ-YD", "ALP-YD", "PUC-YD", "KII-YD", "CDM-YD", "CLN-YD", "SY-YD", "VDL-YD", "ANP-YD", "MV-YD"
+//     "CUP J-YD", "ALP-YD", "PUC-YD", "KII-YD", "CDM-YD", "CLN-YD", "SY-YD", "VDL-YD", "ANP-YD", "MV-YD"
 //   ],
 //   'TPJ-MV': [
 //     "TPJ-GOC", "GOC-TRB", "TRB-SGM", "SGM-BAL", "BAL-ALK", "ALK-TJ", "TJ-TT", "TT-PDV", "PDV-SPL", "SPL-KMU",
@@ -149,7 +149,7 @@
 //     "KPD-VLR", "VLR-KNB", "KNB-ARV", "ARV-PRL", "PRL-AGM", "AGM-TJM",
 //     "TJM-TNM", "TNM-TNI", "TNI-TRK", "TRK-MMP", "MMP-VKM", "VKM-VM", "KPD-YD", "VLR-YD", "KNB-YD", "KMM-YD", "ARV-YD", "PRL-YD", "AGM-YD", "TJM-YD", "TNM-YD", "TNI-YD", "TRK-YD", "MMP-YD", "VKM-YD", "VM-YD"
 //   ],
-//   'CUPJ-VRI': [
+//   'CUP J-VRI': [
 //     "CUP J-KJKPD", "KJKPD-VLU", "VLU-NVL", "NVL-UMG", "UMG-VRI", "CUP J-YD", "KJKPD-YD", "VLU-YD", "NVL-YD", "UMG-YD", "VRI-YD"
 //   ],
 //   'TPJ-TP': [
@@ -542,7 +542,7 @@
 //     "both direction affected": ["Rd 1", "Rd 2"],
 //     "both direction not affected": [],
 //   },
-//   'CUPJ-YD': {
+//   'CUP J-YD': {
 //     "up direction affected": [],
 //     "down direction affected": [],
 //     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5"],
@@ -1273,7 +1273,7 @@
 //   'SNDI-MTUR': ['UP', 'DN'],
 //   'MTUR-ICG': ['UP', 'DN'],
 //   'ICG-TLNR': ['UP', 'DN'],
-//   'TLNR-VRI': ['UP', 'DN'],  // Junction with CUPJ-VRI line
+//   'TLNR-VRI': ['UP', 'DN'],  // Junction with CUP J-VRI line
 //   'VRI-PVN': ['UP', 'DN'],
 //   'PVN-ULU': ['UP', 'DN'],
 //   'ULU-PRKL': ['UP', 'DN'],
@@ -1297,7 +1297,7 @@
 //   'MTUR-YD': ['UP', 'DN'],
 //   'ICG-YD': ['UP', 'DN'],
 //   'TLNR-YD': ['UP', 'DN'],
-//   'VRI-YD': ['UP', 'DN'],  // Appears in both TPJ-VM and CUPJ-VRI sections
+//   'VRI-YD': ['UP', 'DN'],  // Appears in both TPJ-VM and CUP J-VRI sections
 //   'PVN-YD': ['UP', 'DN'],
 //   'ULU-YD': ['UP', 'DN'],
 //   'PRKL-YD': ['UP', 'DN'],
@@ -1312,8 +1312,8 @@
 //   'PRT-MBU': ['UP', 'DN'],
 //   'MBU-NPM': ['UP', 'DN'],
 //   'NPM-TDPR': ['UP', 'DN'],
-//   'TDPR-CUPJ': ['UP', 'DN'],  // Junction with CUPJ-VRI line
-//   'CUPJ-ALP': ['UP', 'DN'],
+//   'TDPR-CUP J': ['UP', 'DN'],  // Junction with CUP J-VRI line
+//   'CUP J-ALP': ['UP', 'DN'],
 //   'ALP-PUC': ['UP', 'DN'],
 //   'PUC-KII': ['UP', 'DN'],
 //   'KII-CDM': ['UP', 'DN'],
@@ -1328,7 +1328,7 @@
 //   'MBU-YD': ['UP', 'DN'],
 //   'NPM-YD': ['UP', 'DN'],
 //   'TDPR-YD': ['UP', 'DN'],
-//   'CUPJ-YD': ['UP', 'DN'],  // Appears in both VM-MV and CUPJ-VRI sections
+//   'CUP J-YD': ['UP', 'DN'],  // Appears in both VM-MV and CUP J-VRI sections
 //   'ALP-YD': ['UP', 'DN'],
 //   'PUC-YD': ['UP', 'DN'],
 //   'KII-YD': ['UP', 'DN'],
@@ -1436,13 +1436,13 @@
 //   'VKM-YD': ['SINGLE'],
 //   // 'VM-YD': ['UP', 'DN'],  // Already listed in multiple sections
 
-//   // CUPJ-VRI Section - Single line
-//   'CUPJ-KJKPD': ['SINGLE'],  // CUPJ is junction with VM-MV line
+//   // CUP J-VRI Section - Single line
+//   'CUP J-KJKPD': ['SINGLE'],  // CUP J is junction with VM-MV line
 //   'KJKPD-VLU': ['SINGLE'],
 //   'VLU-NVL': ['SINGLE'],
 //   'NVL-UMG': ['SINGLE'],
 //   'UMG-VRI': ['SINGLE'],  // VRI is junction with TPJ-VM line
-//   // 'CUPJ-YD': ['UP', 'DN'],  // Already listed in VM-MV
+//   // 'CUP J-YD': ['UP', 'DN'],  // Already listed in VM-MV
 //   'KJKPD-YD': ['SINGLE'],
 //   'VLU-YD': ['SINGLE'],
 //   'NVL-YD': ['SINGLE'],
@@ -1748,7 +1748,7 @@
 // //     'ENGG': ["KPD", "VT"]
 // //   },
 
-// //   "CUPJ-VRI": {
+// //   "CUP J-VRI": {
 // //     'TRD': ["CUP J", "KJKPD"],
 // //     'S&T': ["CUP J", "KJKPD"],
 // //     'ENGG': ["CUP J", "KJKPD"]
@@ -1827,7 +1827,7 @@
 //     'ENGG': ["TNM", "VLR",]
 //   },
 
-//   "CUPJ-VRI": {
+//   "CUP J-VRI": {
 //     'TRD': ["CUP J", "VRI"],
 //     'S&T': ["CUP J", "VRI"],
 //     'ENGG': ["BVR"]
@@ -3018,13 +3018,13 @@ type DepotStructure = {
 
 // export let MajorSection = {
 //  " MAS": ["MAS-GDR","MAS-AJJ","AJJ-KPD", "KPD-JTJ", "AJJ-RU","AJJ-CGL","MSB-VM","MSB-VLCY"],
-// "TPJ": ["TPJ-VM", "VM-MV", "TPJ-MV","TJ-KIK","MV-TVR","NMJ- MQ","VM-PDY","KPD-VM","CUPJ-VRI","TPJ-TP","NGT-VLNK","TVR- KKDI","TTP-AGX"],
+// "TPJ": ["TPJ-VM", "VM-MV", "TPJ-MV","TJ-KIK","MV-TVR","NMJ- MQ","VM-PDY","KPD-VM","CUP J-VRI","TPJ-TP","NGT-VLNK","TVR- KKDI","TTP-AGX"],
 // "SA":["JTJ-ED","ED-PTJ","ED-TPJ","KRR-DG","SA-VRI","SA-MTDM","SA-KRR","CBE-MTP","MTP-UAM","PTJ-CNV"]
 // };
 
 export let MajorSection = {
   MAS: ["MAS-GDR", "MAS-AJJ", "AJJ-KPD", "KPD-JTJ", "AJJ-RU", "AJJ-CGL", "MSB-VM", "MSB-VLCY"],
-  TPJ: ["TPJ-VM", "VM-MV", "TPJ-MV", "TJ-KIK", "MV-TVR", "NMJ-MQ", "VM-PDY", "KPD-VM", "CUPJ-VRI", "TPJ-TP", "NGT-VLNK", "TVR-KKDI", "TTP-AGX"],
+  TPJ: ["TPJ-VM", "VM-MV", "TPJ-MV", "TJ-KIK", "MV-TVR", "NMJ-MQ", "VM-PDY", "KPD-VM", "CUP J-VRI", "TPJ-TP", "NGT-VLNK", "TVR-KKDI", "TTP-AGX"],
   SA: ["JTJ-ED", "ED-PTJ", "ED-TP", "KRR-DG", "SA-VRI", "SA-MTDM", "SA-KRR", "CBE-MTP", "MTP-UAM", "PTJ-CNV"],
   PGT: ["PTJ-SRR", "SRR-CLT", "CLT-CAN", "CAN-MAQ-MAJN", "MAQ-MAJN-PADIL-TOK", "SRR-NIL", "PGT-PGTN-POY", "POY-CNV"]
 };
@@ -3044,11 +3044,11 @@ export let MajorSection = {
 //   ],
 //   'VM-MV': [
 //     "VM-SXR", "SXR-TUY", "TUY-PRT", "PRT-MBU", "MBU-NPM", "NPM-VKP",
-//     "VKP-TDPR", "TDPR-CUPJ", "CUPJ-CQS", "CQS-ALP", "ALP-PUC",
+//     "VKP-TDPR", "TDPR-CUP J", "CUP J-CQS", "CQS-ALP", "ALP-PUC",
 //     "PUC-PO", "PO-KII", "KII-CDM", "CDM-VMP", "VMP-CLN", "CLN-SY",
 //     "SY-VDL", "VDL-ANP", "ANP-NID", "NID-MV",
 //     "VM-YD", "SXR-YD", "TUY-YD", "PRT-YD", "MBU-YD", "NPM-YD",
-//     "VKP-YD", "TDPR-YD", "CUPJ-YD", "CQS-YD", "ALP-YD", "PUC-YD",
+//     "VKP-YD", "TDPR-YD", "CUP J-YD", "CQS-YD", "ALP-YD", "PUC-YD",
 //     "PO-YD", "KII-YD", "CDM-YD", "VMP-YD", "CLN-YD", "SY-YD",
 //     "VDL-YD", "ANP-YD", "NID-YD", "MV-YD"
 //   ],
@@ -3091,9 +3091,9 @@ export let MajorSection = {
 //     "ARV-YD", "MCL-YD", "PRL-YD", "AGM-YD", "TJM-YD", "TNM-YD", "TNI-YD", "AND-YD",
 //     "ACN-YD", "TRK-YD", "AYD-YD", "MMP-YD", "VKM-YD", "VM-YD"
 //   ],
-//   'CUPJ-VRI': [
-//     "CUPJ-KJKPD", "KJKPD-VLU", "VLU-NVL", "NVL-UMG", "UMG-VRI",
-//     "CUPJ-YD", "KJKPD-YD", "VLU-YD", "NVL-YD", "UMG-YD", "VRI-YD"
+//   'CUP J-VRI': [
+//     "CUP J-KJKPD", "KJKPD-VLU", "VLU-NVL", "NVL-UMG", "UMG-VRI",
+//     "CUP J-YD", "KJKPD-YD", "VLU-YD", "NVL-YD", "UMG-YD", "VRI-YD"
 //   ],
 //   'TPJ-TP': [
 //     "TPJ-TPE", "TPE-TP",
@@ -3131,10 +3131,10 @@ export let blockSection = {
     "TVNL-YD", "KDMD-YD", "VM-YD"
   ],
   'VM-MV': [
-    "VM-SXR", "SXR-TUY", "TUY-PRT", "PRT-MBU", "MBU-NPM", "NPM-TDPR", "TDPR-CUPJ", "CUPJ-ALP", "ALP-PUC",
+    "VM-SXR", "SXR-TUY", "TUY-PRT", "PRT-MBU", "MBU-NPM", "NPM-TDPR", "TDPR-CUP J", "CUP J-ALP", "ALP-PUC",
     "PUC-KII", "KII-CDM", "CDM-CLN", "CLN-SY",
     "SY-VDL", "VDL-ANP", "ANP-MV", "VM-YD", "SXR-YD", "TUY-YD", "PRT-YD", "MBU-YD", "NPM-YD", "TDPR-YD",
-    "CUPJ-YD", "ALP-YD", "PUC-YD", "KII-YD", "CDM-YD", "CLN-YD", "SY-YD", "VDL-YD", "ANP-YD", "MV-YD"
+    "CUP J-YD", "ALP-YD", "PUC-YD", "KII-YD", "CDM-YD", "CLN-YD", "SY-YD", "VDL-YD", "ANP-YD", "MV-YD"
   ],
   'TPJ-MV': [
     "TPJ-GOC", "GOC-TRB", "TRB-SGM", "SGM-BAL", "BAL-ALK", "ALK-TJ", "TJ-TT", "TT-PDV", "PDV-SPL", "SPL-KMU",
@@ -3159,7 +3159,7 @@ export let blockSection = {
     "KPD-VLR", "VLR-KNB", "KNB-ARV", "ARV-PRL", "PRL-AGM", "AGM-TJM",
     "TJM-TNM", "TNM-TNI", "TNI-TRK", "TRK-MMP", "MMP-VKM", "VKM-VM", "KPD-YD", "VLR-YD", "KNB-YD", "KMM-YD", "ARV-YD", "PRL-YD", "AGM-YD", "TJM-YD", "TNM-YD", "TNI-YD", "TRK-YD", "MMP-YD", "VKM-YD", "VM-YD"
   ],
-  'CUPJ-VRI': [
+  'CUP J-VRI': [
     "CUP J-KJKPD", "KJKPD-VLU", "VLU-NVL", "NVL-UMG", "UMG-VRI", "CUP J-YD", "KJKPD-YD", "VLU-YD", "NVL-YD", "UMG-YD", "VRI-YD"
   ],
   'TPJ-TP': [
@@ -3551,7 +3551,7 @@ export const streamData = {
     "both direction affected": ["Rd 1", "Rd 2"],
     "both direction not affected": [],
   },
-  'CUPJ-YD': {
+  'CUP J-YD': {
     "up direction affected": [],
     "down direction affected": [],
     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5"],
@@ -3816,13 +3816,6 @@ export const streamData = {
     "both direction not affected": []
   },
   'VKM-YD': {
-    "up direction affected": [],
-    "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-    "both direction not affected": []
-  }
-  ,
-  'CUP J-YD': {
     "up direction affected": [],
     "down direction affected": [],
     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
@@ -4685,7 +4678,7 @@ export let lineData = {
   'SNDI-MTUR': ['UP', 'DN'],
   'MTUR-ICG': ['UP', 'DN'],
   'ICG-TLNR': ['UP', 'DN'],
-  'TLNR-VRI': ['UP', 'DN'],  // Junction with CUPJ-VRI line
+  'TLNR-VRI': ['UP', 'DN'],  // Junction with CUP J-VRI line
   'VRI-PVN': ['UP', 'DN'],
   'PVN-ULU': ['UP', 'DN'],
   'ULU-PRKL': ['UP', 'DN'],
@@ -4709,7 +4702,7 @@ export let lineData = {
   'MTUR-YD': ['UP', 'DN'],
   'ICG-YD': ['UP', 'DN'],
   'TLNR-YD': ['UP', 'DN'],
-  'VRI-YD': ['UP', 'DN'],  // Appears in both TPJ-VM and CUPJ-VRI sections
+  'VRI-YD': ['UP', 'DN'],  // Appears in both TPJ-VM and CUP J-VRI sections
   'PVN-YD': ['UP', 'DN'],
   'ULU-YD': ['UP', 'DN'],
   'PRKL-YD': ['UP', 'DN'],
@@ -4724,8 +4717,8 @@ export let lineData = {
   'PRT-MBU': ['UP', 'DN'],
   'MBU-NPM': ['UP', 'DN'],
   'NPM-TDPR': ['UP', 'DN'],
-  'TDPR-CUPJ': ['UP', 'DN'],  // Junction with CUPJ-VRI line
-  'CUPJ-ALP': ['UP', 'DN'],
+  'TDPR-CUP J': ['UP', 'DN'],  // Junction with CUP J-VRI line
+  'CUP J-ALP': ['UP', 'DN'],
   'ALP-PUC': ['UP', 'DN'],
   'PUC-KII': ['UP', 'DN'],
   'KII-CDM': ['UP', 'DN'],
@@ -4740,7 +4733,7 @@ export let lineData = {
   'MBU-YD': ['UP', 'DN'],
   'NPM-YD': ['UP', 'DN'],
   'TDPR-YD': ['UP', 'DN'],
-  'CUPJ-YD': ['UP', 'DN'],  // Appears in both VM-MV and CUPJ-VRI sections
+  'CUP J-YD': ['UP', 'DN'],  // Appears in both VM-MV and CUP J-VRI sections
   'ALP-YD': ['UP', 'DN'],
   'PUC-YD': ['UP', 'DN'],
   'KII-YD': ['UP', 'DN'],
@@ -4848,13 +4841,13 @@ export let lineData = {
   'VKM-YD': ['SINGLE'],
   // 'VM-YD': ['UP', 'DN'],  // Already listed in multiple sections
 
-  // CUPJ-VRI Section - Single line
-  'CUPJ-KJKPD': ['SINGLE'],  // CUPJ is junction with VM-MV line
+  // CUP J-VRI Section - Single line
+  'CUP J-KJKPD': ['SINGLE'],  // CUP J is junction with VM-MV line
   'KJKPD-VLU': ['SINGLE'],
   'VLU-NVL': ['SINGLE'],
   'NVL-UMG': ['SINGLE'],
   'UMG-VRI': ['SINGLE'],  // VRI is junction with TPJ-VM line
-  // 'CUPJ-YD': ['UP', 'DN'],  // Already listed in VM-MV
+  // 'CUP J-YD': ['UP', 'DN'],  // Already listed in VM-MV
   'KJKPD-YD': ['SINGLE'],
   'VLU-YD': ['SINGLE'],
   'NVL-YD': ['SINGLE'],
@@ -5370,7 +5363,7 @@ export const depot: DepotStructure = {
     'ENGG': ["TNM", "VLR",]
   },
 
-  "CUPJ-VRI": {
+  "CUP J-VRI": {
     'TRD': ["CUP J", "VRI"],
     'S&T': ["CUP J", "VRI"],
     'ENGG': ["BVR"]
