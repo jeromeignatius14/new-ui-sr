@@ -5383,13 +5383,14 @@ export const depot: DepotStructure = {
 
   "TVR-KKDI": {
     'TRD': ["TVR","PKT"],
-    'S&T': ["TVR"],
+    'S&T': ["PKT","TVR"],
     'ENGG': ["PKT", "TTP", "B/TVR"]
   },
 
+
   "TTP-AGX": {
     'TRD': ["PKT"],
-    'S&T': ["TVR"],
+    'S&T': ["PKT","TVR"],
     'ENGG': ["TTP"]
   },
 "PTJ-SRR": {
