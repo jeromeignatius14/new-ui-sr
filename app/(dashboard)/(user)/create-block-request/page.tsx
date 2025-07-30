@@ -1107,39 +1107,39 @@ export default function CreateBlockRequestPage() {
 
     try {
       // ─── 2. Fetch existing requests and run block check ──────────────────
-      const existing = await userRequestService.getUserRequests(1, 100);
-      const requests: any[] = Array.isArray(existing?.data.requests)
-        ? existing.data.requests
-        : [];
-      const now = Date.now();
+      // const existing = await userRequestService.getUserRequests(1, 100);
+      // const requests: any[] = Array.isArray(existing?.data.requests)
+      //   ? existing.data.requests
+      //   : [];
+      // const now = Date.now();
 
-      let hasUnavailedSanctionedBlock = false;
+      // let hasUnavailedSanctionedBlock = false;
 
-      for (let i = 0; i < requests.length; i++) {
-        const req = requests[i];
-        if (
-          req?.isSanctioned === true && // sanctioned
-          req?.availedResponse === null && // not availed
-          req?.sanctionedTimeFrom // has date
-        ) {
-          const sanctionMs = new Date(req.sanctionedTimeFrom).getTime();
-          if (!Number.isNaN(sanctionMs) && now >= sanctionMs) {
-            // sanction start time is in the past (covers >24 h automatically)
-            hasUnavailedSanctionedBlock = true;
-            break;
-          }
-        }
-      }
-      console.log("level 1 passed");
+      // for (let i = 0; i < requests.length; i++) {
+      //   const req = requests[i];
+      //   if (
+      //     req?.isSanctioned === true && // sanctioned
+      //     req?.availedResponse === null && // not availed
+      //     req?.sanctionedTimeFrom // has date
+      //   ) {
+      //     const sanctionMs = new Date(req.sanctionedTimeFrom).getTime();
+      //     if (!Number.isNaN(sanctionMs) && now >= sanctionMs) {
+      //       // sanction start time is in the past (covers >24 h automatically)
+      //       hasUnavailedSanctionedBlock = true;
+      //       break;
+      //     }
+      //   }
+      // }
+      // console.log("level 1 passed");
 
-      if (hasUnavailedSanctionedBlock && !proceedAnyway) {
-        const link = `https://mobile-bms.plattrtechstudio.com/?cugNumber=${
-          session?.user?.phone}`;
-        setPopupLink(link);
-        setShowPopup(true);
-        setFormSubmitting(false);
-        return;
-      }
+      // if (hasUnavailedSanctionedBlock && !proceedAnyway) {
+      //   const link = `https://mobile-bms.plattrtechstudio.com/?cugNumber=${
+      //     session?.user?.phone}`;
+      //   setPopupLink(link);
+      //   setShowPopup(true);
+      //   setFormSubmitting(false);
+      //   return;
+      // }
 
       console.log("level 2 passed");
       // ─── 3. Client‑side validation ───────────────────────────────────────
@@ -3922,13 +3922,13 @@ export default function CreateBlockRequestPage() {
 
           {/* Submit Button */}
           <div className="flex justify-center mt-8 gap-4">
-            {/* <button
+            <button
               type="button"
               onClick={() => { window.location.href = "/dashboard"; }}
               className="w-full rounded-[50%] max-w-72 bg-violet-200 text-black font-bold text-[24px] py-4 tracking-wider border border-[#b7b7d1] hover:bg-[#baffc9] transition"
             >
               Home
-            </button> */}
+            </button>
             <button
               type="button"
               className="w-full rounded-[50%] max-w-72 bg-cyan-200 text-black font-bold text-[24px] py-4 tracking-wider border border-[#b7b7d1] hover:bg-[#f0eaff] transition"
@@ -3942,7 +3942,7 @@ export default function CreateBlockRequestPage() {
             >
               Back
             </button>
-            {showPopup && (
+            {/* {showPopup && (
               <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-white/20">
                 <div className="bg-white p-4 rounded shadow-lg w-[90%] max-w-sm text-center border border-gray-300">
                   <h2 className="text-lg font-semibold mb-2 text-black">
@@ -3952,17 +3952,7 @@ export default function CreateBlockRequestPage() {
                     You already have a sanctioned block for which availing is pending.
                   </p>
                   <div className="flex justify-center gap-3">
-                    {/* <button
-                      onClick={() => {
-                        setShowPopup(false);
-                        setProceedAnyway(true);
-                        // Re-trigger the submit or logic
-                        // handleFormSubmit; // Call the same handler again
-                      }}
-                      className="bg-gray-300 text-black px-4 py-1 rounded hover:bg-gray-400"
-                    >
-                      Proceed
-                    </button> */}
+                 
                     <button
                       onClick={() => {
                         window.open(popupLink, "_blank");
@@ -3973,13 +3963,13 @@ export default function CreateBlockRequestPage() {
                       Go to Avail Page
                     </button>
                   </div>
-                  {/* <div className="text-sm text-orange-700 mt-4">
+                  <div className="text-sm text-orange-700 mt-4">
                     Proceed is available only because the Rolling Block
                     Authorization app is under construction.{" "}
-                  </div> */}
+                  </div>
                 </div>
               </div>
-            )}
+            )} */}
 
             {showReviewModal && (
               <ReviewBlockRequestModal
