@@ -774,7 +774,7 @@ const nonCorridorRequestsFiltered = pendingRequests
 
         // Save Functionality
         const requestIds =
-          data?.data?.requests?.map((request: UserRequest) => request.id) || [];
+          preprocessedRequests.map((request: any) => request.id) || [];
         if (requestIds.length === 0) {
           alert("No requests to optimize");
           return;
@@ -956,53 +956,68 @@ const nonCorridorRequestsFiltered = pendingRequests
             weekStartsOn={1}
           />
         </div>
-{isOptimizeDialogOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
-            <div className="bg-white p-6 w-full max-w-md border border-black">
-              <div className="border-b-2 border-[#13529e] pb-3 mb-4 flex justify-between items-center">
-                <div className="flex items-center gap-4">
-                  <h2 className="text-lg font-bold text-[#13529e]">
-                    Optimize Requests
-                  </h2>
-                  <span
-                    className={`px-3 py-1 text-sm rounded-full ${
-                      isUrgentMode
-                        ? "bg-red-100 text-red-800"
-                        : "bg-blue-100 text-blue-800"
-                    } border border-black`}
-                  >
-                    {isUrgentMode ? "Urgent Mode" : "Normal Mode"}
-                  </span>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setIsOptimizeDialogOpen(false)}
-                    className="px-4 py-1 text-sm bg-white text-[#13529e] border border-black"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => handleOptimize()}
-                    disabled={optimizeMutation.isPending}
-                    className="px-4 py-1 text-sm bg-[#13529e] text-white border border-black disabled:opacity-50"
-                  >
-                    {optimizeMutation.isPending ? "Optimizing..." : "Optimize"}
-                  </button>
-                </div>
-              </div>
-              <div className="mb-4 space-y-2">
-                <p>Are you sure you want to optimize the requests for:</p>
-                <p className="font-medium">
-                  Week: {format(weekStart, "dd MMM")} -{" "}
-                  {format(weekEnd, "dd MMM yyyy")}
-                </p>
-                <p className="font-medium">
-                  Total Requests: {data?.data?.requests?.length || 0}
-                </p>
-              </div>
-            </div>
+{isOptimizeDialogOpen && (() => {
+  // Calculate the requests to be optimized for dialog preview
+  const preData = isUrgentRequests ? urgentRequestDate : [...corridorRequestsFiltered, ...nonCorridorRequestsFiltered];
+  const requestsToOptimize = preData.filter(
+    (request: UserRequest) => {
+      const requestDate = format(parseISO(request.date), "yyyy-MM-dd");
+      const selected = format(selectedDate, "yyyy-MM-dd");
+      return isUrgentRequests
+        ? request.corridorType === "Urgent Block" && requestDate === selected
+        : request.corridorType !== "Urgent Block";
+    }
+  );
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
+      <div className="bg-white p-6 w-full max-w-md border border-black">
+        <div className="border-b-2 border-[#13529e] pb-3 mb-4 flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <h2 className="text-lg font-bold text-[#13529e]">
+              Optimize Requests
+            </h2>
+            <span
+              className={`px-3 py-1 text-sm rounded-full ${
+                isUrgentMode
+                  ? "bg-red-100 text-red-800"
+                  : "bg-blue-100 text-blue-800"
+              } border border-black`}
+            >
+              {isUrgentMode ? "Urgent Mode" : "Normal Mode"}
+            </span>
           </div>
-        )}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setIsOptimizeDialogOpen(false)}
+              className="px-4 py-1 text-sm bg-white text-[#13529e] border border-black"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => handleOptimize()}
+              disabled={optimizeMutation.isPending}
+              className="px-4 py-1 text-sm bg-[#13529e] text-white border border-black disabled:opacity-50"
+            >
+              {optimizeMutation.isPending ? "Optimizing..." : "Optimize"}
+            </button>
+          </div>
+        </div>
+        <div className="mb-4 space-y-2">
+          <p>Are you sure you want to optimize the requests for:</p>
+          <p className="font-medium">
+            Week: {format(weekStart, "dd MMM")} -{" "}
+            {format(weekEnd, "dd MMM yyyy")}
+          </p>
+          <p className="font-medium">
+    {isUrgentRequests
+      ? `Total Block Request for Urgent: ${requestsToOptimize.length}`
+      : `Total Block Request for Corridor and Outside Corridor: ${requestsToOptimize.length}`}
+  </p>
+        </div>
+      </div>
+    </div>
+  );
+})()}
         {/* Urgent Blocks Section - now at the top */}
         <div className="mt-4 mb-8">
           <h2 className="border-b-2 pb-2 border-[#13529e] text-[24px] font-semibold text-[#13529e]">Urgent Blocks</h2>
