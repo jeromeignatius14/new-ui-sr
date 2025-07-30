@@ -3976,7 +3976,7 @@ export const location = {
 
 export const depot: DepotStructure = {
   "SRR-CHTS": {
-    "S&T": ["TCR", "AWY", "ERS"],
+    "S&T": ["TCR", "AWY", "ERS","WKI"],
     "ENGG": ["TCR", "CKI", "AWY", "ERS"],
     "TRD": ["TCR", "CKI", "ERS"]
   },
