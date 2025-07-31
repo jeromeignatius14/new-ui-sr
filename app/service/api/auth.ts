@@ -1,6 +1,6 @@
 import axiosInstance, { axiosPublicInstance } from "@/app/utils/axiosInstance";
 import { LoginInput } from "@/app/validation/auth";
-import router from "next/router";
+// import router from "next/router";
 
 export interface LoginResponse {
   status: boolean;
@@ -92,7 +92,9 @@ export const authService = {
         "Token refresh error:",
         error.response?.data || error.message
       );
-      router.push("/auth/login");
+       if (typeof window !== "undefined") {
+        window.location.href = "/auth/login";
+      }
       throw new Error("Session expired. Please login again.");
     }
   },
