@@ -369,8 +369,10 @@ const TRDRequest = allRequests.filter((r: UserRequest) => {
         "Line/Road",
         "Activity",
         "Status",
-        "Optimize From Time (HH:MM)",
-        "Optimize To Time (HH:MM)",
+        "Demanded From Time (HH:MM)",
+        "Demanded To Time (HH:MM)",
+        "Sanctioned From Time (HH:MM)", 
+        "Sanctioned To Time (HH:MM)",   
         "Corridor Type",
         "Department", 
         "SSE Name",
@@ -387,6 +389,17 @@ const TRDRequest = allRequests.filter((r: UserRequest) => {
         const endTime = request.demandTimeTo
           ? new Date(request.demandTimeTo).toISOString().slice(11, 16)
           : "N/A";
+const sanctionedFrom = request.sanctionedTimeFrom
+  ? new Date(request.sanctionedTimeFrom).toISOString().slice(11, 16)
+  : request.optimizeTimeFrom
+    ? new Date(request.optimizeTimeFrom).toISOString().slice(11, 16)
+    : "N/A";
+
+const sanctionedTo = request.sanctionedTimeTo
+  ? new Date(request.sanctionedTimeTo).toISOString().slice(11, 16)
+  : request.optimizeTimeTo
+    ? new Date(request.optimizeTimeTo).toISOString().slice(11, 16)
+    : "N/A";
 
         return [
           formatDate(request.date), // DD-MM-YYYY
@@ -397,6 +410,8 @@ const TRDRequest = allRequests.filter((r: UserRequest) => {
           getStatusDisplay(request).label,
           startTime,
           endTime,
+          sanctionedFrom,
+          sanctionedTo,
           request.corridorType,
           request.user?.department || request.selectedDepartment || "N/A",
           request.user?.name || "N/A",
