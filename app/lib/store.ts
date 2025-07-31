@@ -1162,7 +1162,7 @@ export const depot: DepotStructure = {
    "DG-MDU": {
       "TRD": ["DG", "MDU"],
       "S&T": ["North-MDU"],
-      "ENGG": ["DG", "MG/MDU", "BG/MDU"]
+      "ENGG": ["DG", "MG-MDU", "BG-MDU"]
     },
   
     "DG-PLNI-POY": {
@@ -1173,8 +1173,8 @@ export const depot: DepotStructure = {
   
     "MDU-VPT": {
       "TRD": ["VPT"],
-      "S&T": ["South/MDU"],
-      "ENGG": ["VPT", "BG/MDU"]
+      "S&T": ["South-MDU"],
+      "ENGG": ["VPT", "BG-MDU"]
     },
   
     "VPT-MEJ": {
@@ -1197,7 +1197,7 @@ export const depot: DepotStructure = {
     "MDU-MNM": {
       "TRD": ["MDU", "MNM"],
       "S&T": ["North-MDU"],
-      "ENGG": ["MG/MDU", "MNM"]
+      "ENGG": ["MG-MDU", "MNM"]
     },
   
     "TPJ-KKDI-MNM": {
@@ -1248,7 +1248,7 @@ export const depot: DepotStructure = {
   
     "MDU-BDNK": {
       "TRD": ["MDU", "TE"],
-      "S&T": ["South/MDU"],
+      "S&T": ["South-MDU"],
       "ENGG": ["ADPT"]
     }
   };
@@ -1258,11 +1258,11 @@ export const depotOnLocation = {
     "DG",
     "North-MDU",
     "MDU",
-    "MG/MDU",
-    "BG/MDU",
+    "MG-MDU",
+    "BG-MDU",
     "PLNI",
     "UDT",
-    "South/MDU",
+    "South-MDU",
     "VPT",
     "CVP",
     "TN",
