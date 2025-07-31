@@ -1071,12 +1071,14 @@ const nonCorridorRequestsFiltered = pendingRequests
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10"><ColumnHeader icon="time" title="Optimize" /></th>
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10"><ColumnHeader icon="work" title="Activity" /></th>
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10"><ColumnHeader icon="action" title="Actions" /></th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10"><ColumnHeader icon="view" title="View" /></th>
+
                 </tr>
               </thead>
               <tbody>
                 {urgentRequestDate.length === 0 && (
                   <tr>
-                    <td colSpan={11} className="border border-black p-2 text-[24px] text-left">No requests found.</td>
+                    <td colSpan={12} className="border border-black p-2 text-[24px] text-left">No requests found.</td>
                   </tr>
                 )}
                 {urgentRequestDate.filter((request:UserRequest)=>!request.isSanctioned).map((request: UserRequest) => (
@@ -1194,6 +1196,17 @@ const nonCorridorRequestsFiltered = pendingRequests
                         )}
                       </div>
                     </td>
+                    <td className="border border-black p-2 text-[24px]">
+  <div className="flex gap-2">
+    <Link
+      href={`/admin/view-request/${request.id}?from=request-table`}
+      className="px-2 py-1 bg-blue-600 text-white border border-black rounded inline-block text-center"
+    >
+      View
+    </Link>
+  </div>
+</td>
+
                   </tr>
                 ))}
               </tbody>
@@ -1259,13 +1272,16 @@ const nonCorridorRequestsFiltered = pendingRequests
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
                     <ColumnHeader icon="action" title="Actions" />
                   </th>
+                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="view" title="View" />
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {corridorRequestsFiltered.length === 0 && (
                   <tr>
                     <td
-                      colSpan={11}
+                      colSpan={12}
                       className="border border-black p-2 text-[24px] text-left"
                     >
                       No requests found.
@@ -1410,6 +1426,16 @@ const nonCorridorRequestsFiltered = pendingRequests
                         )}
                       </div>
                     </td>
+                                      <td className="border border-black p-2 text-[24px]">
+  <div className="flex gap-2">
+    <Link
+      href={`/admin/view-request/${request.id}?from=request-table`}
+      className="px-2 py-1 bg-blue-600 text-white border border-black rounded inline-block text-center"
+    >
+      View
+    </Link>
+  </div>
+</td>
                   </tr>
                 ))}
               </tbody>
@@ -1456,13 +1482,16 @@ const nonCorridorRequestsFiltered = pendingRequests
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
                     <ColumnHeader icon="action" title="Actions" />
                   </th>
+                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="view" title="View" />
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {nonCorridorRequestsFiltered.length === 0 && (
                   <tr>
                     <td
-                      colSpan={11}
+                      colSpan={12}
                       className="border border-black p-2 text-[24px] text-left"
                     >
                       No requests found.
@@ -1607,6 +1636,17 @@ const nonCorridorRequestsFiltered = pendingRequests
                         )}
                       </div>
                     </td>
+                    <td className="border border-black p-2 text-[24px]">
+  <div className="flex gap-2">
+    <Link
+      href={`/admin/view-request/${request.id}?from=request-table`}
+      className="px-2 py-1 bg-blue-600 text-white border border-black rounded inline-block text-center"
+    >
+      View
+    </Link>
+  </div>
+</td>
+
                   </tr>
                 ))}
               </tbody>
