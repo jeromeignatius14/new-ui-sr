@@ -403,29 +403,87 @@ const [requestToReject, setRequestToReject] = useState<{
     }
   };
 
-  const handleStatusUpdate = (id: string, accept: boolean,userDepartement:string,mobileView:string) => {
-    if (accept) {
-      updateOtherRequest(
-        {
-          id,
-          accept,
-          userDepartement,
-          mobileView
+  // const handleStatusUpdate = (id: string, accept: boolean,userDepartement:string,mobileView:string) => {
+  //   if (accept) {
+  //     updateOtherRequest(
+  //       {
+  //         id,
+  //         accept,
+  //         userDepartement,
+  //         mobileView
+  //       },
+  //       {
+  //         onSuccess: () => {
+  //           // Refetch the data after the mutation succeeds
+  //           refetch();
+  //         },
+  //       }
+  //     );
+  //   } else {
+  //   setRequestToReject({ id, userDepartement, mobileView });
+  //   setShowRejectReasonPopup(true);
+  //   }
+  // };
+
+
+const handleStatusUpdate = async (
+  id: string, 
+  accept: boolean, 
+  userDepartement: string, 
+  mobileView: string,
+  requestDateStr: string,
+  corridorType: string
+) => {
+  if (accept) {
+    // Apply the same restrictions for accept actions
+    const now = new Date();
+    const requestDate = new Date(requestDateStr);
+
+    const today = now.getDay(); // 5 = Friday
+    const hour = now.getHours();
+    const minute = now.getMinutes();
+
+    const isUrgent = corridorType === "Urgent Block";
+    const isFridayAfterNoon = today === 5 && (hour > 12 || (hour === 12 && minute >= 0));
+
+    if (!isUrgent && isFridayAfterNoon) {
+      // Define block start = tomorrow (Saturday)
+      const blockStart = new Date(now);
+      blockStart.setDate(now.getDate() + 1); // Saturday
+      blockStart.setHours(0, 0, 0, 0);
+
+      // Define block end = Sunday next week
+      const blockEnd = new Date(blockStart);
+      blockEnd.setDate(blockStart.getDate() + 8); // Sunday next week
+      blockEnd.setHours(23, 59, 59, 999);
+
+      // Block requests within [Saturday ... next Sunday]
+      if (requestDate >= blockStart && requestDate <= blockEnd) {
+        alert("You cannot accept requests from tomorrow to next Sunday on Friday after 12 PM.");
+        return;
+      }
+    }
+
+    // If all checks pass, proceed with acceptance
+    updateOtherRequest(
+      {
+        id,
+        accept,
+        userDepartement,
+        mobileView
+      },
+      {
+        onSuccess: () => {
+          refetch();
         },
-        {
-          onSuccess: () => {
-            // Refetch the data after the mutation succeeds
-            refetch();
-          },
-        }
-      );
-    } else {
+      }
+    );
+  } else {
+    // For reject actions, just set up the rejection dialog
     setRequestToReject({ id, userDepartement, mobileView });
     setShowRejectReasonPopup(true);
-    }
-  };
-
-
+  }
+};
 
   const handleConfirmReject = () => {
   if (!requestToReject || !rejectReason.trim()) return;
@@ -1144,7 +1202,7 @@ const handleDownload = () => {
                           <div className="flex gap-2 justify-center">
                             <button
                               onClick={() =>
-                                handleStatusUpdate(request.id, true,userDepartement,"mobileView")
+                                handleStatusUpdate(request.id, true,userDepartement,"mobileView",request.date,request.corridorType)
                               }
                               disabled={isMutating}
                               className="px-3 py-1 bg-green-50 hover:bg-green-100 text-green-700 text-xs rounded-md border border-green-200 flex items-center transition-colors"
@@ -1164,7 +1222,7 @@ const handleDownload = () => {
                             </button>
                             <button
                               onClick={() =>
-                                handleStatusUpdate(request.id, false,userDepartement,"mobileView")
+                                handleStatusUpdate(request.id, false,userDepartement,"mobileView",request.date,request.corridorType)
                               }
                               disabled={isMutating}
                               className="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-700 text-xs rounded-md border border-red-200 flex items-center transition-colors"
