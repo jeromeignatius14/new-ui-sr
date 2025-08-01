@@ -65,21 +65,72 @@ export default function PendingRequestsPage() {
     });
 
     // Handle accept request
-    const handleAccept = async (id: string) => {
-        if (confirm("Are you sure you want to accept this request?")) {
-            setIsAccepting(true);
-            try {
-                await acceptMutation.mutateAsync({ 
-                    id, 
-                    isAccept: true, 
-                    remark: "", 
-                    mobileView: true 
-                });
-            } finally {
-                setIsAccepting(false);
-            }
-        }
-    };
+    // const handleAccept = async (id: string) => {
+    //     if (confirm("Are you sure you want to accept this request?")) {
+    //         setIsAccepting(true);
+    //         try {
+    //             await acceptMutation.mutateAsync({ 
+    //                 id, 
+    //                 isAccept: true, 
+    //                 remark: "", 
+    //                 mobileView: true 
+    //             });
+    //         } finally {
+    //             setIsAccepting(false);
+    //         }
+    //     }
+    // };
+
+
+const handleAccept = async (
+  id: string,
+  requestDateStr: string,
+  corridorType: string
+) => {
+  const now = new Date();
+  const requestDate = new Date(requestDateStr);
+
+  const today = now.getDay(); // 5 = Friday
+  const hour = now.getHours();
+  const minute = now.getMinutes();
+
+  const isUrgent = corridorType === "Urgent Block";
+  const isFridayAfterNoon = today === 5 && (hour > 12 || (hour === 12 && minute >= 0));
+
+  if (!isUrgent && isFridayAfterNoon) {
+    // Define block start = tomorrow (Saturday)
+    const blockStart = new Date(now);
+    blockStart.setDate(now.getDate() + 1); // Saturday
+    blockStart.setHours(0, 0, 0, 0);
+
+    // Define block end = Sunday next week
+    const blockEnd = new Date(blockStart);
+    blockEnd.setDate(blockStart.getDate() + 8); // Sunday next week
+    blockEnd.setHours(23, 59, 59, 999);
+
+    // Block requests within [Saturday ... next Sunday]
+    if (requestDate >= blockStart && requestDate <= blockEnd) {
+      alert("You cannot accept requests from tomorrow to next Sunday on Friday after 12 PM.");
+      return;
+    }
+  }
+
+  if (confirm("Are you sure you want to accept this request?")) {
+    setIsAccepting(true);
+    try {
+      await acceptMutation.mutateAsync({
+        id,
+        isAccept: true,
+        remark: "",
+        mobileView: true,
+      });
+    } finally {
+      setIsAccepting(false);
+    }
+  }
+};
+
+
 
     // Handle reject request
     const handleReject = async (id: string) => {
@@ -158,8 +209,72 @@ export default function PendingRequestsPage() {
 
 
 
+// const handleBulkAccept = async () => {
+//   if (selectedRequests.size === 0) return;
+
+//   if (!confirm(`Are you sure you want to forward ${selectedRequests.size} requests?`)) return;
+
+//   setIsAccepting(true);
+//   try {
+//     // Process all requests first
+//     const promises = Array.from(selectedRequests).map(id => 
+//       acceptMutation.mutateAsync({
+//         id,
+//         isAccept: true,
+//         remark: "",
+//         mobileView: true,
+//       })
+//     );
+    
+//     await Promise.all(promises);
+    
+//     // Clear selection
+//     setSelectedRequests(new Set());
+    
+//     // Show success only once after all are done
+//     setShowSuccessModal(`${selectedRequests.size} requests forwarded successfully!`);
+//   } catch (error) {
+//     console.error("Error forwarding requests:", error);
+//     toast.error("Some requests failed. Check logs.");
+//   } finally {
+//     setIsAccepting(false);
+//   }
+// };
 const handleBulkAccept = async () => {
   if (selectedRequests.size === 0) return;
+
+  const now = new Date();
+  const today = now.getDay(); // 5 = Friday
+  const hour = now.getHours();
+  const minute = now.getMinutes();
+  const isFridayAfterNoon = today === 5 && (hour > 12 || (hour === 12 && minute >= 0));
+
+  // If it's Friday afternoon, we need to check each selected request
+  if (isFridayAfterNoon) {
+    // Define block period (Saturday to next Sunday)
+    const blockStart = new Date(now);
+    blockStart.setDate(now.getDate() + 1); // Saturday
+    blockStart.setHours(0, 0, 0, 0);
+
+    const blockEnd = new Date(blockStart);
+    blockEnd.setDate(blockStart.getDate() + 8); // Sunday next week
+    blockEnd.setHours(23, 59, 59, 999);
+
+    // Check each selected request
+    for (const id of selectedRequests) {
+      const request = pendingRequests.find(r => r.id === id);
+      if (!request) continue;
+      
+      const requestDate = new Date(request.date);
+      const isUrgent = request.corridorType === "Urgent Block";
+
+      // Block non-urgent requests within the weekend period
+      if (!isUrgent && requestDate >= blockStart && requestDate <= blockEnd) {
+        alert(`You cannot accept request ${request.divisionId || request.id} (${formatDate(request.date)}) because it falls within the weekend period (Saturday to next Sunday) on Friday after 12 PM.`);
+        return;
+      }
+    }
+  }
 
   if (!confirm(`Are you sure you want to forward ${selectedRequests.size} requests?`)) return;
 
@@ -354,6 +469,7 @@ const handleBulkAccept = async () => {
                         checked={selectedRequests.size === pendingRequests.length && pendingRequests.length > 0}
                         onChange={handleSelectAll}
                         className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]"
+                        disabled={pendingRequests.length === 0}
                     />
                     <span className="text-sm text-gray-700">Select All</span>
                 </div>
@@ -424,7 +540,7 @@ const handleBulkAccept = async () => {
                                     <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-[#E6E6FA] text-center align-middle w-32">
                                         <div className="flex gap-2 justify-center flex-col md:flex-row">
                                             <button
-                                                onClick={() => handleAccept(request.id)}
+                                                onClick={() => handleAccept(request.id, request.date, request.corridorType)}
                                                 disabled={isAccepting || isRejecting}
                                                 className="px-2 py-1 text-xs md:text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 font-bold"
                                             >
