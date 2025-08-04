@@ -831,7 +831,9 @@ export default function GenerateReportPage() {
             <table className="w-full border-2 border-black mt-1 text-[24px]">
               <thead>
                 <tr className="bg-[#e49edd] text-black text-[24px] font-bold">
-                  <th className="border-2 border-black px-2 py-1">Section</th>
+                  <th className="border-2 border-black px-2 py-1">DivisionId</th>
+                  <th className="border-2 border-black px-2 py-1">Major section</th>
+                  <th className="border-2 border-black px-2 py-1">Block Section</th>
                   <th className="border-2 border-black px-2 py-1">Date</th>
                   <th className="border-2 border-black px-2 py-1">Type</th>
                   <th className="border-2 border-black px-2 py-1">Duration</th>
@@ -882,8 +884,19 @@ export default function GenerateReportPage() {
                           key={idx}
                           className={`${rowBgColor} hover:bg-[#F3F3F3]`}
                         >
+                         <td className="border-2 border-black px-2 py-1 font-bold text-black">
+  <Link 
+    href={`/admin/view-request/${block.id}?from=sanction-table-data`}
+    className="block w-full h-full"
+  >
+    {block.DivisionId}
+  </Link>
+</td>
                           <td className="border-2 border-black px-2 py-1 font-bold text-black">
                             {block.Section}
+                          </td>
+                           <td className="border-2 border-black px-2 py-1 font-bold text-black">
+                            {block.MissionBlock}
                           </td>
                           <td className="border-2 border-black px-2 py-1 text-black">
                             {dayjs(block.Date).format("DD-MM-YY")}
@@ -910,11 +923,11 @@ export default function GenerateReportPage() {
           </div>
         </div>
         {/* Info Bar and Navigation */}
-        {/* <div className="w-full max-w-4xl flex flex-col md:flex-row items-center justify-between mt-8 mb-4 px-2">
+        <div className="w-full max-w-4xl flex flex-col md:flex-row items-center justify-between mt-8 mb-4 px-2">
           <div className="flex items-center gap-2 bg-[#cfd4ff] px-4 py-2 rounded-2xl border-2 ">
             <span className="text-[24px] font-bold text-black">Click</span>
             <span className="bg-[#00b347] text-white font-bold px-2 py-1 rounded text-[24px]">
-              Section/Block ID
+              DivisionId
             </span>
             <span className="text-[24px] font-bold text-black">
               to see further details.
@@ -929,18 +942,9 @@ export default function GenerateReportPage() {
             </button>
 
           </div>
-        </div> */}
+        </div>
 
-        <div className="w-full max-w-4xl flex flex-col items-center justify-between mt-8 mb-4 px-2">
-  <div className="flex items-center gap-4 mt-4 md:mt-0">
-    <button
-      className="flex items-center gap-2 bg-[#cfd4ff] border-2 border-black rounded-[50%] px-8 py-2 text-[24px] font-bold text-black"
-      onClick={() => router.back()}
-    >
-      Back
-    </button>
-  </div>
-</div>
+
       </div>
     </div>
   );

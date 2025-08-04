@@ -1081,7 +1081,7 @@ const nonCorridorRequestsFiltered = pendingRequests
                     <td colSpan={12} className="border border-black p-2 text-[24px] text-left">No requests found.</td>
                   </tr>
                 )}
-                {urgentRequestDate.filter((request:UserRequest)=>!request.isSanctioned).map((request: UserRequest) => (
+                {urgentRequestDate.filter((request:UserRequest)=>!request.isSanctioned).sort((a:any, b:any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
                   <tr key={`request-${request.id}-${request.date}`} className={`hover:bg-blue-50 transition-colors ${request.optimizeTimeFrom && request.optimizeTimeTo ? "bg-green-50" : ""}`}>
                      <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (
@@ -1288,7 +1288,7 @@ const nonCorridorRequestsFiltered = pendingRequests
                     </td>
                   </tr>
                 )}
-                {corridorRequestsFiltered.map((request: UserRequest) => (
+                {corridorRequestsFiltered.sort((a:any, b:any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
                   <tr
                     key={`request-${request.id}-${request.date}`}
                     className={`hover:bg-blue-50 transition-colors ${request.optimizeTimeFrom && request.optimizeTimeTo
@@ -1498,7 +1498,7 @@ const nonCorridorRequestsFiltered = pendingRequests
                     </td>
                   </tr>
                 )}
-                {nonCorridorRequestsFiltered.map((request: UserRequest) => (
+                {nonCorridorRequestsFiltered.sort((a:any, b:any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
                   <tr
                     key={`request-${request.id}-${request.date}`}
                     className={`hover:bg-blue-50 transition-colors ${request.optimizeTimeFrom && request.optimizeTimeTo
