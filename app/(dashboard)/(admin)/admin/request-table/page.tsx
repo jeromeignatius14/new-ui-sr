@@ -808,7 +808,7 @@ if (activeSummaryFilters.section.length > 0) {
                       </tr>
                     </thead>
                     <tbody>
-                      {sanctionedRequests.map(
+                      {sanctionedRequests.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(
                         (request: UserRequest, idx: number) => {
                           const status = getStatusDisplay(request);
                           return (
