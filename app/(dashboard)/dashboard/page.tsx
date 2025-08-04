@@ -72,7 +72,7 @@ const hasInProgressBlock = requestsData?.data?.requests?.find(
           <a href="/create-block-request" className="w-full rounded-full bg-[#eeb8f7] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">ENTER NEW BLOCK REQUEST</a>
           <a href="/edit-request" className="w-full rounded-full bg-[#aee6f7] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">EDIT/CANCEL PREVIOUS BLOCK REQUESTS</a>
           <a href="/request-table" className="w-full rounded-full bg-[#c7c7f7] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">SUMMARY OF MY BLOCK REQUESTS</a>
-          <a href={`https://mobile-bms.plattrtechstudio.com/?cugNumber=${session?.user?.phone}`} className="w-full rounded-full bg-[#a6f7a6] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">AVAIL BLOCK AT SITE</a>
+          <a href={`rbms://app?cugNumber=${session?.user?.phone}`} className="w-full rounded-full bg-[#a6f7a6] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">AVAIL BLOCK AT SITE</a>
 
 {hasInProgressBlock && (
   <a
@@ -274,7 +274,7 @@ if (session?.user?.role === "SM") {
         </div>
         {/* Navigation buttons */}
         <div className="flex flex-col gap-8 mt-8 w-full max-w-md items-center">
-          <a href={`https://mobile-bms.plattrtechstudio.com/?cugNumber=${session?.user?.phone}`}>
+          <a href={`rbms://app?cugNumber=${session?.user?.phone}`}>
 
             <button className="w-72 bg-[#E6E6FA] py-6 rounded-2xl border-4 border-black text-2xl font-bold text-[#13529e] shadow-lg hover:bg-[#B57CF6] hover:text-white transition-colors">
               AVAIL BLOCK AT SITE
