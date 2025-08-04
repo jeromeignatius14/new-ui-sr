@@ -923,11 +923,11 @@ export default function GenerateReportPage() {
           </div>
         </div>
         {/* Info Bar and Navigation */}
-        {/* <div className="w-full max-w-4xl flex flex-col md:flex-row items-center justify-between mt-8 mb-4 px-2">
+        <div className="w-full max-w-4xl flex flex-col md:flex-row items-center justify-between mt-8 mb-4 px-2">
           <div className="flex items-center gap-2 bg-[#cfd4ff] px-4 py-2 rounded-2xl border-2 ">
             <span className="text-[24px] font-bold text-black">Click</span>
             <span className="bg-[#00b347] text-white font-bold px-2 py-1 rounded text-[24px]">
-              Section/Block ID
+              DivisionId
             </span>
             <span className="text-[24px] font-bold text-black">
               to see further details.
@@ -942,18 +942,9 @@ export default function GenerateReportPage() {
             </button>
 
           </div>
-        </div> */}
+        </div>
 
-        <div className="w-full max-w-4xl flex flex-col items-center justify-between mt-8 mb-4 px-2">
-  <div className="flex items-center gap-4 mt-4 md:mt-0">
-    <button
-      className="flex items-center gap-2 bg-[#cfd4ff] border-2 border-black rounded-[50%] px-8 py-2 text-[24px] font-bold text-black"
-      onClick={() => router.back()}
-    >
-      Back
-    </button>
-  </div>
-</div>
+
       </div>
     </div>
   );
