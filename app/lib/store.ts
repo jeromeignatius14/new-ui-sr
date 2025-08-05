@@ -1780,9 +1780,9 @@
 // // };
 // export const depot: DepotStructure = {
 //   "TPJ-VM": {
-//     'ENGG': ["TPJ","LLI","ALU","A/VRI"],
+//     'ENGG': ["TPJ","LLI","ALU","A-VRI"],
 //     'S&T': ["TPJ", "ALU","VRI","VM"],
-//     'TRD': ["RRI","Lines","VRI/A","VRI/B","VM"]
+//     'TRD': ["RRI","Lines","VRI-A","VRI-B","VM"]
 //   },
 
 //   "VM-MV": {
@@ -1800,7 +1800,7 @@
 //   "TJ-KIK": {
 //     'TRD': ["TJ", "TVR"],
 //     'S&T': ["TJ", "KIK", "TVR"],
-//     'ENGG': ["TJ", "A/TVR"]
+//     'ENGG': ["TJ", "A-TVR"]
 //   },
 
 //   "MV-TVR": {
@@ -1842,13 +1842,13 @@
 //   "NGT-VLNK": {
 //     'TRD': ["TVR"],
 //     'S&T': ["KIK"],
-//     'ENGG': ["A/TVR"]
+//     'ENGG': ["A-TVR"]
 //   },
 
 //   "TVR- KKDI": {
 //     'TRD': ["TVR","PKT"],
 //     'S&T': ["TVR"],
-//     'ENGG': ["PKT", "TTP", "B/TVR"]
+//     'ENGG': ["PKT", "TTP", "B-TVR"]
 //   },
 
 //   "TTP-AGX": {
@@ -1987,13 +1987,13 @@
 //     "TPJ",     // Tiruchchirappalli Junction
 //     "LLI",
 //     "ALU",     // Alur
-//     "A/VRI",
+//     "A-VRI",
 //     "VRI",     // Virarakhavam
 //     "VM",      // Villupuram Junction
 //     "RRI",
 //     "Lines",
-//     "VRI/A",
-//     "VRI/B",
+//     "VRI-A",
+//     "VRI-B",
 //     "CUP J",   // Cuddalore Port Junction
 //     "MV",      // Mayiladuthurai Junction
 //   ],
@@ -5316,8 +5316,8 @@ export let lineData = {
 
 export const depot: DepotStructure = {
   "TPJ-VM": {
-    'ENGG': ["TPJ","LLI","ALU","A/VRI","VM"],
-    'S&T': ["RRI","Lines","VRI/A","VRI/B","VM"],
+    'ENGG': ["TPJ","LLI","ALU","A-VRI","VM"],
+    'S&T': ["RRI","Lines","VRI-A","VRI-B","VM"],
     'TRD': ["TPJ", "ALU","VRI","VM"]
   },
 
@@ -5336,7 +5336,7 @@ export const depot: DepotStructure = {
   "TJ-KIK": {
     'TRD': ["TJ", "TVR","KIK"],
     'S&T': ["TJ", "KIK", "TVR"],
-    'ENGG': ["TJ", "A/TVR"]
+    'ENGG': ["TJ", "A-TVR"]
   },
 
   "MV-TVR": {
@@ -5378,13 +5378,13 @@ export const depot: DepotStructure = {
   "NGT-VLNK": {
     'TRD': ["KIK"],
     'S&T': ["KIK"],
-    'ENGG': ["A/TVR"]
+    'ENGG': ["A-TVR"]
   },
 
   "TVR-KKDI": {
     'TRD': ["TVR","PKT"],
     'S&T': ["PKT","TVR"],
-    'ENGG': ["PKT", "TTP", "B/TVR"]
+    'ENGG': ["PKT", "TTP", "B-TVR"]
   },
 
 
@@ -5524,13 +5524,13 @@ export const depotOnLocation = {
     "TPJ",     // Tiruchchirappalli Junction
     "LLI",
     "ALU",     // Alur
-    "A/VRI",
+    "A-VRI",
     "VRI",     // Virarakhavam
     "VM",      // Villupuram Junction
     "RRI",
     "Lines",
-    "VRI/A",
-    "VRI/B",
+    "VRI-A",
+    "VRI-B",
     "CUP J",   // Cuddalore Port Junction
     "MV",      // Mayiladuthurai Junction
   ],
