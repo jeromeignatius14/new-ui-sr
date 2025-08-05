@@ -143,6 +143,21 @@ const ColumnHeader = ({
   );
 };
 
+
+
+function getDuration(from: string, to: string) {
+  if (!from || !to) return "";
+  const [fromH, fromM] = from.split(":").map(Number);
+  const [toH, toM] = to.split(":").map(Number);
+  let start = fromH * 60 + fromM;
+  let end = toH * 60 + toM;
+  if (end < start) end += 24 * 60;
+  const diff = end - start;
+  const hours = Math.floor(diff / 60);
+  const mins = diff % 60;
+  return `${hours}h ${mins}m`;
+}
+
 // Helper to get line/road display for a request
 const getLineOrRoad = (request: UserRequest) => {
   if (
@@ -1100,7 +1115,13 @@ const nonCorridorRequestsFiltered = pendingRequests
                     <td className="border border-black p-2 text-[24px]">{request.selectedDepo}</td>
                     <td className="border border-black p-2 text-[24px]">{request.missionBlock}</td>
                     <td className="border border-black p-2 text-[24px]">{getLineOrRoad(request)}</td>
-                    <td className="border border-black p-2 text-[24px]">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
+                    <td className="border border-black p-2 text-[24px]">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}
+                      <div className="text-[24px] text-gray-600">(
+    {request.demandTimeFrom && request.demandTimeTo
+      ? getDuration(formatTime(request.demandTimeFrom), formatTime(request.demandTimeTo))
+      : ""})
+  </div>
+                    </td>
                     <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (
                         <div className="flex gap-1 items-center">
@@ -1129,6 +1150,18 @@ const nonCorridorRequestsFiltered = pendingRequests
                             request.optimizeTimeTo !== "WrongRequest"
                             ? formatTime(request.optimizeTimeTo)
                             : "N/A"}
+                                                         <div className="text-xs text-gray-500 text-[24px]">
+                              (
+    {request.optimizeTimeFrom &&
+    request.optimizeTimeTo &&
+    request.optimizeTimeFrom !== "WrongRequest" &&
+    request.optimizeTimeTo !== "WrongRequest"
+      ? getDuration(
+          formatTime(request.optimizeTimeFrom),
+          formatTime(request.optimizeTimeTo)
+        )
+      : ""})
+  </div>
                         </>
                       )}
                     </td>
@@ -1326,6 +1359,12 @@ const nonCorridorRequestsFiltered = pendingRequests
                     <td className="border border-black p-2 text-[24px]">
                       {formatTime(request.demandTimeFrom)} -{" "}
                       {formatTime(request.demandTimeTo)}
+
+                      <div className="text-[24px] text-gray-600">(
+    {request.demandTimeFrom && request.demandTimeTo
+      ? getDuration(formatTime(request.demandTimeFrom), formatTime(request.demandTimeTo))
+      : ""})
+  </div>
                     </td>
                     <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (
@@ -1355,7 +1394,20 @@ const nonCorridorRequestsFiltered = pendingRequests
                             request.optimizeTimeTo !== "WrongRequest"
                             ? formatTime(request.optimizeTimeTo)
                             : "N/A"}
+                             <div className="text-xs text-gray-500 text-[24px]">
+                              (
+    {request.optimizeTimeFrom &&
+    request.optimizeTimeTo &&
+    request.optimizeTimeFrom !== "WrongRequest" &&
+    request.optimizeTimeTo !== "WrongRequest"
+      ? getDuration(
+          formatTime(request.optimizeTimeFrom),
+          formatTime(request.optimizeTimeTo)
+        )
+      : ""})
+  </div>
                         </>
+                        
                       )}
                     </td>
 
@@ -1536,6 +1588,11 @@ const nonCorridorRequestsFiltered = pendingRequests
                     <td className="border border-black p-2 text-[24px]">
                       {formatTime(request.demandTimeFrom)} -{" "}
                       {formatTime(request.demandTimeTo)}
+                       <div className="text-[24px] text-gray-600">(
+    {request.demandTimeFrom && request.demandTimeTo
+      ? getDuration(formatTime(request.demandTimeFrom), formatTime(request.demandTimeTo))
+      : ""})
+  </div>
                     </td>
                     <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (
@@ -1565,6 +1622,17 @@ const nonCorridorRequestsFiltered = pendingRequests
                             request.optimizeTimeTo !== "WrongRequest"
                             ? formatTime(request.optimizeTimeTo)
                             : "N/A"}
+                            <div className="text-xs text-gray-500 text-[24px]">(
+    {request.optimizeTimeFrom &&
+    request.optimizeTimeTo &&
+    request.optimizeTimeFrom !== "WrongRequest" &&
+    request.optimizeTimeTo !== "WrongRequest"
+      ? getDuration(
+          formatTime(request.optimizeTimeFrom),
+          formatTime(request.optimizeTimeTo)
+        )
+      : ""})
+  </div>
                         </>
                       )}
                     </td>
