@@ -3291,7 +3291,7 @@ export default function CreateBlockRequestPage() {
             </div>
           </div>
 
-          {userDepartment === "TRD" && (
+          {/* {userDepartment === "TRD" && ( */}
             <div className="w-full flex flex-row  items-center bg-[#e6f7c6] rounded-2xl p-3 mb-8 border-2 border-[#b6e6c6] shadow">
               {/* Type of Work dropdown */}
               <div className="flex-1 pr-2 ">
@@ -3319,7 +3319,7 @@ export default function CreateBlockRequestPage() {
               </div>
               {/* Activity dropdown */}
             </div>
-          )}
+          {/* )} */}
 
 
           {userDepartment !== "TRD" && (
