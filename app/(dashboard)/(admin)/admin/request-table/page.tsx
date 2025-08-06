@@ -507,12 +507,35 @@ const handlePendingBlockTypeChange = (value: string) => {
   // --- Filtering logic for summary table ---
   let summaryFilteredRequests = data?.data?.requests || [];
   // Date filter
+  // if (activeSummaryFilters.start) {
+  //   summaryFilteredRequests = summaryFilteredRequests.filter((r) => r.date >= activeSummaryFilters.start);
+  // }
+
+
+  // if (activeSummaryFilters.end) {
+  //   summaryFilteredRequests = summaryFilteredRequests.filter((r) => r.date <= activeSummaryFilters.end);
+  // }
+
+
   if (activeSummaryFilters.start) {
-    summaryFilteredRequests = summaryFilteredRequests.filter((r) => r.date >= activeSummaryFilters.start);
-  }
-  if (activeSummaryFilters.end) {
-    summaryFilteredRequests = summaryFilteredRequests.filter((r) => r.date <= activeSummaryFilters.end);
-  }
+  const startDate = new Date(activeSummaryFilters.start);
+  summaryFilteredRequests = summaryFilteredRequests.filter((r) => {
+    const requestDate = new Date(r.date);
+    return requestDate >= startDate;
+  });
+}
+if (activeSummaryFilters.end) {
+  const endDate = new Date(activeSummaryFilters.end);
+  summaryFilteredRequests = summaryFilteredRequests.filter((r) => {
+    const requestDate = new Date(r.date);
+    // Add one day to include the end date fully
+    const endOfDay = new Date(endDate);
+    endOfDay.setDate(endOfDay.getDate() + 1);
+    return requestDate < endOfDay;
+  });
+}
+
+
   // Block type
  if (activeSummaryFilters.blockType.length > 0) {
   // Only filter if not all types are selected
