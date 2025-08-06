@@ -9,6 +9,7 @@ import Link from "next/link";
 import { FaHome } from "react-icons/fa";
 import { useQuery } from "@tanstack/react-query";
 import { userRequestService } from "@/app/service/api/user-request";
+import axiosInstance from "@/app/utils/axiosInstance";
 
 export default function DashboardPage() {
   const { data: session, status } = useSession({
@@ -251,6 +252,29 @@ if (session?.user?.role === "SM") {
     );
   }
   if (session?.user?.role === "JE") {
+//   const handleClick = async () => {
+//   if (!session?.user?.phone) {
+//     alert("Phone number not available");
+//     return;
+//   }
+
+//   try {
+//     const response = await axiosInstance.get("/api/user-request/manager-cug", {
+//       params: { cugNumber: session.user.phone },
+//     });
+
+//     const managerCug = response.data?.data?.managerPhone;
+
+//     if (managerCug) {
+//       window.location.href = `rbms://app?cugNumber=${managerCug}`;
+//     } else {
+//       alert("Manager CUG number not found");
+//     }
+//   } catch (error) {
+//     console.error("Error fetching manager phone:", error);
+//     alert("Something went wrong while fetching manager CUG.");
+//   }
+// };
     return (
       <div className="min-h-screen w-full flex flex-col items-center bg-[#fffbe9]">
         {/* Header */}
@@ -280,6 +304,13 @@ if (session?.user?.role === "SM") {
               AVAIL BLOCK AT SITE
             </button>
           </a>
+
+          {/* <button
+      onClick={handleClick}
+      className="w-72 bg-[#E6E6FA] py-6 rounded-2xl border-4 border-black text-2xl font-bold text-[#13529e] shadow-lg hover:bg-[#B57CF6] hover:text-white transition-colors"
+    >
+      AVAIL BLOCK AT SITE
+    </button> */}
         </div>
         {/* Logout button */}
         <div className="w-full flex justify-center mt-10 mb-4">
