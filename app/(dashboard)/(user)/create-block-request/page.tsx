@@ -669,6 +669,7 @@ export default function CreateBlockRequestPage() {
 
   const userDepot = session?.user.depot;
   const userDept = session?.user.department ?? "";
+  //dept == s&t
 
   const locationSections =
     userLocation && MajorSection[userLocation as keyof typeof MajorSection]
@@ -3325,6 +3326,7 @@ export default function CreateBlockRequestPage() {
           {userDepartment !== "TRD" && (
             <div className="flex flex-col gap-2 border-2 border-[#b6e6c6] shadow rounded-2xl px-4 py-2 bg-white">
               {/* Fresh Caution Section */}
+              {userDepartment !== "S&T" && (
               <div className="w-full mt-2 bg-fuchsia-100 rounded-2xl ">
                 <div className="flex justify-between items-center mb-1 bg-fuchsia-300  rounded-2xl  px-2">
                   <span className="text-black font-bold text-[24px] ">
@@ -3462,6 +3464,7 @@ export default function CreateBlockRequestPage() {
                   </div>
                 )}
               </div>
+              )}
 
               {/* Power Block Section */}
               <div className="w-full mt-2 bg-indigo-200 rounded-2xl">
@@ -3580,6 +3583,7 @@ export default function CreateBlockRequestPage() {
               </div>
 
               {/* S&T Disconnection Section */}
+              {userDepartment !== "S&T" && (
               <div className="w-full mt-2 bg-teal-200 rounded-2xl">
                 <div className="flex justify-between items-center mb-1 bg-teal-400 rounded-2xl  px-2">
                   <span className="text-black font-bold text-[24px]">
@@ -3906,6 +3910,7 @@ export default function CreateBlockRequestPage() {
                   </div>
                 )}
               </div>
+              )}
             </div>
           )}
 
