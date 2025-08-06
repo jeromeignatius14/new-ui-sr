@@ -3291,35 +3291,34 @@ export default function CreateBlockRequestPage() {
             </div>
           </div>
 
-          {userDepartment === "TRD" && (
-            <div className="w-full flex flex-row  items-center bg-[#e6f7c6] rounded-2xl p-3 mb-8 border-2 border-[#b6e6c6] shadow">
-              {/* Type of Work dropdown */}
-              <div className="flex-1 pr-2 ">
-                <label
-                  htmlFor="repercussions"
-                  className="block text-[24px] text-nowrap font-bold text-black mb-2"
-                >
-                  Coaching Repercussions
-                </label>
-                <input
-                  id="repercussions"
-                  name="repercussions"
-                  value={formData.repercussions || ""}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="Coaching Repercussions"
-                  className="w-full border-2 border-[#2c3e50] rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200"
-                  aria-label="Route from location"
-                />
-                {errors.repercussions && (
-                  <span className="text-[24px] text-[#e07a5f] font-medium mt-2 block">
-                    {errors.repercussions}
-                  </span>
-                )}
-              </div>
-              {/* Activity dropdown */}
+          {/* //Coaching Repercussions */}
+          <div className="w-full flex flex-row  items-center bg-[#e6f7c6] rounded-2xl p-3 mb-8 border-2 border-[#b6e6c6] shadow">
+            {/* Type of Work dropdown */}
+            <div className="flex-1 pr-2 ">
+              <label
+                htmlFor="repercussions"
+                className="block text-[24px] text-nowrap font-bold text-black mb-2"
+              >
+                Coaching Repercussions
+              </label>
+              <input
+                id="repercussions"
+                name="repercussions"
+                value={formData.repercussions || ""}
+                onChange={handleInputChange}
+                required
+                placeholder="Coaching Repercussions"
+                className="w-full border-2 border-[#2c3e50] rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200"
+                aria-label="Route from location"
+              />
+              {errors.repercussions && (
+                <span className="text-[24px] text-[#e07a5f] font-medium mt-2 block">
+                  {errors.repercussions}
+                </span>
+              )}
             </div>
-          )}
+            {/* Activity dropdown */}
+          </div>
 
 
           {userDepartment !== "TRD" && (
