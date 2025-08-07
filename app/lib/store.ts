@@ -33,7 +33,7 @@ export let blockSection = {
     "SDN-SER", "SER-KON", "KON-MDU",
 
     "ABI-YD", "KQN-YD", "VDP-YD", "SDN-YD",
-    "SER-YD", "KON-YD", "MDU-YD"
+    "SER-YD", "KON-YD", "MDU-YD","AYR-YD"
   ],
   'DG-PLNI-POY': [
     "DG-API", "API-ODC", "ODC-CHPT", "CHPT-PLNI",
