@@ -38,9 +38,15 @@ export default function PendingRequestsPage() {
  const pendingRequests = (Array.isArray(data?.data?.requests) ? data.data.requests : [])
     .filter((r: UserRequest) => r.status === 'PENDING' && r.managerAcceptance === false)
     .sort((a: UserRequest, b: UserRequest) => {
+        // Priority sort: urgent blocks first
+        const urgentA = a.corridorType === 'Urgent Block' ? 0 : 1;
+        const urgentB = b.corridorType === 'Urgent Block' ? 0 : 1;
+        if (urgentA !== urgentB) return urgentA - urgentB;
+        
+        // Date sort (earliest first)
         const dateA = new Date(a.date).getTime();
         const dateB = new Date(b.date).getTime();
-        return dateB - dateA;
+        return dateA - dateB;
     })
 
     // Mutations
