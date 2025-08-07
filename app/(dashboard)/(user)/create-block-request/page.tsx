@@ -528,7 +528,6 @@ interface FormData {
   elementarySectionTo: string;
   freshCautionLocationTo: string;
   requestremarks: string;
-  remarks: string;
   selectedDepo: string;
   routeFrom: string;
   routeTo: string;
@@ -591,7 +590,6 @@ export default function CreateBlockRequestPage() {
     elementarySectionTo: "",
     freshCautionLocationTo: "",
     requestremarks: "",
-    remarks: "",
     selectedDepo: "",
     routeFrom: "",
     routeTo: "",
@@ -3250,7 +3248,7 @@ export default function CreateBlockRequestPage() {
             </div>
           </div>
 
-          {userDepartment === "TRD" && (
+            {/*Coaching*/}
             <div className="w-full flex flex-row  items-center bg-[#e6f7c6] rounded-2xl p-3 mb-8 border-2 border-[#b6e6c6] shadow">
               {/* Type of Work dropdown */}
               <div className="flex-1 pr-2 ">
@@ -3278,7 +3276,7 @@ export default function CreateBlockRequestPage() {
               </div>
               {/* Activity dropdown */}
             </div>
-          )}
+
 
 
           {userDepartment !== "TRD" && (
@@ -3872,8 +3870,8 @@ export default function CreateBlockRequestPage() {
           <div className="flex flex-row flex-wrap gap-1">
             <span className="text-black font-bold text-[24px]">Remarks:</span>
             <textarea
-              name="remarks"
-              value={formData.remarks || ""}
+              name="requestremarks"
+              value={formData.requestremarks || ""}
               onChange={handleInputChange}
               placeholder="Enter any additional remarks"
               rows={1}
