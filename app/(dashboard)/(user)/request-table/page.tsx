@@ -737,13 +737,17 @@ const handleDownload = () => {
     const excelData = filteredRequests.map((request: any) => ({
       "Date": formatDate(request.date),
       "Block Section": request.missionBlock || "N/A",
-      "UP/DN/SL/Rpad No.": request.lineDirection || "N/A",
+      "UP/DN/SL/Rpad No.": request.processedLineSections[0].lineName || request.processedLineSections[0].road|| "N/A",
       "Activity": request.activity || "N/A",
       "Duration": formatDuration(request.demandTimeFrom, request.demandTimeTo),
       "Status": request.adminRequestStatus === "ACCEPTED" ? "Y" : "N",
       "Sanctioned From": request.sanctionedTimeFrom ? formatTime(request.sanctionedTimeFrom) : "N/A",
       "Sanctioned To": request.sanctionedTimeTo ? formatTime(request.sanctionedTimeTo) : "N/A",
-      "Accept/Reject Status": request.userResponse || "Pending"
+      "Accept/Reject Status": request.userResponse || "Pending",
+      "Major section": request.selectedSection || "N/A",
+      "Corridor Type": request.corridorType || "N/A",
+      "DivisionId": request.divisionId || "N/A",
+      "OverAllStatus":request.overAllStatus || "N/A",
     }));
 
     console.log(excelData);
