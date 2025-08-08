@@ -2071,7 +2071,7 @@ export const location = {
 
 export const depot: DepotStructure = {
   "PTJ-SRR": {
-    'ENGG': ["PTJ/W","PGT/E","PGT/W","SRR","PGT"],
+    'ENGG': ["PTJ/W","PGT/E","PGT/W","SRR","PGT","KJKD"],
     'S&T': ["PGT", "SRR","MDKI"],
     'TRD': ["PGT","SRR"]
   },
