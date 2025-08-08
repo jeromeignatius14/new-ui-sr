@@ -236,6 +236,13 @@ export default function OptimiseTablePage() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
+  const [showDateValidationAlert, setShowDateValidationAlert] = useState(false);
+  const [urgentDeptFilter, setUrgentDeptFilter] = useState<string>('ALL');
+  const [corridorDeptFilter, setCorridorDeptFilter] = useState<string>('ALL');
+  const [nonCorridorDeptFilter, setNonCorridorDeptFilter] = useState<string>('ALL');
+  const [showUrgentDropdown, setShowUrgentDropdown] = useState(false);
+  const [showCorridorDropdown, setShowCorridorDropdown] = useState(false);
+  const [showNonCorridorDropdown, setShowNonCorridorDropdown] = useState(false);
 
   // For urgent mode, use the same day for start and end
   // For non-urgent mode, use Monday to Sunday
@@ -386,7 +393,9 @@ export default function OptimiseTablePage() {
   const urgentRequestDate = UrgentRequests.filter((req: any) => {
     const requestDate =
       typeof req.date === "string" ? parseISO(req.date) : req.date;
-    return isSameDay(requestDate, selectedDate);
+    const dateMatch = isSameDay(requestDate, selectedDate);
+    const deptMatch = urgentDeptFilter === 'ALL' || req.selectedDepartment === urgentDeptFilter;
+    return dateMatch && deptMatch;
   });
 
   // --- Custom: Only show requests that are pending with me, not sanctioned, and after today ---
@@ -424,6 +433,11 @@ const urgentRequests = pendingRequests
         const isUrgent = r.corridorType === "Urgent Block" || r.workType === "EMERGENCY";
         if (!isUrgent) return false;
 
+        // Department filter
+        if (urgentDeptFilter !== 'ALL' && r.selectedDepartment !== urgentDeptFilter) {
+            return false;
+        }
+
         // Handle cases where both flags are true
         if (r.powerBlockRequired && r.sntDisconnectionRequired) {
             return r.trdActionsNeeded && r.sigActionsNeeded;
@@ -451,6 +465,11 @@ const corridorRequestsFiltered = pendingRequests
         // First check if it's an urgent request
         const isCorridor = r.corridorType === "Corridor" ||r.corridorType === "Corridor Block";
         if (!isCorridor) return false;
+
+        // Department filter
+        if (corridorDeptFilter !== 'ALL' && r.selectedDepartment !== corridorDeptFilter) {
+            return false;
+        }
 
         // Handle cases where both flags are true
         if (r.powerBlockRequired && r.sntDisconnectionRequired) {
@@ -480,6 +499,11 @@ const nonCorridorRequestsFiltered = pendingRequests
         // First check if it's an urgent request
         const isNoncorridor = r.corridorType === "Outside Corridor" ||r.corridorType === "Non-Corridor Block";
         if (!isNoncorridor) return false;
+
+        // Department filter
+        if (nonCorridorDeptFilter !== 'ALL' && r.selectedDepartment !== nonCorridorDeptFilter) {
+            return false;
+        }
 
         // Handle cases where both flags are true
         if (r.powerBlockRequired && r.sntDisconnectionRequired) {
@@ -735,9 +759,24 @@ const nonCorridorRequestsFiltered = pendingRequests
   };
 
   const handleOptimize = async () => {
-
+    // Check if trying to optimize for previous dates
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
     const preData = isUrgentRequests ? urgentRequestDate : [...corridorRequestsFiltered, ...  nonCorridorRequestsFiltered]
     if (!preData) return;
+    
+    // Check if any requests are for previous dates
+    const hasPreviousDates = preData.some((request: UserRequest) => {
+      const requestDate = new Date(request.date);
+      requestDate.setHours(0, 0, 0, 0);
+      return requestDate < today;
+    });
+    
+    if (hasPreviousDates) {
+      setShowDateValidationAlert(true);
+      return;
+    }
     try {
       // Preprocess the requests
       //const preprocessedRequests = await flattenRecords(data.data.requests);
@@ -956,6 +995,8 @@ const nonCorridorRequestsFiltered = pendingRequests
             weekStartsOn={1}
           />
         </div>
+
+
 {isOptimizeDialogOpen && (() => {
   // Calculate the requests to be optimized for dialog preview
   const preData = isUrgentRequests ? urgentRequestDate : [...corridorRequestsFiltered, ...nonCorridorRequestsFiltered];
@@ -1032,7 +1073,21 @@ const nonCorridorRequestsFiltered = pendingRequests
               Sanction
             </button> */}
             <button
-              onClick={() => { setIsOptimizeDialogOpen(true); setIsUrgentRequests(true); }}
+              onClick={() => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const hasOldDates = urgentRequestDate.some((request: UserRequest) => {
+                  const reqDate = new Date(request.date);
+                  reqDate.setHours(0, 0, 0, 0);
+                  return reqDate < today;
+                });
+                if (hasOldDates) {
+                  setShowDateValidationAlert(true);
+                  return;
+                }
+                setIsOptimizeDialogOpen(true);
+                setIsUrgentRequests(true);
+              }}
               className="px-3 py-1 text-[24px] bg-white text-[#13529e] border border-black cursor-pointer hover:bg-gray-50 flex items-center"
             >
               <svg className="w-6 h-6 mr-1" viewBox="0 0 20 20" fill="currentColor">
@@ -1062,7 +1117,35 @@ const nonCorridorRequestsFiltered = pendingRequests
               <thead className={`sticky top-0 ${showRejectionModal ? "z-0" : "z-10"} bg-gray-100 shadow`}>
                 <tr className="bg-gray-50">
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10"><ColumnHeader icon="date" title="Date" /></th>
-                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10"><ColumnHeader icon="date" title="Dept" /></th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10 relative">
+                    <div className="flex items-center justify-between">
+                      <ColumnHeader icon="date" title={`Dept (${urgentDeptFilter})`} />
+                      <button
+                        onClick={() => setShowUrgentDropdown(!showUrgentDropdown)}
+                        className="ml-2 text-xs hover:bg-gray-300 px-1 rounded"
+                      >
+                        ▼
+                      </button>
+                    </div>
+                    {showUrgentDropdown && (
+                      <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[120px]">
+                        {['ALL', 'S&T', 'ENGG', 'TRD'].map((dept) => (
+                          <button
+                            key={dept}
+                            onClick={() => {
+                              setUrgentDeptFilter(dept);
+                              setShowUrgentDropdown(false);
+                            }}
+                            className={`block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 ${
+                              urgentDeptFilter === dept ? 'bg-blue-100' : ''
+                            }`}
+                          >
+                            {dept}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </th>
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10"><ColumnHeader icon="section" title="Major Section" /></th>
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10"><ColumnHeader icon="section" title="SSE" /></th>
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10"><ColumnHeader icon="section" title="Block Section" /></th>
@@ -1228,7 +1311,21 @@ const nonCorridorRequestsFiltered = pendingRequests
               Sanction
             </button> */}
             <button
-              onClick={() => { setIsOptimizeDialogOpen(true); setIsUrgentRequests(false); }}
+              onClick={() => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const hasOldDates = [...corridorRequestsFiltered, ...nonCorridorRequestsFiltered].some((request: UserRequest) => {
+                  const reqDate = new Date(request.date);
+                  reqDate.setHours(0, 0, 0, 0);
+                  return reqDate < today;
+                });
+                if (hasOldDates) {
+                  setShowDateValidationAlert(true);
+                  return;
+                }
+                setIsOptimizeDialogOpen(true);
+                setIsUrgentRequests(false);
+              }}
               className="px-3 py-1 text-[24px] bg-white text-[#13529e] border border-black cursor-pointer hover:bg-gray-50 flex items-center"
             >
               <svg className="w-6 h-6 mr-1" viewBox="0 0 20 20" fill="currentColor">
@@ -1244,8 +1341,34 @@ const nonCorridorRequestsFiltered = pendingRequests
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
                     <ColumnHeader icon="date" title="Date" />
                   </th>
-                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
-                    <ColumnHeader icon="date" title="Dept" />
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10 relative">
+                    <div className="flex items-center justify-between">
+                      <ColumnHeader icon="date" title={`Dept (${corridorDeptFilter})`} />
+                      <button
+                        onClick={() => setShowCorridorDropdown(!showCorridorDropdown)}
+                        className="ml-2 text-xs hover:bg-gray-300 px-1 rounded"
+                      >
+                        ▼
+                      </button>
+                    </div>
+                    {showCorridorDropdown && (
+                      <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[120px]">
+                        {['ALL', 'S&T', 'ENGG', 'TRD'].map((dept) => (
+                          <button
+                            key={dept}
+                            onClick={() => {
+                              setCorridorDeptFilter(dept);
+                              setShowCorridorDropdown(false);
+                            }}
+                            className={`block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 ${
+                              corridorDeptFilter === dept ? 'bg-blue-100' : ''
+                            }`}
+                          >
+                            {dept}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </th>
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
                     <ColumnHeader icon="section" title="Major Section" />
@@ -1453,8 +1576,34 @@ const nonCorridorRequestsFiltered = pendingRequests
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
                     <ColumnHeader icon="date" title="Date" />
                   </th>
-                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
-                    <ColumnHeader icon="date" title="Dept" />
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10 relative">
+                    <div className="flex items-center justify-between">
+                      <ColumnHeader icon="date" title={`Dept (${nonCorridorDeptFilter})`} />
+                      <button
+                        onClick={() => setShowNonCorridorDropdown(!showNonCorridorDropdown)}
+                        className="ml-2 text-xs hover:bg-gray-300 px-1 rounded"
+                      >
+                        ▼
+                      </button>
+                    </div>
+                    {showNonCorridorDropdown && (
+                      <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[120px]">
+                        {['ALL', 'S&T', 'ENGG', 'TRD'].map((dept) => (
+                          <button
+                            key={dept}
+                            onClick={() => {
+                              setNonCorridorDeptFilter(dept);
+                              setShowNonCorridorDropdown(false);
+                            }}
+                            className={`block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 ${
+                              nonCorridorDeptFilter === dept ? 'bg-blue-100' : ''
+                            }`}
+                          >
+                            {dept}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </th>
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
                     <ColumnHeader icon="section" title="Major Section" />
@@ -1653,6 +1802,31 @@ const nonCorridorRequestsFiltered = pendingRequests
             </table>
           </div>
         </div>
+
+        {/* Date Validation Alert */}
+        {showDateValidationAlert && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+              <div className="flex items-center gap-3 mb-4">
+                <svg className="w-8 h-8 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <h3 className="text-lg font-bold text-red-600">Invalid Date Range</h3>
+              </div>
+              <p className="text-gray-700 mb-6">
+                Cannot optimize requests for previous dates. Please check the valid date range.
+              </p>
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setShowDateValidationAlert(false)}
+                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Optimization Dialog */}
         {showRejectionModal  && (
