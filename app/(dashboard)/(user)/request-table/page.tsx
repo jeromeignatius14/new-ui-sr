@@ -613,6 +613,9 @@ const handleStatusUpdate = async (
     filteredRequests =
       data?.data?.requests?.filter((request: any) => {
         const reqDate = new Date(request.date);
+        reqDate.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+        tenDaysLater.setHours(0, 0, 0, 0);
         return reqDate >= today && reqDate <= tenDaysLater;
       }) || [];
   }
