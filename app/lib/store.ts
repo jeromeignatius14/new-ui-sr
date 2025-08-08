@@ -2071,7 +2071,7 @@ export const location = {
 
 export const depot: DepotStructure = {
   "PTJ-SRR": {
-    'ENGG': ["PTJ/W","PGT/E","PGT/W","SRR","PGT","KJKD"],
+    'ENGG': ["PTJ-W","PGT-E","PGT-W","SRR","PGT","KJKD"],
     'S&T': ["PGT", "SRR","MDKI"],
     'TRD': ["PGT","SRR"]
   },
@@ -2109,7 +2109,7 @@ export const depot: DepotStructure = {
   "PGT-PGTN-POY": {
     'TRD': ["POY"],
     'S&T': ["PGTN"],
-    'ENGG': ["KLGD","PGT/E","PGT"]
+    'ENGG': ["KLGD","PGT-E","PGT"]
   },
 
   "POY-CNV": {
@@ -2121,7 +2121,7 @@ export const depot: DepotStructure = {
 
 export const depotOnLocation = {
   "PGT": [
-    "PTJ", "SRR", "PGT", "PGT/E", "PGT/W", "TIR", "QLD", "CLT", "CAN",
+    "PTJ", "SRR", "PGT", "PGT-E", "PGT-W", "TIR", "QLD", "CLT", "CAN",
     "CS", "CHV", "ULL", "MAQ", "PAY", "KGQ", "NIL", "AAM", "POY",
     "PGTN", "KLGD"
   ]
