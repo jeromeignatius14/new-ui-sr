@@ -378,6 +378,7 @@ const TRDRequest = allRequests.filter((r: UserRequest) => {
         "SSE Name",
         "Work Location",
         "Remarks",
+        "OverAllStatus"
       ];
 
       // Map data to rows
@@ -417,6 +418,7 @@ const sanctionedTo = request.sanctionedTimeTo
           request.user?.name || "N/A",
           request.workLocationFrom,
           request.requestremarks,
+          request.overAllStatus || "N/A"
         ];
       });
 

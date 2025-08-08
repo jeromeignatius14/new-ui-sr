@@ -958,6 +958,7 @@ export default function ManagerRequestTablePage() {
         "SSE Name",
         "Work Location",
         "Remarks",
+        "overAll Status",
       ];
 
       // Map data to Excel rows
@@ -990,6 +991,7 @@ export default function ManagerRequestTablePage() {
           request.user?.name || "N/A",
           request.workLocationFrom,
           request.requestremarks,
+          request.overallStatus || "N/A", // Added overall status
         ];
       });
 
