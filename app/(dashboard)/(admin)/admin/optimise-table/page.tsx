@@ -240,9 +240,15 @@ export default function OptimiseTablePage() {
   const [urgentDeptFilter, setUrgentDeptFilter] = useState<string>('ALL');
   const [corridorDeptFilter, setCorridorDeptFilter] = useState<string>('ALL');
   const [nonCorridorDeptFilter, setNonCorridorDeptFilter] = useState<string>('ALL');
+  const [urgentActivityFilter, setUrgentActivityFilter] = useState<string>('ALL');
+  const [corridorActivityFilter, setCorridorActivityFilter] = useState<string>('ALL');
+  const [nonCorridorActivityFilter, setNonCorridorActivityFilter] = useState<string>('ALL');
   const [showUrgentDropdown, setShowUrgentDropdown] = useState(false);
   const [showCorridorDropdown, setShowCorridorDropdown] = useState(false);
   const [showNonCorridorDropdown, setShowNonCorridorDropdown] = useState(false);
+  const [showUrgentActivityDropdown, setShowUrgentActivityDropdown] = useState(false);
+  const [showCorridorActivityDropdown, setShowCorridorActivityDropdown] = useState(false);
+  const [showNonCorridorActivityDropdown, setShowNonCorridorActivityDropdown] = useState(false);
 
   // For urgent mode, use the same day for start and end
   // For non-urgent mode, use Monday to Sunday
@@ -390,13 +396,7 @@ export default function OptimiseTablePage() {
     }
   }, []);
 
-  const urgentRequestDate = UrgentRequests.filter((req: any) => {
-    const requestDate =
-      typeof req.date === "string" ? parseISO(req.date) : req.date;
-    const dateMatch = isSameDay(requestDate, selectedDate);
-    const deptMatch = urgentDeptFilter === 'ALL' || req.selectedDepartment === urgentDeptFilter;
-    return dateMatch && deptMatch;
-  });
+
 
   // --- Custom: Only show requests that are pending with me, not sanctioned, and after today ---
 const today = new Date();
@@ -438,6 +438,11 @@ const urgentRequests = pendingRequests
             return false;
         }
 
+        // Activity filter
+        if (urgentActivityFilter !== 'ALL' && r.activity !== urgentActivityFilter) {
+            return false;
+        }
+
         // Handle cases where both flags are true
         if (r.powerBlockRequired && r.sntDisconnectionRequired) {
             return r.trdActionsNeeded && r.sigActionsNeeded;
@@ -458,6 +463,12 @@ const urgentRequests = pendingRequests
     })
     .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
+  // Filter urgent requests by selected date and filters
+  const urgentRequestsForSelectedDate = urgentRequests.filter((req: UserRequest) => {
+    const requestDate = typeof req.date === "string" ? parseISO(req.date) : req.date;
+    return isSameDay(requestDate, selectedDate);
+  });
+
 
 
 const corridorRequestsFiltered = pendingRequests
@@ -468,6 +479,11 @@ const corridorRequestsFiltered = pendingRequests
 
         // Department filter
         if (corridorDeptFilter !== 'ALL' && r.selectedDepartment !== corridorDeptFilter) {
+            return false;
+        }
+
+        // Activity filter
+        if (corridorActivityFilter !== 'ALL' && r.activity !== corridorActivityFilter) {
             return false;
         }
 
@@ -502,6 +518,11 @@ const nonCorridorRequestsFiltered = pendingRequests
 
         // Department filter
         if (nonCorridorDeptFilter !== 'ALL' && r.selectedDepartment !== nonCorridorDeptFilter) {
+            return false;
+        }
+
+        // Activity filter
+        if (nonCorridorActivityFilter !== 'ALL' && r.activity !== nonCorridorActivityFilter) {
             return false;
         }
 
@@ -763,7 +784,7 @@ const nonCorridorRequestsFiltered = pendingRequests
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    const preData = isUrgentRequests ? urgentRequestDate : [...corridorRequestsFiltered, ...  nonCorridorRequestsFiltered]
+    const preData = isUrgentRequests ? urgentRequestsForSelectedDate : [...corridorRequestsFiltered, ...  nonCorridorRequestsFiltered]
     if (!preData) return;
     
     // Check if any requests are for previous dates
@@ -999,7 +1020,7 @@ const nonCorridorRequestsFiltered = pendingRequests
 
 {isOptimizeDialogOpen && (() => {
   // Calculate the requests to be optimized for dialog preview
-  const preData = isUrgentRequests ? urgentRequestDate : [...corridorRequestsFiltered, ...nonCorridorRequestsFiltered];
+  const preData = isUrgentRequests ? urgentRequestsForSelectedDate : [...corridorRequestsFiltered, ...nonCorridorRequestsFiltered];
   const requestsToOptimize = preData.filter(
     (request: UserRequest) => {
       const requestDate = format(parseISO(request.date), "yyyy-MM-dd");
@@ -1076,7 +1097,7 @@ const nonCorridorRequestsFiltered = pendingRequests
               onClick={() => {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
-                const hasOldDates = urgentRequestDate.some((request: UserRequest) => {
+                const hasOldDates = urgentRequestsForSelectedDate.some((request: UserRequest) => {
                   const reqDate = new Date(request.date);
                   reqDate.setHours(0, 0, 0, 0);
                   return reqDate < today;
@@ -1117,8 +1138,8 @@ const nonCorridorRequestsFiltered = pendingRequests
               <thead className={`sticky top-0 ${showRejectionModal ? "z-0" : "z-10"} bg-gray-100 shadow`}>
                 <tr className="bg-gray-50">
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10"><ColumnHeader icon="date" title="Date" /></th>
-                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10 relative">
-                    <div className="flex items-center justify-between">
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <div className="flex items-center justify-between relative">
                       <ColumnHeader icon="date" title={`Dept (${urgentDeptFilter})`} />
                       <button
                         onClick={() => setShowUrgentDropdown(!showUrgentDropdown)}
@@ -1126,25 +1147,25 @@ const nonCorridorRequestsFiltered = pendingRequests
                       >
                         ▼
                       </button>
+                      {showUrgentDropdown && (
+                        <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-[9999] min-w-[120px]">
+                          {['ALL', 'S&T', 'ENGG', 'TRD'].map((dept) => (
+                            <button
+                              key={dept}
+                              onClick={() => {
+                                setUrgentDeptFilter(dept);
+                                setShowUrgentDropdown(false);
+                              }}
+                              className={`block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 ${
+                                urgentDeptFilter === dept ? 'bg-blue-100' : ''
+                              }`}
+                            >
+                              {dept}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    {showUrgentDropdown && (
-                      <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[120px]">
-                        {['ALL', 'S&T', 'ENGG', 'TRD'].map((dept) => (
-                          <button
-                            key={dept}
-                            onClick={() => {
-                              setUrgentDeptFilter(dept);
-                              setShowUrgentDropdown(false);
-                            }}
-                            className={`block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 ${
-                              urgentDeptFilter === dept ? 'bg-blue-100' : ''
-                            }`}
-                          >
-                            {dept}
-                          </button>
-                        ))}
-                      </div>
-                    )}
                   </th>
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10"><ColumnHeader icon="section" title="Major Section" /></th>
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10"><ColumnHeader icon="section" title="SSE" /></th>
@@ -1152,19 +1173,68 @@ const nonCorridorRequestsFiltered = pendingRequests
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10"><ColumnHeader icon="line" title="Line / Road" /></th>
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10"><ColumnHeader icon="time" title="Demanded" /></th>
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10"><ColumnHeader icon="time" title="Optimize" /></th>
-                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10"><ColumnHeader icon="work" title="Activity" /></th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <div className="flex items-center justify-between relative">
+                      <ColumnHeader icon="work" title={`Activity (${urgentActivityFilter})`} />
+                      <button
+                        onClick={() => setShowUrgentActivityDropdown(!showUrgentActivityDropdown)}
+                        className="ml-2 text-xs hover:bg-gray-300 px-1 rounded"
+                      >
+                        ▼
+                      </button>
+                      {showUrgentActivityDropdown && (
+                        <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-[9999] min-w-[200px] max-h-60 overflow-y-auto">
+                          {['ALL', ...Object.values({
+                            'Gear': ['Point', 'EI', 'Signal', 'DC Track', 'AFTC', 'SSDAC', 'MSDAC', 'Panel', 'LC Gate Mechanical', 'LC Gate ELB', 'Emergency Sliding Boom', 'IPS', 'Conventional power supply equipment', 'System Integrity Test of each PI/EI/RRI stations', 'Cable Insulation testing (cable meggering) for one station.', 'DLBI- SGE', 'TLBI-FM Inst', 'UFSBI', 'Fuse', 'EKT'],
+                            'Tw': ['AOH', 'POH', 'IOH', 'RE POH', 'RD WORK', 'TURN OUT CHECKING', 'CROSS OVER CHECKING', 'CROSS TRACK FEEDERS CHECKING', 'GANTRY MAINTENANCE', 'CONTACT WIRE RENEWAL WORK', 'CATENARY WIRE RENEWAL WORK', 'CANTILEVER ERECTION/REPLACEMENT(2x25KV WORK)', 'MAST ERECTION(2x25KV WORK)', 'FEEDERS ERECTION(2x25KV WORK)', 'OHE PROFILING', 'OHE/CN WORK', 'OTHER SPECIAL WORKS'],
+                            'Lt': ['AOH', 'POH', 'IOH', 'RE POH', 'RD WORK', 'TURN OUT CHECKING', 'CROSS OVER CHECKING', 'CROSS TRACK FEEDERS CHECKING', 'GANTRY MAINTENANCE', 'CONTACT WIRE RENEWAL WORK', 'CATENARY WIRE RENEWAL WORK', 'CANTILEVER ERECTION/REPLACEMENT(2x25KV WORK)', 'MAST ERECTION(2x25KV WORK)', 'FEEDERS ERECTION(2x25KV WORK)', 'OHE PROFILING', 'OHE/CN WORK', 'OTHER SPECIAL WORKS'],
+                            'Machine': ['BCM ', 'DTE ', 'CSM ', 'DUOMAT', 'UNIMAT', 'MPT', 'BRM', 'TRT ', 'UTV', 'DTS', 'T28', 'SQRS', 'RGM working', 'SBCM'],
+                            'Non-Machine': ['Rail renewal', 'Welding work', 'Destressing work', 'Switch renewal', 'CMS Crossing renewal', 'SEJ Renewal', 'Glued Joint renewal', 'Dummy Glued Joint removal', 'TRR P 60 Kg', 'TRR S 60 Kg', 'TRR S 60 kg', 'TRR S 52 kg', 'Interchanging', 'Trucking out/Shifting materials', 'TWR with MFBW', 'TBTR (Br sleeper renewal)', 'TSR P 60 Kg', 'TSR S 60 Kg', 'TSR S 52 Kg', 'TTSR work', 'Jt Insp Notes Attn', 'Stretcherbar renewal', 'TFR Work', 'Ballast Unloading', 'Rail unloading', 'Lifting and packing', 'Gauge tie plate renewal', 'Sleeper renewal', 'Fish Plates O&E', 'Preliminary/Post works', 'Trucking out materials', 'Cutting Widening work', 'JCB working', 'Earth work/Muck removal', 'Crane Moving/Working', 'Attention to Track', 'Attention to Fittings', 'Attention to Bridge', 'Attention to Guard rail', 'Attention to Points & Xing', 'Attention to LC', 'Attention to Curve check rail', 'Sheet Piling work', 'Platform work', 'Platform Shelter work', 'ABSS work', 'Erection of Platform shelter purlins work', 'Erection of FOB Girders', 'Other FOB works', 'Other Track works', 'Other Bridge work']
+                          }).flat()].map((activity, index) => (
+                            <button
+                              key={`urgent-${index}-${activity}`}
+                              onClick={() => {
+                                setUrgentActivityFilter(activity);
+                                setShowUrgentActivityDropdown(false);
+                              }}
+                              className={`block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 ${
+                                urgentActivityFilter === activity ? 'bg-blue-100' : ''
+                              }`}
+                            >
+                              {activity}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </th>
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10"><ColumnHeader icon="action" title="Actions" /></th>
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10"><ColumnHeader icon="view" title="View" /></th>
 
                 </tr>
               </thead>
               <tbody>
-                {urgentRequestDate.length === 0 && (
+                {urgentRequestsForSelectedDate.filter((request:UserRequest)=>!request.isSanctioned).length === 0 && (
                   <tr>
-                    <td colSpan={12} className="border border-black p-2 text-[24px] text-left">No requests found.</td>
+                    <td colSpan={12} className="border border-black p-2 text-[24px] text-left">
+                      <div className="text-center py-4">
+                        <p className="mb-2">No requests found.</p>
+                        {(urgentDeptFilter !== 'ALL' || urgentActivityFilter !== 'ALL') && (
+                          <button
+                            onClick={() => {
+                              setUrgentDeptFilter('ALL');
+                              setUrgentActivityFilter('ALL');
+                            }}
+                            className="px-3 py-1 bg-blue-500 text-white border border-black rounded hover:bg-blue-600"
+                          >
+                            Clear Filters
+                          </button>
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 )}
-                {urgentRequestDate.filter((request:UserRequest)=>!request.isSanctioned).sort((a:any, b:any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
+                {urgentRequestsForSelectedDate.filter((request:UserRequest)=>!request.isSanctioned).sort((a:any, b:any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
                   <tr key={`request-${request.id}-${request.date}`} className={`hover:bg-blue-50 transition-colors ${request.optimizeTimeFrom && request.optimizeTimeTo ? "bg-green-50" : ""}`}>
                      <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (
@@ -1341,8 +1411,8 @@ const nonCorridorRequestsFiltered = pendingRequests
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
                     <ColumnHeader icon="date" title="Date" />
                   </th>
-                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10 relative">
-                    <div className="flex items-center justify-between">
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <div className="flex items-center justify-between relative">
                       <ColumnHeader icon="date" title={`Dept (${corridorDeptFilter})`} />
                       <button
                         onClick={() => setShowCorridorDropdown(!showCorridorDropdown)}
@@ -1350,25 +1420,25 @@ const nonCorridorRequestsFiltered = pendingRequests
                       >
                         ▼
                       </button>
+                      {showCorridorDropdown && (
+                        <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-[9999] min-w-[120px]">
+                          {['ALL', 'S&T', 'ENGG', 'TRD'].map((dept) => (
+                            <button
+                              key={dept}
+                              onClick={() => {
+                                setCorridorDeptFilter(dept);
+                                setShowCorridorDropdown(false);
+                              }}
+                              className={`block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 ${
+                                corridorDeptFilter === dept ? 'bg-blue-100' : ''
+                              }`}
+                            >
+                              {dept}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    {showCorridorDropdown && (
-                      <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[120px]">
-                        {['ALL', 'S&T', 'ENGG', 'TRD'].map((dept) => (
-                          <button
-                            key={dept}
-                            onClick={() => {
-                              setCorridorDeptFilter(dept);
-                              setShowCorridorDropdown(false);
-                            }}
-                            className={`block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 ${
-                              corridorDeptFilter === dept ? 'bg-blue-100' : ''
-                            }`}
-                          >
-                            {dept}
-                          </button>
-                        ))}
-                      </div>
-                    )}
                   </th>
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
                     <ColumnHeader icon="section" title="Major Section" />
@@ -1390,7 +1460,39 @@ const nonCorridorRequestsFiltered = pendingRequests
                   </th>
 
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
-                    <ColumnHeader icon="work" title="Activity" />
+                    <div className="flex items-center justify-between relative">
+                      <ColumnHeader icon="work" title={`Activity (${corridorActivityFilter})`} />
+                      <button
+                        onClick={() => setShowCorridorActivityDropdown(!showCorridorActivityDropdown)}
+                        className="ml-2 text-xs hover:bg-gray-300 px-1 rounded"
+                      >
+                        ▼
+                      </button>
+                      {showCorridorActivityDropdown && (
+                        <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-[9999] min-w-[200px] max-h-60 overflow-y-auto">
+                          {['ALL', ...Object.values({
+                            'Gear': ['Point', 'EI', 'Signal', 'DC Track', 'AFTC', 'SSDAC', 'MSDAC', 'Panel', 'LC Gate Mechanical', 'LC Gate ELB', 'Emergency Sliding Boom', 'IPS', 'Conventional power supply equipment', 'System Integrity Test of each PI/EI/RRI stations', 'Cable Insulation testing (cable meggering) for one station.', 'DLBI- SGE', 'TLBI-FM Inst', 'UFSBI', 'Fuse', 'EKT'],
+                            'Tw': ['AOH', 'POH', 'IOH', 'RE POH', 'RD WORK', 'TURN OUT CHECKING', 'CROSS OVER CHECKING', 'CROSS TRACK FEEDERS CHECKING', 'GANTRY MAINTENANCE', 'CONTACT WIRE RENEWAL WORK', 'CATENARY WIRE RENEWAL WORK', 'CANTILEVER ERECTION/REPLACEMENT(2x25KV WORK)', 'MAST ERECTION(2x25KV WORK)', 'FEEDERS ERECTION(2x25KV WORK)', 'OHE PROFILING', 'OHE/CN WORK', 'OTHER SPECIAL WORKS'],
+                            'Lt': ['AOH', 'POH', 'IOH', 'RE POH', 'RD WORK', 'TURN OUT CHECKING', 'CROSS OVER CHECKING', 'CROSS TRACK FEEDERS CHECKING', 'GANTRY MAINTENANCE', 'CONTACT WIRE RENEWAL WORK', 'CATENARY WIRE RENEWAL WORK', 'CANTILEVER ERECTION/REPLACEMENT(2x25KV WORK)', 'MAST ERECTION(2x25KV WORK)', 'FEEDERS ERECTION(2x25KV WORK)', 'OHE PROFILING', 'OHE/CN WORK', 'OTHER SPECIAL WORKS'],
+                            'Machine': ['BCM ', 'DTE ', 'CSM ', 'DUOMAT', 'UNIMAT', 'MPT', 'BRM', 'TRT ', 'UTV', 'DTS', 'T28', 'SQRS', 'RGM working', 'SBCM'],
+                            'Non-Machine': ['Rail renewal', 'Welding work', 'Destressing work', 'Switch renewal', 'CMS Crossing renewal', 'SEJ Renewal', 'Glued Joint renewal', 'Dummy Glued Joint removal', 'TRR P 60 Kg', 'TRR S 60 Kg', 'TRR S 60 kg', 'TRR S 52 kg', 'Interchanging', 'Trucking out/Shifting materials', 'TWR with MFBW', 'TBTR (Br sleeper renewal)', 'TSR P 60 Kg', 'TSR S 60 Kg', 'TSR S 52 Kg', 'TTSR work', 'Jt Insp Notes Attn', 'Stretcherbar renewal', 'TFR Work', 'Ballast Unloading', 'Rail unloading', 'Lifting and packing', 'Gauge tie plate renewal', 'Sleeper renewal', 'Fish Plates O&E', 'Preliminary/Post works', 'Trucking out materials', 'Cutting Widening work', 'JCB working', 'Earth work/Muck removal', 'Crane Moving/Working', 'Attention to Track', 'Attention to Fittings', 'Attention to Bridge', 'Attention to Guard rail', 'Attention to Points & Xing', 'Attention to LC', 'Attention to Curve check rail', 'Sheet Piling work', 'Platform work', 'Platform Shelter work', 'ABSS work', 'Erection of Platform shelter purlins work', 'Erection of FOB Girders', 'Other FOB works', 'Other Track works', 'Other Bridge work']
+                          }).flat()].map((activity, index) => (
+                            <button
+                              key={`corridor-${index}-${activity}`}
+                              onClick={() => {
+                                setCorridorActivityFilter(activity);
+                                setShowCorridorActivityDropdown(false);
+                              }}
+                              className={`block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 ${
+                                corridorActivityFilter === activity ? 'bg-blue-100' : ''
+                              }`}
+                            >
+                              {activity}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </th>
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
                     <ColumnHeader icon="action" title="Actions" />
@@ -1407,7 +1509,20 @@ const nonCorridorRequestsFiltered = pendingRequests
                       colSpan={12}
                       className="border border-black p-2 text-[24px] text-left"
                     >
-                      No requests found.
+                      <div className="text-center py-4">
+                        <p className="mb-2">No requests found.</p>
+                        {(corridorDeptFilter !== 'ALL' || corridorActivityFilter !== 'ALL') && (
+                          <button
+                            onClick={() => {
+                              setCorridorDeptFilter('ALL');
+                              setCorridorActivityFilter('ALL');
+                            }}
+                            className="px-3 py-1 bg-blue-500 text-white border border-black rounded hover:bg-blue-600"
+                          >
+                            Clear Filters
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 )}
@@ -1576,8 +1691,8 @@ const nonCorridorRequestsFiltered = pendingRequests
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
                     <ColumnHeader icon="date" title="Date" />
                   </th>
-                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10 relative">
-                    <div className="flex items-center justify-between">
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <div className="flex items-center justify-between relative">
                       <ColumnHeader icon="date" title={`Dept (${nonCorridorDeptFilter})`} />
                       <button
                         onClick={() => setShowNonCorridorDropdown(!showNonCorridorDropdown)}
@@ -1585,25 +1700,25 @@ const nonCorridorRequestsFiltered = pendingRequests
                       >
                         ▼
                       </button>
+                      {showNonCorridorDropdown && (
+                        <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-[9999] min-w-[120px]">
+                          {['ALL', 'S&T', 'ENGG', 'TRD'].map((dept) => (
+                            <button
+                              key={dept}
+                              onClick={() => {
+                                setNonCorridorDeptFilter(dept);
+                                setShowNonCorridorDropdown(false);
+                              }}
+                              className={`block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 ${
+                                nonCorridorDeptFilter === dept ? 'bg-blue-100' : ''
+                              }`}
+                            >
+                              {dept}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    {showNonCorridorDropdown && (
-                      <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[120px]">
-                        {['ALL', 'S&T', 'ENGG', 'TRD'].map((dept) => (
-                          <button
-                            key={dept}
-                            onClick={() => {
-                              setNonCorridorDeptFilter(dept);
-                              setShowNonCorridorDropdown(false);
-                            }}
-                            className={`block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 ${
-                              nonCorridorDeptFilter === dept ? 'bg-blue-100' : ''
-                            }`}
-                          >
-                            {dept}
-                          </button>
-                        ))}
-                      </div>
-                    )}
                   </th>
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
                     <ColumnHeader icon="section" title="Major Section" />
@@ -1625,7 +1740,39 @@ const nonCorridorRequestsFiltered = pendingRequests
                   </th>
 
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
-                    <ColumnHeader icon="work" title="Activity" />
+                    <div className="flex items-center justify-between relative">
+                      <ColumnHeader icon="work" title={`Activity (${nonCorridorActivityFilter})`} />
+                      <button
+                        onClick={() => setShowNonCorridorActivityDropdown(!showNonCorridorActivityDropdown)}
+                        className="ml-2 text-xs hover:bg-gray-300 px-1 rounded"
+                      >
+                        ▼
+                      </button>
+                      {showNonCorridorActivityDropdown && (
+                        <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-[9999] min-w-[200px] max-h-60 overflow-y-auto">
+                          {['ALL', ...Object.values({
+                            'Gear': ['Point', 'EI', 'Signal', 'DC Track', 'AFTC', 'SSDAC', 'MSDAC', 'Panel', 'LC Gate Mechanical', 'LC Gate ELB', 'Emergency Sliding Boom', 'IPS', 'Conventional power supply equipment', 'System Integrity Test of each PI/EI/RRI stations', 'Cable Insulation testing (cable meggering) for one station.', 'DLBI- SGE', 'TLBI-FM Inst', 'UFSBI', 'Fuse', 'EKT'],
+                            'Tw': ['AOH', 'POH', 'IOH', 'RE POH', 'RD WORK', 'TURN OUT CHECKING', 'CROSS OVER CHECKING', 'CROSS TRACK FEEDERS CHECKING', 'GANTRY MAINTENANCE', 'CONTACT WIRE RENEWAL WORK', 'CATENARY WIRE RENEWAL WORK', 'CANTILEVER ERECTION/REPLACEMENT(2x25KV WORK)', 'MAST ERECTION(2x25KV WORK)', 'FEEDERS ERECTION(2x25KV WORK)', 'OHE PROFILING', 'OHE/CN WORK', 'OTHER SPECIAL WORKS'],
+                            'Lt': ['AOH', 'POH', 'IOH', 'RE POH', 'RD WORK', 'TURN OUT CHECKING', 'CROSS OVER CHECKING', 'CROSS TRACK FEEDERS CHECKING', 'GANTRY MAINTENANCE', 'CONTACT WIRE RENEWAL WORK', 'CATENARY WIRE RENEWAL WORK', 'CANTILEVER ERECTION/REPLACEMENT(2x25KV WORK)', 'MAST ERECTION(2x25KV WORK)', 'FEEDERS ERECTION(2x25KV WORK)', 'OHE PROFILING', 'OHE/CN WORK', 'OTHER SPECIAL WORKS'],
+                            'Machine': ['BCM ', 'DTE ', 'CSM ', 'DUOMAT', 'UNIMAT', 'MPT', 'BRM', 'TRT ', 'UTV', 'DTS', 'T28', 'SQRS', 'RGM working', 'SBCM'],
+                            'Non-Machine': ['Rail renewal', 'Welding work', 'Destressing work', 'Switch renewal', 'CMS Crossing renewal', 'SEJ Renewal', 'Glued Joint renewal', 'Dummy Glued Joint removal', 'TRR P 60 Kg', 'TRR S 60 Kg', 'TRR S 60 kg', 'TRR S 52 kg', 'Interchanging', 'Trucking out/Shifting materials', 'TWR with MFBW', 'TBTR (Br sleeper renewal)', 'TSR P 60 Kg', 'TSR S 60 Kg', 'TSR S 52 Kg', 'TTSR work', 'Jt Insp Notes Attn', 'Stretcherbar renewal', 'TFR Work', 'Ballast Unloading', 'Rail unloading', 'Lifting and packing', 'Gauge tie plate renewal', 'Sleeper renewal', 'Fish Plates O&E', 'Preliminary/Post works', 'Trucking out materials', 'Cutting Widening work', 'JCB working', 'Earth work/Muck removal', 'Crane Moving/Working', 'Attention to Track', 'Attention to Fittings', 'Attention to Bridge', 'Attention to Guard rail', 'Attention to Points & Xing', 'Attention to LC', 'Attention to Curve check rail', 'Sheet Piling work', 'Platform work', 'Platform Shelter work', 'ABSS work', 'Erection of Platform shelter purlins work', 'Erection of FOB Girders', 'Other FOB works', 'Other Track works', 'Other Bridge work']
+                          }).flat()].map((activity, index) => (
+                            <button
+                              key={`noncorridor-${index}-${activity}`}
+                              onClick={() => {
+                                setNonCorridorActivityFilter(activity);
+                                setShowNonCorridorActivityDropdown(false);
+                              }}
+                              className={`block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 ${
+                                nonCorridorActivityFilter === activity ? 'bg-blue-100' : ''
+                              }`}
+                            >
+                              {activity}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </th>
 
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
@@ -1643,7 +1790,20 @@ const nonCorridorRequestsFiltered = pendingRequests
                       colSpan={12}
                       className="border border-black p-2 text-[24px] text-left"
                     >
-                      No requests found.
+                      <div className="text-center py-4">
+                        <p className="mb-2">No requests found.</p>
+                        {(nonCorridorDeptFilter !== 'ALL' || nonCorridorActivityFilter !== 'ALL') && (
+                          <button
+                            onClick={() => {
+                              setNonCorridorDeptFilter('ALL');
+                              setNonCorridorActivityFilter('ALL');
+                            }}
+                            className="px-3 py-1 bg-blue-500 text-white border border-black rounded hover:bg-blue-600"
+                          >
+                            Clear Filters
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 )}
