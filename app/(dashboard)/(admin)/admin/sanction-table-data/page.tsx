@@ -831,7 +831,7 @@ export default function GenerateReportPage() {
             <table className="w-full border-2 border-black mt-1 text-[24px]">
               <thead>
                 <tr className="bg-[#e49edd] text-black text-[24px] font-bold">
-                  <th className="border-2 border-black px-2 py-1">DivisionId</th>
+                  <th className="border-2 border-black px-2 py-1">RequestId</th>
                   <th className="border-2 border-black px-2 py-1">Major section</th>
                   <th className="border-2 border-black px-2 py-1">Block Section</th>
                   <th className="border-2 border-black px-2 py-1">Date</th>

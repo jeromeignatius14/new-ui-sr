@@ -33,6 +33,7 @@ export interface UsersResponse {
 }
 
 export interface UserRequest {
+    overallStatus: string;
     overAllStatus: string;
     divisionId: string;
     sanctionedTimeTo: any;
