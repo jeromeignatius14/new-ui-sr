@@ -443,12 +443,7 @@ export default function OptimiseTablePage() {
     if (!request.status || request.status.toUpperCase() !== "APPROVED") return false;
     if (request.isSanctioned) return false;
     if (!request.date) return false;
-
-    const reqDate = new Date(request.date);
-    reqDate.setHours(0, 0, 0, 0);
-
-    // Include requests for today and future dates
-    return reqDate >= today;
+    return true;
   });
 
   // console.log("pendingRequests.length", pendingRequests.length);
@@ -802,23 +797,39 @@ export default function OptimiseTablePage() {
   };
 
   const handleOptimize = async () => {
-    // Check if trying to optimize for previous dates
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const nextWeekStart = new Date(today);
+    nextWeekStart.setDate(today.getDate() + (7 - today.getDay()));
+    nextWeekStart.setHours(0, 0, 0, 0);
 
     const preData = isUrgentRequests ? urgentRequestsForSelectedDate : [...corridorRequestsFiltered, ...nonCorridorRequestsFiltered]
     if (!preData) return;
 
-    // Check if any requests are for previous dates
-    const hasPreviousDates = preData.some((request: UserRequest) => {
-      const requestDate = new Date(request.date);
-      requestDate.setHours(0, 0, 0, 0);
-      return requestDate < today;
-    });
+    // For non-urgent requests, check if trying to optimize for current week
+    if (!isUrgentRequests) {
+      const hasCurrentWeekDates = preData.some((request: UserRequest) => {
+        const requestDate = new Date(request.date);
+        requestDate.setHours(0, 0, 0, 0);
+        return requestDate < nextWeekStart;
+      });
 
-    if (hasPreviousDates) {
-      setShowDateValidationAlert(true);
-      return;
+      if (hasCurrentWeekDates) {
+        setShowDateValidationAlert(true);
+        return;
+      }
+    } else {
+      // For urgent requests, check if any requests are for previous dates
+      const hasPreviousDates = preData.some((request: UserRequest) => {
+        const requestDate = new Date(request.date);
+        requestDate.setHours(0, 0, 0, 0);
+        return requestDate < today;
+      });
+
+      if (hasPreviousDates) {
+        setShowDateValidationAlert(true);
+        return;
+      }
     }
     try {
       // Preprocess the requests
@@ -1235,12 +1246,12 @@ export default function OptimiseTablePage() {
               onClick={() => {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
-                const hasOldDates = urgentRequestsForSelectedDate.some((request: UserRequest) => {
+                const hasPreviousDays = urgentRequestsForSelectedDate.some((request: UserRequest) => {
                   const reqDate = new Date(request.date);
                   reqDate.setHours(0, 0, 0, 0);
                   return reqDate < today;
                 });
-                if (hasOldDates) {
+                if (hasPreviousDays) {
                   setShowDateValidationAlert(true);
                   return;
                 }
@@ -1455,12 +1466,17 @@ export default function OptimiseTablePage() {
               onClick={() => {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
-                const hasOldDates = [...corridorRequestsFiltered, ...nonCorridorRequestsFiltered].some((request: UserRequest) => {
+                const nextWeekStart = new Date(today);
+                nextWeekStart.setDate(today.getDate() + (7 - today.getDay()));
+                nextWeekStart.setHours(0, 0, 0, 0);
+                
+                const hasCurrentWeekDates = [...corridorRequestsFiltered, ...nonCorridorRequestsFiltered].some((request: UserRequest) => {
                   const reqDate = new Date(request.date);
                   reqDate.setHours(0, 0, 0, 0);
-                  return reqDate < today;
+                  return reqDate < nextWeekStart;
                 });
-                if (hasOldDates) {
+                
+                if (hasCurrentWeekDates) {
                   setShowDateValidationAlert(true);
                   return;
                 }
@@ -1929,7 +1945,7 @@ export default function OptimiseTablePage() {
 
         {/* Date Validation Alert */}
         {showDateValidationAlert && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-transparent bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
               <div className="flex items-center gap-3 mb-4">
                 <svg className="w-8 h-8 text-red-500" fill="currentColor" viewBox="0 0 20 20">
@@ -1938,7 +1954,7 @@ export default function OptimiseTablePage() {
                 <h3 className="text-lg font-bold text-red-600">Invalid Date Range</h3>
               </div>
               <p className="text-gray-700 mb-6">
-                Cannot optimize requests for previous dates. Please check the valid date range.
+                Cannot optimize requests for invalid date range. For corridor/non-corridor requests, only next week optimization is allowed. For urgent requests, previous dates are not allowed.
               </p>
               <div className="flex justify-end">
                 <button
