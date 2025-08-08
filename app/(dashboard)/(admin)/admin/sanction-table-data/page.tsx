@@ -831,10 +831,11 @@ export default function GenerateReportPage() {
             <table className="w-full border-2 border-black mt-1 text-[24px]">
               <thead>
                 <tr className="bg-[#e49edd] text-black text-[24px] font-bold">
-                  <th className="border-2 border-black px-2 py-1">DivisionId</th>
+                  
+                  <th className="border-2 border-black px-2 py-1">Date</th>
+                  <th className="border-2 border-black px-2 py-1">RequestId</th>
                   <th className="border-2 border-black px-2 py-1">Major section</th>
                   <th className="border-2 border-black px-2 py-1">Block Section</th>
-                  <th className="border-2 border-black px-2 py-1">Date</th>
                   <th className="border-2 border-black px-2 py-1">Type</th>
                   <th className="border-2 border-black px-2 py-1">Duration</th>
                   <th className="border-2 border-black px-2 py-1">Status</th>
@@ -884,9 +885,13 @@ export default function GenerateReportPage() {
                           key={idx}
                           className={`${rowBgColor} hover:bg-[#F3F3F3]`}
                         >
+                           <td className="border-2 border-black px-2 py-1 text-black">
+                            {dayjs(block.Date).format("DD-MM-YY")}
+
+                          </td>
                          <td className="border-2 border-black px-2 py-1 font-bold text-black">
   <Link 
-    href={`/admin/view-request/${block.id}?from=sanction-table-data`}
+    href={``}
     className="block w-full h-full"
   >
     {block.DivisionId}
@@ -898,10 +903,7 @@ export default function GenerateReportPage() {
                            <td className="border-2 border-black px-2 py-1 font-bold text-black">
                             {block.MissionBlock}
                           </td>
-                          <td className="border-2 border-black px-2 py-1 text-black">
-                            {dayjs(block.Date).format("DD-MM-YY")}
-
-                          </td>
+                         
                           <td className="border-2 border-black px-2 py-1 text-black">
                             {block.Type}
                           </td>
