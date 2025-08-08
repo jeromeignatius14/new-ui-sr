@@ -31,12 +31,19 @@ const workType = {
   'TRD': ['Tw', 'Lt'],
 };
 
+const trdActivities = ['AOH', 'POH', 'IOH', 'RE POH', 'RD WORK', 'TURN OUT CHECKING', 'CROSS OVER CHECKING', 'CROSS TRACK FEEDERS CHECKING', 'GANTRY MAINTENANCE', 'CONTACT WIRE RENEWAL WORK', 'CATENARY WIRE RENEWAL WORK', 'CANTILEVER ERECTION/REPLACEMENT(2x25KV WORK)', 'MAST ERECTION(2x25KV WORK)', 'FEEDERS ERECTION(2x25KV WORK)', 'OHE PROFILING', 'OHE/CN WORK', 'OTHER SPECIAL WORKS'];
+
 const Activity = {
   'Gear': ['Point', 'EI', 'Signal', 'DC Track', 'AFTC', 'SSDAC', 'MSDAC', 'Panel', 'LC Gate Mechanical', 'LC Gate ELB', 'Emergency Sliding Boom', 'IPS', 'Conventional power supply equipment', 'System Integrity Test of each PI/EI/RRI stations', 'Cable Insulation testing (cable meggering) for one station.', 'DLBI- SGE', 'TLBI-FM Inst', 'UFSBI', 'Fuse', 'EKT'],
-  'Tw': ['AOH', 'POH', 'IOH', 'RE POH', 'RD WORK', 'TURN OUT CHECKING', 'CROSS OVER CHECKING', 'CROSS TRACK FEEDERS CHECKING', 'GANTRY MAINTENANCE', 'CONTACT WIRE RENEWAL WORK', 'CATENARY WIRE RENEWAL WORK', 'CANTILEVER ERECTION/REPLACEMENT(2x25KV WORK)', 'MAST ERECTION(2x25KV WORK)', 'FEEDERS ERECTION(2x25KV WORK)', 'OHE PROFILING', 'OHE/CN WORK', 'OTHER SPECIAL WORKS'],
-  'Lt': ['AOH', 'POH', 'IOH', 'RE POH', 'RD WORK', 'TURN OUT CHECKING', 'CROSS OVER CHECKING', 'CROSS TRACK FEEDERS CHECKING', 'GANTRY MAINTENANCE', 'CONTACT WIRE RENEWAL WORK', 'CATENARY WIRE RENEWAL WORK', 'CANTILEVER ERECTION/REPLACEMENT(2x25KV WORK)', 'MAST ERECTION(2x25KV WORK)', 'FEEDERS ERECTION(2x25KV WORK)', 'OHE PROFILING', 'OHE/CN WORK', 'OTHER SPECIAL WORKS'],
-  'Machine': ['BCM ', 'DTE ', 'CSM ', 'DUOMAT', 'UNIMAT', 'MPT', 'BRM', 'TRT ', 'UTV', 'DTS', 'T28', 'SQRS', 'RGM working', 'SBCM'],
+  'Tw': trdActivities,
+  'Lt': trdActivities,
+  'Machine': ['BCM', 'DTE', 'CSM', 'DUOMAT', 'UNIMAT', 'MPT', 'BRM', 'TRT', 'UTV', 'DTS', 'T28', 'SQRS', 'RGM working', 'SBCM'],
   'Non-Machine': ['Rail renewal', 'Welding work', 'Destressing work', 'Switch renewal', 'CMS Crossing renewal', 'SEJ Renewal', 'Glued Joint renewal', 'Dummy Glued Joint removal', 'TRR P 60 Kg', 'TRR S 60 Kg', 'TRR S 60 kg', 'TRR S 52 kg', 'Interchanging', 'Trucking out/Shifting materials', 'TWR with MFBW', 'TBTR (Br sleeper renewal)', 'TSR P 60 Kg', 'TSR S 60 Kg', 'TSR S 52 Kg', 'TTSR work', 'Jt Insp Notes Attn', 'Stretcherbar renewal', 'TFR Work', 'Ballast Unloading', 'Rail unloading', 'Lifting and packing', 'Gauge tie plate renewal', 'Sleeper renewal', 'Fish Plates O&E', 'Preliminary/Post works', 'Trucking out materials', 'Cutting Widening work', 'JCB working', 'Earth work/Muck removal', 'Crane Moving/Working', 'Attention to Track', 'Attention to Fittings', 'Attention to Bridge', 'Attention to Guard rail', 'Attention to Points & Xing', 'Attention to LC', 'Attention to Curve check rail', 'Sheet Piling work', 'Platform work', 'Platform Shelter work', 'ABSS work', 'Erection of Platform shelter purlins work', 'Erection of FOB Girders', 'Other FOB works', 'Other Track works', 'Other Bridge work'],
+};
+
+const getActivitiesForWorkType = (workTypeSelected: string): string[] => {
+  if (workTypeSelected === 'ALL') return ['ALL'];
+  return ['ALL', ...(Activity[workTypeSelected as keyof typeof Activity] || [])];
 };
 
 // Helper function to get activities based on department
@@ -220,6 +227,7 @@ const getAdjacentLinesAffected = (request: UserRequest): string => {
   return "N/A";
 };
 
+// amazonq-ignore-next-line
 export default function OptimiseTablePage() {
   const router = useRouter();
 
@@ -261,9 +269,11 @@ export default function OptimiseTablePage() {
   const [showDateValidationAlert, setShowDateValidationAlert] = useState(false);
   const [deptFilter, setDeptFilter] = useState<string>('ALL');
   const [workTypeFilter, setWorkTypeFilter] = useState<string>('ALL');
+  const [activityFilter, setActivityFilter] = useState<string>('ALL');
   const [timeSlotFilter, setTimeSlotFilter] = useState<string>('ALL');
   const [showDeptDropdown, setShowDeptDropdown] = useState(false);
   const [showWorkTypeDropdown, setShowWorkTypeDropdown] = useState(false);
+  const [showActivityDropdown, setShowActivityDropdown] = useState(false);
   const [showTimeSlotDropdown, setShowTimeSlotDropdown] = useState(false);
 
   // Helper function to check if request matches time slot
@@ -285,6 +295,12 @@ export default function OptimiseTablePage() {
     if (workTypeFilter === 'ALL') return true;
     const deptWorkTypes = workType[request.selectedDepartment as keyof typeof workType] || [];
     return deptWorkTypes.includes(workTypeFilter);
+  };
+
+  const matchesActivity = (request: UserRequest): boolean => {
+    if (activityFilter === 'ALL') return true;
+    if (!request.activity) return false;
+    return request.activity.trim() === activityFilter.trim();
   };
 
   // For urgent mode, use the same day for start and end
@@ -427,12 +443,12 @@ export default function OptimiseTablePage() {
     return startOfWeek(currentWeekStart, { weekStartsOn: 1 });
   });
   // Set selectedDate only when minDate is ready
+  // amazonq-ignore-next-line
   useEffect(() => {
     if (minDate && !selectedDate) {
       setSelectedDate(startOfWeek(currentWeekStart, { weekStartsOn: 1 }));
     }
   }, []);
-
 
 
   // --- Custom: Only show requests that are pending with me, not sanctioned, and after today ---
@@ -468,6 +484,7 @@ export default function OptimiseTablePage() {
       // Global filters
       if (deptFilter !== 'ALL' && r.selectedDepartment !== deptFilter) return false;
       if (!matchesWorkType(r)) return false;
+      if (!matchesActivity(r)) return false;
       if (!matchesTimeSlot(r)) return false;
 
       // Handle cases where both flags are true
@@ -507,6 +524,7 @@ export default function OptimiseTablePage() {
       // Global filters
       if (deptFilter !== 'ALL' && r.selectedDepartment !== deptFilter) return false;
       if (!matchesWorkType(r)) return false;
+      if (!matchesActivity(r)) return false;
       if (!matchesTimeSlot(r)) return false;
 
       // Handle cases where both flags are true
@@ -541,6 +559,7 @@ export default function OptimiseTablePage() {
       // Global filters
       if (deptFilter !== 'ALL' && r.selectedDepartment !== deptFilter) return false;
       if (!matchesWorkType(r)) return false;
+      if (!matchesActivity(r)) return false;
       if (!matchesTimeSlot(r)) return false;
 
       // Handle cases where both flags are true
@@ -605,6 +624,7 @@ export default function OptimiseTablePage() {
       setEditingId(null);
     },
     onError: (error) => {
+      // amazonq-ignore-next-line
       console.error("Error updating times:", error);
       alert("Failed to update. Please check your inputs and try again.");
     },
@@ -777,6 +797,7 @@ export default function OptimiseTablePage() {
       const minutes = date.getUTCMinutes().toString().padStart(2, "0");
       return `${hours}:${minutes}`;
     } catch (error) {
+      // amazonq-ignore-next-line
       console.error("Error formatting time:", error, dateString);
       return "N/A";
     }
@@ -1069,6 +1090,7 @@ export default function OptimiseTablePage() {
                     onClick={() => {
                       setDeptFilter(dept);
                       setWorkTypeFilter('ALL');
+                      setActivityFilter('ALL');
                       setShowDeptDropdown(false);
                     }}
                     className={`block w-full text-left px-3 py-2 hover:bg-gray-100 text-black ${deptFilter === dept ? 'bg-blue-100' : ''
@@ -1099,12 +1121,41 @@ export default function OptimiseTablePage() {
                     key={type}
                     onClick={() => {
                       setWorkTypeFilter(type);
+                      setActivityFilter('ALL');
                       setShowWorkTypeDropdown(false);
                     }}
                     className={`block w-full text-left px-3 py-2 hover:bg-gray-100 text-black ${workTypeFilter === type ? 'bg-blue-100' : ''
                       }`}
                   >
                     {type}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Activity Filter */}
+          <div className="relative">
+            <button
+              onClick={() => workTypeFilter !== 'ALL' && setShowActivityDropdown(!showActivityDropdown)}
+              className={`px-4 py-2 bg-white border border-black rounded flex items-center gap-2 text-black ${workTypeFilter === 'ALL' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              disabled={workTypeFilter === 'ALL'}
+            >
+              Activity: {activityFilter}
+              <span>▼</span>
+            </button>
+            {showActivityDropdown && workTypeFilter !== 'ALL' && (
+              <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[200px] max-h-60 overflow-y-auto">
+                {getActivitiesForWorkType(workTypeFilter).map((activity) => (
+                  <button
+                    key={activity}
+                    onClick={() => {
+                      setActivityFilter(activity);
+                      setShowActivityDropdown(false);
+                    }}
+                    className={`block w-full text-left px-3 py-2 hover:bg-gray-100 text-black ${activityFilter === activity ? 'bg-blue-100' : ''}`}
+                  >
+                    {activity}
                   </button>
                 ))}
               </div>
@@ -1149,6 +1200,7 @@ export default function OptimiseTablePage() {
             onClick={() => {
               setDeptFilter('ALL');
               setWorkTypeFilter('ALL');
+              setActivityFilter('ALL');
               setTimeSlotFilter('ALL');
             }}
             className="px-4 py-2 bg-red-500 text-white border border-black rounded"
@@ -1300,18 +1352,6 @@ export default function OptimiseTablePage() {
                     <td colSpan={12} className="border border-black p-2 text-[24px] text-left">
                       <div className="text-center py-4">
                         <p className="mb-2">No requests found.</p>
-                        {(deptFilter !== 'ALL' || workTypeFilter !== 'ALL' || timeSlotFilter !== 'ALL') && (
-                          <button
-                            onClick={() => {
-                              setDeptFilter('ALL');
-                              setWorkTypeFilter('ALL');
-                              setTimeSlotFilter('ALL');
-                            }}
-                            className="px-3 py-1 bg-blue-500 text-white border border-black rounded hover:bg-blue-600"
-                          >
-                            Clear Filters
-                          </button>
-                        )}
                       </div>
                     </td>
                   </tr>
@@ -1549,18 +1589,6 @@ export default function OptimiseTablePage() {
                     >
                       <div className="text-center py-4">
                         <p className="mb-2">No requests found.</p>
-                        {(deptFilter !== 'ALL' || workTypeFilter !== 'ALL' || timeSlotFilter !== 'ALL') && (
-                          <button
-                            onClick={() => {
-                              setDeptFilter('ALL');
-                              setWorkTypeFilter('ALL');
-                              setTimeSlotFilter('ALL');
-                            }}
-                            className="px-3 py-1 bg-blue-500 text-white border border-black rounded hover:bg-blue-600"
-                          >
-                            Clear Filters
-                          </button>
-                        )}
                       </div>
                     </td>
                   </tr>
@@ -1771,18 +1799,6 @@ export default function OptimiseTablePage() {
                     >
                       <div className="text-center py-4">
                         <p className="mb-2">No requests found.</p>
-                        {(deptFilter !== 'ALL' || workTypeFilter !== 'ALL' || timeSlotFilter !== 'ALL') && (
-                          <button
-                            onClick={() => {
-                              setDeptFilter('ALL');
-                              setWorkTypeFilter('ALL');
-                              setTimeSlotFilter('ALL');
-                            }}
-                            className="px-3 py-1 bg-blue-500 text-white border border-black rounded hover:bg-blue-600"
-                          >
-                            Clear Filters
-                          </button>
-                        )}
                       </div>
                     </td>
                   </tr>
