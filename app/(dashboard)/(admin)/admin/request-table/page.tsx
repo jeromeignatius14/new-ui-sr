@@ -226,7 +226,7 @@ const TotalRequests = allRequests.filter((r: UserRequest) => {
   return (
     !r.isSanctioned &&
     (r.overAllStatus === "with optg.")&&
-    reqDate > today
+    reqDate >= today
   );
 }).length;
 
@@ -239,7 +239,7 @@ const ENGGRequest = allRequests.filter((r: UserRequest) => {
     !r.isSanctioned &&
     r.selectedDepartment === "ENGG" &&
     (r.overAllStatus === "with optg.")&&
-    reqDate > today
+    reqDate >= today
   );
 }).length;
 
@@ -252,7 +252,7 @@ const SandTRequest = allRequests.filter((r: UserRequest) => {
     !r.isSanctioned &&
     r.selectedDepartment === "S&T" &&
     (r.overAllStatus === "with optg.")&&
-    reqDate > today
+    reqDate >= today
   );
 }).length;
 
