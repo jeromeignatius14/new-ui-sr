@@ -101,7 +101,7 @@ export default function ViewRequestPage() {
   }
 
   if (error) {
-     router.push('/auth/login');
+    router.push('/auth/login');
     // return (
     //   <div className="min-h-screen bg-white p-3 border border-black flex items-center justify-center">
     //     <div className="text-center py-5 text-red-600">
@@ -139,15 +139,15 @@ export default function ViewRequestPage() {
           >
             Back
           </Link> */}
-<Link
-  href= '/request-table'
-  className="px-3 py-1 text-sm bg-white text-[#13529e] border border-black flex items-center gap-1"
->
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M19 12H5M12 19l-7-7 7-7"/>
-  </svg>
-  Back
-</Link>
+          <Link
+            href='/request-table'
+            className="px-3 py-1 text-sm bg-white text-[#13529e] border border-black flex items-center gap-1"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+            Back
+          </Link>
 
 
           {request.status === "PENDING" && (
@@ -189,7 +189,7 @@ export default function ViewRequestPage() {
             <tbody>
               <tr>
                 <td className="py-1 font-medium">Request ID:</td>
-                <td className="py-1">{request.divisionId||request.id}</td>
+                <td className="py-1">{request.divisionId || request.id}</td>
               </tr>
               <tr>
                 <td className="py-1 font-medium">Date:</td>
@@ -251,16 +251,18 @@ export default function ViewRequestPage() {
                     {request.workLocationFrom} to {request.workLocationTo}
                   </td> */}
                   <td className="py-1">
-  {request.workLocationFrom && request.workLocationTo
-    ? `${request.workLocationFrom} to ${request.workLocationTo}`
-    :  `${request.workLocationFrom}`}
-</td>
+                    {request.workLocationFrom && request.workLocationTo
+                      ? `${request.workLocationFrom} to ${request.workLocationTo}`
+                      : `${request.workLocationFrom}`}
+                  </td>
                 </tr>
               ) : null}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/*Emergency Block Remarks code below */}
 
       {request.processedLineSections &&
         request.processedLineSections.length > 0 && (
@@ -295,11 +297,11 @@ export default function ViewRequestPage() {
                         <span className="text-xs font-medium">Stream:</span>
                         <div className="py-1">{section.stream || "N/A"}</div>
                       </div>)}
-                      {section.road && ( <div>
+                      {section.road && (<div>
                         <span className="text-xs font-medium">Road:</span>
                         <div className="py-1">{section.road || "N/A"}</div>
                       </div>)}
-                     
+
                       {section.otherRoads && (
                         <div className="col-span-2">
                           <span className="text-xs font-medium">
@@ -315,6 +317,15 @@ export default function ViewRequestPage() {
             </div>
           </div>
         )}
+
+      {request.emergencyBlockRemarks && (
+        <div className="border border-black p-3 mb-4">
+          <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
+            Emergency Block Remarks
+          </h2>
+          <div className="py-1">{request.emergencyBlockRemarks}</div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div className="border border-black p-3">
@@ -338,14 +349,14 @@ export default function ViewRequestPage() {
                 </tr>
               )}
               <tr>
-                    <td className="py-1 font-medium">
-                      SelectedDepot For Power Block:
-                    </td>
-                    <td className="py-1">
-                      {request.powerBlockDisconnectionAssignTo ||
-                        "N/A"}
-                    </td>
-                  </tr>
+                <td className="py-1 font-medium">
+                  SelectedDepot For Power Block:
+                </td>
+                <td className="py-1">
+                  {request.powerBlockDisconnectionAssignTo ||
+                    "N/A"}
+                </td>
+              </tr>
               <tr>
                 <td className="py-1 font-medium">Elementary Section:</td>
                 <td className="py-1">
@@ -372,15 +383,15 @@ export default function ViewRequestPage() {
                     </td>
                   </tr>
                 )}
-                 <tr>
-                    <td className="py-1 font-medium">
-                      SelectedDepot For S&T Disconnection:
-                    </td>
-                    <td className="py-1">
-                      {request.sntDisconnectionAssignTo ||
-                        "N/A"}
-                    </td>
-                  </tr>
+              <tr>
+                <td className="py-1 font-medium">
+                  SelectedDepot For S&T Disconnection:
+                </td>
+                <td className="py-1">
+                  {request.sntDisconnectionAssignTo ||
+                    "N/A"}
+                </td>
+              </tr>
               <tr>
                 <td className="py-1 font-medium">S&T Lines:</td>
                 {/* <td className="py-1">
@@ -388,10 +399,10 @@ export default function ViewRequestPage() {
                   {request.sntDisconnectionLineTo}
                 </td> */}
                 <td className="py-1">
-  {request.sntDisconnectionLineFrom && request.sntDisconnectionLineTo
-    ? `${request.sntDisconnectionLineFrom} to ${request.sntDisconnectionLineTo}`
-    : "-"}
-</td>
+                  {request.sntDisconnectionLineFrom && request.sntDisconnectionLineTo
+                    ? `${request.sntDisconnectionLineFrom} to ${request.sntDisconnectionLineTo}`
+                    : "-"}
+                </td>
               </tr>
               {/* <tr>
                 <td className="py-1 font-medium">Caution Required :</td>
