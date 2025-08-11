@@ -252,7 +252,9 @@ export default function ViewRequestPage() {
         </h1>
         <div className="flex gap-2">
           <Link
-            href={data?.data ? getBackUrl(data.data) : '/manage/request-table'}
+            // href={data?.data ? getBackUrl(data.data) : '/manage/request-table'}
+            href={'/manage/pending-requests'}
+
   className="px-3 py-1 text-sm bg-white text-[#13529e] border border-black flex items-center gap-1"
 
           >
