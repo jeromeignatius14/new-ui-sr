@@ -720,6 +720,7 @@ import { WeeklySwitcher } from "@/app/components/ui/WeeklySwitcher";
 import { useSession } from "next-auth/react";
 import { useRef } from "react";
 import dayjs from "dayjs";
+import { get } from "http";
 
 export default function ManagerRequestTablePage() {
   const router = useRouter();
@@ -952,8 +953,10 @@ export default function ManagerRequestTablePage() {
         "Line/Road",
         "Activity",
         "Status",
-        "Start Time (HH:MM)",
-        "End Time (HH:MM)",
+        "Demanded Time From",
+        "Demanded Time To",
+        "Sanctioned Time From",
+        "Sanctioned Time To",
         "Corridor Type",
         "SSE Name",
         "Work Location",
@@ -961,7 +964,7 @@ export default function ManagerRequestTablePage() {
       ];
 
       // Map data to Excel rows
-      const rows = filteredRequests.map((request) => {
+      const rows = filteredRequests.filter(request => request.isSanctioned === true).map((request) => {
         // Function to get exact time as stored in DB
         const getExactTime = (dateString: string | null) => {
           if (!dateString) return "N/A";
@@ -986,6 +989,8 @@ export default function ManagerRequestTablePage() {
           request.status || "N/A", // Added status which was in headers but missing in rows
           getExactTime(request.demandTimeFrom),
           getExactTime(request.demandTimeTo),
+          getExactTime(request.sanctionedTimeFrom||request.optimizeTimeFrom||"N/A"),
+          getExactTime(request.sanctionedTimeTo||request.optimizeTimeTo||"N/A"),
           request.corridorType,
           request.user?.name || "N/A",
           request.workLocationFrom,

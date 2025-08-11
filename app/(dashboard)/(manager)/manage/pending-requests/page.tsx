@@ -64,23 +64,6 @@ export default function PendingRequestsPage() {
         },
     });
 
-    // Handle accept request
-    // const handleAccept = async (id: string) => {
-    //     if (confirm("Are you sure you want to accept this request?")) {
-    //         setIsAccepting(true);
-    //         try {
-    //             await acceptMutation.mutateAsync({ 
-    //                 id, 
-    //                 isAccept: true, 
-    //                 remark: "", 
-    //                 mobileView: true 
-    //             });
-    //         } finally {
-    //             setIsAccepting(false);
-    //         }
-    //     }
-    // };
-
 
 const handleAccept = async (
   id: string,
@@ -182,64 +165,6 @@ const handleAccept = async (
         setSelectedRequests(newSelected);
     };
 
-//   const handleBulkAccept = async () => {
-//   if (selectedRequests.size === 0) return;
-
-//   if (!confirm(`Are you sure you want to forward ${selectedRequests.size} requests?`)) return;
-
-//   setIsAccepting(true);
-//   try {
-//     for (const id of selectedRequests) {
-//       await acceptMutation.mutateAsync({
-//         id,
-//         isAccept: true,
-//         remark: "",
-//         mobileView: true,
-//       });
-//     }
-//     setSelectedRequests(new Set());
-//     toast.success("All selected requests forwarded successfully!");
-//   } catch (error) {
-//     console.error("Error forwarding requests:", error);
-//     toast.error("Some requests failed. Check logs.");
-//   } finally {
-//     setIsAccepting(false);
-//   }
-// };
-
-
-
-// const handleBulkAccept = async () => {
-//   if (selectedRequests.size === 0) return;
-
-//   if (!confirm(`Are you sure you want to forward ${selectedRequests.size} requests?`)) return;
-
-//   setIsAccepting(true);
-//   try {
-//     // Process all requests first
-//     const promises = Array.from(selectedRequests).map(id => 
-//       acceptMutation.mutateAsync({
-//         id,
-//         isAccept: true,
-//         remark: "",
-//         mobileView: true,
-//       })
-//     );
-    
-//     await Promise.all(promises);
-    
-//     // Clear selection
-//     setSelectedRequests(new Set());
-    
-//     // Show success only once after all are done
-//     setShowSuccessModal(`${selectedRequests.size} requests forwarded successfully!`);
-//   } catch (error) {
-//     console.error("Error forwarding requests:", error);
-//     toast.error("Some requests failed. Check logs.");
-//   } finally {
-//     setIsAccepting(false);
-//   }
-// };
 const handleBulkAccept = async () => {
   if (selectedRequests.size === 0) return;
 
@@ -350,10 +275,7 @@ const handleBulkAccept = async () => {
         notFound();
     }
 
-    // if (!isLoading && !error && pendingRequests.length === 0) {
-    //     notFound();
-    // }
-
+ 
     if (!isLoading && !error && pendingRequests.length === 0) {
     return (
         <div className="min-h-screen text-black bg-white p-3 border border-black flex flex-col items-center justify-center gap-4">
@@ -482,13 +404,6 @@ const handleBulkAccept = async () => {
                         >
                             {bulkAcceptRequests.isPending ? "Processing..." : `Forward (${selectedRequests.size})`}
                         </button>
-                        {/* <button
-                            onClick={handleBulkReject}
-                            disabled={bulkRejectRequests.isPending}
-                            className="px-4 py-2 text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
-                        >
-                            {bulkRejectRequests.isPending ? "Processing..." : `Return (${selectedRequests.size})`}
-                        </button> */}
                     </div>
                 )}
             </div>
@@ -606,21 +521,8 @@ const handleBulkAccept = async () => {
                     </div>
                 </div>
             )}
-
-            {/* {showSuccessModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-lg p-6 max-w-xs w-full flex flex-col items-center">
-                        <div className="text-lg font-bold mb-4 text-center">{showSuccessModal}</div>
-                        <button
-                            onClick={() => setShowSuccessModal(null)}
-                            className="px-6 py-2 text-base bg-green-600 text-white rounded hover:bg-green-700 mt-2 font-bold"
-                        >
-                            OK
-                        </button>
-                    </div>
-                </div>
-            )} */}
-            {showSuccessModal && (
+   
+         {showSuccessModal && (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
     <div className="bg-white rounded-lg p-6 max-w-xs w-full flex flex-col items-center">
       <div className="text-lg font-bold mb-4 text-center text-black">{showSuccessModal}</div>
