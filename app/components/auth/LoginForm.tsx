@@ -70,6 +70,10 @@ export default function PhoneLoginForm() {
     setAuthError(null);
 
     if (step === "phone") {
+      if (localStorage.getItem("otpRequestInProgress") === "true") {
+      setAuthError("OTP request already in progress. Please wait...");
+      return;
+    }
       // Request OTP
       try {
         requestOtp(data.phone);
@@ -154,7 +158,7 @@ export default function PhoneLoginForm() {
       {/* Submit Button */}
       <button
         type="submit"
-        disabled={isLoading}
+        disabled={isLoading || localStorage.getItem("otpRequestInProgress") === "true"}
         className="flex items-center justify-center font-bold text-black text-2xl"
         style={{
           width: "180px",
