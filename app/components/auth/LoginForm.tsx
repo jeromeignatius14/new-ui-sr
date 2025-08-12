@@ -15,6 +15,7 @@ export default function PhoneLoginForm() {
   const [step, setStep] = useState<"phone" | "otp">("phone");
   const [otpId, setOtpId] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [otpInProgress, setOtpInProgress] = useState(false);
   const router = useRouter();
   
   const { 
@@ -63,6 +64,15 @@ export default function PhoneLoginForm() {
     }
   }, [otpRequestData]);
 
+
+
+useEffect(() => {
+  if (typeof window !== "undefined") {
+    setOtpInProgress(localStorage.getItem("otpRequestInProgress") === "true");
+  }
+}, []);
+
+
   /**
    * Handle form submission based on current step
    */
@@ -70,10 +80,12 @@ export default function PhoneLoginForm() {
     setAuthError(null);
 
     if (step === "phone") {
-      if (localStorage.getItem("otpRequestInProgress") === "true") {
+
+if (otpInProgress) {
       setAuthError("OTP request already in progress. Please wait...");
       return;
     }
+
       // Request OTP
       try {
         requestOtp(data.phone);
@@ -158,7 +170,7 @@ export default function PhoneLoginForm() {
       {/* Submit Button */}
       <button
         type="submit"
-        disabled={isLoading || localStorage.getItem("otpRequestInProgress") === "true"}
+        disabled={isLoading || otpInProgress}
         className="flex items-center justify-center font-bold text-black text-2xl"
         style={{
           width: "180px",
