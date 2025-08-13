@@ -52,7 +52,7 @@ export interface RequestItem {
     elementarySectionTo: string | null;
     sigElementarySectionFrom: string | null;
     sigElementarySectionTo: string | null;
-    repercussions: string | null;
+    repercussions : string | null;
     requestremarks: string;
     createdAt: string;
     status: "PENDING" | "APPROVED" | "REJECTED";
