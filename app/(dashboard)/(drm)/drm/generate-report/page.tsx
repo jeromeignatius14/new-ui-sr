@@ -325,7 +325,7 @@ export default function GenerateReportPage() {
         <span className="text-[24px] font-extrabold text-black">
           Block Summary Report
         </span>
-        <span className="text-[24px] font-bold text-black">DRM/ADRM/SrDOM</span>
+        <span className="text-[24px] font-bold text-black">{session?.user?.name}</span>
         <div className="mt-2 bg-[#7be09b] px-6 py-1 rounded-2xl">
           <span className="text-[24px] font-bold text-white">
             Blocks Granted/Availed/Pending
