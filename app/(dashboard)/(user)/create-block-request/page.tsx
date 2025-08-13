@@ -94,8 +94,8 @@ const selectStyles = {
     backgroundColor: state.isSelected
       ? "#e0e7ef"
       : state.isFocused
-      ? "#f3f4f6"
-      : "white",
+        ? "#f3f4f6"
+        : "white",
     fontSize: "12px",
     padding: "4px 8px",
     "&:hover": {
@@ -128,16 +128,16 @@ const getSelectStyles = (hasError: boolean) => {
       borderColor: hasError
         ? "#dc2626"
         : state.isFocused
-        ? "#2461aa"
-        : "#45526c",
+          ? "#2461aa"
+          : "#45526c",
       borderWidth: hasError ? "2px" : "1px",
       borderRadius: "4px",
       padding: "2px",
       boxShadow: hasError
         ? "0 0 0 1px rgba(220, 38, 38, 0.2)"
         : state.isFocused
-        ? "0 0 0 1px rgba(37, 99, 176, 0.1)"
-        : "none",
+          ? "0 0 0 1px rgba(37, 99, 176, 0.1)"
+          : "none",
       fontSize: "14px",
       minHeight: "36px",
       "&:hover": {
@@ -310,7 +310,7 @@ function ReviewBlockRequestModal({
                   <div>
                     <b>Requirements:</b>{" "}
                     {formData.powerBlockRequirements &&
-                    formData.powerBlockRequirements.length > 0
+                      formData.powerBlockRequirements.length > 0
                       ? formData.powerBlockRequirements.join(", ")
                       : "-"}
                   </div>
@@ -336,7 +336,7 @@ function ReviewBlockRequestModal({
                   <div>
                     <b>Requirements:</b>{" "}
                     {formData.sntDisconnectionRequirements &&
-                    formData.sntDisconnectionRequirements.length > 0
+                      formData.sntDisconnectionRequirements.length > 0
                       ? formData.sntDisconnectionRequirements.join(", ")
                       : "-"}
                   </div>
@@ -399,8 +399,8 @@ const otherAffectedSelectStyles = {
     backgroundColor: state.isSelected
       ? "#e0e7ef"
       : state.isFocused
-      ? "#e5e7eb"
-      : "white",
+        ? "#e5e7eb"
+        : "white",
     fontSize: "13px",
     padding: "6px 10px",
     fontWeight: state.isSelected ? "bold" : "normal",
@@ -497,10 +497,10 @@ interface FormData {
   workType: string;
   activity: string;
   corridorTypeSelection:
-    | "Corridor"
-    | "Outside Corridor"
-    | "Urgent Block"
-    | null;
+  | "Corridor"
+  | "Outside Corridor"
+  | "Urgent Block"
+  | null;
   corridorType: "Corridor" | "Outside Corridor" | "Urgent Block" | null;
   selectedStream: string;
   selectedRoad: string;
@@ -677,18 +677,18 @@ export default function CreateBlockRequestPage() {
     userDepot === "OVERALL"
       ? locationSections
       : locationSections.filter((section) => {
-          const depotData: any = depot[section as keyof typeof depot];
-          if (!depotData) return false;
+        const depotData: any = depot[section as keyof typeof depot];
+        if (!depotData) return false;
 
-          if (!(userDept in depotData)) return false;
+        if (!(userDept in depotData)) return false;
 
-          return depotData[userDept].includes(userDepot);
-        });
+        return depotData[userDept].includes(userDepot);
+      });
 
   const selectedMajorSection = formData.selectedSection;
   const blockSectionOptions =
     selectedMajorSection &&
-    blockSection[selectedMajorSection as keyof typeof blockSection]
+      blockSection[selectedMajorSection as keyof typeof blockSection]
       ? blockSection[selectedMajorSection as keyof typeof blockSection]
       : [];
   const userDepartment = session?.user.department;
@@ -1131,9 +1131,8 @@ export default function CreateBlockRequestPage() {
       console.log("level 1 passed");
 
       if (hasUnavailedSanctionedBlock && !proceedAnyway) {
-        const link = `https://mobile-bms.plattrtechstudio.com/?cugNumber=${
-          session?.user?.phone
-        }&section=${formData.missionBlock || "MAS-GDR"}`;
+        const link = `https://mobile-bms.plattrtechstudio.com/?cugNumber=${session?.user?.phone
+          }&section=${formData.missionBlock || "MAS-GDR"}`;
         setPopupLink(link);
         setShowPopup(true);
         setFormSubmitting(false);
@@ -1160,21 +1159,21 @@ export default function CreateBlockRequestPage() {
       const processedSections = validSecs.map((s) =>
         s.type === "yard"
           ? {
-              ...s,
-              lineName: s.lineName || "",
-              otherLines: s.otherLines || "",
-              stream: s.stream || "",
-              road: s.road || "",
-              otherRoads: s.otherRoads || "",
-            }
+            ...s,
+            lineName: s.lineName || "",
+            otherLines: s.otherLines || "",
+            stream: s.stream || "",
+            road: s.road || "",
+            otherRoads: s.otherRoads || "",
+          }
           : {
-              ...s,
-              lineName: s.lineName || "",
-              otherLines: s.otherLines || "",
-              stream: "",
-              road: "",
-              otherRoads: "",
-            }
+            ...s,
+            lineName: s.lineName || "",
+            otherLines: s.otherLines || "",
+            stream: "",
+            road: "",
+            otherRoads: "",
+          }
       );
 
       // ─── 5. Flatten first fresh‑caution (backend still expects single set)
@@ -1194,17 +1193,17 @@ export default function CreateBlockRequestPage() {
         freshCautionRequired: formData.freshCautionRequired ?? false,
         sntDisconnectionRequirements: formData.sntDisconnectionRequired
           ? [
-              formData.sntDisconnectionPointNo.toString(),
-              formData.sntDisconnectionSignalNo.toString(),
-            ]
+            formData.sntDisconnectionPointNo.toString(),
+            formData.sntDisconnectionSignalNo.toString(),
+          ]
           : [],
         sntDisconnectionAssignTo: formData.sntDisconnectionAssignTo || "",
         powerBlockRequirements: formData.powerBlockRequired
           ? [
-              formData.powerBlockKmFrom.toString(),
-              formData.powerBlockKmTo.toString(),
-              formData.powerBlockRoad.toString(),
-            ]
+            formData.powerBlockKmFrom.toString(),
+            formData.powerBlockKmTo.toString(),
+            formData.powerBlockRoad.toString(),
+          ]
           : [],
         powerBlockDisconnectionAssignTo:
           formData.powerBlockDisconnectionAssignTo || "",
@@ -1527,21 +1526,18 @@ export default function CreateBlockRequestPage() {
   };
 
   const getInputClassName = (fieldName: string) => {
-    return `w-full border-2 rounded-lg px-4 py-2 text-lg font-bold bg-white focus:outline-none focus:ring-2 focus:ring-purple-300 text-black placeholder-black text-xs px-2 py-1 ${
-      errors[fieldName] ? "border-red-600 ring-2 ring-red-300" : "border-black"
-    }`;
+    return `w-full border-2 rounded-lg px-4 py-2 text-lg font-bold bg-white focus:outline-none focus:ring-2 focus:ring-purple-300 text-black placeholder-black text-xs px-2 py-1 ${errors[fieldName] ? "border-red-600 ring-2 ring-red-300" : "border-black"
+      }`;
   };
 
   const getSelectClassName = (fieldName: string) => {
-    return `w-full border-2 rounded-lg px-4 py-2 text-lg font-bold bg-white focus:outline-none focus:ring-2 focus:ring-green-300 text-black placeholder-black text-xs px-2 py-1 ${
-      errors[fieldName] ? "border-red-600 ring-2 ring-red-300" : "border-black"
-    }`;
+    return `w-full border-2 rounded-lg px-4 py-2 text-lg font-bold bg-white focus:outline-none focus:ring-2 focus:ring-green-300 text-black placeholder-black text-xs px-2 py-1 ${errors[fieldName] ? "border-red-600 ring-2 ring-red-300" : "border-black"
+      }`;
   };
 
   const getTextareaClassName = (fieldName: string) => {
-    return `w-full border-2 rounded-lg px-4 py-2 text-lg bg-white focus:outline-none focus:ring-2 focus:ring-purple-300 text-black placeholder-black text-xs px-2 py-1 ${
-      errors[fieldName] ? "border-red-600 ring-2 ring-red-300" : "border-black"
-    }`;
+    return `w-full border-2 rounded-lg px-4 py-2 text-lg bg-white focus:outline-none focus:ring-2 focus:ring-purple-300 text-black placeholder-black text-xs px-2 py-1 ${errors[fieldName] ? "border-red-600 ring-2 ring-red-300" : "border-black"
+      }`;
   };
 
   useEffect(() => {
@@ -2249,13 +2245,13 @@ export default function CreateBlockRequestPage() {
                       <div className="text-black text-[24px]">
                         {submittedSummary?.date
                           ? new Date(submittedSummary.date).toLocaleDateString(
-                              "en-GB",
-                              {
-                                year: "2-digit",
-                                month: "2-digit",
-                                day: "2-digit",
-                              }
-                            )
+                            "en-GB",
+                            {
+                              year: "2-digit",
+                              month: "2-digit",
+                              day: "2-digit",
+                            }
+                          )
                           : "-"}
                       </div>
                     </td>
@@ -2462,11 +2458,10 @@ export default function CreateBlockRequestPage() {
                         <div className="flex flex-row gap-2">
                           <button
                             type="button"
-                            className={`px-5 py-2 rounded-lg border-2 text-[24px] font-extrabold shadow-sm focus:outline-none transition-all ${
-                              formData.corridorTypeSelection === "Corridor"
-                                ? "bg-[#e6f7c6] border-black text-black"
-                                : "bg-white border-[#b6e6c6] text-[#888]"
-                            }`}
+                            className={`px-5 py-2 rounded-lg border-2 text-[24px] font-extrabold shadow-sm focus:outline-none transition-all ${formData.corridorTypeSelection === "Corridor"
+                              ? "bg-[#e6f7c6] border-black text-black"
+                              : "bg-white border-[#b6e6c6] text-[#888]"
+                              }`}
                             onClick={() =>
                               handleInputChange({
                                 target: {
@@ -2480,12 +2475,11 @@ export default function CreateBlockRequestPage() {
                           </button>
                           <button
                             type="button"
-                            className={`px-5 py-2 rounded-lg border-2 text-[24px] font-extrabold shadow-sm focus:outline-none transition-all ${
-                              formData.corridorTypeSelection ===
+                            className={`px-5 py-2 rounded-lg border-2 text-[24px] font-extrabold shadow-sm focus:outline-none transition-all ${formData.corridorTypeSelection ===
                               "Outside Corridor"
-                                ? "bg-[#ffe082] border-black text-black"
-                                : "bg-white border-[#ffe082] text-[#888]"
-                            }`}
+                              ? "bg-[#ffe082] border-black text-black"
+                              : "bg-white border-[#ffe082] text-[#888]"
+                              }`}
                             onClick={() =>
                               handleInputChange({
                                 target: {
@@ -2637,8 +2631,8 @@ export default function CreateBlockRequestPage() {
                     backgroundColor: state.isSelected
                       ? "#ffe082"
                       : state.isFocused
-                      ? "#ffe08299"
-                      : "#ffe6b3",
+                        ? "#ffe08299"
+                        : "#ffe6b3",
                     color: "black",
                     fontWeight: "bold",
                     fontSize: "24px",
@@ -2673,15 +2667,15 @@ export default function CreateBlockRequestPage() {
               const isYard = block.includes("-YD");
               const lineOrRoadOptions = isYard
                 ? getAllRoadsForYard(block).map((road: string) => ({
-                    value: road,
-                    label: road,
-                  }))
+                  value: road,
+                  label: road,
+                }))
                 : (lineData[block as keyof typeof lineData] || []).map(
-                    (line: string) => ({
-                      value: line,
-                      label: line,
-                    })
-                  );
+                  (line: string) => ({
+                    value: line,
+                    label: line,
+                  })
+                );
               const sectionEntry: any =
                 (formData.processedLineSections || []).find(
                   (s: any) => s.block === block
@@ -2817,8 +2811,8 @@ export default function CreateBlockRequestPage() {
                           backgroundColor: state.isSelected
                             ? "#b6e6f7"
                             : state.isFocused
-                            ? "#b6e6f799"
-                            : "#e6f7fa",
+                              ? "#b6e6f799"
+                              : "#e6f7fa",
                           color: "black",
                           fontWeight: "bold",
                           fontSize: "22px",
@@ -3145,7 +3139,7 @@ export default function CreateBlockRequestPage() {
               {/* Activity dropdown */}
             </div>
           )}
-          
+
 
           {/* Type of Work and Activity - horizontal, pastel green */}
           <div className="w-full flex flex-row  items-center bg-[#e6f7c6] rounded-2xl p-3 mb-8 border-2 border-[#b6e6c6] shadow">
@@ -3248,34 +3242,34 @@ export default function CreateBlockRequestPage() {
             </div>
           </div>
 
-            {/*Coaching*/}
-            <div className="w-full flex flex-row  items-center bg-[#e6f7c6] rounded-2xl p-3 mb-8 border-2 border-[#b6e6c6] shadow">
-              {/* Type of Work dropdown */}
-              <div className="flex-1 pr-2 ">
-                <label
-                  htmlFor="repercussions"
-                  className="block text-[24px] text-nowrap font-bold text-black mb-2"
-                >
-                  Coaching Repercussions
-                </label>
-                <input
-                  id="repercussions"
-                  name="repercussions"
-                  value={formData.repercussions || ""}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="Coaching Repercussions"
-                  className="w-full border-2 border-[#2c3e50] rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200"
-                  aria-label="Route from location"
-                />
-                {errors.repercussions && (
-                  <span className="text-[24px] text-[#e07a5f] font-medium mt-2 block">
-                    {errors.repercussions}
-                  </span>
-                )}
-              </div>
-              {/* Activity dropdown */}
+          {/*Coaching*/}
+          <div className="w-full flex flex-row  items-center bg-[#e6f7c6] rounded-2xl p-3 mb-8 border-2 border-[#b6e6c6] shadow">
+            {/* Type of Work dropdown */}
+            <div className="flex-1 pr-2 ">
+              <label
+                htmlFor="repercussions"
+                className="block text-[24px] text-nowrap font-bold text-black mb-2"
+              >
+                Movement Restrictions
+              </label>
+              <input
+                id="repercussions"
+                name="repercussions"
+                value={formData.repercussions || ""}
+                onChange={handleInputChange}
+                required
+                placeholder="Movement Restrictions"
+                className="w-full border-2 border-[#2c3e50] rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200"
+                aria-label="Route from location"
+              />
+              {errors.repercussions && (
+                <span className="text-[24px] text-[#e07a5f] font-medium mt-2 block">
+                  {errors.repercussions}
+                </span>
+              )}
             </div>
+            {/* Activity dropdown */}
+          </div>
 
 
 
@@ -3342,11 +3336,11 @@ export default function CreateBlockRequestPage() {
                             const isYard = block.includes("-YD");
                             return isYard
                               ? getAllRoadsForYard(block).map((r) => (
-                                  <option key={r} value={r} />
-                                ))
+                                <option key={r} value={r} />
+                              ))
                               : (
-                                  lineData[block as keyof typeof lineData] || []
-                                ).map((l) => <option key={l} value={l} />);
+                                lineData[block as keyof typeof lineData] || []
+                              ).map((l) => <option key={l} value={l} />);
                           })}
                         </datalist>
 
@@ -3510,9 +3504,9 @@ export default function CreateBlockRequestPage() {
                           Select Depo
                         </option>
                         {selectedMajorSection &&
-                        session?.user.department &&
-                        depot[selectedMajorSection] &&
-                        depot[selectedMajorSection]["TRD"] ? (
+                          session?.user.department &&
+                          depot[selectedMajorSection] &&
+                          depot[selectedMajorSection]["TRD"] ? (
                           depot[selectedMajorSection]["TRD"].map(
                             (depotOption: string, index) => (
                               <option key={index} value={depotOption}>
@@ -3658,40 +3652,40 @@ export default function CreateBlockRequestPage() {
                               ?.split(",")
                               .filter((p) => p.trim() !== "").length || 0) <
                               2 && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const points =
-                                    formData.sntDisconnectionPointNo
-                                      ?.split(",")
-                                      .filter((p) => p.trim() !== "") || [];
-                                  points.push("");
-                                  handleInputChange({
-                                    target: {
-                                      name: "sntDisconnectionPointNo",
-                                      value: points.join(","),
-                                    },
-                                  } as React.ChangeEvent<HTMLInputElement>);
-                                }}
-                                className="flex items-center gap-1 mt-2 px-3 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-base font-semibold rounded shadow hover:from-green-700 hover:to-green-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-green-400"
-                              >
-                                <svg
-                                  width="18"
-                                  height="18"
-                                  fill="none"
-                                  viewBox="0 0 20 20"
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const points =
+                                      formData.sntDisconnectionPointNo
+                                        ?.split(",")
+                                        .filter((p) => p.trim() !== "") || [];
+                                    points.push("");
+                                    handleInputChange({
+                                      target: {
+                                        name: "sntDisconnectionPointNo",
+                                        value: points.join(","),
+                                      },
+                                    } as React.ChangeEvent<HTMLInputElement>);
+                                  }}
+                                  className="flex items-center gap-1 mt-2 px-3 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-base font-semibold rounded shadow hover:from-green-700 hover:to-green-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-green-400"
                                 >
-                                  <circle cx="10" cy="10" r="10" fill="#fff" />
-                                  <path
-                                    d="M10 5v10M5 10h10"
-                                    stroke="#166534"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                  />
-                                </svg>
-                                Add Point
-                              </button>
-                            )}
+                                  <svg
+                                    width="18"
+                                    height="18"
+                                    fill="none"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <circle cx="10" cy="10" r="10" fill="#fff" />
+                                    <path
+                                      d="M10 5v10M5 10h10"
+                                      stroke="#166534"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                    />
+                                  </svg>
+                                  Add Point
+                                </button>
+                              )}
                           </div>
                         </div>
 
@@ -3782,40 +3776,40 @@ export default function CreateBlockRequestPage() {
                               ?.split(",")
                               .filter((p) => p.trim() !== "").length || 0) <
                               2 && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const points =
-                                    formData.sntDisconnectionSignalNo
-                                      ?.split(",")
-                                      .filter((p) => p.trim() !== "") || [];
-                                  points.push("");
-                                  handleInputChange({
-                                    target: {
-                                      name: "sntDisconnectionSignalNo",
-                                      value: points.join(","),
-                                    },
-                                  } as React.ChangeEvent<HTMLInputElement>);
-                                }}
-                                className="flex items-center gap-1 mt-2 px-3 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-base font-semibold rounded shadow hover:from-green-700 hover:to-green-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-green-400"
-                              >
-                                <svg
-                                  width="18"
-                                  height="18"
-                                  fill="none"
-                                  viewBox="0 0 20 20"
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const points =
+                                      formData.sntDisconnectionSignalNo
+                                        ?.split(",")
+                                        .filter((p) => p.trim() !== "") || [];
+                                    points.push("");
+                                    handleInputChange({
+                                      target: {
+                                        name: "sntDisconnectionSignalNo",
+                                        value: points.join(","),
+                                      },
+                                    } as React.ChangeEvent<HTMLInputElement>);
+                                  }}
+                                  className="flex items-center gap-1 mt-2 px-3 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-base font-semibold rounded shadow hover:from-green-700 hover:to-green-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-green-400"
                                 >
-                                  <circle cx="10" cy="10" r="10" fill="#fff" />
-                                  <path
-                                    d="M10 5v10M5 10h10"
-                                    stroke="#166534"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                  />
-                                </svg>
-                                Add Signal
-                              </button>
-                            )}
+                                  <svg
+                                    width="18"
+                                    height="18"
+                                    fill="none"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <circle cx="10" cy="10" r="10" fill="#fff" />
+                                    <path
+                                      d="M10 5v10M5 10h10"
+                                      stroke="#166534"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                    />
+                                  </svg>
+                                  Add Signal
+                                </button>
+                              )}
                           </div>
                         </div>
                       </div>
@@ -3836,9 +3830,9 @@ export default function CreateBlockRequestPage() {
                           Select Depo
                         </option>
                         {selectedMajorSection &&
-                        session?.user.department &&
-                        depot[selectedMajorSection] &&
-                        depot[selectedMajorSection]["S&T"] ? (
+                          session?.user.department &&
+                          depot[selectedMajorSection] &&
+                          depot[selectedMajorSection]["S&T"] ? (
                           depot[selectedMajorSection]["S&T"].map(
                             (depotOption: string, index) => (
                               <option key={index} value={depotOption}>
@@ -3962,9 +3956,8 @@ export default function CreateBlockRequestPage() {
             {reviewMode ? (
               <button
                 type="submit"
-                className={`w-full bg-[#eeb8f7] border-2 border-black rounded-[50%] max-w-72 px-6 py-2 text-lg font-extrabold text-white hover:brightness-90 ${
-                  formSubmitting ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+                className={`w-full bg-[#eeb8f7] border-2 border-black rounded-[50%] max-w-72 px-6 py-2 text-lg font-extrabold text-white hover:brightness-90 ${formSubmitting ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 disabled={formSubmitting}
                 style={{
                   borderRadius: "50%",
@@ -3977,9 +3970,8 @@ export default function CreateBlockRequestPage() {
             ) : (
               <button
                 type="submit"
-                className={`w-full bg-[#eeb8f7] border-2 border-black rounded-[50%] max-w-72 px-6 py-2 text-lg font-extrabold text-white hover:brightness-90 ${
-                  formSubmitting ? "brightness-95 cursor-not-allowed" : ""
-                }`}
+                className={`w-full bg-[#eeb8f7] border-2 border-black rounded-[50%] max-w-72 px-6 py-2 text-lg font-extrabold text-white hover:brightness-90 ${formSubmitting ? "brightness-95 cursor-not-allowed" : ""
+                  }`}
                 disabled={formSubmitting}
               >
                 {formSubmitting ? "SUBMITTING..." : "SUBMIT"}
