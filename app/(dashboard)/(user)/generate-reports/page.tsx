@@ -56,6 +56,7 @@ interface DetailedData {
   Duration: number;
   Type: string;
   Status: string;
+  userId?: string;
 }
 
 const locationOptions: OptionType[] = [
@@ -93,9 +94,9 @@ export default function GenerateReportPage() {
     "All",
   ]);
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
-  const [selectedMajorSections, setSelectedMajorSections] = useState<string[]>(
-    ["MAS-GDR"]
-  );
+  // const [selectedMajorSections, setSelectedMajorSections] = useState<string[]>(
+  //   ["MAS-GDR"]
+  // );
   const [majorSectionOptions, setMajorSectionOptions] = useState<OptionType[]>(
     []
   );
@@ -195,25 +196,25 @@ export default function GenerateReportPage() {
   };
 
   // Handler for major section selection
-  const handleMajorSectionChange = (options: MultiValue<OptionType>) => {
-    if (Array.isArray(options) && options.length > 0) {
-      const selectedValues = options.map((option) => option.value);
+  // const handleMajorSectionChange = (options: MultiValue<OptionType>) => {
+  //   if (Array.isArray(options) && options.length > 0) {
+  //     const selectedValues = options.map((option) => option.value);
 
-      // Check if 'All' is included in the selected options
-      if (selectedValues.includes("All")) {
-        // If 'All' is selected, include all major sections except 'All' itself
-        const allSpecificSections = majorSectionOptions
-          .map((option) => option.value)
-          .filter((value) => value !== "All");
-        setSelectedMajorSections(allSpecificSections);
-      } else {
-        // Otherwise just set the selected values
-        setSelectedMajorSections(selectedValues);
-      }
-    } else {
-      setSelectedMajorSections([]);
-    }
-  };
+  //     // Check if 'All' is included in the selected options
+  //     if (selectedValues.includes("All")) {
+  //       // If 'All' is selected, include all major sections except 'All' itself
+  //       const allSpecificSections = majorSectionOptions
+  //         .map((option) => option.value)
+  //         .filter((value) => value !== "All");
+  //       setSelectedMajorSections(allSpecificSections);
+  //     } else {
+  //       // Otherwise just set the selected values
+  //       setSelectedMajorSections(selectedValues);
+  //     }
+  //   } else {
+  //     setSelectedMajorSections([]);
+  //   }
+  // };
 
   // Toggle selection for buttons
   const toggleBlockType = (blockType: string) => {
@@ -253,12 +254,12 @@ export default function GenerateReportPage() {
 
       const formattedStartDate = format(startDate, "dd/MM/yy");
       const formattedEndDate = format(endDate, "dd/MM/yy");
-
+ 
       // Update query parameters
       setQueryParams({
         startDate: formattedStartDate,
         endDate: formattedEndDate,
-        majorSections: selectedMajorSections,
+        majorSections: majorSectionOptions.map(opt => opt.value),
         department: selectedDepartments,
         blockType: selectedBlockTypes,
         userId: session?.user?.id || "",
@@ -293,7 +294,9 @@ export default function GenerateReportPage() {
     useState<string>("All");
   const sectionOptionsB: string[] = Array.from(
     new Set(
-      reportData?.data?.detailedData?.map((b: DetailedData) => b.Section) || []
+      reportData?.data?.detailedData
+        ?.filter((b: DetailedData) => b.userId === session?.user?.id)
+        .map((b: DetailedData) => b.Section) || []
     )
   );
   const filteredUpcomingBlocks: DetailedData[] =
@@ -316,7 +319,9 @@ export default function GenerateReportPage() {
     }
     return dateString;
   }
-
+const userUpcomingBlocks = filteredUpcomingBlocks.filter(
+  (block) => block.userId === session?.user?.id
+);
   const upcomingBlocks: DetailedData[] = reportData?.data?.detailedData || [];
 
   const [sectionDropdownOpenB, setSectionDropdownOpenB] = useState(false);
@@ -463,7 +468,7 @@ export default function GenerateReportPage() {
                         style={{ color: "black" }}
                       >
                         {/* {summary.Department || summary.Section || ""} */}
-                        MAS-GDR
+                      {(summary.Department)}
                       </td>
                       <td
                         className="border-2 border-black px-2 py-1 text-center"
@@ -677,7 +682,7 @@ export default function GenerateReportPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredUpcomingBlocks.length === 0 ? (
+                {userUpcomingBlocks.length === 0 ? (
                   <tr className="bg-white">
                     <td
                       colSpan={5}
@@ -688,7 +693,7 @@ export default function GenerateReportPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredUpcomingBlocks
+                  userUpcomingBlocks
                     .slice(0, 200)
                     .map((block: DetailedData, idx: number) => {
                       // Status color logic
