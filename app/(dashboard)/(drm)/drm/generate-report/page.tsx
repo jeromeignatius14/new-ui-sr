@@ -51,6 +51,7 @@ interface DetailedData {
   Status: string;
   DivisionId?: string; // Added property to match usage
   Activity?: string; // Added property to match usage
+  overAllStatus?: string; // Added property to match usage
 }
 
 const locationOptions: OptionType[] = [
@@ -795,21 +796,38 @@ export default function GenerateReportPage() {
                     .slice(0, 200)
                     .map((block: DetailedData, idx: number) => {
                       // Status color logic
-                      let statusLabel = "";
+                      // let statusLabel = "";
+                      // let statusStyle = { background: "#fff", color: "#222" };
+                      // if (block.Status === "APPROVED") {
+                      //   statusLabel = "Pending with Optg";
+                      //   statusStyle = { background: "#fff86b", color: "#222" };
+                      // } else if (block.Status === "PENDING") {
+                      //   statusLabel = "Pending with dept control";
+                      //   statusStyle = { background: "#d47ed4", color: "#222" };
+                      // } else if (block.Status === "REJECTED") {
+                      //   statusLabel = "Returned by Optg";
+                      //   statusStyle = { background: "#ff4e36", color: "#fff" };
+                      // } else {
+                      //   statusLabel = block.Status;
+                      // }
+let statusLabel = "";
                       let statusStyle = { background: "#fff", color: "#222" };
-                      if (block.Status === "APPROVED") {
-                        statusLabel = "Pending with Optg";
+                      if (block.overAllStatus === "Sanctioned") {
+                        statusLabel = "Sanctioned";
                         statusStyle = { background: "#fff86b", color: "#222" };
-                      } else if (block.Status === "PENDING") {
+                      }else if (block.overAllStatus === "with optg.") {
+                        statusLabel = "with optg.";
+                        statusStyle = { background: "#d47ed4", color: "#222" };
+                      } 
+                       else if (block.Status === "PENDING") {
                         statusLabel = "Pending with dept control";
                         statusStyle = { background: "#d47ed4", color: "#222" };
                       } else if (block.Status === "REJECTED") {
                         statusLabel = "Returned by Optg";
                         statusStyle = { background: "#ff4e36", color: "#fff" };
                       } else {
-                        statusLabel = block.Status;
+                        statusLabel = block.overAllStatus||block.Status;
                       }
-
                       // Row background alternates between pink and white
                       const rowBgColor =
                         idx % 2 === 0 ? "bg-white" : "bg-[#f5d0f2]";
