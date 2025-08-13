@@ -3156,7 +3156,7 @@ export let blockSection = {
     "VM-CBU", "CBU-PDY", "CBU-YD", "PDY-YD"
   ],
   'KPD-VM': [
-    "KPD-VLR", "VLR-KNB", "KNB-ARV", "ARV-PRL", "PRL-AGM", "AGM-TJM",
+    "KPD-VLR", "VLR-KNB", "KNB-KMM", "KMM-ARV", "ARV-PRL", "PRL-AGM", "AGM-TJM",
     "TJM-TNM", "TNM-TNI", "TNI-TRK", "TRK-MMP", "MMP-VKM", "VKM-VM", "KPD-YD", "VLR-YD", "KNB-YD", "KMM-YD", "ARV-YD", "PRL-YD", "AGM-YD", "TJM-YD", "TNM-YD", "TNI-YD", "TRK-YD", "MMP-YD", "VKM-YD", "VM-YD"
   ],
   'CUP J-VRI': [
@@ -4816,7 +4816,8 @@ export let lineData = {
   // KPD-VM Section - Single line
   'KPD-VLR': ['SINGLE'],
   'VLR-KNB': ['SINGLE'],
-  'KNB-ARV': ['SINGLE'],
+   'KNB-KMM': ['SINGLE'],
+ 'KMM-ARV': ['SINGLE'],
   'ARV-PRL': ['SINGLE'],
   'PRL-AGM': ['SINGLE'],
   'AGM-TJM': ['SINGLE'],
