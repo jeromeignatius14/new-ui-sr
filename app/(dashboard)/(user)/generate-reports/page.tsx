@@ -56,6 +56,7 @@ interface DetailedData {
   Duration: number;
   Type: string;
   Status: string;
+  Activity?: string;
 }
 
 const locationOptions: OptionType[] = [
@@ -672,6 +673,7 @@ export default function GenerateReportPage() {
                   <th className="border-2 border-black px-2 py-1">Section</th>
                   <th className="border-2 border-black px-2 py-1">Date</th>
                   <th className="border-2 border-black px-2 py-1">Type</th>
+                  <th className="border-2 border-black px-2 py-1">Activity</th>
                   <th className="border-2 border-black px-2 py-1">Duration</th>
                   <th className="border-2 border-black px-2 py-1">Status</th>
                 </tr>
@@ -724,6 +726,9 @@ export default function GenerateReportPage() {
                           </td>
                           <td className="border-2 border-black px-2 py-1 text-black">
                             {block.Type}
+                          </td>
+                           <td className="border-2 border-black px-2 py-1 text-black">
+                            {block.Activity || "N/A"}
                           </td>
                           <td className="border-2 border-black px-2 py-1 text-black">
                             {block.Duration}

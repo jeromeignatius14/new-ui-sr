@@ -898,6 +898,7 @@ const formatDisplayDate = (dateStr: string) => {
                   <th className="border-2 border-black px-2 py-1">Major section</th>
                   <th className="border-2 border-black px-2 py-1">Block Section</th>
                   <th className="border-2 border-black px-2 py-1">Type</th>
+                  <th className="border-2 border-black px-2 py-1">Activity</th>
                   <th className="border-2 border-black px-2 py-1">Duration</th>
                   <th className="border-2 border-black px-2 py-1">Status</th>
                 </tr>
@@ -963,6 +964,9 @@ const formatDisplayDate = (dateStr: string) => {
                          
                           <td className="border-2 border-black px-2 py-1 text-black">
                             {block.Type}
+                          </td>
+                           <td className="border-2 border-black px-2 py-1 text-black">
+                            {block.Activity}
                           </td>
                           <td className="border-2 border-black px-2 py-1 text-black">
                             {block.Duration}

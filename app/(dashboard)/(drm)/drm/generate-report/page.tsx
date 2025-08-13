@@ -49,6 +49,8 @@ interface DetailedData {
   Duration: number;
   Type: string;
   Status: string;
+  DivisionId?: string; // Added property to match usage
+  Activity?: string; // Added property to match usage
 }
 
 const locationOptions: OptionType[] = [
@@ -768,9 +770,11 @@ export default function GenerateReportPage() {
             <table className="w-full border-2 border-black mt-1 text-[24px]">
               <thead>
                 <tr className="bg-[#e49edd] text-black text-[24px] font-bold">
-                  <th className="border-2 border-black px-2 py-1">Section</th>
                   <th className="border-2 border-black px-2 py-1">Date</th>
+                  <th className="border-2 border-black px-2 py-1">RequestID</th>
+                  <th className="border-2 border-black px-2 py-1">Section</th>
                   <th className="border-2 border-black px-2 py-1">Type</th>
+                  <th className="border-2 border-black px-2 py-1">Activity</th>
                   <th className="border-2 border-black px-2 py-1">Duration</th>
                   <th className="border-2 border-black px-2 py-1">Status</th>
                 </tr>
@@ -815,15 +819,23 @@ export default function GenerateReportPage() {
                           key={idx}
                           className={`${rowBgColor} hover:bg-[#F3F3F3]`}
                         >
-                          <td className="border-2 border-black px-2 py-1 font-bold text-black">
-                            {block.Section}
-                          </td>
-                          <td className="border-2 border-black px-2 py-1 text-black">
+                           <td className="border-2 border-black px-2 py-1 text-black">
                             {dayjs(block.Date).format("DD-MM-YY")}
 
                           </td>
+                          <td className="border-2 border-black px-2 py-1 font-bold text-black">
+                            {block.DivisionId}
+                          </td>
+                          <td className="border-2 border-black px-2 py-1 font-bold text-black">
+                            {block.Section}
+                          </td>
+                         
                           <td className="border-2 border-black px-2 py-1 text-black">
                             {block.Type}
+                          </td>
+
+                           <td className="border-2 border-black px-2 py-1 text-black">
+                            {block.Activity}
                           </td>
                           <td className="border-2 border-black px-2 py-1 text-black">
                             {block.Duration}
