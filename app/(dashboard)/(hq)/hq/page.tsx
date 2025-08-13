@@ -32,7 +32,7 @@ export default function AdminDashboardPage() {
           style={{ maxWidth: "90vw" }}
         >
           <span className="text-lg font-bold text-black tracking-wide">
-            HQ
+            {session?.user?.name}
           </span>
         </div>
       </div>

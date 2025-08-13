@@ -196,8 +196,12 @@ export default function ViewRequestPage() {
                 <td className="py-1">{formatDate(request.date)}</td>
               </tr>
               <tr>
-                <td className="py-1 font-medium">Created:</td>
+                <td className="py-1 font-medium">Created Date:</td>
                 <td className="py-1">{formatDate(request.createdAt)}</td>
+              </tr>
+               <tr>
+                <td className="py-1 font-medium">Created Time:</td>
+                <td className="py-1">{formatTime(request.createdAt)}</td>
               </tr>
               <tr>
                 <td className="py-1 font-medium">Requested By:</td>

@@ -357,7 +357,7 @@ if (session?.user?.role === "SM") {
             style={{ maxWidth: "90vw" }}
           >
             <span className="text-lg font-bold text-black tracking-wide">
-              DRM
+            {session?.user?.name || ''}
             </span>
           </div>
         </div>
