@@ -1471,11 +1471,11 @@ export default function OptimiseTablePage() {
                         )}
                       </div>
                     </td>
-                    <td className="border border-black p-2 text-[24px]">
+                    <td className="border border-black p-2 text-[24px] min-w-[140px]">
                       <div className="flex gap-2">
                         <Link
                           href={`/admin/view-request/${request.id}?from=request-table`}
-                          className="px-2 py-1 bg-blue-600 text-white border border-black rounded inline-block text-center"
+                          className="px-2 py-1 bg-blue-600 text-white border border-black rounded inline-block text-center w-full min-w-[120px]"
                         >
                           View
                         </Link>
@@ -1731,11 +1731,11 @@ export default function OptimiseTablePage() {
                         )}
                       </div>
                     </td>
-                    <td className="border border-black p-2 text-[24px]">
+                    <td className="border border-black p-2 text-[24px] min-w-[140px]">
                       <div className="flex gap-2">
                         <Link
                           href={`/admin/view-request/${request.id}?from=request-table`}
-                          className="px-2 py-1 bg-blue-600 text-white border border-black rounded inline-block text-center"
+                          className="px-2 py-1 bg-blue-600 text-white border border-black rounded inline-block text-center  w-full min-w-[120px]"
                         >
                           View
                         </Link>
@@ -1941,11 +1941,11 @@ export default function OptimiseTablePage() {
                         )}
                       </div>
                     </td>
-                    <td className="border border-black p-2 text-[24px]">
+                    <td className="border border-black p-2 text-[24px] min-w-[140px]">
                       <div className="flex gap-2">
                         <Link
                           href={`/admin/view-request/${request.id}?from=request-table`}
-                          className="px-2 py-1 bg-blue-600 text-white border border-black rounded inline-block text-center"
+                          className="px-2 py-1 bg-blue-600 text-white border border-black rounded inline-block text-center w-full min-w-[120px]"
                         >
                           View
                         </Link>
