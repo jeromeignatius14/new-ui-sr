@@ -1001,10 +1001,30 @@ export default function ManagerRequestTablePage() {
       // Create workbook
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Block Requests");
+  const formatDateForFilename = (dateString: string) => {
+      const date = new Date(dateString);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${day}/${month}/${year}`;
+    };
 
-      // Generate Excel file and trigger download
-      const dateString = new Date().toISOString().slice(0, 10);
-      XLSX.writeFile(workbook, `block_requests_${dateString}.xlsx`);
+    // Generate filename based on selected date range
+    let filename;
+    if (customDateRange.start && customDateRange.end) {
+      const startDate = formatDateForFilename(customDateRange.start);
+      const endDate = formatDateForFilename(customDateRange.end);
+      filename = `block_requests_${startDate}_to_${endDate}.xlsx`;
+    } else if (customDateRange.start) {
+      filename = `block_requests_${formatDateForFilename(customDateRange.start)}.xlsx`;
+    } else if (customDateRange.end) {
+      filename = `block_requests_${formatDateForFilename(customDateRange.end)}.xlsx`;
+    } else {
+      filename = `block_requests_${formatDateForFilename(new Date().toISOString())}.xlsx`;
+    }
+
+    // Generate Excel file and trigger download
+    XLSX.writeFile(workbook, filename);
     } catch (error) {
       console.error("Download failed:", error);
       alert("Failed to generate Excel file. Please check console for details.");
