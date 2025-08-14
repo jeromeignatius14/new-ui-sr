@@ -1,11 +1,12 @@
 "use client";
 
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { managerService } from "@/app/service/api/manager";
 import { format, parseISO } from "date-fns";
 import Link from "next/link";
 import { useState } from "react";
+import { useAcceptUserRequest } from "@/app/service/mutation/admin";
 
 export default function ViewRequestPage() {
   const params = useParams();
@@ -13,26 +14,11 @@ export default function ViewRequestPage() {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const id = params.id as string;
-  const [isAccepting, setIsAccepting] = useState(false);
-  const [isRejecting, setIsRejecting] = useState(false);
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [rejectionReason, setRejectionReason] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const acceptMutation = useAcceptUserRequest();
 
-  // Get the source page from URL parameter or default to request-table
-  const sourcePage = searchParams.get('from') || 'request-table';
-
-  // Get the date parameter or use the request's date
-  const getBackUrl = (request: any) => {
-    const date = format(new Date(request.date), 'yyyy-MM-dd');
-    switch (sourcePage) {
-      case 'sanction-table':
-        return `/manage/sanction-table?date=${date}`;
-      case 'optimised-table':
-        return `/manage/optimised-table?date=${date}`;
-      default:
-        return `/manage/request-table?date=${date}`;
-    }
-  };
+  // Get the source page from URL parameter or default to optimise-table
+  const sourcePage = searchParams.get('from') || 'optimise-table';
 
   // Fetch request data
   const { data, isLoading, error } = useQuery({
@@ -40,48 +26,6 @@ export default function ViewRequestPage() {
     queryFn: () => managerService.getUserRequestById(id),
   });
 
-  // Accept request mutation
-  // const acceptMutation = useMutation({
-  //   mutationFn: () => managerService.acceptUserRequest(id),
-  //   onSuccess: () => {
-  //     queryClient.invalidateQueries({ queryKey: ["request", id] });
-  //     queryClient.invalidateQueries({ queryKey: ["requests"] });
-  //     alert("Request accepted successfully");
-  //     router.push("/manage/request-table");
-  //   },
-  //   onError: (error) => {
-  //     console.error("Failed to accept request:", error);
-  //     alert("Failed to accept request. Please try again.");
-  //   },
-  // });
-  // const acceptMutation = useMutation({
-  //   mutationFn: (isAccept: boolean) => 
-  //     managerService.acceptUserRequest(id, isAccept),  // Pass the decision to the API
-  //   onSuccess: () => {
-  //     queryClient.invalidateQueries({ queryKey: ["request", id] });
-  //     queryClient.invalidateQueries({ queryKey: ["requests"] });
-  //     alert("Request processed successfully");
-  //     router.push("/manage/request-table");
-  //   },
-  //   onError: (error) => {
-  //     console.error("Failed to process request:", error);
-  //     alert("Failed to process request. Please try again.");
-  //   },
-  // });
-  const acceptMutation = useMutation({
-    mutationFn: ({ isAccept, remark,mobileView }: { isAccept: boolean; remark?: string;mobileView:boolean }) =>
-      managerService.acceptUserRequest(id, isAccept, remark,mobileView),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["request", id] });
-      queryClient.invalidateQueries({ queryKey: ["requests"] });
-      alert(`Request ${isAccepting ? "accepted" : "rejected"} successfully`);
-      router.push("/manage/request-table");
-    },
-    onError: (error) => {
-      console.error("Failed to process request:", error);
-      alert("Failed to process request. Please try again.");
-    },
-  });
   // Format date and time
   const formatDate = (dateString: string) => {
     try {
@@ -91,87 +35,49 @@ export default function ViewRequestPage() {
     }
   };
 
-  const formatTime = (dateString: string) => {
+  const formatTime = (dateString: string): string => {
+    if (!dateString) return "Invalid time";
+
     try {
-      return format(parseISO(dateString), "HH:mm");
+      // Handle both full ISO strings and time-only strings
+      const timePart = dateString.includes('T')
+        ? dateString.split('T')[1]
+        : dateString;
+
+      // Extract just the hours and minutes
+      const [hours, minutes] = timePart.split(':');
+      return `${hours.padStart(2, '0')}:${(minutes || '00').padStart(2, '0').substring(0, 2)}`;
     } catch {
       return "Invalid time";
     }
   };
 
-  // Handle accept request
-  // const handleAccept = async () => {
-  //   if (confirm("Are you sure you want to accept this request?")) {
-  //     setIsAccepting(true);
-  //     try {
-  //       await acceptMutation.mutateAsync();
-  //     } finally {
-  //       setIsAccepting(false);
-  //     }
-  //   }
-  // };
-
-  // Handle accept or reject request
-  // const handleAcceptReject = async (isAccept: boolean) => {
-  //   const action = isAccept ? "accept" : "reject";
-  //   if (confirm(`Are you sure you want to ${action} this request?`)) {
-  //     if (isAccept) {
-  //       setIsAccepting(true);
-  //     } else {
-  //       setIsRejecting(true);
-  //     }
-  //     try {
-  //       await acceptMutation.mutateAsync(isAccept);
-  //     } finally {
-  //       if (isAccept) {
-  //         setIsAccepting(false);
-  //       } else {
-  //         setIsRejecting(false);
-  //       }
-  //     }
-  //   }
-  // };
-  // Handle accept request
-  const handleAccept = async () => {
-    if (confirm("Are you sure you want to accept this request?")) {
-      setIsAccepting(true);
+  // Handle accept/reject request
+  const handleRequestAction = async (accept: boolean) => {
+    if (
+      confirm(
+        `Are you sure you want to ${accept ? "approve" : "reject"
+        } this request?`
+      )
+    ) {
+      setIsProcessing(true);
       try {
-        await acceptMutation.mutateAsync({ isAccept: true,mobileView:true });
+        await acceptMutation.mutateAsync({ id, accept });
+        alert(`Request ${accept ? "approved" : "rejected"} successfully`);
+        router.push("/admin/request-table");
+      } catch (error) {
+        console.error("Failed to process request:", error);
+        alert("Failed to process request. Please try again.");
       } finally {
-        setIsAccepting(false);
+        setIsProcessing(false);
       }
     }
   };
 
-  // Handle reject request with reason
-  const handleReject = async () => {
-    setShowRejectModal(true);
-  };
-
-  const submitRejection = async () => {
-    if (!rejectionReason.trim()) {
-      alert("Please enter a rejection reason");
-      return;
-    }
-
-    setIsRejecting(true);
-    try {
-      await acceptMutation.mutateAsync({
-        isAccept: false,
-        remark: rejectionReason,
-        mobileView:false
-      });
-    } finally {
-      setIsRejecting(false);
-      setShowRejectModal(false);
-      setRejectionReason("");
-    }
-  };
-
-
   // Status badge class
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
+      case "ACCEPTED":
       case "APPROVED":
         return "bg-green-100 text-green-800 border border-black";
       case "REJECTED":
@@ -193,13 +99,7 @@ export default function ViewRequestPage() {
 
   if (error) {
     router.push('/auth/login');
-    // return (
-    //   <div className="min-h-screen bg-white p-3 border border-black flex items-center justify-center">
-    //     <div className="text-center py-5 text-red-600">
-    //       Error loading approved requests. Please try again.
-    //     </div>
-    //   </div>
-    // );
+    return null;
   }
 
   const request = data?.data;
@@ -214,117 +114,75 @@ export default function ViewRequestPage() {
 
   return (
     <div className="bg-white p-3 border border-black mb-3 text-black">
-      {showRejectModal && (
-        <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Enter Rejection Reason</h2>
-            <textarea
-              className="w-full p-2 border border-gray-300 rounded mb-4"
-              rows={4}
-              placeholder="Please specify the reason for rejection..."
-              value={rejectionReason}
-              onChange={(e) => setRejectionReason(e.target.value)}
-            />
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => {
-                  setShowRejectModal(false);
-                  setRejectionReason("");
-                }}
-                className="px-4 py-2 bg-gray-300 rounded"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={submitRejection}
-                disabled={isRejecting}
-                className="px-4 py-2 bg-red-600 text-white rounded disabled:opacity-50"
-              >
-                {isRejecting ? "Submitting..." : "Submit Rejection"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
       <div className="border-b-2 border-[#13529e] pb-3 mb-4 flex justify-between items-center">
         <h1 className="text-lg font-bold text-[#13529e]">
           Block Details
         </h1>
         <div className="flex gap-2">
-          <Link
-            href={data?.data ? getBackUrl(data.data) : '/manage/request-table'}
-  className="px-3 py-1 text-sm bg-white text-[#13529e] border border-black flex items-center gap-1"
-
+          <button
+            onClick={() => router.back()}
+            className="px-3 py-1 text-sm bg-white text-[#13529e] border border-black flex items-center gap-1"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M19 12H5M12 19l-7-7 7-7"/>
-  </svg>
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
             Back
-          </Link>{request.status === "PENDING" && !request.managerAcceptance && (
-            <>
-              <button
-                onClick={handleAccept}  // Accept
-                disabled={isAccepting || isRejecting}
-                className="px-3 py-1 text-sm bg-[#13529e] text-white border border-black disabled:opacity-50"
-              >
-                {isAccepting ? "Accepting..." : "Accept Request"}
-              </button>
-              <button
-                onClick={handleReject}  // Reject
-                disabled={isAccepting || isRejecting}
-                className="px-3 py-1 text-sm bg-red-600 text-white border border-black disabled:opacity-50"
-              >
-                {isRejecting ? "Rejecting..." : "Delete/Cancel"}
-              </button>
-            </>
+          </button>
+          {request.adminRequestStatus === "PENDING" && (
+            <button
+              onClick={() => handleRequestAction(false)}
+              disabled={isProcessing}
+              className="px-3 py-1 text-sm bg-red-600 text-white border border-black disabled:opacity-50"
+            >
+              {isProcessing ? "Processing..." : "Delete/Cancel"}
+            </button>
           )}
-
         </div>
       </div>
 
       <div className="mb-4 px-2 py-1 inline-block">
         <span
-          className={`px-2 py-0.5 text-xl font-medium ${getStatusBadgeClass(
-            request.managerAcceptance ? "APPROVED" : "PENDING"
+          className={`px-2 py-0.5 text-sm ${getStatusBadgeClass(
+            request.adminRequestStatus
           )}`}
         >
-          Status: {request.managerAcceptance ? "APPROVED" : "PENDING"}
+          Status: {request.adminRequestStatus}
         </span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div className="border border-black p-3">
-          <h2 className="text-[24px] font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
+          <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
             Request Information
           </h2>
           <table className="w-full text-sm">
             <tbody>
               <tr>
-                <td className="py-1 font-medium text-[18px]">Request ID:</td>
+                <td className="py-1 font-medium">Request ID:</td>
                 <td className="py-1">{request.id}</td>
               </tr>
               <tr>
-                <td className="py-1 font-medium text-[18px]">Date:</td>
+                <td className="py-1 font-medium">Date:</td>
                 <td className="py-1">{formatDate(request.date)}</td>
               </tr>
               <tr>
-                <td className="py-1 font-medium text-[18px]">Created:</td>
+                <td className="py-1 font-medium">Created:</td>
                 <td className="py-1">{formatDate(request.createdAt)}</td>
               </tr>
               <tr>
-                <td className="py-1 font-medium text-[18px]">Requested By:</td>
+                <td className="py-1 font-medium">Requested By:</td>
                 <td className="py-1">{request.user.name}</td>
               </tr>
               <tr>
-                <td className="py-1 font-medium text-[18px]">Department:</td>
+                <td className="py-1 font-medium">Department:</td>
                 <td className="py-1">{request.selectedDepartment}</td>
               </tr>
               <tr>
-                <td className="py-1 font-medium text-[18px]">Section:</td>
+                <td className="py-1 font-medium">Section:</td>
                 <td className="py-1">{request.selectedSection}</td>
               </tr>
               <tr>
-                <td className="py-1 font-medium text-[18px]">Depot:</td>
+                <td className="py-1 font-medium">Depot:</td>
                 <td className="py-1">{request.selectedDepo}</td>
               </tr>
             </tbody>
@@ -332,40 +190,37 @@ export default function ViewRequestPage() {
         </div>
 
         <div className="border border-black p-3">
-          <h2 className="text-[24px] font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
+          <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
             Work Details
           </h2>
           <table className="w-full text-sm">
             <tbody>
               <tr>
-                <td className="py-1 font-medium text-[18px]">Work Type:</td>
+                <td className="py-1 font-medium">Work Type:</td>
                 <td className="py-1">{request.workType}</td>
               </tr>
               <tr>
-                <td className="py-1 font-medium text-[18px]">Activity:</td>
+                <td className="py-1 font-medium">Activity:</td>
                 <td className="py-1">{request.activity}</td>
               </tr>
               <tr>
-                <td className="py-1 font-medium text-[18px]">Time:</td>
-                {/* <td className="py-1">
+                <td className="py-1 font-medium">Time:</td>
+                <td className="py-1">
                   {formatTime(request.demandTimeFrom)} to{" "}
                   {formatTime(request.demandTimeTo)}
-                </td> */}
-                <td className="py-1">
-                  {request.demandTimeFrom && request.demandTimeTo
-                    ? `${new Date(request.demandTimeFrom).toISOString().substring(11, 16)} to ${new Date(request.demandTimeTo).toISOString().substring(11, 16)}`
-                    : "N/A"}
                 </td>
               </tr>
               <tr>
-                <td className="py-1 font-medium text-[18px]">Block Section:</td>
+                <td className="py-1 font-medium">Block Section:</td>
                 <td className="py-1">{request.missionBlock}</td>
               </tr>
               {request.workLocationFrom ? (
                 <tr>
-                  <td className="py-1 font-medium text-[18px]">Work Location:</td>
+                  <td className="py-1 font-medium">Work Location:</td>
                   <td className="py-1">
-                    {request.workLocationFrom}
+                    {request.workLocationFrom && request.workLocationTo
+                      ? `${request.workLocationFrom} to ${request.workLocationTo}`
+                      : `${request.workLocationFrom}`}
                   </td>
                 </tr>
               ) : null}
@@ -374,27 +229,27 @@ export default function ViewRequestPage() {
         </div>
       </div>
 
-      {request.processedLineSections &&
-        request.processedLineSections.length > 0 && (
+      {(request as any).processedLineSections &&
+        (request as any).processedLineSections.length > 0 && (
           <div className="border border-black p-3 mb-4">
-            <h2 className="text-[24px] font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
+            <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
               Block Sections Detail
             </h2>
             <div className="space-y-3">
-              {request.processedLineSections.map((section, index) => (
+              {(request as any).processedLineSections.map((section: any, index: number) => (
                 <div key={index} className="border border-gray-200 p-2">
-                  <h3 className="font-medium text-[#13529e] text-[18px]">
+                  <h3 className="font-medium text-[#13529e]">
                     {section.block}
                   </h3>
-                  {section.type === "line"|| section.type==="regular" ? (
+                  {section.type === "regular" ? (
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-[18px]">Line:</span>
+                      <div>
+                        <span className="text-xs font-medium">Line:</span>
                         <div className="py-1">{section.lineName || "N/A"}</div>
                       </div>
                       {section.otherLines && (
-                        <div >
-                          <span className="text-[18px] font-medium">
+                        <div>
+                          <span className="text-xs font-medium">
                             Other Lines Affected:
                           </span>
                           <div className="py-1">{section.otherLines}</div>
@@ -403,17 +258,18 @@ export default function ViewRequestPage() {
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <span className="text-[18px] font-medium">Stream:</span>
+                      {section.stream && (<div>
+                        <span className="text-xs font-medium">Stream:</span>
                         <div className="py-1">{section.stream || "N/A"}</div>
-                      </div>
-                      <div>
-                        <span className="text-[18px] font-medium">Road:</span>
+                      </div>)}
+                      {section.road && (<div>
+                        <span className="text-xs font-medium">Road:</span>
                         <div className="py-1">{section.road || "N/A"}</div>
-                      </div>
+                      </div>)}
+
                       {section.otherRoads && (
                         <div className="col-span-2">
-                          <span className="text-[18px] font-medium">
+                          <span className="text-xs font-medium">
                             Other Roads Affected:
                           </span>
                           <div className="py-1">{section.otherRoads}</div>
@@ -427,36 +283,54 @@ export default function ViewRequestPage() {
           </div>
         )}
 
+      {(request as any).emergencyBlockRemarks && (
+        <div className="border border-black p-3 mb-4">
+          <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
+            Emergency Block Remarks
+          </h2>
+          <div className="py-1">{(request as any).emergencyBlockRemarks}</div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div className="border border-black p-3">
-          <h2 className="text-[24px] font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
+          <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
             System Disconnections
           </h2>
           <table className="w-full text-sm">
             <tbody>
               <tr>
-                <td className="py-1 text-[18px]">Power Block Required:</td>
+                <td className="py-1 font-medium">Power Block Required:</td>
                 <td className="py-1">
-                  {request?.powerBlockRequired && request.powerBlockRequired
-                    ? "Yes"
-                    : "No"}
+                  {request.powerBlockRequired ? "Yes" : "No"}
                 </td>
               </tr>
-              {request.powerBlockRequired && request.powerBlockRequirements && (
+              {request.powerBlockRequired && (request as any).powerBlockRequirements && (
                 <tr>
-                  <td className="py-1 text-[18px]">Power Block Details:</td>
+                  <td className="py-1 font-medium">Power Block Details:</td>
                   <td className="py-1">
-                    {request.powerBlockRequirements?.join(", ") || "N/A"}
+                    {Array.isArray((request as any).powerBlockRequirements) 
+                      ? (request as any).powerBlockRequirements.join(", ") 
+                      : (request as any).powerBlockRequirements || "N/A"}
                   </td>
                 </tr>
               )}
               <tr>
-                <td className="py-1 text-[18px]">Elementary Section:</td>
-                <td className="py-1">{request.elementarySection}</td>
+                <td className="py-1 font-medium">
+                  SelectedDepot For Power Block:
+                </td>
+                <td className="py-1">
+                  {(request as any).powerBlockDisconnectionAssignTo || "N/A"}
+                </td>
               </tr>
-
               <tr>
-                <td className="py-1 text-[18px]">
+                <td className="py-1 font-medium">Elementary Section:</td>
+                <td className="py-1">
+                  {(request as any).elementarySection || "N/A"}
+                </td>
+              </tr>
+              <tr>
+                <td className="py-1 font-medium">
                   S&T Disconnection Required:
                 </td>
                 <td className="py-1">
@@ -464,81 +338,77 @@ export default function ViewRequestPage() {
                 </td>
               </tr>
               {request.sntDisconnectionRequired &&
-                request.sntDisconnectionRequirements && (
+                (request as any).sntDisconnectionRequirements && (
                   <tr>
-                    <td className="py-1 text-[18px]">
+                    <td className="py-1 font-medium">
                       S&T Disconnection Details:
                     </td>
                     <td className="py-1">
-                      {request.sntDisconnectionRequirements?.join(", ") ||
-                        "N/A"}
+                      {Array.isArray((request as any).sntDisconnectionRequirements)
+                        ? (request as any).sntDisconnectionRequirements.join(", ")
+                        : (request as any).sntDisconnectionRequirements || "N/A"}
                     </td>
                   </tr>
                 )}
               <tr>
-                <td className="py-1 text-[18px]">S&T Lines:</td>
+                <td className="py-1 font-medium">
+                  SelectedDepot For S&T Disconnection:
+                </td>
                 <td className="py-1">
-                  {request.sntDisconnectionLineFrom} to{" "}
-                  {request.sntDisconnectionLineTo}
+                  {(request as any).sntDisconnectionAssignTo || "N/A"}
                 </td>
               </tr>
               <tr>
-                {/* <td className="py-1 font-medium">Signal Disconnection:</td>
+                <td className="py-1 font-medium">S&T Lines:</td>
                 <td className="py-1">
-                  {request.sigDisconnection ? "Yes" : "No"}
-                </td> */}
+                  {(request as any).sntDisconnectionLineFrom && (request as any).sntDisconnectionLineTo
+                    ? `${(request as any).sntDisconnectionLineFrom} to ${(request as any).sntDisconnectionLineTo}`
+                    : "-"}
+                </td>
               </tr>
-              {request.sigDisconnection && request.sntDisconnectionRequired && (
-                <tr>
-                  <td className="py-1 text-[18px]">
-                    Signal Disconnection Details:
-                  </td>
-                  <td className="py-1">
-                    {request.sntDisconnectionRequired || "N/A"}
-                  </td>
-                </tr>
-              )}
             </tbody>
           </table>
         </div>
 
         <div className="border border-black p-3">
-          <h2 className="text-[24px] font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
+          <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
             Safety & Additional Information
           </h2>
           <table className="w-full text-sm">
             <tbody>
               <tr>
-                <td className="py-1 text-[18px]">Fresh Caution Required:</td>
+                <td className="py-1 font-medium">Fresh Caution Required:</td>
                 <td className="py-1">
-                  {request.freshCautionRequired ? "Yes" : "No"}
+                  {(request as any).freshCautionRequired ? "Yes" : "No"}
                 </td>
               </tr>
-              {request.freshCautionRequired && (
+              {(request as any).freshCautionRequired && (
                 <>
                   <tr>
-                    <td className="py-1 text-[18px]">Caution Speed:</td>
-                    <td className="py-1">{request.freshCautionSpeed} km/h</td>
+                    <td className="py-1 font-medium">Caution Speed:</td>
+                    <td className="py-1">{(request as any).freshCautionSpeed} km/h</td>
                   </tr>
-                  {request.freshCautionLocationFrom && (
+                  {(request as any).freshCautionLocationFrom && (
                     <tr>
-                      <td className="py-1 text-[18px]">Caution Location:</td>
+                      <td className="py-1 font-medium">Caution Location:</td>
                       <td className="py-1">
-                        {request.freshCautionLocationFrom} to{" "}
-                        {request.freshCautionLocationTo}
+                        {(request as any).freshCautionLocationFrom} to{" "}
+                        {(request as any).freshCautionLocationTo}
                       </td>
                     </tr>
                   )}
+                  <tr>
+                    <td className="py-1 font-medium">Adjacent lines affected:</td>
+                    <td className="py-1">
+                      {(request as any).adjacentLinesAffected}
+                    </td>
+                  </tr>
                 </>
               )}
-              <tr>
-                <td className="py-1 text-[18px]">Adjacent lines affected:</td>
-                <td className="py-1">{request.adjacentLinesAffected}</td>
-              </tr>
-              {request.repercussions && (
+              {(request as any).repercussions && (
                 <tr>
-                  <td className="py-1 text-[18px]">Repercussions:</td>
-                  <td className="py-1">{request.repercussions}</td>
+                  <td className="py-1 font-medium">Repercussions:</td>
+                  <td className="py-1">{(request as any).repercussions}</td>
                 </tr>
               )}
             </tbody>
@@ -546,27 +416,26 @@ export default function ViewRequestPage() {
         </div>
       </div>
 
-      {/* {request.requestremarks && (
+      {(request as any).requestremarks && (
         <div className="border border-black p-3 mb-4">
           <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
             Remarks
           </h2>
-          <p className="text-sm">{request.requestremarks}</p>
+          <p className="text-sm">{(request as any).requestremarks}</p>
         </div>
-      )} */}
+      )}
 
- <div className="border border-black p-3 mb-4">
-          <h2 className="text-[24px] font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
-            Remarks
+      {request.adminRequestStatus !== "PENDING" && (request as any).ManagerResponse && (
+        <div className="border border-black p-3 mb-4">
+          <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
+            Manager Response
           </h2>
-          {/* <p className="text-sm">{request.requestremarks}</p> */}
-          <p className="text-[18px]">
-  {request.requestremarks?.trim() ? request.requestremarks : "Nil"}
-</p>
-
+          <p className="text-sm">{(request as any).ManagerResponse}</p>
         </div>
-      <div className="text-[10px] text-gray-600 mt-2 border-t border-black pt-1 text-right">
-        © {new Date().getFullYear()} Indian Railways
+      )}
+
+      <div className="text-[10px] text-gray-600 mt-2 border-t border-black pt-1">
+        © {new Date().getFullYear()} Indian Railways. All Rights Reserved.
       </div>
     </div>
   );

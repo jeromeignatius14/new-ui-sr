@@ -20,21 +20,6 @@ export default function ViewRequestPage() {
   // Get the source page from URL parameter or default to optimise-table
   const sourcePage = searchParams.get('from') || 'optimise-table';
 
-  // Get the date parameter or use the request's date
-  const getBackUrl = (request: any) => {
-    const date = format(new Date(request.date), 'yyyy-MM-dd');
-    switch (sourcePage) {
-      case 'optimised-table-data':
-        return `/admin/optimised-table-data?date=${date}`;
-      case 'sanction-table-data':
-        return `/admin/sanction-table-data?date=${date}`;
-      case 'request-table':
-        return `/admin/request-table?date=${date}`;
-      default:
-        return `/admin/optimise-table?date=${date}`;
-    }
-  };
-
   // Fetch request data
   const { data, isLoading, error } = useQuery({
     queryKey: ["request", id],
@@ -50,18 +35,20 @@ export default function ViewRequestPage() {
     }
   };
 
-  const formatTime = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return "N/A";
+  const formatTime = (dateString: string): string => {
+    if (!dateString) return "Invalid time";
 
-      // Format as 24-hour time (HH:mm) using UTC
-      const hours = date.getUTCHours().toString().padStart(2, '0');
-      const minutes = date.getUTCMinutes().toString().padStart(2, '0');
-      return `${hours}:${minutes}`;
-    } catch (error) {
-      console.error("Error formatting time:", error, dateString);
-      return "N/A";
+    try {
+      // Handle both full ISO strings and time-only strings
+      const timePart = dateString.includes('T')
+        ? dateString.split('T')[1]
+        : dateString;
+
+      // Extract just the hours and minutes
+      const [hours, minutes] = timePart.split(':');
+      return `${hours.padStart(2, '0')}:${(minutes || '00').padStart(2, '0').substring(0, 2)}`;
+    } catch {
+      return "Invalid time";
     }
   };
 
@@ -91,6 +78,7 @@ export default function ViewRequestPage() {
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case "ACCEPTED":
+      case "APPROVED":
         return "bg-green-100 text-green-800 border border-black";
       case "REJECTED":
         return "bg-red-100 text-red-800 border border-black";
@@ -111,13 +99,7 @@ export default function ViewRequestPage() {
 
   if (error) {
     router.push('/auth/login');
-    // return (
-    //   <div className="min-h-screen bg-white p-3 border border-black flex items-center justify-center">
-    //     <div className="text-center py-5 text-red-600">
-    //       Error loading approved requests. Please try again.
-    //     </div>
-    //   </div>
-    // );
+    return null;
   }
 
   const request = data?.data;
@@ -137,18 +119,15 @@ export default function ViewRequestPage() {
           Block Details
         </h1>
         <div className="flex gap-2">
-          {/* <Link
-            href={data?.data ? getBackUrl(data.data) : '/admin/optimise-table'}
-            className="px-3 py-1 text-sm bg-white text-[#13529e] border border-black"
-          >
-            Back
-          </Link> */}
           <button
-      onClick={() => router.back()}
-      className="px-3 py-1 text-sm bg-white text-[#13529e] border border-black"
-    >
-      Back
-    </button>
+            onClick={() => router.back()}
+            className="px-3 py-1 text-sm bg-white text-[#13529e] border border-black flex items-center gap-1"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+            Back
+          </button>
           {request.adminRequestStatus === "PENDING" && (
             <button
               onClick={() => handleRequestAction(false)}
@@ -161,24 +140,15 @@ export default function ViewRequestPage() {
         </div>
       </div>
 
-      {/* <div className="mb-4 px-2 py-1 inline-block">
+      <div className="mb-4 px-2 py-1 inline-block">
         <span
           className={`px-2 py-0.5 text-sm ${getStatusBadgeClass(
-            request.sntDisconnectionRequired === undefined
-              ? "NAN"
-              : request.sntDisconnectionRequired
-                ? request.DisconnAcceptance || "PENDING"
-                : "NAN"
+            request.adminRequestStatus
           )}`}
         >
-          S&T Approval:{" "}
-          {request.sntDisconnectionRequired === undefined
-            ? "NAN"
-            : request.sntDisconnectionRequired
-              ? request.DisconnAcceptance || "PENDING"
-              : "NAN"}
+          Status: {request.adminRequestStatus}
         </span>
-      </div> */}
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div className="border border-black p-3">
@@ -248,7 +218,9 @@ export default function ViewRequestPage() {
                 <tr>
                   <td className="py-1 font-medium">Work Location:</td>
                   <td className="py-1">
-                    {request.workLocationFrom} 
+                    {request.workLocationFrom && request.workLocationTo
+                      ? `${request.workLocationFrom} to ${request.workLocationTo}`
+                      : `${request.workLocationFrom}`}
                   </td>
                 </tr>
               ) : null}
@@ -257,14 +229,14 @@ export default function ViewRequestPage() {
         </div>
       </div>
 
-      {request.processedLineSections &&
-        request.processedLineSections.length > 0 && (
+      {(request as any).processedLineSections &&
+        (request as any).processedLineSections.length > 0 && (
           <div className="border border-black p-3 mb-4">
             <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
               Block Sections Detail
             </h2>
             <div className="space-y-3">
-              {request.processedLineSections.map((section, index) => (
+              {(request as any).processedLineSections.map((section: any, index: number) => (
                 <div key={index} className="border border-gray-200 p-2">
                   <h3 className="font-medium text-[#13529e]">
                     {section.block}
@@ -286,14 +258,15 @@ export default function ViewRequestPage() {
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-2">
-                      <div>
+                      {section.stream && (<div>
                         <span className="text-xs font-medium">Stream:</span>
                         <div className="py-1">{section.stream || "N/A"}</div>
-                      </div>
-                      <div>
+                      </div>)}
+                      {section.road && (<div>
                         <span className="text-xs font-medium">Road:</span>
                         <div className="py-1">{section.road || "N/A"}</div>
-                      </div>
+                      </div>)}
+
                       {section.otherRoads && (
                         <div className="col-span-2">
                           <span className="text-xs font-medium">
@@ -310,6 +283,15 @@ export default function ViewRequestPage() {
           </div>
         )}
 
+      {(request as any).emergencyBlockRemarks && (
+        <div className="border border-black p-3 mb-4">
+          <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
+            Emergency Block Remarks
+          </h2>
+          <div className="py-1">{(request as any).emergencyBlockRemarks}</div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div className="border border-black p-3">
           <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
@@ -320,19 +302,33 @@ export default function ViewRequestPage() {
               <tr>
                 <td className="py-1 font-medium">Power Block Required:</td>
                 <td className="py-1">
-                  {request?.powerBlockRequired && request.powerBlockRequired
-                    ? "Yes"
-                    : "No"}
+                  {request.powerBlockRequired ? "Yes" : "No"}
                 </td>
               </tr>
-              {request.powerBlockRequired && request.powerBlockRequirements && (
+              {request.powerBlockRequired && (request as any).powerBlockRequirements && (
                 <tr>
                   <td className="py-1 font-medium">Power Block Details:</td>
                   <td className="py-1">
-                    {request.powerBlockRequirements || "N/A"}
+                    {Array.isArray((request as any).powerBlockRequirements) 
+                      ? (request as any).powerBlockRequirements.join(", ") 
+                      : (request as any).powerBlockRequirements || "N/A"}
                   </td>
                 </tr>
               )}
+              <tr>
+                <td className="py-1 font-medium">
+                  SelectedDepot For Power Block:
+                </td>
+                <td className="py-1">
+                  {(request as any).powerBlockDisconnectionAssignTo || "N/A"}
+                </td>
+              </tr>
+              <tr>
+                <td className="py-1 font-medium">Elementary Section:</td>
+                <td className="py-1">
+                  {(request as any).elementarySection || "N/A"}
+                </td>
+              </tr>
               <tr>
                 <td className="py-1 font-medium">
                   S&T Disconnection Required:
@@ -342,32 +338,34 @@ export default function ViewRequestPage() {
                 </td>
               </tr>
               {request.sntDisconnectionRequired &&
-                request.sntDisconnectionRequirements && (
+                (request as any).sntDisconnectionRequirements && (
                   <tr>
                     <td className="py-1 font-medium">
                       S&T Disconnection Details:
                     </td>
                     <td className="py-1">
-                      {request.sntDisconnectionRequirements || "N/A"}
+                      {Array.isArray((request as any).sntDisconnectionRequirements)
+                        ? (request as any).sntDisconnectionRequirements.join(", ")
+                        : (request as any).sntDisconnectionRequirements || "N/A"}
                     </td>
                   </tr>
                 )}
               <tr>
-                <td className="py-1 font-medium">Signal Disconnection:</td>
+                <td className="py-1 font-medium">
+                  SelectedDepot For S&T Disconnection:
+                </td>
                 <td className="py-1">
-                  {request.sigDisconnection ? "Yes" : "No"}
+                  {(request as any).sntDisconnectionAssignTo || "N/A"}
                 </td>
               </tr>
-              {request.sigDisconnection && request.sntDisconnectionRequired && (
-                <tr>
-                  <td className="py-1 font-medium">
-                    Signal Disconnection Details:
-                  </td>
-                  <td className="py-1">
-                    {request.sntDisconnectionRequired || "N/A"}
-                  </td>
-                </tr>
-              )}
+              <tr>
+                <td className="py-1 font-medium">S&T Lines:</td>
+                <td className="py-1">
+                  {(request as any).sntDisconnectionLineFrom && (request as any).sntDisconnectionLineTo
+                    ? `${(request as any).sntDisconnectionLineFrom} to ${(request as any).sntDisconnectionLineTo}`
+                    : "-"}
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -381,30 +379,36 @@ export default function ViewRequestPage() {
               <tr>
                 <td className="py-1 font-medium">Fresh Caution Required:</td>
                 <td className="py-1">
-                  {request.freshCautionRequired ? "Yes" : "No"}
+                  {(request as any).freshCautionRequired ? "Yes" : "No"}
                 </td>
               </tr>
-              {request.freshCautionRequired && (
+              {(request as any).freshCautionRequired && (
                 <>
                   <tr>
                     <td className="py-1 font-medium">Caution Speed:</td>
-                    <td className="py-1">{request.freshCautionSpeed} km/h</td>
+                    <td className="py-1">{(request as any).freshCautionSpeed} km/h</td>
                   </tr>
-                  {request.freshCautionLocationFrom && (
+                  {(request as any).freshCautionLocationFrom && (
                     <tr>
                       <td className="py-1 font-medium">Caution Location:</td>
                       <td className="py-1">
-                        {request.freshCautionLocationFrom} to{" "}
-                        {request.freshCautionLocationTo}
+                        {(request as any).freshCautionLocationFrom} to{" "}
+                        {(request as any).freshCautionLocationTo}
                       </td>
                     </tr>
                   )}
+                  <tr>
+                    <td className="py-1 font-medium">Adjacent lines affected:</td>
+                    <td className="py-1">
+                      {(request as any).adjacentLinesAffected}
+                    </td>
+                  </tr>
                 </>
               )}
-              {request.repercussions && (
+              {(request as any).repercussions && (
                 <tr>
                   <td className="py-1 font-medium">Repercussions:</td>
-                  <td className="py-1">{request.repercussions}</td>
+                  <td className="py-1">{(request as any).repercussions}</td>
                 </tr>
               )}
             </tbody>
@@ -412,17 +416,26 @@ export default function ViewRequestPage() {
         </div>
       </div>
 
-      {request.requestremarks && (
+      {(request as any).requestremarks && (
         <div className="border border-black p-3 mb-4">
           <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
             Remarks
           </h2>
-          <p className="text-sm">{request.requestremarks}</p>
+          <p className="text-sm">{(request as any).requestremarks}</p>
         </div>
       )}
 
-      <div className="text-[10px] text-gray-600 mt-2 border-t border-black pt-1 text-right">
-        © {new Date().getFullYear()} Indian Railways
+      {request.adminRequestStatus !== "PENDING" && (request as any).ManagerResponse && (
+        <div className="border border-black p-3 mb-4">
+          <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
+            Manager Response
+          </h2>
+          <p className="text-sm">{(request as any).ManagerResponse}</p>
+        </div>
+      )}
+
+      <div className="text-[10px] text-gray-600 mt-2 border-t border-black pt-1">
+        © {new Date().getFullYear()} Indian Railways. All Rights Reserved.
       </div>
     </div>
   );
