@@ -428,10 +428,41 @@ const sanctionedTo = request.sanctionedTimeTo
 
       // Add worksheet to workbook
       XLSX.utils.book_append_sheet(wb, ws, "Block Requests");
+    const formatDateForFilename = (dateString: string) => {
+      if (!dateString) return "";
+      try {
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+      } catch {
+        return "";
+      }
+    };
 
+    // Generate filename based on selected date range
+    let filename;
+    if (activeSummaryFilters.start && activeSummaryFilters.end) {
+      const startDate = formatDateForFilename(activeSummaryFilters.start);
+      const endDate = formatDateForFilename(activeSummaryFilters.end);
+      filename = `block_requests_${startDate}_to_${endDate}.xlsx`;
+    } else if (activeSummaryFilters.start) {
+      filename = `block_requests_${formatDateForFilename(activeSummaryFilters.start)}.xlsx`;
+    } else if (activeSummaryFilters.end) {
+      filename = `block_requests_${formatDateForFilename(activeSummaryFilters.end)}.xlsx`;
+    } else {
+      // Use current date if no range is specified
+      const today = new Date();
+      const day = String(today.getDate()).padStart(2, '0');
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const year = today.getFullYear();
+      filename = `block_requests_${day}-${month}-${year}.xlsx`;
+    }
+    XLSX.writeFile(wb, filename);
       // Generate file and trigger download
-      const date = new Date().toISOString().slice(0, 10);
-      XLSX.writeFile(wb, `block_requests_${date}.xlsx`);
+      // const date = new Date().toISOString().slice(0, 10);
+      // XLSX.writeFile(wb, `block_requests_${date}.xlsx`);
 
     } catch (error) {
       console.error("Download failed:", error);
