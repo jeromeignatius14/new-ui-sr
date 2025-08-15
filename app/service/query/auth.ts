@@ -66,9 +66,26 @@ export const useAuth = () => {
 export const usePhoneAuth = () => {
   const router = useRouter();
 
-  const requestOtpMutation = useMutation({
-    mutationFn: (phone: string) => authService.requestOtp(phone),
+  // const requestOtpMutation = useMutation({
+  //   mutationFn: (phone: string) => authService.requestOtp(phone),
+  // });
+
+
+const requestOtpMutation = useMutation({
+    mutationFn: (phone: string) => {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("otpRequestInProgress", "true");
+      }
+      return authService.requestOtp(phone);
+    },
+    onSettled: () => {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("otpRequestInProgress");
+      }
+    }
   });
+
+
 
   const verifyOtpMutation = useMutation({
     mutationFn: ({
