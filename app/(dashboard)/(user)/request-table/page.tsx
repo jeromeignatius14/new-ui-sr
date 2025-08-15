@@ -1145,7 +1145,7 @@ const handleDownload = () => {
                       <td className="border border-black px-2 py-1 text-black">
                         {request.missionBlock}
                       </td>
-                   <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                   {/* <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
                       {session?.user.department === "S&T"
                         ? request.processedLineSections
                             .map((section: any) =>
@@ -1160,7 +1160,19 @@ const handleDownload = () => {
                             .map((section: any) => section.lineName)
                             .filter(Boolean)
                             .join(", ") || "N/A"}
-                    </td>
+                    </td> */}
+                    <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+  {request.processedLineSections
+    .map((section: any) =>
+      section.type === "line"
+        ? [section.lineName, section.otherLines]
+        : [section.road, section.otherRoads]
+    )
+    .flat()
+    .filter(Boolean)
+    .join(", ") || "N/A"}
+</td>
+
                       <td className="border border-black px-2 py-1 text-black">
                         {request.activity}
                       </td>
