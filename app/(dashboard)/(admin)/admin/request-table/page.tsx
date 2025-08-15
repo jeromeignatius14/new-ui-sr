@@ -604,12 +604,22 @@ if (activeSummaryFilters.section.length > 0) {
       ))}
     </div>
 
-    <Link
+    {/* <Link
       href="/admin/optimise-table"
       className="mx-auto w-fit flex items-center gap-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF8989] text-white font-bold px-8 py-3 mb-6 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-[22px]"
     >
       Click To View
-    </Link>
+    </Link> */}
+    <Link
+  href="/admin/optimise-table"
+  className="mx-auto w-fit flex items-center gap-2 font-bold px-8 py-3 mb-6 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-[22px]"
+  style={{
+    background: 'linear-gradient(to right, #FF6B6B, #FF8989)',
+    color: 'white'
+  }}
+>
+  Click To View
+</Link>
   </div>
 </div>
 

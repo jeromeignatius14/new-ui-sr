@@ -1177,7 +1177,8 @@ const nonCorridorRequestsFiltered = pendingRequests
                         ) : (
                           <>
                             <button
-                              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
+                              className="px-2 py-1 text-[24px]  border border-black rounded"
+                              style={{backgroundColor:"#00a63e",color:"white"}}
                               onClick={
                                 () => {
                                     handleSendUrgentRequests([request]);
@@ -1187,7 +1188,8 @@ const nonCorridorRequestsFiltered = pendingRequests
                               Sanction
                             </button>
                               <button
-                                className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
+                                className="px-2 py-1 text-[24px] text-black border border-black rounded"
+                                style={{backgroundColor:"#d1d5dc",color:"black"}}
                                 onClick={() => setModifyReturnOpenId(request.id)}
                               >
                                 Modify/Return
@@ -1200,7 +1202,8 @@ const nonCorridorRequestsFiltered = pendingRequests
   <div className="flex gap-2">
     <Link
       href={`/admin/view-request/${request.id}?from=request-table`}
-      className="px-2 py-1 bg-blue-600 text-white border border-black rounded inline-block text-center"
+      className="px-2 py-1  border border-black rounded inline-block text-center"
+      style={{backgroundColor:"#155dfc",color:"white"}}
     >
       View
     </Link>
@@ -1407,7 +1410,8 @@ const nonCorridorRequestsFiltered = pendingRequests
                         ) : (
                           <>
                             <button
-                              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
+                              className="px-2 py-1 text-[24px]  border border-black rounded"
+                              style={{backgroundColor:"#00a63e",color:"white"}}
                               onClick={
                                 () => {
                                     handleSendNonUrgentRequests([request]);
@@ -1417,7 +1421,8 @@ const nonCorridorRequestsFiltered = pendingRequests
                               Sanction
                             </button>
                               <button
-                                className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
+                                className="px-2 py-1 text-[24px]  border border-black rounded"
+                                 style={{backgroundColor:"#d1d5dc",color:"black"}}
                                 onClick={() => setModifyReturnOpenId(request.id)}
                               >
                                 Modify/Return
@@ -1430,7 +1435,8 @@ const nonCorridorRequestsFiltered = pendingRequests
   <div className="flex gap-2">
     <Link
       href={`/admin/view-request/${request.id}?from=request-table`}
-      className="px-2 py-1 bg-blue-600 text-white border border-black rounded inline-block text-center"
+      className="px-2 py-1  border border-black rounded inline-block text-center"
+      style={{backgroundColor:"#155dfc",color:"white"}}
     >
       View
     </Link>
@@ -1617,7 +1623,8 @@ const nonCorridorRequestsFiltered = pendingRequests
                         ) : (
                           <>
                             <button
-                              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
+                              className="px-2 py-1 text-[24px]  border border-black rounded"
+                              style={{backgroundColor:"#00a63e",color:"white"}}
                               onClick={
                                 () => {
                                     handleSendNonUrgentRequests([request]);
@@ -1627,7 +1634,8 @@ const nonCorridorRequestsFiltered = pendingRequests
                               Sanction
                             </button>
                               <button
-                                className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
+                                className="px-2 py-1 text-[24px]  border border-black rounded"
+                                 style={{backgroundColor:"#d1d5dc",color:"black"}}
                                 onClick={() => setModifyReturnOpenId(request.id)}
                               >
                                 Modify/Return
@@ -1640,7 +1648,8 @@ const nonCorridorRequestsFiltered = pendingRequests
   <div className="flex gap-2">
     <Link
       href={`/admin/view-request/${request.id}?from=request-table`}
-      className="px-2 py-1 bg-blue-600 text-white border border-black rounded inline-block text-center"
+      className="px-2 py-1  border border-black rounded inline-block text-center"
+      style={{backgroundColor:"#155dfc",color:"white"}}
     >
       View
     </Link>
