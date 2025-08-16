@@ -19,16 +19,16 @@ export default function DashboardPage() {
   });
 
 
- const { data: requestsData } = useQuery({
+  const { data: requestsData } = useQuery({
     queryKey: ["user-requests"],
     queryFn: () => userRequestService.getUserRequests(1, 10), // First page, 10 items
     enabled: !!session?.user, // Only fetch when user is authenticated
   });
 
-const hasInProgressBlock = requestsData?.data?.requests?.find(
-  (request: any) =>
-    ["inprogress", "in-progress"].includes(request.overAllStatus?.toLowerCase())
-);
+  const hasInProgressBlock = requestsData?.data?.requests?.find(
+    (request: any) =>
+      ["inprogress", "in-progress"].includes(request.overAllStatus?.toLowerCase())
+  );
 
 
 
@@ -74,16 +74,59 @@ const hasInProgressBlock = requestsData?.data?.requests?.find(
           <a href="/request-table" className="w-full rounded-full bg-[#c7c7f7] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">SUMMARY OF MY BLOCK REQUESTS</a>
           <a href={`rbms://app?cugNumber=${session?.user?.phone}`} className="w-full rounded-full bg-[#a6f7a6] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">AVAIL BLOCK AT SITE</a>
 
-{hasInProgressBlock && (
-  <a
-    href={`https://mobile-bms.plattrtechstudio.com/?cugNumber=${session?.user?.phone}&section=MAS-GDR&in-progress=true`}
-    className="w-full rounded-full bg-[#f69697] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition"
-  >
-    Block under progress
-  </a>
-)}
+          {hasInProgressBlock && (
+            <a
+              href={`https://mobile-bms.plattrtechstudio.com/?cugNumber=${session?.user?.phone}&section=MAS-GDR&in-progress=true`}
+              className="w-full rounded-full bg-[#f69697] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition"
+            >
+              Block under progress
+            </a>
+          )}
 
 
+          <a href="/generate-reports" className="w-full rounded-full bg-[#ffd180] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">GENERATE REPORTS</a>
+        </div>
+
+        {/* Logout button */}
+        <div className="w-full flex justify-center mt-10 mb-4">
+          <form action="/auth/login" method="get" onSubmit={async (e) => { e.preventDefault(); await import('next-auth/react').then(mod => mod.signOut({ redirect: true, callbackUrl: '/auth/login' })); }}>
+            <button type="submit" className="flex items-center gap-2 bg-[#dbe6fd] border border-black rounded-[50%] px-6 py-2 text-lg font-bold text-black shadow hover:bg-[#c7d7f7] transition">
+              <span className=" w-7 h-7 bg-white rounded-[50%] border border-black flex items-center justify-center">
+                <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' strokeWidth={2} className='w-5 h-5'><path strokeLinecap='round' strokeLinejoin='round' d='M6 18L18 6M6 6l12 12' /></svg>
+              </span>
+              Logout
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // Custom PUNCTUALITY_CONTROLLER dashboard UI
+  if (session?.user?.role === "PUNCTUALITY_CONTROLLER") {
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center bg-[#fffbe9]">
+        {/* Header */}
+        <div className="w-full border border-black bg-yellow-200 flex items-center justify-center relative p-2" style={{ minHeight: 60 }}>
+          <span className="absolute left-4 top-1/2 -translate-y-1/2">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 32 32" stroke="black" strokeWidth={2} className="w-9 h-9"><rect x="6" y="12" width="20" height="12" rx="2" fill="#fffbe9" stroke="black" strokeWidth="2" /><path d="M4 14L16 4L28 14" stroke="black" strokeWidth="2" fill="none" /></svg>
+          </span>
+          <span className="text-2xl font-bold text-black">Home</span>
+        </div>
+        {/* RBMS badge */}
+        <div className="w-full flex justify-center mt-4">
+          <div className="bg-[#8ed974] px-8 py-2">
+            <span className="text-[9vw] min-[430px]:text-4xl text-nowrap font-extrabold text-[#b07be0] tracking-wide">RBMS-{session?.user?.location}-DIVN</span>
+          </div>
+        </div>
+        {/* Designation bar */}
+        <div className="w-full flex justify-center mt-4">
+          <div className="bg-[#ffeaea] px-6 py-2 border border-black flex flex-col items-center" style={{ maxWidth: '90vw' }}>
+            <span className="text-2xl font-semibold text-gray-700 tracking-wide">DESGN:<span className="text-2xl font-bold text-black">{session?.user?.name || ''}</span></span>
+          </div>
+        </div>
+        {/* Navigation buttons */}
+        <div className="w-full flex flex-col items-center gap-5 mt-6 px-2 max-w-md">
           <a href="/generate-reports" className="w-full rounded-full bg-[#ffd180] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">GENERATE REPORTS</a>
         </div>
 
@@ -183,19 +226,23 @@ const hasInProgressBlock = requestsData?.data?.requests?.find(
   //     </div>
   //   );
   // }
-if (session?.user?.role === "DEPT_CONTROLLER") {
+  if(session?.user?.role === "PUNCTUALITY_CONTROLLER" || session?.user?.role === "SENIOR_OFFICER" || session?.user?.role === "JUNIOR_OFFICER"){
+    window.location.href = "/controller";
+  }
+
+  if (session?.user?.role === "DEPT_CONTROLLER") {
 
     window.location.href = "/manage/request-table";
- 
-}
 
-if (session?.user?.role === "SM") {
+  }
+
+  if (session?.user?.role === "SM") {
 
     // window.location.href = "https://smr-dashboard.plattorian.tech/?cugNumber=${session?.user?.phone}&section=MAS-GDR";
-        window.location.href=`https://smr-dashboard.plattorian.tech/?cugNumber=${session?.user?.phone}&stationCode=${session?.user?.depot}&user=SM&token=W1IU66ZFEBFBF6C1dGmouN6PVyHARQJg`
+    window.location.href = `https://smr-dashboard.plattorian.tech/?cugNumber=${session?.user?.phone}&stationCode=${session?.user?.depot}&user=SM&token=W1IU66ZFEBFBF6C1dGmouN6PVyHARQJg`
 
- 
-}
+
+  }
   // Custom admin dashboard UI (match manager dashboard style)
   if (session?.user?.role === "ADMIN") {
     return (

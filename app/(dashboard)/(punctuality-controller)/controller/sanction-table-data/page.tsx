@@ -577,43 +577,6 @@ export default function AdminRequestTablePage() {
         </span>
       </div>
 
-      {/* Requests Pending With Me CTA */}
-      <div className="flex justify-center mt-8 mb-6">
-        <div className="w-full max-w-2xl rounded-2xl border-4 border-[#FF6B6B] bg-gradient-to-b from-[#FFF0F0] to-[#FFE5E5] shadow-xl p-0 transform hover:scale-[1.02] transition-all duration-300">
-          <div className="text-[28px] font-bold text-[#B22222] text-center py-4 tracking-wide border-b-2 border-[#FFB3B3]">
-            REQUESTS PENDING WITH ME
-          </div>
-          <div className="text-center text-[26px] text-[#B22222] pt-3 font-semibold">
-            Total Pending: <span className="text-[32px]">{TotalRequests}</span>
-          </div>
-
-          {/* Cards Responsive Fix */}
-          <div className="flex flex-wrap justify-center items-center gap-1 py-4">
-            {[{ label: "ENGG", value: ENGGRequest },
-            { label: "S&T", value: SandTRequest },
-            { label: "TRD", value: TRDRequest }].map((item, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between w-fit bg-gradient-to-r from-[#FFB3B3] to-[#FFD5D5] text-[#B22222] font-bold py-2 px-0.5 rounded-xl border-2 border-[#FF6B6B] text-[22px] shadow-md hover:shadow-lg transition-all"
-              >
-                <span>{item.label}</span>
-                <span className="bg-white rounded-full w-12 h-12 flex items-center justify-center text-[24px] shadow-inner border-2 border-[#FFB3B3]">
-                  {item.value}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          <Link
-            href="/admin/optimise-table"
-            className="mx-auto w-fit flex items-center gap-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF8989] text-white font-bold px-8 py-3 mb-6 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-[22px]"
-          >
-            Click To View
-          </Link>
-        </div>
-      </div>
-
-
       {/* View Summary of Upcoming Blocks CTA */}
       <div className="flex justify-center mb-8 w-full">
         <div className="w-full max-w-[1200px] rounded-2xl border-4 border-[#00B4D8] bg-[#CAF0F8] shadow-lg p-0">
