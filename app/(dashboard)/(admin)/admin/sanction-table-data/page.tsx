@@ -13,7 +13,8 @@ import { useSession } from "next-auth/react";
 import { managerService, UserRequest } from "@/app/service/api/manager";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
-
+  import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 interface OptionType {
   value: string;
   label: string;
@@ -265,6 +266,61 @@ export default function GenerateReportPage() {
     const [day, month, year] = value.split("/");
     if (!day || !month || !year) return value;
     return `${day}/${month}/${year}`;
+  };
+  const handleDownloadTableB = () => {
+    try {
+      const doc = new jsPDF();
+  
+      // Title
+      doc.setFontSize(16);
+      doc.text("(B) Summary of Upcoming Blocks", 14, 20);
+  
+      // Table header (match your <th>)
+      const headers = [
+        ["Date", "DivisionId", "Major Section", "Block Section", "Type", "Duration", "Status"],
+      ];
+  
+      // Table body (match your <td>)
+      const body = filteredUpcomingBlocks.slice(0, 200).map((block: any) => {
+        let statusLabel = "";
+        if (block.overAllStatus === "Sanctioned") {
+          statusLabel = "Sanctioned";
+        } else if (block.overAllStatus === "with optg.") {
+          statusLabel = "with optg.";
+        } else if (block.Status === "PENDING") {
+          statusLabel = "Pending with dept control";
+        } else if (block.Status === "REJECTED") {
+          statusLabel = "Returned by Optg";
+        } else {
+          statusLabel = block.overAllStatus || block.Status || "-";
+        }
+  
+        return [
+          formatDateB(block.Date),
+          block.DivisionId || "-",
+          block.Section || "-",
+          block.MissionBlock || "-",
+          block.Type || "-",
+          block.Duration || "-",
+          statusLabel,
+        ];
+      });
+  
+      // Generate PDF table
+      autoTable(doc, {
+        head: headers,
+        body,
+        startY: 30,
+        styles: { fontSize: 10, halign: "center" },
+        headStyles: { fillColor: [228, 158, 221] }, // match your pink header
+        alternateRowStyles: { fillColor: [245, 208, 242] }, // match zebra stripes
+      });
+  
+      // Save
+      doc.save("Summary_of_Upcoming_Blocks.pdf");
+    } catch (err) {
+      console.error("PDF download error:", err);
+    }
   };
 
   // Format the selected dates for display
@@ -934,6 +990,14 @@ export default function GenerateReportPage() {
             <span className="text-[24px] font-bold text-black">
               to see further details.
             </span>
+          </div>
+            <div className="flex items-center gap-4 mt-4 md:mt-0">
+                     <button
+  onClick={handleDownloadTableB}
+  className="bg-[#7be09b] hover:bg-[#5bc07b] text-white font-bold px-4 py-2 rounded-lg shadow border border-[#00b347] text-sm"
+>
+  Download PDF
+</button>
           </div>
           <div className="flex items-center gap-4 mt-4 md:mt-0">
             <button
