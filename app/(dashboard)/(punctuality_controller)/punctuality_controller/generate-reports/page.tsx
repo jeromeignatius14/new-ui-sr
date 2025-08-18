@@ -598,14 +598,14 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
   return (
     <div className="min-h-screen w-full bg-[#fffbe9] flex flex-col items-center">
       {/* RBMS Header */}
-      {/* <div className="w-full bg-[#fff35c] flex flex-col items-center py-2 rounded-t-2xl">
+      <div className="w-full bg-[#fff35c] flex flex-col items-center py-2 rounded-t-2xl">
         <span className="text-[24px] font-extrabold text-[#b07be0] tracking-wide">
           RBMS-{session?.user?.location}-DIVN
         </span>
-      </div> */}
+      </div>
       
       {/* Block Summary Report Title */}
-      {/* <div className="w-full bg-[#b7e3ee] flex flex-col items-center pt-2 pb-1">
+      <div className="w-full bg-[#b7e3ee] flex flex-col items-center pt-2 pb-1">
         <span className="text-[24px] font-extrabold text-black">
           Block Summary Report
         </span>
@@ -615,7 +615,7 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
             Blocks Granted/Availed/Pending
           </span>
         </div>
-      </div> */}
+      </div>
       
       {/* Main Content */}
       <div className="max-w-screen-lg mx-auto w-full px-3">
@@ -623,7 +623,7 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
         <div className="w-full bg-[#fffbe9] px-2 py-2">
           <div className="flex flex-row gap-8 items-end w-full flex-wrap">
             {/* Choose Section Dropdown */}
-            {/* <div className="flex flex-col flex-1 min-w-[90px] max-w-[110px] w-full">
+            <div className="flex flex-col flex-1 min-w-[90px] max-w-[110px] w-full">
               <span className="text-[24px] font-bold text-black mb-1 whitespace-nowrap">
                 Choose Section
               </span>
@@ -705,10 +705,10 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
                 }
                 menuPosition="fixed"
               />
-            </div> */}
+            </div>
             
             {/* Select Period */}
-            {/* <div className="flex flex-col flex-1 min-w-[180px] w-full">
+            <div className="flex flex-col flex-1 min-w-[180px] w-full">
               <div className="flex justify-center w-full mb-1">
                 <span className="text-[24px] font-bold text-black">
                   Select Period
@@ -731,12 +731,12 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
                   {...register("endDate")}
                 />
               </div>
-            </div> */}
+            </div>
           </div>
         </div>
         
         {/* Block Type Filters */}
-        {/* <div className="w-full flex flex-wrap justify-center gap-2 mt-2 mb-1">
+        <div className="w-full flex flex-wrap justify-center gap-2 mt-2 mb-1">
           {blockTypeOptions.map((opt) => (
             <button
               key={opt.value}
@@ -754,10 +754,10 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
               {opt.label}
             </button>
           ))}
-        </div> */}
+        </div>
         
         {/* Department Filters */}
-        {/* <div className="w-full flex flex-wrap justify-center gap-2 mb-2">
+        <div className="w-full flex flex-wrap justify-center gap-2 mb-2">
           {departmentOptions.map((opt) => (
             <button
               key={opt.value}
@@ -784,10 +784,10 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
               {opt.label}
             </button>
           ))}
-        </div> */}
+        </div>
         
         {/* Submit Button */}
-        {/* <div className="w-full flex justify-center mb-2">
+        <div className="w-full flex justify-center mb-2">
           <button
             className="bg-[#7be09b] hover:bg-[#5bc07b] text-white font-bold px-8 py-2 rounded-lg shadow border border-[#00b347] text-[24px]"
             onClick={handleSubmit(onSubmit)}
@@ -795,7 +795,7 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
           >
              Submit
           </button>
-        </div> */}
+        </div>
         
         {/* (A) Block Summary Table */}
         {/* <div className="w-full mt-4">
@@ -884,10 +884,10 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
         </div> */}
         
         {/* (B) Summary of Upcoming Blocks */}
-        {/* <div className="w-full max-w-4xl mt-8">
+        <div className="w-full max-w-4xl mt-8">
           <div className="flex w-full items-center">
             <div className="flex-1 bg-[#f1a983] text-[24px] font-bold border-2 border-black px-2 py-1">
-              (B) Summary of Upcoming Blocks
+               Summary of Upcoming Blocks
             </div>
             <div className="flex items-center gap-2 ml-4">
               <div className="relative inline-block" ref={sectionDropdownRefB}>
@@ -1001,7 +1001,7 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
               </tbody>
             </table>
           </div>
-        </div> */}
+        </div>
 
         {/* View Summary of Sanctioned Blocks */}
         <div className="flex justify-center mb-8 mt-7 w-full">
