@@ -887,7 +887,7 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
         <div className="w-full max-w-4xl mt-8">
           <div className="flex w-full items-center">
             <div className="flex-1 bg-[#f1a983] text-[24px] font-bold border-2 border-black px-2 py-1">
-               Summary of Upcoming Blocks
+              (B) Summary of Upcoming Blocks
             </div>
             <div className="flex items-center gap-2 ml-4">
               <div className="relative inline-block" ref={sectionDropdownRefB}>
@@ -1004,8 +1004,8 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
         </div>
 
         {/* View Summary of Sanctioned Blocks */}
-        <div className="flex justify-center mb-8 mt-7 w-full">
-          <div className="w-full max-w-4xl rounded-2xl border-4 border-[#00B4D8] bg-[#CAF0F8] shadow-lg p-0">
+        <div className="flex justify-center mb-8 mt-7 max-w-[2000px]">
+          <div className="max-w-[2000px] max-w-6xl rounded-2xl border-4 border-[#00B4D8] bg-[#CAF0F8] shadow-lg p-0">
             <div className="text-[24px] font-bold text-[#0077B6] text-center py-3 tracking-wide">
               View Summary of Sanctioned Blocks
             </div>
