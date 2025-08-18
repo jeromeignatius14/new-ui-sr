@@ -10,6 +10,8 @@ import { useRouter } from "next/navigation";
 import { useGenerateReport } from "@/app/service/query/hq";
 import { MajorSection } from "@/app/lib/store";
 import { useSession } from "next-auth/react";
+  import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import { managerService, UserRequest } from "@/app/service/api/manager";
 import { useQuery } from "@tanstack/react-query";
 
@@ -258,6 +260,64 @@ useEffect(() => {
       toast.error("Failed to generate report");
     }
   };
+
+
+const handleDownloadTableB = () => {
+  try {
+    const doc = new jsPDF();
+
+    // Title
+    doc.setFontSize(16);
+    doc.text("(B) Summary of Upcoming Blocks", 14, 20);
+
+    // Table header (match your <th>)
+    const headers = [
+      ["Date", "DivisionId", "Major Section", "Block Section", "Type", "Duration", "Status"],
+    ];
+
+    // Table body (match your <td>)
+    const body = filteredUpcomingBlocks.slice(0, 200).map((block: any) => {
+      let statusLabel = "";
+      if (block.overAllStatus === "Sanctioned") {
+        statusLabel = "Sanctioned";
+      } else if (block.overAllStatus === "with optg.") {
+        statusLabel = "with optg.";
+      } else if (block.Status === "PENDING") {
+        statusLabel = "Pending with dept control";
+      } else if (block.Status === "REJECTED") {
+        statusLabel = "Returned by Optg";
+      } else {
+        statusLabel = block.overAllStatus || block.Status || "-";
+      }
+
+      return [
+        formatDateB(block.Date),
+        block.DivisionId || "-",
+        block.Section || "-",
+        block.MissionBlock || "-",
+        block.Type || "-",
+        block.Duration || "-",
+        statusLabel,
+      ];
+    });
+
+    // Generate PDF table
+    autoTable(doc, {
+      head: headers,
+      body,
+      startY: 30,
+      styles: { fontSize: 10, halign: "center" },
+      headStyles: { fillColor: [228, 158, 221] }, // match your pink header
+      alternateRowStyles: { fillColor: [245, 208, 242] }, // match zebra stripes
+    });
+
+    // Save
+    doc.save("Summary_of_Upcoming_Blocks.pdf");
+  } catch (err) {
+    console.error("PDF download error:", err);
+  }
+};
+
 
   const formatDateInput = (value: string) => {
     // Format as DD/MM/YY
@@ -804,22 +864,7 @@ useEffect(() => {
                       } else {
                         statusLabel = block.overAllStatus||block.Status;
                       }
-                      // let statusLabel = "";
-                      // let statusStyle = { background: "#fff", color: "#222" };
-                      // if (block.Status === "APPROVED") {
-                      //   statusLabel = "Pending with Optg";
-                      //   statusStyle = { background: "#fff86b", color: "#222" };
-                      // } else if (block.Status === "PENDING") {
-                      //   statusLabel = "Pending with dept control";
-                      //   statusStyle = { background: "#d47ed4", color: "#222" };
-                      // } else if (block.Status === "REJECTED") {
-                      //   statusLabel = "Returned by Optg";
-                      //   statusStyle = { background: "#ff4e36", color: "#fff" };
-                      // } else {
-                      //   statusLabel = block.Status;
-                      // }
-
-                      // Row background alternates between pink and white
+   
                       const rowBgColor =
                         idx % 2 === 0 ? "bg-white" : "bg-[#f5d0f2]";
 
@@ -877,6 +922,16 @@ useEffect(() => {
               to see further details.
             </span>
           </div>
+          <div className="flex items-center gap-4 mt-4 md:mt-0">
+                     <button
+  onClick={handleDownloadTableB}
+  className="bg-[#7be09b] hover:bg-[#5bc07b] text-white font-bold px-4 py-2 rounded-lg shadow border border-[#00b347] text-sm"
+>
+  Download PDF
+</button>
+          </div>
+ 
+
           <div className="flex items-center gap-4 mt-4 md:mt-0">
             <button
               className="flex items-center gap-2 bg-[#cfd4ff] border-2 border-black rounded-[50%] px-8 py-2 text-lg font-bold text-black"
