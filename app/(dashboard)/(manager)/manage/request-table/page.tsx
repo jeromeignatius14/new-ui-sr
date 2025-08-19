@@ -87,17 +87,17 @@ export default function ManagerRequestTablePage() {
   const weekEnd = endOfWeek(currentWeekStart, { weekStartsOn: 6 });
   const weekStart = startOfWeek(currentWeekStart, { weekStartsOn: 6 });
 let someId=""
-if(session?.user?.id!=="852e95b1-a568-4571-99e4-96bf7e02ba01"&&session?.user.department==="ENGG"&&session?.user.role==="DEPT_CONTROLLER")
+if(session?.user?.id!=="c561a1eb-1db3-49af-8123-65a5cad032c7"&&session?.user.department==="ENGG"&&session?.user.role==="DEPT_CONTROLLER")
   {
-    someId="852e95b1-a568-4571-99e4-96bf7e02ba01"
+    someId="c561a1eb-1db3-49af-8123-65a5cad032c7"
   }
-  if(session?.user?.id!=="596aad5b-1e8b-42c1-ad1c-244d8774dedc"&&session?.user.department==="TRD"&&session?.user.role==="DEPT_CONTROLLER")
+  if(session?.user?.id!=="b01fe008-b00c-41e6-b2c9-17769aa7bc46"&&session?.user.department==="TRD"&&session?.user.role==="DEPT_CONTROLLER")
   {
-    someId="596aad5b-1e8b-42c1-ad1c-244d8774dedc"
+    someId="b01fe008-b00c-41e6-b2c9-17769aa7bc46"
   }
-  if(session?.user?.id!=="78a2a1d7-037a-4948-aa86-a33adf1a6596"&&session?.user.department==="S&T"&&session?.user.role==="DEPT_CONTROLLER")
+  if(session?.user?.id!=="3865fdd2-a9be-4004-aa16-6551746bcf83"&&session?.user.department==="S&T"&&session?.user.role==="DEPT_CONTROLLER")
   {
-    someId="78a2a1d7-037a-4948-aa86-a33adf1a6596"
+    someId="3865fdd2-a9be-4004-aa16-6551746bcf83"
   }
   // Fetch all requests initially (no date filter)
   const { data, isLoading, error } = useQuery({
