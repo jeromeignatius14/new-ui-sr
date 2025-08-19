@@ -2114,13 +2114,13 @@ export const depot: DepotStructure = {
 
   "PGT-PGTN-POY": {
     'TRD': ["POY"],
-    'S&T': ["PGTN"],
-    'ENGG': ["KLGD","PGT-E","PGT"]
+    'S&T': ["PGTN","POY"],
+    'ENGG': ["KLGD","PGT-E","PGT",]
   },
 
   "POY-CNV": {
     'TRD': ["POY"],
-    'S&T': ["PGTN"],
+    'S&T': ["PGTN","POY"],
     'ENGG': ["KLGD","PGT"]
   }
 };
