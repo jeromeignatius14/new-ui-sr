@@ -1134,7 +1134,8 @@ export default function CreateBlockRequestPage() {
 
       // if (hasUnavailedSanctionedBlock && !proceedAnyway) {
       //   const link = `https://mobile-bms.plattrtechstudio.com/?cugNumber=${
-      //     session?.user?.phone}`;
+      //     session?.user?.phone
+      //   }&section=${formData.missionBlock || "MAS-GDR"}`;
       //   setPopupLink(link);
       //   setShowPopup(true);
       //   setFormSubmitting(false);
