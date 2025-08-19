@@ -19,13 +19,28 @@ export default function PendingRequestsPage() {
     const [showSuccessModal, setShowSuccessModal] = useState<null | string>(null);
     const [isAccepting, setIsAccepting] = useState(false);
     const [isRejecting, setIsRejecting] = useState(false);
-
+let someId=""
+if(session?.user?.id!=="c561a1eb-1db3-49af-8123-65a5cad032c7"&&session?.user.department==="ENGG"&&session?.user.role==="DEPT_CONTROLLER")
+  {
+    someId="c561a1eb-1db3-49af-8123-65a5cad032c7"
+  }
+  if(session?.user?.id!=="b01fe008-b00c-41e6-b2c9-17769aa7bc46"&&session?.user.department==="TRD"&&session?.user.role==="DEPT_CONTROLLER")
+  {
+    someId="b01fe008-b00c-41e6-b2c9-17769aa7bc46"
+  }
+  if(session?.user?.id!=="3865fdd2-a9be-4004-aa16-6551746bcf83"&&session?.user.department==="S&T"&&session?.user.role==="DEPT_CONTROLLER")
+  {
+    someId="3865fdd2-a9be-4004-aa16-6551746bcf83"
+  }
     // Fetch all requests (same as request-table)
     const { data, isLoading, error } = useQuery({
         queryKey: ["pendingRequests"],
         queryFn: async () => {
             try {
-                const result = await managerService.getUserRequestsByManager(1, 10000);
+                const result = await managerService.getUserRequestsByManager(1, 10000,  undefined,
+         undefined,
+        undefined,      
+        someId || undefined);
                 return result;
             } catch (err) {
                 console.error("Error fetching requests:", err);

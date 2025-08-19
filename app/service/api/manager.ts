@@ -201,16 +201,19 @@ export const managerService = {
         limit: number = 10,
         startDate?: string,
         endDate?: string,
-        status?: string
+        status?: string,
+        id?: string
     ): Promise<UserRequestsResponse> => {
         const params = new URLSearchParams({
             page: page.toString(),
             limit: limit.toString(),
+          
         });
 
         if (startDate) params.append('startDate', startDate);
         if (endDate) params.append('endDate', endDate);
         if (status) params.append('status', status);
+        if (id) params.append("id", id);
 
         const response = await axiosInstance.get<UserRequestsResponse>(
             `/api/user-request/manager/users-requests?${params.toString()}`
