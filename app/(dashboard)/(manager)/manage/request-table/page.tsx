@@ -21,6 +21,7 @@ import { WeeklySwitcher } from "@/app/components/ui/WeeklySwitcher";
 import { useSession } from "next-auth/react";
 import { useRef } from "react";
 import dayjs from "dayjs";
+import { request } from "http";
 
 export default function ManagerRequestTablePage() {
   const router = useRouter();
@@ -269,6 +270,8 @@ if(session?.user?.id!=="852e95b1-a568-4571-99e4-96bf7e02ba01"&&session?.user.dep
         "Status",
         "Start Time (HH:MM)",
         "End Time (HH:MM)",
+        "sanctionedTimeFrom",
+        "sanctionedTimeTo",
         "Corridor Type",
         "SSE Name",
         "Work Location",
@@ -277,7 +280,7 @@ if(session?.user?.id!=="852e95b1-a568-4571-99e4-96bf7e02ba01"&&session?.user.dep
       ];
 
       // Map data to Excel rows
-      const rows = filteredRequests.map((request) => {
+      const rows = filteredRequests.filter(request=>request.isSanctioned===true).map((request) => {
         // Function to get exact time as stored in DB
         const getExactTime = (dateString: string | null) => {
           if (!dateString) return "N/A";
@@ -302,11 +305,14 @@ if(session?.user?.id!=="852e95b1-a568-4571-99e4-96bf7e02ba01"&&session?.user.dep
           request.status || "N/A", // Added status which was in headers but missing in rows
           getExactTime(request.demandTimeFrom),
           getExactTime(request.demandTimeTo),
+          getExactTime(request.sanctionedTimeFrom ?? null) || getExactTime(request.optimizeTimeFrom ?? null) || "N/A",
+          getExactTime(request.sanctionedTimeTo ?? null) || getExactTime(request.optimizeTimeTo ?? null) || "N/A",
+
           request.corridorType,
           request.user?.name || "N/A",
           request.workLocationFrom,
           request.requestremarks,
-          request.overallStatus || "N/A", // Added overall status
+          request.overAllStatus || "N/A", // Added overall status
         ];
       });
 
