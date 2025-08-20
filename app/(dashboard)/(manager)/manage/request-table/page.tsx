@@ -280,7 +280,7 @@ if(session?.user?.id!=="852e95b1-a568-4571-99e4-96bf7e02ba01"&&session?.user.dep
       ];
 
       // Map data to Excel rows
-      const rows = filteredRequests.filter(request=>request.isSanctioned===true).map((request) => {
+      const rows = filteredRequests.filter(request=>request.isSanctioned===true && request.overAllStatus==="Sanctioned").map((request) => {
         // Function to get exact time as stored in DB
         const getExactTime = (dateString: string | null) => {
           if (!dateString) return "N/A";
