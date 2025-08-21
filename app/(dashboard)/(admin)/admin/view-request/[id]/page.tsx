@@ -189,7 +189,7 @@ export default function ViewRequestPage() {
             <tbody>
               <tr>
                 <td className="py-1 font-medium">Request ID:</td>
-                <td className="py-1">{request.id}</td>
+                <td className="py-1">{request.divisionId||request.id}</td>
               </tr>
               <tr>
                 <td className="py-1 font-medium">Date:</td>
@@ -211,6 +211,18 @@ export default function ViewRequestPage() {
                 <td className="py-1 font-medium">Section:</td>
                 <td className="py-1">{request.selectedSection}</td>
               </tr>
+              {request.elementarySection!==""&&
+               <tr>
+                <td className="py-1 font-medium">Elementary Section:</td>
+                <td className="py-1">{request.elementarySection}</td>
+              </tr>
+              }
+              {request.elementarySectionTo!==""&&
+               <tr>
+                <td className="py-1 font-medium">Elementary Section To:</td>
+                <td className="py-1">{request.elementarySectionTo}</td>
+              </tr>
+              }
               <tr>
                 <td className="py-1 font-medium">Depot:</td>
                 <td className="py-1">{request.selectedDepo}</td>
@@ -263,13 +275,13 @@ export default function ViewRequestPage() {
             <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
               Block Sections Detail
             </h2>
-            <div className="space-y-3">
+            {/* <div className="space-y-3">
               {request.processedLineSections.map((section, index) => (
                 <div key={index} className="border border-gray-200 p-2">
                   <h3 className="font-medium text-[#13529e]">
                     {section.block}
                   </h3>
-                  {section.type === "regular" ? (
+                  {section.type === "regular" || "line"? (
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <span className="text-xs font-medium">Line:</span>
@@ -306,7 +318,66 @@ export default function ViewRequestPage() {
                   )}
                 </div>
               ))}
-            </div>
+            </div> */}
+               <div className="space-y-3">
+        {request.processedLineSections.map((section, index) => (
+          <div key={index} className="border border-gray-200 p-2">
+            <h3 className="font-medium text-[#13529e]">
+              {section.block}
+            </h3>
+            {section.type === "line" ? (
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <span className="text-xs font-medium">Line:</span>
+                  <div className="py-1">{section.lineName || "N/A"}</div>
+                </div>
+                {section.otherLines && (
+                  <div>
+                    <span className="text-xs font-medium">
+                      Other Lines Affected:
+                    </span>
+                    <div className="py-1">{section.otherLines}</div>
+                  </div>
+                )}
+              </div>
+            ) : section.type === "yard" ? (
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <span className="text-xs font-medium">Road:</span>
+                  <div className="py-1">{section.road || "N/A"}</div>
+                </div>
+                {section.otherRoads && (
+                  <div className="col-span-2">
+                    <span className="text-xs font-medium">
+                      Other Roads Affected:
+                    </span>
+                    <div className="py-1">{section.otherRoads}</div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <span className="text-xs font-medium">Stream:</span>
+                  <div className="py-1">{section.stream || "N/A"}</div>
+                </div>
+                <div>
+                  <span className="text-xs font-medium">Road:</span>
+                  <div className="py-1">{section.road || "N/A"}</div>
+                </div>
+                {section.otherRoads && (
+                  <div className="col-span-2">
+                    <span className="text-xs font-medium">
+                      Other Roads Affected:
+                    </span>
+                    <div className="py-1">{section.otherRoads}</div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
           </div>
         )}
 

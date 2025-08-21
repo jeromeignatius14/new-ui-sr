@@ -964,7 +964,7 @@ export default function ManagerRequestTablePage() {
       ];
 
       // Map data to Excel rows
-      const rows = filteredRequests.filter(request => request.isSanctioned === true).map((request) => {
+      const rows = filteredRequests.filter(request=>request.isSanctioned===true && request.overAllStatus==="Sanctioned").map((request) => {
         // Function to get exact time as stored in DB
         const getExactTime = (dateString: string | null) => {
           if (!dateString) return "N/A";
