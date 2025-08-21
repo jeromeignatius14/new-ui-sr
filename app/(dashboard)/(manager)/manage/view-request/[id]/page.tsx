@@ -29,6 +29,8 @@ export default function ViewRequestPage() {
         return `/manage/sanction-table?date=${date}`;
       case 'optimised-table':
         return `/manage/optimised-table?date=${date}`;
+         case 'block-summary':
+        return `/manage/block-summary?date=${date}`;
       default:
         return `/manage/request-table?date=${date}`;
     }
