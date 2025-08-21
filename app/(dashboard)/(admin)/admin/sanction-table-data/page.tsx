@@ -686,7 +686,7 @@ export default function GenerateReportPage() {
                         {pastBlockSummary.reduce(
                           (sum, item) => sum + (item.Demanded || 0),
                           0
-                        )}
+                        ).toFixed(2)}
                       </td>
                       <td
                         className="border-2 border-black px-2 py-1 text-center"
@@ -695,7 +695,7 @@ export default function GenerateReportPage() {
                         {pastBlockSummary.reduce(
                           (sum, item) => sum + (item.Approved || 0),
                           0
-                        )}
+                        ).toFixed(2)}
                       </td>
                       <td
                         className="border-2 border-black px-2 py-1 text-center"

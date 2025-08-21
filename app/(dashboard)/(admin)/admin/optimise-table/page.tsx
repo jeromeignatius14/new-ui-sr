@@ -303,7 +303,7 @@ export default function OptimiseTablePage() {
 
   const UrgentRequests =
     data?.data?.requests?.filter((request: UserRequest) => {
-      return request.corridorType === "Urgent Block";
+      return request.corridorType === "Urgent Block"&&request.overAllStatus === "with optg.";
     }) || [];
 
   // const { minDate, maxDate } = UrgentRequests.reduce(
@@ -402,26 +402,16 @@ const pendingRequests = (data?.data?.requests || []).filter((request: UserReques
   reqDate.setHours(0, 0, 0, 0);
 
   // Include requests for today and future dates
-  return reqDate >= today;
+    return (
+    reqDate  &&
+    request.overAllStatus === "with optg."   
+  );
 });
-
-// console.log("pendingRequests.length", pendingRequests.length);
-  // Group and sort
-  // const urgentRequests = pendingRequests
-  //   .filter((r: UserRequest) => r.corridorType === "Urgent Block" || r.workType === "EMERGENCY")
-  //   .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  // const corridorRequestsFiltered = pendingRequests
-  //   .filter((r: UserRequest) => r.corridorType === "Corridor" || r.corridorType === "Corridor Block")
-  //   .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  // const nonCorridorRequestsFiltered = pendingRequests
-  //   .filter((r: UserRequest) => r.corridorType === "Outside Corridor" || r.corridorType === "Non-Corridor Block")
-  //   .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
 
 const urgentRequests = pendingRequests
     .filter((r: UserRequest) => {
         // First check if it's an urgent request
-        const isUrgent = r.corridorType === "Urgent Block" || r.workType === "EMERGENCY";
+        const isUrgent = (r.corridorType === "Urgent Block" || r.workType === "EMERGENCY");
         if (!isUrgent) return false;
 
         // Handle cases where both flags are true
