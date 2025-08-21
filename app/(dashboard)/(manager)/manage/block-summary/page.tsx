@@ -267,7 +267,7 @@ useEffect(() => {
     data: reportData,
     isLoading,
     error,
-    refetch,
+    // refetch,
   } = useGenerateReport(queryParams);
 
   // Watch for query results and loading state
@@ -373,7 +373,7 @@ useEffect(() => {
       });
 
       // Trigger the query - react-query will handle the loading state
-      await refetch();
+      // await refetch();
     } catch (error) {
       console.error("Error initiating report generation:", error);
       toast.error("Failed to generate report");
@@ -948,7 +948,7 @@ const formatDisplayDate = (dateStr: string) => {
                           </td>
                                                      <td className="border-2 border-black px-2 py-1 font-bold text-black">
  <Link 
-  href={``}
+  href={`/manage/view-request/${block.id}?from=block-summary`}
   className="block w-full h-full"
 >
   {block.DivisionId}
