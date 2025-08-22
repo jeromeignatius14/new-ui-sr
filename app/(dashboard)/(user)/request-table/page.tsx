@@ -1110,6 +1110,12 @@ const handleDownload = () => {
                   <th className="border border-black px-2 py-1 whitespace-nowrap w-[20%]">
                     Activity
                   </th>
+                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[20%]">
+                    Demanded
+                  </th>
+                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[20%]">
+                    Offered
+                  </th>
                   <th className="border border-black px-2 py-1 whitespace-nowrap w-[10%]">
                     Duration
                   </th>
@@ -1173,6 +1179,26 @@ const handleDownload = () => {
                       <td className="border border-black px-2 py-1 text-black">
                         {request.activity}
                       </td>
+                                          <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                      {formatTime(request.demandTimeFrom)} -{" "}
+                      {formatTime(request.demandTimeTo)}
+                    </td>
+                    <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                      {request.isSanctioned === true ? (
+                        <>
+                          {request.sanctionedTimeFrom === null || request.sanctionedTimeTo === null ? (
+                            <span className="text-gray-500">00:00 - 00:00</span>
+                          ) : (
+                            <>
+                              {formatTime(request.sanctionedTimeFrom)} -{" "}
+                              {formatTime(request.sanctionedTimeTo)}
+                            </>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-gray-500">N/A</span>
+                      )}
+                    </td>
                       <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
                         {formatDuration(
                           request.demandTimeFrom,

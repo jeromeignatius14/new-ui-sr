@@ -540,7 +540,7 @@ const handleBulkAccept = async () => {
                                         </Link>
                                     </td>
                                     <td className="border border-black px-2 py-1 align-middle">{request.missionBlock}</td>
-                                    <td className="border border-black px-2 py-1 text-center align-middle">{request.processedLineSections?.[0]?.lineName || 'N/A'}</td>
+                                    <td className="border border-black px-2 py-1 text-center align-middle">{request.processedLineSections?.[0]?.lineName || request.processedLineSections?.[0]?.road||'N/A'}</td>
                                     <td className="border border-black px-2 py-1 text-center align-middle">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
                                     <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
                                     <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-[#E6E6FA] text-center align-middle w-32">
