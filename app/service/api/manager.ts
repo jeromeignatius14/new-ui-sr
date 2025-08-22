@@ -33,7 +33,10 @@ export interface UsersResponse {
 }
 
 export interface UserRequest {
-    overAllStatus: string;
+    sntDisconnectionAssignTo: string;
+    powerBlockDisconnectionAssignTo: string;
+    emergencyBlockRemarks: any;
+    overallStatus: string;
     divisionId: string;
     sanctionedTimeTo: any;
     sanctionedTimeFrom: any;
