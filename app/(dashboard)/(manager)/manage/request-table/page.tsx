@@ -954,6 +954,8 @@ export default function ManagerRequestTablePage() {
         "Status",
         "Start Time (HH:MM)",
         "End Time (HH:MM)",
+        "sanctionedTimeFrom",
+        "sanctionedTimeTo",
         "Corridor Type",
         "SSE Name",
         "Work Location",
@@ -986,6 +988,8 @@ export default function ManagerRequestTablePage() {
           request.status || "N/A", // Added status which was in headers but missing in rows
           getExactTime(request.demandTimeFrom),
           getExactTime(request.demandTimeTo),
+          getExactTime(request.sanctionedTimeFrom ?? null) || getExactTime(request.optimizeTimeFrom ?? null) || "N/A",
+          getExactTime(request.sanctionedTimeTo ?? null) || getExactTime(request.optimizeTimeTo ?? null) || "N/A",
           request.corridorType,
           request.user?.name || "N/A",
           request.workLocationFrom,
