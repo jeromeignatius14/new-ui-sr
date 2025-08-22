@@ -160,26 +160,6 @@ export default function ViewRequestPage() {
           )}
         </div>
       </div>
-
-      {/* <div className="mb-4 px-2 py-1 inline-block">
-        <span
-          className={`px-2 py-0.5 text-sm ${getStatusBadgeClass(
-            request.sntDisconnectionRequired === undefined
-              ? "NAN"
-              : request.sntDisconnectionRequired
-                ? request.DisconnAcceptance || "PENDING"
-                : "NAN"
-          )}`}
-        >
-          S&T Approval:{" "}
-          {request.sntDisconnectionRequired === undefined
-            ? "NAN"
-            : request.sntDisconnectionRequired
-              ? request.DisconnAcceptance || "PENDING"
-              : "NAN"}
-        </span>
-      </div> */}
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div className="border border-black p-3">
           <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
@@ -223,10 +203,14 @@ export default function ViewRequestPage() {
                 <td className="py-1">{request.elementarySectionTo}</td>
               </tr>
               }
-              <tr>
+               <tr>
+                <td className="py-1 font-medium ">Request Type:</td>
+                <td className="py-1">{request.corridorType}</td>
+              </tr>
+              {/* <tr>
                 <td className="py-1 font-medium">Depot:</td>
                 <td className="py-1">{request.selectedDepo}</td>
-              </tr>
+              </tr> */}
             </tbody>
           </table>
         </div>
@@ -319,7 +303,7 @@ export default function ViewRequestPage() {
                 </div>
               ))}
             </div> */}
-               <div className="space-y-3">
+                  <div className="space-y-3">
         {request.processedLineSections.map((section, index) => (
           <div key={index} className="border border-gray-200 p-2">
             <h3 className="font-medium text-[#13529e]">
@@ -380,6 +364,14 @@ export default function ViewRequestPage() {
       </div>
           </div>
         )}
+        {request.emergencyBlockRemarks && (
+        <div className="border border-black p-3 mb-4">
+          <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
+           {request.corridorType==="Urgent Block"?"Emergency Block Remarks":"Non-corridor Block Remarks"} 
+          </h2>
+          <div className="py-1">{request.emergencyBlockRemarks}</div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div className="border border-black p-3">
@@ -404,6 +396,15 @@ export default function ViewRequestPage() {
                   </td>
                 </tr>
               )}
+               <tr>
+                <td className="py-1 font-medium">
+                  Selected Depot For Power Block:
+                </td>
+                <td className="py-1">
+                  {request.powerBlockDisconnectionAssignTo ||
+                    "N/A"}
+                </td>
+              </tr>
               <tr>
                 <td className="py-1 font-medium">
                   S&T Disconnection Required:
@@ -423,7 +424,16 @@ export default function ViewRequestPage() {
                     </td>
                   </tr>
                 )}
-              <tr>
+                 <tr>
+                <td className="py-1 font-medium">
+                  Selected Depot For S&T Disconnection:
+                </td>
+                <td className="py-1">
+                  {request.sntDisconnectionAssignTo ||
+                    "N/A"}
+                </td>
+              </tr>
+              {/* <tr>
                 <td className="py-1 font-medium">Signal Disconnection:</td>
                 <td className="py-1">
                   {request.sigDisconnection ? "Yes" : "No"}
@@ -438,6 +448,17 @@ export default function ViewRequestPage() {
                     {request.sntDisconnectionRequired || "N/A"}
                   </td>
                 </tr>
+              )} */}
+
+               {request.sntDisconnectionLineFrom && request.sntDisconnectionLineTo && (
+                 <tr>
+                <td className="py-1 font-medium">S&T Lines:</td>
+                <td className="py-1">
+                  {request.sntDisconnectionLineFrom && request.sntDisconnectionLineTo
+                    ? `${request.sntDisconnectionLineFrom} to ${request.sntDisconnectionLineTo}`
+                    : "-"}
+                </td>
+              </tr>
               )}
             </tbody>
           </table>
@@ -461,15 +482,19 @@ export default function ViewRequestPage() {
                     <td className="py-1 font-medium">Caution Speed:</td>
                     <td className="py-1">{request.freshCautionSpeed} km/h</td>
                   </tr>
-                  {request.freshCautionLocationFrom && (
-                    <tr>
-                      <td className="py-1 font-medium">Caution Location:</td>
-                      <td className="py-1">
-                        {request.freshCautionLocationFrom} to{" "}
-                        {request.freshCautionLocationTo}
-                      </td>
-                    </tr>
-                  )}
+                               {request.freshCautionLocationFrom && request.freshCautionLocationTo && (
+  <tr>
+    <td className="py-1 font-medium">Caution Location:</td>
+    <td className="py-1">
+      {request.freshCautionLocationFrom.split(",")
+        .map((fromVal: string, idx: number) => {
+          const toVals = (request.freshCautionLocationTo ?? "").split(",");
+          return `(${fromVal},${toVals[idx] || ""})`;
+        })
+        .join(",")}
+    </td>
+  </tr>
+)}
                 </>
               )}
               {request.repercussions && (
@@ -478,6 +503,13 @@ export default function ViewRequestPage() {
                   <td className="py-1">{request.repercussions}</td>
                 </tr>
               )}
+                 <tr>
+                    <td className="py-1 font-medium">Adjacent lines affected:</td>
+                    <td className="py-1">
+                      {request.adjacentLinesAffected}
+
+                    </td>
+                  </tr>
             </tbody>
           </table>
         </div>
@@ -491,7 +523,14 @@ export default function ViewRequestPage() {
           <p className="text-sm">{request.requestremarks}</p>
         </div>
       )}
-
+{request.status !== "PENDING" && request.ManagerResponse && (
+        <div className="border border-black p-3 mb-4">
+          <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
+            Manager Response
+          </h2>
+          <p className="text-sm">{request.ManagerResponse}</p>
+        </div>
+      )}
       <div className="text-[10px] text-gray-600 mt-2 border-t border-black pt-1 text-right">
         © {new Date().getFullYear()} Indian Railways
       </div>
