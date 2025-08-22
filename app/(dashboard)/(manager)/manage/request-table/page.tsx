@@ -269,6 +269,8 @@ if(session?.user?.id!=="02e51371-5ea6-4d5c-b857-a605ee76f745"&&session?.user.dep
         "Status",
         "Start Time (HH:MM)",
         "End Time (HH:MM)",
+        "sanctionedTimeFrom",
+        "sanctionedTimeTo",
         "Corridor Type",
         "SSE Name",
         "Work Location",
@@ -276,7 +278,7 @@ if(session?.user?.id!=="02e51371-5ea6-4d5c-b857-a605ee76f745"&&session?.user.dep
       ];
 
       // Map data to Excel rows
-      const rows = filteredRequests.map((request) => {
+      const rows = filteredRequests.filter(request=>request.isSanctioned===true && request.overAllStatus==="Sanctioned").map((request) => {
         // Function to get exact time as stored in DB
         const getExactTime = (dateString: string | null) => {
           if (!dateString) return "N/A";
@@ -301,6 +303,8 @@ if(session?.user?.id!=="02e51371-5ea6-4d5c-b857-a605ee76f745"&&session?.user.dep
           request.status || "N/A", // Added status which was in headers but missing in rows
           getExactTime(request.demandTimeFrom),
           getExactTime(request.demandTimeTo),
+          getExactTime(request.sanctionedTimeFrom ?? null) || getExactTime(request.optimizeTimeFrom ?? null) || "N/A",
+          getExactTime(request.sanctionedTimeTo ?? null) || getExactTime(request.optimizeTimeTo ?? null) || "N/A",
           request.corridorType,
           request.user?.name || "N/A",
           request.workLocationFrom,
