@@ -481,6 +481,7 @@ interface FormData {
   date: string;
   demandTimeFrom: string;
   demandTimeTo: string;
+  duration?: string; // <-- Added this line
   processedLineSections: {
     type: string;
     block: string;
@@ -622,6 +623,7 @@ export default function CreateBlockRequestPage() {
         freshCautionSpeed: "",
       },
     ],
+    duration: "",
   };
 
   const [formData, setFormData] = useState<FormData>(initialFormData);
@@ -1233,6 +1235,8 @@ export default function CreateBlockRequestPage() {
           formData.date || "",
           formData.demandTimeTo || ""
         ),
+        duration:formatTimeToDatetime(formData.date || "",formData.duration||"" ),
+
         processedLineSections: processedSections,
         adminAcceptance: false,
         // selectedDepo: formData.sntDisconnectionAssignTo || "", 
@@ -1253,11 +1257,13 @@ export default function CreateBlockRequestPage() {
             submitData.processedLineSections
               ?.map((s) => s.lineName || s.road)
               .join(", ") || "-",
-          duration:
-            getDurationFromTimes(
-              formData.demandTimeFrom || "",
-              formData.demandTimeTo || ""
-            ) || "-",
+          // duration:
+          //   getDurationFromTimes(
+          //     formData.demandTimeFrom || "",
+          //     formData.demandTimeTo || ""
+          //   ) || "-",
+          duration: formData.duration || "-",
+          
         });
 
         // Reset form + UI
@@ -1294,125 +1300,6 @@ export default function CreateBlockRequestPage() {
     selectedDate.getFullYear() === today.getFullYear()
   );
 }
-
-  // Refactor handleSubmit to work with reviewMode
-  //   const handleFormSubmit = async (e: React.FormEvent) => {
-  //     e.preventDefault();
-  //     if (!reviewMode) {
-  //       setReviewMode(true); // Enter review mode
-  //       return;
-  //     }
-  //     // Only submit in review mode
-  //     setFormSubmitting(true);
-  //     setFormError(null);
-  //     try {
-  //       const validationResult = handleFormValidation();
-  //       if (!validationResult.isValid) {
-  //         setErrors(validationResult.errors);
-  //         scrollToFirstError(validationResult.errors);
-  //         setFormSubmitting(false);
-  //         return;
-  //       }
-  //       const validProcessedSections = (
-  //         formData.processedLineSections || []
-  //       ).filter((section) => blockSectionValue.includes(section.block));
-  //       const processedSectionsWithDefaults = validProcessedSections.map(
-  //         (section) => {
-  //           if (section.type === "yard") {
-  //             return {
-  //               ...section,
-  //               lineName: section.lineName || "",
-  //               otherLines: section.otherLines || "",
-  //               stream: section.stream || "",
-  //               road: section.road || "",
-  //               otherRoads: section.otherRoads || "",
-  //             };
-  //           } else {
-  //             return {
-  //               ...section,
-  //               lineName: section.lineName || "",
-  //               otherLines: section.otherLines || "",
-  //               stream: "",
-  //               road: "",
-  //               otherRoads: "",
-  //             };
-  //           }
-  //         }
-  //       );
-  // //       const firstCaution = formData.freshCautions[0] || {
-  // //   freshCautionLocationFrom: "",
-  // //   freshCautionLocationTo: "",
-  // //   adjacentLinesAffected: "",
-  // //   freshCautionSpeed: 0,
-  // // };
-  //       const submitData: UserRequestInput = {
-  //         ...formData,
-  //         corridorType: formData.corridorTypeSelection,
-  //         sntDisconnectionRequired: formData.sntDisconnectionRequired ?? false,
-  //         powerBlockRequired: formData.powerBlockRequired ?? false,
-  //         freshCautionRequired: formData.freshCautionRequired ?? false,
-  //          adjacentLinesAffected: formData.freshCautions.map(c => c.adjacentLinesAffected).filter(Boolean).join(","),
-  //   freshCautionLocationFrom: formData.freshCautions.map(c => c.freshCautionLocationFrom).filter(Boolean).join(","),
-  //   freshCautionLocationTo: formData.freshCautions.map(c => c.freshCautionLocationTo).filter(Boolean).join(","),
-  //   freshCautionSpeed: Number(formData.freshCautions[0]?.freshCautionSpeed) || 0,
-  //         date: formatDateToISO(formData.date || ""),
-  //         demandTimeFrom: formatTimeToDatetime(
-  //           formData.date || "",
-  //           formData.demandTimeFrom || ""
-  //         ),
-  //         demandTimeTo: formatTimeToDatetime(
-  //           formData.date || "",
-  //           formData.demandTimeTo || ""
-  //         ),
-  //         processedLineSections: processedSectionsWithDefaults,
-  //         adminAcceptance: false,
-  //         selectedDepo: formData.selectedDepo,
-  //       };
-  //       const response = await mutation.mutateAsync(submitData);
-  //       if (response) {
-  //         toast.success("Block request submitted successfully!");
-  //         setSubmittedSummary({
-  //           date: submitData.date,
-  //           id: response.data?.divisionId || response.data?.id,
-  //           blockSection: submitData.missionBlock || "-",
-  //           lineOrRoad:
-  //             submitData.processedLineSections &&
-  //             submitData.processedLineSections.length > 0
-  //               ? submitData.processedLineSections
-  //                   .map((s: any) => s.lineName || s.road)
-  //                   .join(", ")
-  //               : "-",
-  //           duration:
-  //             getDurationFromTimes(
-  //               formData.demandTimeFrom || "",
-  //               formData.demandTimeTo || ""
-  //             ) || "-",
-  //         });
-  //         setFormData(initialFormData);
-  //         setBlockSectionValue([]);
-  //         setProcessedLineSections([]);
-  //         setSelectedActivities([]);
-  //         setCustomActivity("");
-  //         setErrors({});
-  //         setShowSuccessPage(true);
-  //         setReviewMode(false);
-  //       }
-  //     } catch (error: any) {
-  //       console.error("Form submission error:", error);
-  //       if (error.response) {
-  //         console.error("Error response data:", error.response.data);
-  //         console.error("Error response status:", error.response.status);
-  //         console.error("Error response headers:", error.response.headers);
-  //       }
-  //       setFormError(
-  //         error.message ||
-  //           "An error occurred while submitting the form. Please try again."
-  //       );
-  //       toast.error(error.message || "Failed to submit block request");
-  //     } finally {
-  //       setFormSubmitting(false);
-  //     }
-  //   };
 
   const handleFormValidation = () => {
     const errors: Record<string, string> = {};
@@ -1932,195 +1819,7 @@ export default function CreateBlockRequestPage() {
       });
   }, []);
 
-  // Compute corridor time when block section or line changes
-  // useEffect(() => {
-  //   if (!corridorData.length || !blockSectionValue.length) {
-  //     setCorridorTime(null);
-  //     return;
-  //   }
-  //   // For each selected block section, get the first selected line
-  //   const firstLines = blockSectionValue.map((block: string) => {
-  //     const sectionEntry =
-  //       (formData.processedLineSections || []).find(
-  //         (s: any) => s.block === block
-  //       ) || {};
-  //     return (sectionEntry as any).lineName
-  //       ? (sectionEntry as any).lineName.split(",")[0]
-  //       : null;
-  //   });
-  //   // Only consider block sections with a selected line
-  //   const validPairs = blockSectionValue
-  //     .map((block: string, idx: number) => {
-  //       const line = firstLines[idx];
-  //       if (!line) return null;
-  //       // Find matching corridor row
-  //       const row = corridorData.find((row: any) => {
-  //         return (
-  //           (row["Section/ station"] || row["section"])?.trim() === block &&
-  //           (row["Line"] || "").trim() === line
-  //         );
-  //       });
-  //       return row || null;
-  //     })
-  //     .filter(Boolean);
-  //   if (!validPairs.length) {
-  //     setCorridorTime(null);
-  //     return;
-  //   }
-  //   // Find intersection of corridor times (latest from, earliest to)
-  //   let fromTimes = validPairs.map((row: any) => row["From"]);
-  //   let toTimes = validPairs.map((row: any) => row["To"]);
-  //   let duration = validPairs[0]["Duration"];
-  //   // Use max of fromTimes and min of toTimes
-  //   const maxFrom = fromTimes.reduce((a, b) => (a > b ? a : b));
-  //   const minTo = toTimes.reduce((a, b) => (a < b ? a : b));
-  //   setCorridorTime({ from: maxFrom, to: minTo, duration });
-  // }, [corridorData, blockSectionValue, formData.processedLineSections]);
-  // useEffect(() => {
-  //   if (!blockSectionValue.length) {
-  //     setCorridorTime(null);
-  //     return;
-  //   }
 
-  //   /* ---------- 1.  LINE‑BASED LOGIC (UNCHANGED) ---------- */
-  //   const linePairs = blockSectionValue
-  //     .map((block: string) => {
-  //       // look up the entry for this block
-  //       const sectionEntry =
-  //         (formData.processedLineSections || []).find(
-  //           (s: any) => s.block === block
-  //         ) || {};
-
-  //       // first line chosen (if any)
-  //       const firstLine = sectionEntry?.lineName
-  //         ? sectionEntry.lineName.split(",")[0]
-  //         : null;
-
-  //       // if no line chosen for this block, skip – road logic will handle it
-  //       if (!firstLine) return null;
-
-  //       // find matching row in corridorData
-  //       const row = corridorData.find((r: any) => {
-  //         return (
-  //           (r["Section/ station"] || r["section"])?.trim() === block &&
-  //           (r["Line"] || "").trim() === firstLine
-  //         );
-  //       });
-
-  //       return row || null;
-  //     })
-  //     .filter(Boolean); // removes nulls
-
-  //   /* ---------- 2.  YARD / ROAD LOGIC (FOR BLOCKS WITH NO LINE) ---------- */
-
-  //   const roadTimeMap: Record<string, { from: string; to: string }> = {
-  //     "AJJ-RU-Up": { from: "01:30", to: "04:30" },
-  //     "AJJ-RU-Down": { from: "00:30", to: "03:30" },
-  //     "AJJ-RU-Both": { from: "01:30", to: "04:30" },
-
-  //     "MAS-AJJ-Up": { from: "00:05", to: "03:05" },
-  //     "MAS-AJJ-Down": { from: "00:30", to: "03:30" },
-  //     "MAS-AJJ-Both": { from: "00:05", to: "03:05" },
-
-  //     "AJJ-KPD-Up": { from: "21:15", to: "00:15" },
-  //     "AJJ-KPD-Down": { from: "11:00", to: "14:00" },
-  //     "AJJ-KPD-Both": { from: "21:15", to: "00:15" },
-
-  //     "KPD-JTJ-Up": { from: "22:30", to: "00:45" },
-  //     "KPD-JTJ-Down": { from: "12:45", to: "15:15" },
-  //     "KPD-JTJ-Both": { from: "22:30", to: "00:45" },
-
-  //     "AJJ-CGL-Up": { from: "01:00", to: "04:00" },
-  //     "AJJ-CGL-Down": { from: "01:00", to: "04:00" },
-  //     "AJJ-CGL-Both": { from: "01:00", to: "04:00" },
-
-  //     "MAS-GDR-Up": { from: "00:20", to: "03:20" },
-  //     "MAS-GDR-Down": { from: "23:30", to: "01:30" },
-  //     "MAS-GDR-Both": { from: "00:20", to: "03:20" },
-
-  //     "MSB-VM-Up": { from: "21:15", to: "00:15" },
-  //     "MSB-VM-Down": { from: "01:30", to: "04:30" },
-  //     "MSB-VM-Both": { from: "21:15", to: "00:15" },
-
-  //     "MSB-VLCY-Up": { from: "00:30", to: "03:30" },
-  //     "MSB-VLCY-Down": { from: "00:30", to: "03:30" },
-  //     "MSB-VLCY-Both": { from: "00:30", to: "03:30" },
-  //   };
-
-  //   const roadPairs = blockSectionValue
-  //     .map((block: string) => {
-  //       // if a line was already chosen for this block, skip (line logic handled it)
-  //       const hadLine =
-  //         (formData.processedLineSections || []).some(
-  //           (s: any) => s.block === block && s.lineName
-  //         );
-  //       if (hadLine) return null;
-
-  //       // road logic starts here …
-  //       const sectionEntry =
-  //         (formData.processedLineSections || []).find(
-  //           (s: any) => s.block === block
-  //         ) || {};
-  //       if (!sectionEntry.road) return null;
-
-  //       const roads = sectionEntry.road
-  //         .split(",")
-  //         .map((r: string) => r.trim().toLowerCase());
-
-  //       const streamEntry = streamData[block];
-  //       const majorSection = formData.selectedSection;
-  //       if (!streamEntry || !majorSection) return null;
-
-  //       const checkDirection = (dir: "Up" | "Down" | "Both") =>
-  //         roads.some((r: string) =>
-  //           (streamEntry[`${dir} Direction Affected`] || [])
-  //             .map((x: string) => x.trim().toLowerCase())
-  //             .includes(r)
-  //         );
-
-  //       const dirs = ["Both", "Up", "Down"] as const;
-  //       for (const dir of dirs) {
-  //         if (checkDirection(dir)) {
-  //           const time = roadTimeMap[`${majorSection}-${dir}`];
-  //           if (time) return { from: time.from, to: time.to };
-  //         }
-  //       }
-  //       return null;
-  //     })
-  //     .filter(Boolean);
-
-  //   /* ---------- 3.  COMBINE BOTH RESULTS ---------- */
-
-  //   // nothing found in either? → clear the state
-  //   if (!linePairs.length && !roadPairs.length) {
-  //     setCorridorTime(null);
-  //     return;
-  //   }
-
-  //   // gather all times from lines + roads
-  //   const fromTimes = [
-  //     ...linePairs.map((p: any) => p["From"]),
-  //     ...roadPairs.map((p: any) => p.from),
-  //   ];
-  //   const toTimes = [
-  //     ...linePairs.map((p: any) => p["To"]),
-  //     ...roadPairs.map((p: any) => p.to),
-  //   ];
-
-  //   const maxFrom = fromTimes.reduce((a, b) => (a > b ? a : b));
-  //   const minTo = toTimes.reduce((a, b) => (a < b ? a : b));
-
-  //   // duration only exists on line rows – take the first one if any
-  //   const duration =
-  //     linePairs.length > 0 ? (linePairs[0] as any)["Duration"] : undefined;
-
-  //   setCorridorTime({ from: maxFrom, to: minTo, duration });
-  // }, [
-  //   corridorData,
-  //   blockSectionValue,
-  //   formData.processedLineSections,
-  //   formData.selectedSection,
-  // ]);
   useEffect(() => {
     if (!blockSectionValue.length) {
       setCorridorTime(null);
@@ -3057,12 +2756,77 @@ export default function CreateBlockRequestPage() {
   <span className="text-[#2c3e50] font-bold text-[24px] mb-1 tracking-wide">
     Duration
   </span>
-  <span className="bg-white border-2 border-[#2c3e50] rounded-lg px-6 py-2 text-2xl font-bold text-[#2c3e50] min-w-[120px] text-center shadow-md hover:shadow-lg transition-shadow duration-200">
+ 
+<div className="flex flex-row flex-wrap items-center justify-center gap-2 px-3 py-2 text-2xl">
+  <div className="bg-white border-2 border-[#2c3e50] text-[#2c3e50] font-bold text-2xl px-2 py-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3498db] shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200">
+    {/* Duration Hours */}
+    <select
+      name="durationHour"
+      value={formData.duration ? formData.duration.split(":")[0] : ""}
+      onChange={(e) => {
+        const hour = e.target.value;
+        const min = formData.duration
+          ? formData.duration.split(":")[1]
+          : "00";
+        handleInputChange({
+          target: {
+            name: "duration",
+            value: `${hour}:${min}`,
+          },
+        } as any);
+      }}
+      className="appearance-none text-center"
+      required
+    >
+      <option value="">--</option>
+      {[...Array(25).keys()].map((h) => (
+        <option key={h} value={h.toString().padStart(2, "0")}>
+          {h.toString().padStart(2, "0")}
+        </option>
+      ))}
+    </select>
+
+    <span className="text-[#2c3e50] font-bold text-[24px]">:</span>
+
+    {/* Duration Minutes */}
+    <select
+      name="durationMin"
+      value={formData.duration ? formData.duration.split(":")[1] : ""}
+      onChange={(e) => {
+        const min = e.target.value;
+        const hour = formData.duration
+          ? formData.duration.split(":")[0]
+          : "00";
+        handleInputChange({
+          target: {
+            name: "duration",
+            value: `${hour}:${min}`,
+          },
+        } as any);
+      }}
+      className="appearance-none text-center"
+      required
+    >
+      <option value="">--</option>
+      {[...Array(12).keys()].map((m) => (
+        <option
+          key={m}
+          value={(m * 5).toString().padStart(2, "0")}
+        >
+          {(m * 5).toString().padStart(2, "0")}
+        </option>
+      ))}
+    </select>
+  </div>
+</div>
+
+  {/* <span className="bg-white border-2 border-[#2c3e50] rounded-lg px-6 py-2 text-2xl font-bold text-[#2c3e50] min-w-[120px] text-center shadow-md hover:shadow-lg transition-shadow duration-200">
     {getDurationFromTimes(
       formData.demandTimeFrom || "",
       formData.demandTimeTo || ""
     ) || "--"}
-  </span>
+  </span> */}
+  
 </div>
               {/* Site Location row */}
               <div className="flex flex-row items-center gap-4 w-full pl-1">
