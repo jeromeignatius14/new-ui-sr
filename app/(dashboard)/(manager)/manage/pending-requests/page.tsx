@@ -48,6 +48,19 @@ export default function PendingRequestsPage() {
         const dateB = new Date(b.date).getTime();
         return dateA - dateB;
     })
+     const rejectedRequest = (Array.isArray(data?.data?.requests) ? data.data.requests : [])
+    .filter((r: UserRequest) => (r.trdActionsNeeded === false&&r.oheResponse!=="" )||(r.sigActionsNeeded===false&&r.sigResponse!=="")||(r.overAllStatus==="return to applicant by optg")||(r.overAllStatus==="return to applicant by trd.")||(r.overAllStatus==="return to applicant by s&t and trd.")||(r.overAllStatus==="return to applicant by s&t."))
+    .sort((a: UserRequest, b: UserRequest) => {
+        // Priority sort: urgent blocks first
+        const urgentA = a.corridorType === 'Urgent Block' ? 0 : 1;
+        const urgentB = b.corridorType === 'Urgent Block' ? 0 : 1;
+        if (urgentA !== urgentB) return urgentA - urgentB;
+        
+        // Date sort (earliest first)
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return dateA - dateB;
+    })
 
     // Mutations
     const bulkAcceptRequests = useBulkAcceptRequests();
@@ -468,7 +481,8 @@ const handleBulkAccept = async () => {
             </div>
 
             {/* Bulk Actions */}
-            <div className="mx-4 mt-6 flex items-center gap-4">
+            {pendingRequests.length > 0 && (
+                 <div className="mx-4 mt-6 flex items-center gap-4">
                 <div className="flex items-center gap-2">
                     <input
                         type="checkbox"
@@ -498,9 +512,12 @@ const handleBulkAccept = async () => {
                     </div>
                 )}
             </div>
+            )}
+           
 
             {/* Table Section */}
-            <div className="mx-4 mt-6 overflow-x-auto">
+            {pendingRequests.length > 0 && (
+                <div className="mx-4 mt-6 overflow-x-auto">
                 <div className={`rounded-xl overflow-hidden border-2 border-black bg-[#F5E7B2] min-w-[700px] ${showRejectModal || showSuccessModal ? 'invisible' : ''}`}>
                     <table className="w-full text-black text-base border-collapse">
                         <thead>
@@ -567,9 +584,12 @@ const handleBulkAccept = async () => {
                     </table>
                 </div>
             </div>
+            )}
+            
 
             {/* Action Buttons */}
-            <div className="mx-4 mt-6 mb-8 flex justify-center gap-4">
+            {pendingRequests.length > 0 && (
+                  <div className="mx-4 mt-6 mb-8 flex justify-center gap-4">
                 <button  onClick={handleDownloadExcel} className="bg-[#FFA07A] px-8 py-2 rounded-[50%] border-2 border-black font-bold">
                     Download
                 </button>
@@ -577,7 +597,56 @@ const handleBulkAccept = async () => {
                     Back
                 </Link>
             </div>
+            )}
+          
+            {rejectedRequest.length>0&&(
+                <div className="mx-4 mt-6 overflow-x-auto">
+     <div className="w-full  py-2 flex flex-col items-center">
+                <span className="text-xl font-bold text-black">Rejected Request</span>
+            </div>
+                <div className={`rounded-xl overflow-hidden border-2 border-black bg-[#F5E7B2] min-w-[700px] ${showRejectModal || showSuccessModal ? 'invisible' : ''}`}>
 
+                    <table className="w-full text-black text-base border-collapse">
+                        <thead>
+                            <tr className="bg-[#D6F3FF] text-black font-bold">
+                               
+                                <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Date</th>
+                                <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">ID</th>
+                                <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Block Section</th>
+                                <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Line</th>
+                                <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Demanded</th>
+                                <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Activity</th>
+                                <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Status</th>
+
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {rejectedRequest.map((request: UserRequest) => (
+                                <tr key={request.id} className="bg-white hover:bg-[#FFF86B] text-black">
+                                    <td className="border border-black px-2 py-1 text-center align-middle">{formatDate(request.date)}</td>
+                                    <td className="border border-black px-2 py-1 text-center align-middle">
+                                        <Link href={`/manage/view-request/${request.id}`} className="text-[#13529e] hover:underline font-semibold">
+                                            {request.divisionId||request.id}
+                                        </Link>
+                                    </td>
+                                    <td className="border border-black px-2 py-1 align-middle">{request.missionBlock}</td>
+                                    <td className="border border-black px-2 py-1 text-center align-middle">{request.processedLineSections?.[0]?.lineName || 'N/A'}</td>
+                                    <td className="border border-black px-2 py-1 text-center align-middle">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
+                                    <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
+                                    <td className="border border-black px-2 py-1 align-middle">{request.overAllStatus}</td>       
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            )}
+    <div className="mx-4 mt-6 mb-8 flex justify-center gap-4">
+                
+                <Link href="/manage/request-table" className="bg-[#90EE90] px-8 py-2 rounded-[50%] border-2 border-black font-bold">
+                    Back
+                </Link>
+            </div>
             {/* Reject Modal */}
             {showRejectModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">

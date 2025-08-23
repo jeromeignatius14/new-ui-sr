@@ -385,6 +385,17 @@ const [requestToReject, setRequestToReject] = useState<{
   userDepartement: string;
   mobileView: string;
 } | null>(null);
+
+const [acceptReason, setAcceptReason] = useState("");
+const [showAcceptReasonPopup, setShowAcceptReasonPopup] = useState(false);
+const [requestToAccept, setRequestToAccept] = useState<{
+  id: string;
+  userDepartement: string;
+  mobileView: string;
+  requestDateStr: string;
+  corridorType: string;
+} | null>(null);
+
   const { data: otherRequestsData, refetch } = useGetOtherRequests(
     selectedDepo,
     currentPage,
@@ -465,19 +476,21 @@ const handleStatusUpdate = async (
     }
 
     // If all checks pass, proceed with acceptance
-    updateOtherRequest(
-      {
-        id,
-        accept,
-        userDepartement,
-        mobileView
-      },
-      {
-        onSuccess: () => {
-          refetch();
-        },
-      }
-    );
+    // updateOtherRequest(
+    //   {
+    //     id,
+    //     accept,
+    //     userDepartement,
+    //     mobileView
+    //   },
+    //   {
+    //     onSuccess: () => {
+    //       refetch();
+    //     },
+    //   }
+    // );
+    setRequestToAccept({ id, userDepartement, mobileView, requestDateStr, corridorType });
+    setShowAcceptReasonPopup(true);
   } else {
     // For reject actions, just set up the rejection dialog
     setRequestToReject({ id, userDepartement, mobileView });
@@ -506,6 +519,31 @@ const handleStatusUpdate = async (
       },
       onError: () => {
         toast.error("Failed to reject request");
+      }
+    }
+  );
+};
+const handleConfirmAccept = () => {
+  if (!requestToAccept || !acceptReason.trim()) return;
+  
+  updateOtherRequest(
+    {
+      id: requestToAccept.id,
+      accept: true,
+      userDepartement: requestToAccept.userDepartement,
+      mobileView: requestToAccept.mobileView,
+      disconnectionRequestRejectRemarks: acceptReason // Make sure your API accepts this field
+    },
+    {
+      onSuccess: () => {
+        refetch();
+        setShowAcceptReasonPopup(false);
+        setAcceptReason("");
+        setRequestToAccept(null);
+        toast.success("Request accepted successfully");
+      },
+      onError: () => {
+        toast.error("Failed to accept request");
       }
     }
   );
@@ -823,6 +861,40 @@ const handleDownload = () => {
           onClick={handleConfirmReject}
         >
           {isMutating ? "Rejecting..." : "Confirm Reject"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{showAcceptReasonPopup && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+    <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md border border-gray-300">
+      <h2 className="text-lg font-bold mb-2 text-black">Reason for Acceptance</h2>
+      <textarea
+        className="w-full border border-gray-400 rounded p-2 mb-4 text-black"
+        rows={3}
+        value={acceptReason}
+        onChange={(e) => setAcceptReason(e.target.value)}
+        placeholder="Please specify the reason for acceptance..."
+        autoFocus
+      />
+      <div className="flex justify-end gap-2">
+        <button
+          className="px-4 py-1 rounded bg-gray-200 text-black font-semibold"
+          onClick={() => {
+            setShowAcceptReasonPopup(false);
+            setAcceptReason("");
+          }}
+        >
+          Cancel
+        </button>
+        <button
+          className="px-4 py-1 rounded bg-green-600 text-white font-semibold"
+          disabled={!acceptReason.trim() || isMutating}
+          onClick={handleConfirmAccept}
+        >
+          {isMutating ? "Accepting..." : "Confirm Accept"}
         </button>
       </div>
     </div>
