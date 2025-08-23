@@ -205,7 +205,11 @@ export default function OptimiseTablePage() {
   const searchParams = useSearchParams();
   const { isUrgentMode } = useUrgentMode();
   const queryClient = useQueryClient();
+const [isModalOpen, setIsModalOpen] = useState(false);
+const [isNonUrgentModalOpen, setIsNonUrgentModalOpen] = useState(false);
 
+const [remark, setRemark] = useState("");
+const [selectedRequests, setSelectedRequests] = useState<UserRequest[]>([]);
   // Initialize currentWeekStart from URL parameter or default to current date
   const [currentWeekStart, setCurrentWeekStart] = useState(() => {
     const dateParam = searchParams.get("date");
@@ -621,7 +625,7 @@ const nonCorridorRequestsFiltered = pendingRequests
     }
   };
 
-  const handleSendUrgentRequests = async (requests : UserRequest[]) => {
+  const handleSendUrgentRequests = async (requests : UserRequest[],remark:string) => {
     try {
       const UrgentRequestsData =
         requests?.filter(
@@ -633,6 +637,7 @@ const nonCorridorRequestsFiltered = pendingRequests
             id: request.id,
             optimizeTimeFrom: request.optimizeTimeFrom,
             optimizeTimeTo: request.optimizeTimeTo,
+            sanctionedRemark: remark,
           })) || [];
 
       if (UrgentRequestsData.length === 0) {
@@ -656,7 +661,7 @@ const nonCorridorRequestsFiltered = pendingRequests
     }
   };
 
-  const handleSendNonUrgentRequests = async (requests : UserRequest[]) => {
+  const handleSendNonUrgentRequests = async (requests : UserRequest[],remark:string) => {
     try {
       // Only send the required fields for each non-urgent request
       const nonUrgentRequestsData =
@@ -669,6 +674,7 @@ const nonCorridorRequestsFiltered = pendingRequests
             id: request.id,
             optimizeTimeFrom: request.optimizeTimeFrom,
             optimizeTimeTo: request.optimizeTimeTo,
+            sanctionedRemark: remark,
           })) || [];
 
       if (nonUrgentRequestsData.length === 0) {
@@ -1179,11 +1185,15 @@ const nonCorridorRequestsFiltered = pendingRequests
                           <>
                             <button
                               className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-                              onClick={
-                                () => {
-                                    handleSendUrgentRequests([request]);
-                                }
-                              }
+                              // onClick={
+                              //   () => {
+                              //       handleSendUrgentRequests([request]);
+                              //   }
+                              // }
+                           onClick={() => {
+                                  setSelectedRequests([request]); // save clicked request
+                                   setIsModalOpen(true);           // open popup
+                              }}                                                 
                             >
                               Sanction
                             </button>
@@ -1409,11 +1419,15 @@ const nonCorridorRequestsFiltered = pendingRequests
                           <>
                             <button
                               className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-                              onClick={
-                                () => {
-                                    handleSendNonUrgentRequests([request]);
-                                }
-                              }
+                              // onClick={
+                              //   () => {
+                              //       handleSendNonUrgentRequests([request]);
+                              //   }
+                              // }
+                              onClick={() => {
+                                 setSelectedRequests([request]); // save clicked request
+                                   setIsNonUrgentModalOpen(true);           // open popup
+                                       }}
                             >
                               Sanction
                             </button>
@@ -1619,11 +1633,15 @@ const nonCorridorRequestsFiltered = pendingRequests
                           <>
                             <button
                               className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-                              onClick={
-                                () => {
-                                    handleSendNonUrgentRequests([request]);
-                                }
-                              }
+                              // onClick={
+                              //   () => {
+                              //       handleSendNonUrgentRequests([request]);
+                              //   }
+                              // }
+                              onClick={() => {
+                               setSelectedRequests([request]); // save clicked request
+                                setIsNonUrgentModalOpen(true);           // open popup
+                               }}
                             >
                               Sanction
                             </button>
@@ -1654,7 +1672,70 @@ const nonCorridorRequestsFiltered = pendingRequests
             </table>
           </div>
         </div>
-
+{isModalOpen && (
+  <div className="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm z-50">
+    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+      <h2 className="text-xl font-bold mb-4" style={{color:"black"}}>Repurcussion</h2>
+      <textarea
+        className="w-full border p-2 rounded mb-4 text-black"
+        rows={4}
+        placeholder="Enter reason..."
+        value={remark}
+        onChange={(e) => setRemark(e.target.value)}
+      />
+      <div className="flex justify-end gap-2">
+        <button
+          className="px-4 py-2 bg-gray-400 text-white rounded"
+          onClick={() => setIsModalOpen(false)}
+        >
+          Cancel
+        </button>
+        <button
+          className="px-4 py-2 bg-green-600 text-white rounded"
+          onClick={() => {
+            handleSendUrgentRequests(selectedRequests, remark);
+            setIsModalOpen(false);
+            setRemark("");
+          }}
+        >
+          Submit
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+{isNonUrgentModalOpen && (
+  <div className="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm z-50">
+    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+      <h2 className="text-xl font-bold mb-4" style={{color:"black"}}>Repurcussion</h2>
+      <textarea
+        className="w-full border p-2 rounded mb-4 text-black"
+        rows={4}
+        placeholder="Enter reason..."
+        value={remark}
+        onChange={(e) => setRemark(e.target.value)}
+      />
+      <div className="flex justify-end gap-2">
+        <button
+          className="px-4 py-2 bg-gray-400 text-white rounded"
+          onClick={() => setIsNonUrgentModalOpen(false)}
+        >
+          Cancel
+        </button>
+        <button
+          className="px-4 py-2 bg-green-600 text-white rounded"
+          onClick={() => {
+            handleSendNonUrgentRequests(selectedRequests, remark);
+            setIsNonUrgentModalOpen(false);
+            setRemark("");
+          }}
+        >
+          Submit
+        </button>
+      </div>
+    </div>
+  </div>
+)}
         {/* Optimization Dialog */}
         {showRejectionModal  && (
           <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-20">
