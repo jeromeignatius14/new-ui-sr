@@ -16,6 +16,7 @@ export const userRequestSchema = z.object({
     workLocationFrom: z.string(),  // present in both
     workLocationTo: z.string(),  // present in both
     demandTimeFrom: z.string(),  // present in both
+    duration: z.string().optional(), // added
     demandTimeTo: z.string(),  // present in both
     sigDisconnection: z.boolean(),  // present in both
     elementarySection: z.string().optional(),  // present in both
