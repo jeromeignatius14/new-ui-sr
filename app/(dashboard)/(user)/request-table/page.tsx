@@ -1177,10 +1177,12 @@ const handleDownload = () => {
                         {request.activity}
                       </td>
                       <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
-                        {formatDuration(
-                          request.demandTimeFrom,
-                          request.demandTimeTo
-                        )}
+                        
+                       {request.duration
+  ? new Date(request.duration).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+  : formatDuration(request.demandTimeFrom, request.demandTimeTo)}
+
+
                       </td>
                       <td className="border border-black px-2 py-1 text-center whitespace-nowrap">
                         {request.DisconnAcceptance === "ACCEPTED" ? (
