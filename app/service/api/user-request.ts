@@ -156,7 +156,7 @@ updateOtherRequest: async (
   // Prepare request body based on parameters
   const body: any = {};
   
-  if (!accept && disconnectionRequestRejectRemarks) {
+  if (disconnectionRequestRejectRemarks) {
     body.disconnectionRequestRejectRemarks = disconnectionRequestRejectRemarks;
   }
   
