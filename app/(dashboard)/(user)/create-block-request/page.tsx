@@ -2577,21 +2577,40 @@ export default function CreateBlockRequestPage() {
                   value: val,
                   label: val,
                 }))}
-                onChange={(selected) => {
-                  const values = selected
-                    ? selected.map((opt: any) => opt.value)
-                    : [];
-                  if (values.length <= 2) {
-                    setBlockSectionValue(values);
-                    setFormData((prev) => ({
-                      ...prev,
-                      missionBlock: values.join(","),
-                      processedLineSections: (
-                        prev.processedLineSections || []
-                      ).filter((s: any) => values.includes(s.block)),
-                    }));
-                  }
-                }}
+                // onChange={(selected) => {
+                //   const values = selected
+                //     ? selected.map((opt: any) => opt.value)
+                //     : [];
+                //   if (values.length <= 2) {
+                //     setBlockSectionValue(values);
+                //     setFormData((prev) => ({
+                //       ...prev,
+                //       missionBlock: values.join(","),
+                //       processedLineSections: (
+                //         prev.processedLineSections || []
+                //       ).filter((s: any) => values.includes(s.block)),
+                //     }));
+                //   }
+                // }}
+                 onChange={(selected) => {
+    const values = selected
+      ? selected.map((opt: any) => opt.value)
+      : [];
+    
+    // Update this line to check user department
+    const maxSelections = userDepartment === "TRD" ? 4 : 2;
+    
+    if (values.length <= maxSelections) {
+      setBlockSectionValue(values);
+      setFormData((prev) => ({
+        ...prev,
+        missionBlock: values.join(","),
+        processedLineSections: (
+          prev.processedLineSections || []
+        ).filter((s: any) => values.includes(s.block)),
+      }));
+    }
+  }}
                 classNamePrefix="react-select"
                 styles={{
                   control: (base) => ({
@@ -2657,9 +2676,17 @@ export default function CreateBlockRequestPage() {
                     padding: 0,
                   }),
                 }}
-                placeholder="Select up to 2 Block Sections/Yards"
+                // placeholder="Select up to 2 Block Sections/Yards"
+                placeholder={
+  userDepartment === "TRD" 
+    ? "Select up to 4 Block Sections/Yards" 
+    : "Select up to 2 Block Sections/Yards"
+}
                 closeMenuOnSelect={false}
-                isOptionDisabled={() => blockSectionValue.length >= 2}
+                // isOptionDisabled={() => blockSectionValue.length >= 2}
+                isOptionDisabled={() => 
+    blockSectionValue.length >= (userDepartment === "TRD" ? 4 : 2)
+  }
                 required
               />
               {errors.missionBlock && (
@@ -3256,7 +3283,7 @@ export default function CreateBlockRequestPage() {
                   htmlFor="repercussions"
                   className="block text-[24px] text-nowrap font-bold text-black mb-2"
                 >
-                  Coaching Repercussions
+                  Movement Restriction
                 </label>
                 <input
                   id="repercussions"
@@ -3264,7 +3291,7 @@ export default function CreateBlockRequestPage() {
                   value={formData.repercussions || ""}
                   onChange={handleInputChange}
                   required
-                  placeholder="Coaching Repercussions"
+                  placeholder="Movement Restriction"
                   className="w-full border-2 border-[#2c3e50] rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200"
                   aria-label="Route from location"
                 />
@@ -3537,7 +3564,8 @@ export default function CreateBlockRequestPage() {
               </div>
 
               {/* S&T Disconnection Section */}
-              <div className="w-full mt-2 bg-teal-200 rounded-2xl">
+              {session?.user.department !== "S&T" && (
+                 <div className="w-full mt-2 bg-teal-200 rounded-2xl">
                 <div className="flex justify-between items-center mb-1 bg-teal-400 rounded-2xl  px-2">
                   <span className="text-black font-bold text-[24px]">
                     S&T Disconnection Needed?
@@ -3863,6 +3891,8 @@ export default function CreateBlockRequestPage() {
                   </div>
                 )}
               </div>
+              )}
+             
             </div>
           )}
 
