@@ -4412,42 +4412,42 @@ export const depot: DepotStructure = {
   "MAS-GDR": {
     'TRD': ["BBQ", "TVT", "PON", "SPE", "GDR", "ADEE/PON"],
     'S&T': ["MAS", "BBQ", "TVT", "GPD", "SPE", "NYP"],
-    'ENGG': ["TVT", "PON", "SPE", "GDR"]
+    'ENGG': ["TVT", "PON", "SPE", "GDR","BRIDGE"]
   },
   "MAS-AJJ": {
     'TRD': ["BBQ", "AVD", "TRL", "AJJ"],
     'S&T': ["BBQ", "TRL", "AJJE"],
-    'ENGG': ["WSTA", "WSTB", "AVD", "TRLA", "TRLB", "AJJ"]
+    'ENGG': ["WSTA", "WSTB", "AVD", "TRLA", "TRLB", "AJJ","BRIDGE"]
   },
   "AJJ-KPD": {
     'TRD': ["AJJ", "WJR", "KPD"],
     'S&T': ["AJJ", "WJR", "KPD"],
-    'ENGG': ["AJJ", "WJR", "KPD"]
+    'ENGG': ["AJJ", "WJR", "KPD","BRIDGE"]
   },
   "KPD-JTJ": {
     'TRD': ["KPD", "AB", "JTJ"],
     'S&T': ["KPDW", "AB", "JTJ"],
-    'ENGG': ["KPD", "AB", "JTJ"]
+    'ENGG': ["KPD", "AB", "JTJ","BRIDGE"]
   },
   "AJJ-RU": {
     'TRD': ["AJJ", "PUT"],
     'S&T': ["TRT", "AJJ", "PUT"],
-    'ENGG': ["TRT", "AJJ", "PUT"]
+    'ENGG': ["TRT", "AJJ", "PUT","BRIDGE"]
   },
   "AJJ-CGL": {
     'TRD': ["AJJ", "CGL"],
     'S&T': ["CGL"],
-    'ENGG': ["CJ"]
+    'ENGG': ["CJ","BRIDGE"]
   },
   "MSB-VM": {
     'TRD': ["MS", "TBM", "CGL", "ACK", "VM"],
     'S&T': ["MSB", "MS", "TBM", "CGL", "TMV"],
-    'ENGG': ["MS", "TBM", "CGL", "ACK", "TMV"]
+    'ENGG': ["MS", "TBM", "CGL", "ACK", "TMV","BRIDGE"]
   },
   "MSB-VLCY": {
     'TRD': ["MSB", "MS"],
     'S&T': ["MSB", "MS"],
-    'ENGG': ["MSB", "MS"]
+    'ENGG': ["MSB", "MS","BRIDGE"]
   }
 };
 
