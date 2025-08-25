@@ -84,6 +84,33 @@ export default function ManagerRequestTablePage() {
     end: "",
   });
 
+    useEffect(() => {
+  const params = new URLSearchParams();
+
+  if (selectedSections.length) params.set("sections", selectedSections.join(","));
+  if (selectedSSEs.length) params.set("sses", selectedSSEs.join(","));
+  if (blockType.length) params.set("blockTypes", blockType.join(","));
+  if (customDateRange.start) params.set("start", customDateRange.start);
+  if (customDateRange.end) params.set("end", customDateRange.end);
+
+  router.replace(`?${params.toString()}`);
+}, [selectedSections, selectedSSEs, blockType, customDateRange]);
+
+useEffect(() => {
+  const sections = searchParams.get("sections")?.split(",") || [];
+  const sses = searchParams.get("sses")?.split(",") || [];
+  const blocks = searchParams.get("blockTypes")?.split(",") || [];
+  const start = searchParams.get("start") || "";
+  const end = searchParams.get("end") || "";
+
+  setSelectedSections(sections);
+  setSelectedSSEs(sses);
+  setBlockType(blocks);
+  setCustomDateRange({ start, end });
+  setFiltersApplied(true)
+}, []);
+
+
   // Calculate week range
   const weekEnd = endOfWeek(currentWeekStart, { weekStartsOn: 6 });
   const weekStart = startOfWeek(currentWeekStart, { weekStartsOn: 6 });
@@ -369,6 +396,13 @@ if(session?.user?.id!=="852e95b1-a568-4571-99e4-96bf7e02ba01"&&session?.user.dep
     //   </div>
     // );
   }
+  function clearFilters(): void {
+    setSelectedSections([]);
+    setSelectedSSEs([]);
+    setBlockType([]);
+    setCustomDateRange({ start: "", end: "" });
+    setFiltersApplied(false);
+  }
   return (
     <div className="min-h-screen bg-[#FFFDF5]">
       {/* Top Yellow Bar */}
@@ -560,6 +594,12 @@ if(session?.user?.id!=="852e95b1-a568-4571-99e4-96bf7e02ba01"&&session?.user.dep
         >
           click to view
         </button>
+        <button
+          onClick={() => clearFilters()}
+          className="text-2xl mx-auto bg-[#f69b7c] px-6 py-2 rounded-[50%] border-2 border-[#8E44AD] font-bold text-white hover:bg-[#A56CE6] transition shadow-md"
+        >
+          clear filters
+        </button>
       </div>
     </div>
 
@@ -570,7 +610,7 @@ if(session?.user?.id!=="852e95b1-a568-4571-99e4-96bf7e02ba01"&&session?.user.dep
       <div className="overflow-x-auto">
         <div className="max-h-[695px] min-h-[100px] overflow-y-auto border-2 border-[#B57CF6] rounded-lg bg-white shadow-inner">
           <table className="w-full text-black relative">
-            <thead className="sticky top-0 z-20">
+            <thead className="sticky top-0 ">
               <tr className="bg-[#E8D6FF] text-black">
                 <th className="border-2 border-[#B57CF6] p-2">Date</th>
                 <th className="border-2 border-[#B57CF6] p-2">ID</th>
@@ -610,12 +650,17 @@ if(session?.user?.id!=="852e95b1-a568-4571-99e4-96bf7e02ba01"&&session?.user.dep
               {dayjs(request.date).format("DD-MM-YY")}
             </td>
             <td className="border border-[#B57CF6] p-2 text-center">
-              <Link
-                href={`/manage/view-request/${request.id}?from=request-table`}
+             <button
                 className="text-[#6C3483] hover:underline font-semibold"
+                onClick={() =>
+                  router.push(
+                    `/manage/view-request/${request.id}?from=request-table`,
+                    {  scroll: false } // shallow keeps state alive
+                  )
+                }
               >
                 {request.divisionId || request.id}
-              </Link>
+              </button>
             </td>
             <td className="border border-[#B57CF6] p-2 text-center">
               {request.missionBlock}
