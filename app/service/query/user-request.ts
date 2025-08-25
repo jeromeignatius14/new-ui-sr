@@ -17,6 +17,7 @@ export interface RequestResponse {
 }
 
 export interface RequestItem {
+    duration: string;
     emergencyBlockRemarks: any;
     powerBlockDisconnectionAssignTo: string;
     sntDisconnectionAssignTo: any;

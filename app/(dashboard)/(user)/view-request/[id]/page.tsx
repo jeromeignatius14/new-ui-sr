@@ -250,6 +250,23 @@ export default function ViewRequestPage() {
                 </td>
               </tr>
               <tr>
+                <td className="py-1 font-medium">Duration:</td>
+                <td className="py-1">
+                  {request.duration
+      ? formatTime(request.duration)
+      : (() => {
+          const from = new Date(request.demandTimeFrom);
+          const to = new Date(request.demandTimeTo);
+          const diffMs = to.getTime() - from.getTime();
+          const diffMins = Math.floor(diffMs / 60000);
+          const hours = String(Math.floor(diffMins / 60)).padStart(2, "0");
+          const minutes = String(diffMins % 60).padStart(2, "0");
+          return `${hours}:${minutes}`;
+        })()}
+                 
+                </td>
+              </tr>
+              <tr>
                 <td className="py-1 font-medium">Block Section:</td>
                 <td className="py-1">{request.missionBlock}</td>
               </tr>
