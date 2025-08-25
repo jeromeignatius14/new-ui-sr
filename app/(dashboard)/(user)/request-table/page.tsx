@@ -1112,7 +1112,7 @@ const handleDownload = () => {
                     Block Section
                   </th>
                   <th className="border border-black px-2 py-1 whitespace-nowrap w-[15%]">
-                    UP/DN/SL/Rpad
+                    Line/Road
                   </th>
                   <th className="border border-black px-2 py-1 whitespace-nowrap w-[20%]">
                     Activity
