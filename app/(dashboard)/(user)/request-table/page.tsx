@@ -1204,9 +1204,17 @@ const handleDownload = () => {
                     </td>
                       <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
                         
-                       {request.duration
-  ? new Date(request.duration).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-  : formatDuration(request.demandTimeFrom, request.demandTimeTo)}
+                                {request.duration
+      ? formatTime(request.duration)
+      : (() => {
+          const from = new Date(request.demandTimeFrom);
+          const to = new Date(request.demandTimeTo);
+          const diffMs = to.getTime() - from.getTime();
+          const diffMins = Math.floor(diffMs / 60000);
+          const hours = String(Math.floor(diffMins / 60)).padStart(2, "0");
+          const minutes = String(diffMins % 60).padStart(2, "0");
+          return `${hours}:${minutes}`;
+        })()}
 
 
                       </td>
