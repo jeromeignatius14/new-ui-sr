@@ -4421,7 +4421,7 @@ export const depot: DepotStructure = {
   },
   "AJJ-KPD": {
     'TRD': ["AJJ", "WJR", "KPD"],
-    'S&T': ["AJJ", "WJR", "KPD"],
+    'S&T': ["AJJW","AJJE", "KPDE", "KPDW"],
     'ENGG': ["AJJ", "WJR", "KPD","BRIDGE"]
   },
   "KPD-JTJ": {
@@ -4431,7 +4431,7 @@ export const depot: DepotStructure = {
   },
   "AJJ-RU": {
     'TRD': ["AJJ", "PUT"],
-    'S&T': ["TRT", "AJJ", "PUT"],
+    'S&T': ["TRT", "AJJW","AJJE", "PUT"],
     'ENGG': ["TRT", "AJJ", "PUT","BRIDGE"]
   },
   "AJJ-CGL": {
