@@ -247,7 +247,7 @@ export let blockSection = {
   'PTJ-SRR': [
     "PTJ-MDKI", "MDKI-ETMD", "ETMD-WRA", "WRA-CLMD",
     "CLMD-KJKD", "KJKD-KTKU", "KTKU-PGT", "PGT-PLL",
-    "PLL-LDY", "LDY-OTP", "OTP-MNUR", "MNUR-SRR A", "SRR A-SRR",
+    "PLL-LDY", "LDY-OTP", "OTP-MNUR", "MNUR-SRR A", "SRR A-SRR","SRR A-SRR B","SRR-SRR B","SRR B-VTK",
     
     "PTJ-YD", "MDKI-YD", "ETMD-YD", "WRA-YD", "CLMD-YD",
     "KJKD-YD", "KTKU-YD", "PGT-YD", "PLL-YD", "LDY-YD",
@@ -1811,7 +1811,9 @@ export let lineData = {
   "OTP-MNUR": ["UP", "DN"],
   "MNUR-SRR A": ["UP", "DN"],
   "SRR A-SRR": ["Single"],
-
+  "SRR A-SRR B":["UP", "DN"],
+  "SRR-SRR B":["UP", "DN"],
+  "SRR B-VTK":["UP","DN"],
  // SRR-CLT Section
   "SRR-KRKD": ["UP", "DN"],
   "KRKD-PTB": ["UP", "DN"],
