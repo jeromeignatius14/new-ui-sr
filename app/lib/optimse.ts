@@ -118,6 +118,9 @@ export function flattenRecords(records: OriginalRecord[]): FlatRecord[] {
                 const otherAffected = hasLine
                     ? sec.otherLines ?? null
                     : sec.otherRoads ?? null;
+                const selectedLine = hasLine
+                    ? sec.lineName ?? null
+                    : sec.road ?? null;
 
                 result.push({
                     id: record.id,
@@ -128,10 +131,10 @@ export function flattenRecords(records: OriginalRecord[]): FlatRecord[] {
                     demandTimeFrom: formattedTimeFrom,
                     demandTimeTo: formattedTimeTo,
                     selectedDepartment: record.selectedDepartment,
-                    selectedLine: sec.lineName ?? null,
+                    selectedLine: selectedLine,
                     otherAffectedLine: otherAffected,
                     missionBlock: sec.block,
-                    selectedStream: sec.stream ?? null,
+                    selectedStream: sec.stream || sec.type || null,
                 });
             });
         } else {
