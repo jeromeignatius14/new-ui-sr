@@ -1044,7 +1044,7 @@ export const streamData = {
     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
     "both direction not affected": []
   },
-  "MAHE-YD": {
+  "MHE-YD": {
     "up direction affected": [],
     "down direction affected": [],
     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
