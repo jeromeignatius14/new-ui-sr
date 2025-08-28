@@ -14,12 +14,13 @@ import Select, { MultiValue } from "react-select";
 import { toast } from "react-hot-toast";
 import { format } from "date-fns";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { MajorSection } from "@/app/lib/store";
 import { useSession } from "next-auth/react";
 import { managerService, UserRequest } from "@/app/service/api/manager";
 import { useQuery } from "@tanstack/react-query";
 import { useUserGenerateReport } from "@/app/service/query/user-generate-report";
+import formatTime from "@/app/utils/formatTime";
 
 interface OptionType {
   value: string;
@@ -58,6 +59,26 @@ interface DetailedData {
   Status: string;
 }
 
+interface Data {
+  DivisionId: string;
+  Date: string;
+  Section: string;
+  Duration: number;
+  Type: string;
+  Status: string;
+  Activity?: string;
+}
+
+interface Data {
+  DivisionId: string;
+  Date: string;
+  Section: string;
+  Duration: number;
+  Type: string;
+  Status: string;
+  Activity?: string;
+}
+
 const locationOptions: OptionType[] = [
   { value: "MAS", label: "MAS" },
   { value: "SA", label: "SA" },
@@ -89,9 +110,7 @@ export default function GenerateReportPage() {
   const [loading, setLoading] = useState(false);
   const [reportGenerated, setReportGenerated] = useState(false);
   const [selectedLocations, setSelectedLocations] = useState<string[]>(["All"]);
-  const [selectedBlockTypes, setSelectedBlockTypes] = useState<string[]>([
-    "All",
-  ]);
+  const [selectedBlockTypes, setSelectedBlockTypes] = useState<string[]>([]);
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
   const [selectedMajorSections, setSelectedMajorSections] = useState<string[]>(
     ["MAS-GDR"]
@@ -100,10 +119,15 @@ export default function GenerateReportPage() {
     []
   );
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [hydrated, setHydrated] = useState(false); 
+
   const {
     register,
     handleSubmit,
     control,
+    setValue,
     watch,
     formState: { errors },
   } = useForm<FormData>();
@@ -113,6 +137,28 @@ export default function GenerateReportPage() {
       setSelectedDepartments([session.user.department]);
     }
   }, [session]);
+
+useEffect(() => {
+  const section = searchParams.get("section") ;
+  const blockType = searchParams.get("blockType");
+  const start = searchParams.get("startDate");
+  const end = searchParams.get("endDate");
+
+  if (section) setSelectedMajorSections(section.split(","));
+  if (blockType)
+  { 
+      setSelectedBlockTypes(blockType.split(","));
+  }
+
+  if (start && end) {
+    setValue("startDate", start); // yyyy-MM-dd works with <input type="date">
+    setValue("endDate", end);
+  }
+
+  if (!hydrated) {
+    handleSubmit(onSubmit)(); // ✅ only once
+  }
+}, [searchParams]);
 
   // Parameters for the query
   const [queryParams, setQueryParams] = useState({
@@ -157,6 +203,7 @@ export default function GenerateReportPage() {
     console.log("Full reportData:", reportData);
 
     if (reportData && reportData.data) {
+      setHydrated(true); // Mark as hydrated when data is received
       // Safe access of nested properties with detailed logging
       console.log(
         "pastBlockSummary raw data:",
@@ -239,38 +286,57 @@ export default function GenerateReportPage() {
     }
   };
 
-  const onSubmit = async (data: FormData) => {
-    // Validate dates
-    if (!data.startDate || !data.endDate) {
-      toast.error("Please enter both start and end dates");
-      return;
+const onSubmit = async (data: FormData) => {
+
+  // if (!hydrated) {
+  //   console.log("wait for hydration");
+  // }
+  if (!data.startDate || !data.endDate) {
+    toast.error("Please enter both start and end dates");
+    return;
+  }
+
+  try {
+    // Keep raw yyyy-MM-dd for URL and form
+    const startDateRaw = data.startDate;
+    const endDateRaw = data.endDate;
+
+    // Convert ONLY for API/query
+    const startDate = format(new Date(startDateRaw), "dd/MM/yy");
+    const endDate = format(new Date(endDateRaw), "dd/MM/yy");
+
+    // Update query state
+    setQueryParams({
+      startDate,
+      endDate,
+      majorSections: selectedMajorSections,
+      department: selectedDepartments,
+      blockType: selectedBlockTypes,
+      userId: session?.user?.id || "",
+    });
+
+    // ✅ Keep yyyy-MM-dd in URL for reloads
+    const params = new URLSearchParams();
+    params.set("startDate", startDateRaw);
+    params.set("endDate", endDateRaw);
+    if (selectedMajorSections.length > 0) {
+      params.set("section", selectedMajorSections.join(","));
+    }
+    if (selectedBlockTypes.length > 0) {
+      params.set("blockType", selectedBlockTypes.join(","));
+    }
+    if (selectedDepartments.length > 0) {
+      params.set("department", selectedDepartments.join(","));
     }
 
-    try {
-      // Format dates to DD/MM/YY format for API
-      const startDate = new Date(data.startDate);
-      const endDate = new Date(data.endDate);
+    router.push(`?${params.toString()}`);
 
-      const formattedStartDate = format(startDate, "dd/MM/yy");
-      const formattedEndDate = format(endDate, "dd/MM/yy");
-
-      // Update query parameters
-      setQueryParams({
-        startDate: formattedStartDate,
-        endDate: formattedEndDate,
-        majorSections: selectedMajorSections,
-        department: selectedDepartments,
-        blockType: selectedBlockTypes,
-        userId: session?.user?.id || "",
-      });
-
-      // Trigger the query - react-query will handle the loading state
-      await refetch();
-    } catch (error) {
-      console.error("Error initiating report generation:", error);
-      toast.error("Failed to generate report");
-    }
-  };
+    // await refetch();
+  } catch (error) {
+    console.error("Error initiating report generation:", error);
+    toast.error("Failed to generate report");
+  }
+};
 
   const formatDateInput = (value: string) => {
     // Format as DD/MM/YY
@@ -343,7 +409,7 @@ export default function GenerateReportPage() {
         </div>
       </div>
       {/* Wrap the main content in a max-w-screen-lg mx-auto w-full container */}
-      <div className="max-w-screen-lg mx-auto w-full px-4">
+      <div className=" mx-auto w-full px-4">
         {/* Filters Section */}
        
         {/* Block Type Filters (first line) */}
@@ -579,7 +645,7 @@ export default function GenerateReportPage() {
           </div>
         </div>
         {/* (B) Summary of Upcoming Blocks */}
-        <div className="w-full max-w-4xl mt-8">
+        <div className="w-full mt-8">
           <div className="flex w-full items-center">
             <div className="flex-1 bg-[#f1a983] text-[24px] font-bold border-2 border-black px-2 py-1">
               (B) Summary of Upcoming Blocks
@@ -669,10 +735,14 @@ export default function GenerateReportPage() {
             <table className="w-full border-2 border-black mt-1 text-[24px]">
               <thead>
                 <tr className="bg-[#e49edd] text-black text-lg font-bold">
-                  <th className="border-2 border-black px-2 py-1">Section</th>
                   <th className="border-2 border-black px-2 py-1">Date</th>
+                  <th className="border-2 border-black px-2 py-1">DivisionId</th>
+                  <th className="border-2 border-black px-2 py-1">Major section</th>
+                  <th className="border-2 border-black px-2 py-1">Block Section</th>
                   <th className="border-2 border-black px-2 py-1">Type</th>
-                  <th className="border-2 border-black px-2 py-1">Duration</th>
+                  <th className="border-2 border-black px-2 py-1">Activity</th>
+                  <th className="border-2 border-black px-2 py-1">Demand time</th>
+                  <th className="border-2 border-black px-2 py-1">Sanctioned time</th>
                   <th className="border-2 border-black px-2 py-1">Status</th>
                 </tr>
               </thead>
@@ -690,7 +760,7 @@ export default function GenerateReportPage() {
                 ) : (
                   filteredUpcomingBlocks
                     .slice(0, 200)
-                    .map((block: DetailedData, idx: number) => {
+                    .map((block: any, idx: number) => {
                       // Status color logic
                       let statusLabel = "";
                       let statusStyle = { background: "#fff", color: "#222" };
@@ -716,17 +786,43 @@ export default function GenerateReportPage() {
                           key={idx}
                           className={`${rowBgColor} hover:bg-[#F3F3F3]`}
                         >
+                          <td className="border-2 border-black px-2 py-1 text-black">
+                            {formatDateB(block.Date)}
+                          </td>
+                          <td className="border-2 border-black px-2 py-1 font-bold text-black">
+                            <Link
+                              href={`/view-request/${block.id}`}
+                              className="block w-full h-full"
+                            >
+                              {block.DivisionId}
+                            </Link>
+                          </td>
                           <td className="border-2 border-black px-2 py-1 font-bold text-black">
                             {block.Section}
                           </td>
-                          <td className="border-2 border-black px-2 py-1 text-black">
-                            {formatDateB(block.Date)}
+                          <td className="border-2 border-black px-2 py-1 font-bold text-black">
+                            {block.MissionBlock}
                           </td>
                           <td className="border-2 border-black px-2 py-1 text-black">
                             {block.Type}
                           </td>
+                          <td className="border-2 border-black px-2 py-1 text-black max-w-[200px] break-words">
+                            {block.Activity}
+                          </td>
                           <td className="border-2 border-black px-2 py-1 text-black">
-                            {block.Duration}
+                            {formatTime(block.DemandedTimeFrom)} to{" "}
+                            {formatTime(block.DemandedTimeTo)}
+                          </td>
+                          <td className="border-2 border-black px-2 py-1 text-black">
+                            {block.SanctionedTimeFrom &&
+                            block.SanctionedTimeTo ? (
+                              <>
+                                {formatTime(block.SanctionedTimeFrom)} to{" "}
+                                {formatTime(block.SanctionedTimeTo)}
+                              </>
+                            ) : (
+                              "Not Optimized Yet"
+                            )}
                           </td>
                           <td
                             className="border-2 border-black px-2 py-1 font-bold text-center text-black"
