@@ -139,15 +139,15 @@ export default function ViewRequestPage() {
           >
             Back
           </Link> */}
-          <Link
-            href='/request-table'
+          <button
+            onClick={() => window.history.back()}
             className="px-3 py-1 text-sm bg-white text-[#13529e] border border-black flex items-center gap-1"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
             Back
-          </Link>
+          </button>
 
 
           {request.status === "PENDING" && (

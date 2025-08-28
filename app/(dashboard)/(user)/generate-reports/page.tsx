@@ -727,7 +727,7 @@ const onSubmit = async (data: FormData) => {
               <thead>
                 <tr className="bg-[#e49edd] text-black text-lg font-bold">
                   <th className="border-2 border-black px-2 py-1">Date</th>
-                  <th className="border-2 border-black px-2 py-1">DivisionId</th>
+                  <th className="border-2 border-black px-2 py-1">ID</th>
                   <th className="border-2 border-black px-2 py-1">Major section</th>
                   <th className="border-2 border-black px-2 py-1">Block Section</th>
                   <th className="border-2 border-black px-2 py-1">Type</th>

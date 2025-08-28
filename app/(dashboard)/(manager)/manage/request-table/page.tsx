@@ -157,6 +157,41 @@ if(session?.user?.id!=="852e95b1-a568-4571-99e4-96bf7e02ba01"&&session?.user.dep
     }
   };
 
+  const handleDateChange = (key: "start" | "end", value: string) => {
+  setCustomDateRange((prev) => {
+    const updated = { ...prev, [key]: value };
+    updateQueryParams({ startDate: updated.start, endDate: updated.end });
+    return updated;
+  });
+};
+
+useEffect(() => {
+  const section = searchParams.get("section");
+  const sse = searchParams.get("sse");
+  const blockType = searchParams.get("blockType");
+  const start = searchParams.get("startDate");
+  const end = searchParams.get("endDate");
+
+  if (section) setSelectedSections(section.split(","));
+  if (sse) setSelectedSSEs(sse.split(","));
+  if (blockType) setBlockType(blockType.split(","));
+  if (start || end) setCustomDateRange({ start: start || "", end: end || "" });
+}, [searchParams]);
+
+const updateQueryParams = (updates: Record<string, string | string[] | null>) => {
+  const params = new URLSearchParams(searchParams.toString());
+
+  Object.entries(updates).forEach(([key, value]) => {
+    if (!value || (Array.isArray(value) && value.length === 0)) {
+      params.delete(key);
+    } else {
+      params.set(key, Array.isArray(value) ? value.join(",") : value);
+    }
+  });
+
+  router.replace(`?${params.toString()}`);
+};
+
   // Status mapping function for table display
   function getDisplayStatus(request: UserRequest) {
     // Sanctioned (light green)
@@ -431,18 +466,17 @@ if(session?.user?.id!=="852e95b1-a568-4571-99e4-96bf7e02ba01"&&session?.user.dep
           <input
             type="date"
             value={customDateRange.start}
-            onChange={(e) =>
-              setCustomDateRange((r) => ({ ...r, start: e.target.value }))
-            }
+            onChange={(e) => handleDateChange("start", e.target.value)}
+
             className="p-2 border-2 border-[#B57CF6] text-black bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B57CF6] text-2xl"
           />
           <span className="px-1 text-black font-medium">to</span>
           <input
             type="date"
             value={customDateRange.end}
-            onChange={(e) =>
-              setCustomDateRange((r) => ({ ...r, end: e.target.value }))
-            }
+            onChange={(e) => handleDateChange("end", e.target.value)}
+
+
             className="p-2 border-2 border-[#B57CF6] text-black bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B57CF6] text-2xl"
           />
         </div>
@@ -469,11 +503,14 @@ if(session?.user?.id!=="852e95b1-a568-4571-99e4-96bf7e02ba01"&&session?.user.dep
                     type="checkbox"
                     checked={selectedSections.includes(section)}
                     onChange={() =>
-                      setSelectedSections((prev) =>
-                        prev.includes(section)
+                      setSelectedSections((prev) => {
+                        const updated = prev.includes(section)
                           ? prev.filter((s) => s !== section)
-                          : [...prev, section]
-                      )
+                          : [...prev, section];
+
+                        updateQueryParams({ section: updated });
+                        return updated;
+                      })
                     }
                     className="mr-2 accent-[#B57CF6]"
                   />
@@ -494,7 +531,7 @@ if(session?.user?.id!=="852e95b1-a568-4571-99e4-96bf7e02ba01"&&session?.user.dep
             <span className="ml-1">▼</span>
           </button>
           {sseDropdownOpen && (
-            <div className="absolute z-10 mt-1 w-48 bg-white border-2 border-[#B57CF6] rounded-lg shadow-lg max-h-60 overflow-y-auto">
+            <div className="absolute z-40 mt-1 w-48 bg-white border-2 border-[#B57CF6] rounded-lg shadow-lg max-h-60 overflow-y-auto">
               {sseOptions.map((sse) => (
                 <label
                   key={sse}
@@ -504,11 +541,14 @@ if(session?.user?.id!=="852e95b1-a568-4571-99e4-96bf7e02ba01"&&session?.user.dep
                     type="checkbox"
                     checked={selectedSSEs.includes(sse)}
                     onChange={() =>
-                      setSelectedSSEs((prev) =>
-                        prev.includes(sse)
+                      setSelectedSSEs((prev) => {
+                        const updated = prev.includes(sse)
                           ? prev.filter((s) => s !== sse)
-                          : [...prev, sse]
-                      )
+                          : [...prev, sse];
+
+                        updateQueryParams({ sse: updated });
+                        return updated;
+                      })
                     }
                     className="mr-2 accent-[#B57CF6]"
                   />
@@ -539,11 +579,14 @@ if(session?.user?.id!=="852e95b1-a568-4571-99e4-96bf7e02ba01"&&session?.user.dep
                     type="checkbox"
                     checked={blockType.includes(opt.value)}
                     onChange={() =>
-                      setBlockType((prev) =>
-                        prev.includes(opt.value)
+                      setBlockType((prev) => {
+                        const updated = prev.includes(opt.value)
                           ? prev.filter((s) => s !== opt.value)
-                          : [...prev, opt.value]
-                      )
+                          : [...prev, opt.value];
+
+                        updateQueryParams({ blockType: updated });
+                        return updated;
+                      })
                     }
                     className="mr-2 accent-[#B57CF6]"
                   />
