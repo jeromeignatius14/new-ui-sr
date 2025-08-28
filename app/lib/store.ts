@@ -11,7 +11,7 @@ export let MajorSection = {
   "MAS": ["MAS-GDR","MAS-AJJ","AJJ-KPD", "KPD-JTJ", "AJJ-RU","AJJ-CGL","MSB-VM","MSB-VLCY"],
   "TPJ": ["TPJ-VM", "VM-MV", "TPJ-MV","TJ-KIK","MV-TVR","NMJ- MQ","VM-PDY","KPD-VM","CUPJ-VRI","TPJ-TP","NGT-VLNK","TVR- KKDI","TTP-AGX"],
   "SA": ["JTJ-ED","ED-PTJ","ED-TP","KRR-DG","SA-VRI","SA-MTDM","SA-KRR","CBE-MTP","MTP-UAM","PTJ-CNV"],
-  "PGT": ["PTJ-SRR","SRR-CLT","CLT-CAN","CAN-MAQ-MAJN","MAQ-MAJN-PADIL-TOK","SRR-NIL","PGT-PGTN-POY","POY-CNV"]
+  "PGT": ["PTJ-SRR","SRR-CLT","CLT-CAN","CAN-MAQ-MAJN","MAQ-MAJN-PADIL-TOK","SRR-NIL","PGT-PGTN-POY","POY-CNV","SRR-PNQ"]
 };
 // export let MajorSection = {
 //   "MAS": ["MAS-GDR","MAS-AJJ","AJJ-KPD", "KPD-JTJ", "AJJ-RU","AJJ-CGL","MSB-VM","MSB-VLCY"],
@@ -304,7 +304,9 @@ export let blockSection = {
     "POY-CNV",
 
     "POY-YD", "CNV-YD"
-  ]
+  ],
+
+  'SRR-PNQ':["SRR B-VTK"]
 };
  
 
@@ -1813,7 +1815,7 @@ export let lineData = {
   "SRR A-SRR": ["Single"],
   "SRR A-SRR B":["UP", "DN"],
   "SRR-SRR B":["UP", "DN"],
-  "SRR B-VTK":["UP","DN"],
+  "SRR B-VTK":["UP","DN","Single"],
  // SRR-CLT Section
   "SRR-KRKD": ["UP", "DN"],
   "KRKD-PTB": ["UP", "DN"],
@@ -2111,7 +2113,7 @@ export const depot: DepotStructure = {
   "SRR-NIL": {
     'TRD': ["NIL"],
     'S&T': ["SRR"],
-    'ENGG': ["AAM","PGT"]
+    'ENGG': ["AAM","PGT","SRR"]
   },
 
   "PGT-PGTN-POY": {
@@ -2124,6 +2126,12 @@ export const depot: DepotStructure = {
     'TRD': ["POY"],
     'S&T': ["PGTN","POY"],
     'ENGG': ["KLGD","PGT"]
+  },
+
+  "SRR-PNQ":{
+    'ENGG':["SRR"],
+    'S&T':["SRR"],
+    'TRD':["SRR"]
   }
 };
 
