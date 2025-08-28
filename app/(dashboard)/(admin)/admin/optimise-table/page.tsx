@@ -387,7 +387,8 @@ export default function OptimiseTablePage() {
     const requestDate =
       typeof req.date === "string" ? parseISO(req.date) : req.date;
     return isSameDay(requestDate, selectedDate);
-  });
+  }).filter((request: UserRequest) => !request.isSanctioned)
+    .sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime());
 
   // --- Custom: Only show requests that are pending with me, not sanctioned, and after today ---
 const today = new Date();
@@ -1081,7 +1082,7 @@ const nonCorridorRequestsFiltered = pendingRequests
                     <td colSpan={12} className="border border-black p-2 text-[24px] text-left">No requests found.</td>
                   </tr>
                 )}
-                {urgentRequestDate.filter((request:UserRequest)=>!request.isSanctioned).sort((a:any, b:any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
+                {urgentRequestDate.map((request: UserRequest) => (
                   <tr key={`request-${request.id}-${request.date}`} className={`hover:bg-blue-50 transition-colors ${request.optimizeTimeFrom && request.optimizeTimeTo ? "bg-green-50" : ""}`}>
                      <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (

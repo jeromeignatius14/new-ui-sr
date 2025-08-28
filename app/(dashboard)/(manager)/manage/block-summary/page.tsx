@@ -130,13 +130,14 @@ import Select, { MultiValue } from "react-select";
 import { toast } from "react-hot-toast";
 import { format } from "date-fns";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useGenerateReport } from "@/app/service/query/hq";
 import { MajorSection } from "@/app/lib/store";
 import { useSession } from "next-auth/react";
 import { managerService, UserRequest } from "@/app/service/api/manager";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
+import formatTime from "@/app/utils/formatTime";
 
 interface OptionType {
   value: string;
@@ -213,11 +214,16 @@ export default function GenerateReportPage() {
     []
   );
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [hydrated, setHydrated] = useState(false);
+  
   const {
     register,
     handleSubmit,
     control,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<FormData>();
   const { data: session } = useSession();
@@ -276,6 +282,8 @@ useEffect(() => {
     console.log("Full reportData:", reportData);
 
     if (reportData && reportData.data) {
+
+      setHydrated(true);
       // Safe access of nested properties with detailed logging
       console.log(
         "pastBlockSummary raw data:",
@@ -346,6 +354,23 @@ useEffect(() => {
     }
   };
 
+
+  const updateURLParams = (filters: {
+  startDate?: string;
+  endDate?: string;
+  sections?: string[];
+  blockType?: string[];
+}) => {
+  const params = new URLSearchParams();
+
+  if (filters.startDate) params.set("startDate", filters.startDate);
+  if (filters.endDate) params.set("endDate", filters.endDate);
+  if (filters.sections?.length) params.set("section", filters.sections.join(","));
+  if (filters.blockType?.length) params.set("blockType", filters.blockType.join(","));
+
+  router.push(`?${params.toString()}`);
+};
+
  
 
   const onSubmit = async (data: FormData) => {
@@ -372,6 +397,14 @@ useEffect(() => {
         blockType: selectedBlockTypes,
       });
 
+       // Sync with URL so it survives refresh
+      updateURLParams({
+        startDate: data.startDate,
+        endDate: data.endDate,
+        sections: selectedMajorSections,
+        blockType: selectedBlockTypes,
+      });
+
       // Trigger the query - react-query will handle the loading state
       await refetch();
     } catch (error) {
@@ -379,6 +412,27 @@ useEffect(() => {
       toast.error("Failed to generate report");
     }
   };
+
+useEffect(() => {
+  const section = searchParams.get("section");
+  const blockType = searchParams.get("blockType");
+  const start = searchParams.get("startDate");
+  const end = searchParams.get("endDate");
+
+  if (section) setSelectedMajorSections(section.split(","));
+  if (blockType) setSelectedBlockTypes(blockType.split(","));
+  if (start && end) {
+    setValue("startDate", start);
+    setValue("endDate", end);
+  }
+
+  console.log("hydration check - searchParams:", hydrated)
+  if (!hydrated) {
+    handleSubmit(onSubmit)(); // ✅ only once
+    // setHydrated(true);
+  }
+
+}, [searchParams]);
 
   const formatDateInput = (value: string) => {
     // Format as DD/MM/YY
@@ -780,10 +834,9 @@ const formatDisplayDate = (dateStr: string) => {
                         className="border-2 border-black px-2 py-1"
                         style={{ color: "black" }}
                       >
-                        {pastBlockSummary.reduce(
-                          (sum, item) => sum + (item.Demanded || 0),
-                          0
-                        )}
+                        {pastBlockSummary
+                          .reduce((sum, item) => sum + (item.Demanded || 0), 0)
+                          .toFixed(2)}
                       </td>
                       <td
                         className="border-2 border-black px-2 py-1"
@@ -792,7 +845,7 @@ const formatDisplayDate = (dateStr: string) => {
                         {pastBlockSummary.reduce(
                           (sum, item) => sum + (item.Approved || 0),
                           0
-                        )}
+                        ).toFixed(2)}
                       </td>
                       <td
                         className="border-2 border-black px-2 py-1"
@@ -801,7 +854,7 @@ const formatDisplayDate = (dateStr: string) => {
                         {pastBlockSummary.reduce(
                           (sum, item) => sum + (item.Granted || 0),
                           0
-                        )}
+                        ).toFixed(2)}
                       </td>
                       <td
                         className="border-2 border-black px-2 py-1"
@@ -838,7 +891,7 @@ const formatDisplayDate = (dateStr: string) => {
           </div>
         </div>
         {/* (B) Summary of Upcoming Blocks */}
-        <div className="w-full max-w-4xl mt-8">
+        <div className="w-full mt-8">
           <div className="flex w-full items-center">
             <div className="flex w-full gap-x-3">
               {" "}
@@ -898,7 +951,9 @@ const formatDisplayDate = (dateStr: string) => {
                   <th className="border-2 border-black px-2 py-1">Major section</th>
                   <th className="border-2 border-black px-2 py-1">Block Section</th>
                   <th className="border-2 border-black px-2 py-1">Type</th>
-                  <th className="border-2 border-black px-2 py-1">Duration</th>
+                  <th className="border-2 border-black px-2 py-1">Activity</th>
+                  <th className="border-2 border-black px-2 py-1">Demand time</th>
+                  <th className="border-2 border-black px-2 py-1">Sanctioned time</th>
                   <th className="border-2 border-black px-2 py-1">Status</th>
                 </tr>
               </thead>
@@ -942,30 +997,43 @@ const formatDisplayDate = (dateStr: string) => {
                           key={idx}
                           className={`${rowBgColor} hover:bg-[#F3F3F3]`}
                         >
-                           <td className="border-2 border-black px-2 py-1 text-black">
+                          <td className="border-2 border-black px-2 py-1 text-black">
                             {dayjs(block.Date).format("DD-MM-YY")}
                           </td>
-                                                     <td className="border-2 border-black px-2 py-1 font-bold text-black">
- <Link 
-  href={``}
-  className="block w-full h-full"
->
-  {block.DivisionId}
-</Link>
-
-</td>
+                          <td className="border-2 border-black px-2 py-1 font-bold text-black">
+                            <Link
+                              href={`/manage/view-request/${block.id}?from=block-summary`}
+                              className="block w-full h-full"
+                            >
+                              {block.DivisionId}
+                            </Link>
+                          </td>
                           <td className="border-2 border-black px-2 py-1 font-bold text-black">
                             {block.Section}
                           </td>
-                           <td className="border-2 border-black px-2 py-1 font-bold text-black">
+                          <td className="border-2 border-black px-2 py-1 font-bold text-black">
                             {block.MissionBlock}
                           </td>
-                         
                           <td className="border-2 border-black px-2 py-1 text-black">
                             {block.Type}
                           </td>
                           <td className="border-2 border-black px-2 py-1 text-black">
-                            {block.Duration}
+                            {block.Activity}
+                          </td>
+                          <td className="border-2 border-black px-2 py-1 text-black">
+                            {formatTime(block.DemandedTimeFrom)} to{" "}
+                            {formatTime(block.DemandedTimeTo)}
+                          </td>
+                          <td className="border-2 border-black px-2 py-1 text-black">
+                            {block.SanctionedTimeFrom &&
+                            block.SanctionedTimeTo ? (
+                              <>
+                                {formatTime(block.SanctionedTimeFrom)} to{" "}
+                                {formatTime(block.SanctionedTimeTo)}
+                              </>
+                            ) : (
+                              "Not Optimized Yet"
+                            )}
                           </td>
                           <td
                             className="border-2 border-black px-2 py-1 font-bold text-center text-black"
