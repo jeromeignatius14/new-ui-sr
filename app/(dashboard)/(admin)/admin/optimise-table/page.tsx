@@ -511,7 +511,8 @@ export default function OptimiseTablePage() {
   const urgentRequestsForSelectedDate = urgentRequests.filter((req: UserRequest) => {
     const requestDate = typeof req.date === "string" ? parseISO(req.date) : req.date;
     return isSameDay(requestDate, selectedDate);
-  });
+  }).filter((request: UserRequest) => !request.isSanctioned)
+    .sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime());
 
 
 
@@ -1347,7 +1348,7 @@ export default function OptimiseTablePage() {
                 </tr>
               </thead>
               <tbody>
-                {urgentRequestsForSelectedDate.filter((request: UserRequest) => !request.isSanctioned).length === 0 && (
+                {urgentRequestsForSelectedDate.length === 0 && (
                   <tr>
                     <td colSpan={12} className="border border-black p-2 text-[24px] text-left">
                       <div className="text-center py-4">
@@ -1356,7 +1357,7 @@ export default function OptimiseTablePage() {
                     </td>
                   </tr>
                 )}
-                {urgentRequestsForSelectedDate.filter((request: UserRequest) => !request.isSanctioned).sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
+                {urgentRequestsForSelectedDate.map((request: UserRequest) => (
                   <tr key={`request-${request.id}-${request.date}`} className={`hover:bg-blue-50 transition-colors ${request.optimizeTimeFrom && request.optimizeTimeTo ? "bg-green-50" : ""}`}>
                     <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (

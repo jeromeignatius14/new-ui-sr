@@ -802,46 +802,51 @@ const handleDownload = () => {
 
   return (
     <div className="min-h-screen bg-[#FFFDF5] max-w-[1366px] mx-auto px-2 relative ">
-
       {showRejectReasonPopup && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-    <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md border border-gray-300">
-      <h2 className="text-lg font-bold mb-2 text-black">Reason for Rejection</h2>
-      <textarea
-        className="w-full border border-gray-400 rounded p-2 mb-4 text-black"
-        rows={3}
-        value={rejectReason}
-        onChange={(e) => setRejectReason(e.target.value)}
-        placeholder="Please specify the reason for rejection..."
-        autoFocus
-      />
-      <div className="flex justify-end gap-2">
-        <button
-          className="px-4 py-1 rounded bg-gray-200 text-black font-semibold"
-          onClick={() => {
-            setShowRejectReasonPopup(false);
-            setRejectReason("");
-          }}
-        >
-          Cancel
-        </button>
-        <button
-          className="px-4 py-1 rounded bg-red-600 text-white font-semibold"
-          disabled={!rejectReason.trim() || isMutating}
-          onClick={handleConfirmReject}
-        >
-          {isMutating ? "Rejecting..." : "Confirm Reject"}
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md border border-gray-300">
+            <h2 className="text-lg font-bold mb-2 text-black">
+              Reason for Rejection
+            </h2>
+            <textarea
+              className="w-full border border-gray-400 rounded p-2 mb-4 text-black"
+              rows={3}
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Please specify the reason for rejection..."
+              autoFocus
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                className="px-4 py-1 rounded bg-gray-200 text-black font-semibold"
+                onClick={() => {
+                  setShowRejectReasonPopup(false);
+                  setRejectReason("");
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-1 rounded bg-red-600 text-white font-semibold"
+                disabled={!rejectReason.trim() || isMutating}
+                onClick={handleConfirmReject}
+              >
+                {isMutating ? "Rejecting..." : "Confirm Reject"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {rejectRemarkPopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md border border-gray-300">
-            <h2 className="text-lg font-bold mb-2 text-black">Reject Request</h2>
-            <p className="mb-2 text-black">Please provide remarks for rejection:</p>
+            <h2 className="text-lg font-bold mb-2 text-black">
+              Reject Request
+            </h2>
+            <p className="mb-2 text-black">
+              Please provide remarks for rejection:
+            </p>
             <textarea
               className="w-full border border-gray-400 rounded p-2 mb-4 text-black"
               rows={3}
@@ -880,7 +885,7 @@ const handleDownload = () => {
       {/* Top Yellow Bar */}
       <div className="w-full bg-[#FFF86B] py-2 flex flex-col items-center">
         <span className="text-[24px] font-bold text-[#B57CF6] tracking-widest">
-            RBMS-{session?.user?.location}-DIVN
+          RBMS-{session?.user?.location}-DIVN
         </span>
       </div>
 
@@ -892,16 +897,16 @@ const handleDownload = () => {
       </div>
 
       {/* User Info Row */}
-   <div className="flex justify-center mt-3">
-  <div className="flex gap-3">
-    <span className="bg-[#FFB74D] border-2 border-black px-5 py-2 font-bold text-2xl text-black rounded-lg">
-      DESGN:
-    </span>
-    <span className="bg-[#FFB74D] border-2 border-black px-5 py-2 font-bold text-2xl text-black rounded-lg">
-      {userName}
-    </span>
-  </div>
-</div>
+      <div className="flex justify-center mt-3">
+        <div className="flex gap-3">
+          <span className="bg-[#FFB74D] border-2 border-black px-5 py-2 font-bold text-2xl text-black rounded-lg">
+            DESGN:
+          </span>
+          <span className="bg-[#FFB74D] border-2 border-black px-5 py-2 font-bold text-2xl text-black rounded-lg">
+            {userName}
+          </span>
+        </div>
+      </div>
 
       {/* Summary Box */}
       <div className="flex justify-center mt-3 mb-6">
@@ -999,19 +1004,20 @@ const handleDownload = () => {
                     <td className="border border-black px-2 py-1 bg-[#E6E6FA] text-center align-middle w-32">
                       {request.isSanctioned === true ? (
                         <>
-                        {
-                          request.userResponse === "ACCEPTED" ? (
-                          <div className="px-2 py-1 bg-green-100 text-green-800 mx-auto">
-                            Sanctioned and Accepted
-                          </div>
-                        ) : (
-                          AcceptOrRejectButton(request)
-                        )}
+                          {request.userResponse === "ACCEPTED" ? (
+                            <div className="px-2 py-1 bg-green-100 text-green-800 mx-auto">
+                              Sanctioned and Accepted
+                            </div>
+                          ) : (
+                            AcceptOrRejectButton(request)
+                          )}
                         </>
                       ) : (
                         <>
-                         <span className="text-gray-500">{request.overAllStatus}</span>
-  {/* {(() => {
+                          <span className="text-gray-500">
+                            {request.overAllStatus}
+                          </span>
+                          {/* {(() => {
     if (request.managerAcceptance === false&&request.remarkByManager===null ) {
       return <span className="text-gray-500">with Dept controller</span>;
     } 
@@ -1076,7 +1082,6 @@ const handleDownload = () => {
     // }
   })()} */}
 </>
-                        
                       )}
                     </td>
                   </tr>
@@ -1155,7 +1160,7 @@ const handleDownload = () => {
                       <td className="border border-black px-2 py-1 text-black">
                         {request.missionBlock}
                       </td>
-                   {/* <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                  {/* <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
                       {session?.user.department === "S&T"
                         ? request.processedLineSections
                             .map((section: any) =>
@@ -1172,106 +1177,80 @@ const handleDownload = () => {
                             .join(", ") || "N/A"}
                     </td> */}
                     <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
-  {request.processedLineSections
-    .map((section: any) =>
-      section.type === "line"
-        ? [section.lineName, section.otherLines]
-        : [section.road, section.otherRoads]
-    )
-    .flat()
-    .filter(Boolean)
-    .join(", ") || "N/A"}
-</td>
+                          {request.processedLineSections
+                            .map((section: any) =>
+                              section.type === "line"
+                                ? [section.lineName, section.otherLines]
+                                : [section.road, section.otherRoads]
+                            )
+                            .flat()
+                            .filter(Boolean)
+                            .join(", ") || "N/A"}
+                        </td>
 
-                      <td className="border border-black px-2 py-1 text-black">
-                        {request.activity}
-                      </td>
-                                          <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
-                      {formatTime(request.demandTimeFrom)} -{" "}
-                      {formatTime(request.demandTimeTo)}
-                    </td>
-                    <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
-                      {request.isSanctioned === true ? (
-                        <>
-                          {request.sanctionedTimeFrom === null || request.sanctionedTimeTo === null ? (
-                            <span className="text-gray-500">00:00 - 00:00</span>
-                          ) : (
+                        <td className="border border-black px-2 py-1 text-black">
+                          {request.activity}
+                        </td>
+                        <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                          {formatTime(request.demandTimeFrom)} -{" "}
+                          {formatTime(request.demandTimeTo)}
+                        </td>
+                        <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                          {request.isSanctioned === true ? (
                             <>
-                              {formatTime(request.sanctionedTimeFrom)} -{" "}
-                              {formatTime(request.sanctionedTimeTo)}
+                              {request.sanctionedTimeFrom === null ||
+                              request.sanctionedTimeTo === null ? (
+                                <span className="text-gray-500">
+                                  00:00 - 00:00
+                                </span>
+                              ) : (
+                                <>
+                                  {formatTime(request.sanctionedTimeFrom)} -{" "}
+                                  {formatTime(request.sanctionedTimeTo)}
+                                </>
+                              )}
                             </>
+                          ) : (
+                            <span className="text-gray-500">N/A</span>
                           )}
-                        </>
-                      ) : (
-                        <span className="text-gray-500">N/A</span>
-                      )}
-                    </td>
-                      <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
-                        {formatDuration(
-                          request.demandTimeFrom,
-                          request.demandTimeTo
-                        )}
-                      </td>
-                      <td className="border border-black px-2 py-1 text-center whitespace-nowrap">
-                        {request.DisconnAcceptance === "ACCEPTED" ? (
-                          <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                            <svg
-                              className="w-3 h-3 mr-1"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                            Accepted
-                          </span>
-                        ) : request.DisconnAcceptance === "REJECTED" ? (
-                          <span className="inline-flex items-center px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
-                            <svg
-                              className="w-3 h-3 mr-1"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                            Rejected
-                          </span>
-                        ) : (
-                          <div className="flex gap-2 justify-center">
-                            <button
-                              onClick={() =>
-                                handleStatusUpdate(request.id, true,userDepartement,"mobileView",request.date,request.corridorType)
-                              }
-                              disabled={isMutating}
-                              className="px-3 py-1 bg-green-50 hover:bg-green-100 text-green-700 text-xs rounded-md border border-green-200 flex items-center transition-colors"
-                            >
-                              <svg
-                                className="w-3 h-3 mr-1"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                              Accept
-                            </button>
-                            <button
-                              onClick={() =>
-                                handleStatusUpdate(request.id, false,userDepartement,"mobileView",request.date,request.corridorType)
-                              }
-                              disabled={isMutating}
-                              className="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-700 text-xs rounded-md border border-red-200 flex items-center transition-colors"
-                            >
+                        </td>
+                        <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                          {formatDuration(
+                            request.demandTimeFrom,
+                            request.demandTimeTo
+                          )}
+                        </td>
+                        <td className="border border-black px-2 py-1 text-center whitespace-nowrap">
+                          {request.DisconnAcceptance === "ACCEPTED" ? (
+                            <>
+                              {/*
+                              <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                                <svg
+                                  className="w-3 h-3 mr-1"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                                Accepted 
+                              </span>
+                              */}
+                              {request.isSanctioned ? (
+                                <span className="bg-green-100  p-2 text-green-600">
+                                  {request.overAllStatus}
+                                </span>
+                              ) : (
+                                <span className="text-gray-500 ">
+                                  {request.overAllStatus}
+                                </span>
+                              )}
+                            </>
+                          ) : request.DisconnAcceptance === "REJECTED" ? (
+                            <span className="inline-flex items-center px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
                               <svg
                                 className="w-3 h-3 mr-1"
                                 fill="currentColor"
@@ -1283,12 +1262,68 @@ const handleDownload = () => {
                                   clipRule="evenodd"
                                 />
                               </svg>
-                              Reject
-                            </button>
-                          </div>
-                        )}
-                      </td>
-                      {/* {request.DisconnAcceptance === "PENDING" && (
+                              Rejected
+                            </span>
+                          ) : (
+                            <div className="flex gap-2 justify-center">
+                              <button
+                                onClick={() =>
+                                  handleStatusUpdate(
+                                    request.id,
+                                    true,
+                                    userDepartement,
+                                    "mobileView",
+                                    request.date,
+                                    request.corridorType
+                                  )
+                                }
+                                disabled={isMutating}
+                                className="px-3 py-1 bg-green-50 hover:bg-green-100 text-green-700 text-xs rounded-md border border-green-200 flex items-center transition-colors"
+                              >
+                                <svg
+                                  className="w-3 h-3 mr-1"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                                Accept
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleStatusUpdate(
+                                    request.id,
+                                    false,
+                                    userDepartement,
+                                    "mobileView",
+                                    request.date,
+                                    request.corridorType
+                                  )
+                                }
+                                disabled={isMutating}
+                                className="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-700 text-xs rounded-md border border-red-200 flex items-center transition-colors"
+                              >
+                                <svg
+                                  className="w-3 h-3 mr-1"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                                Reject
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                        {/* {request.DisconnAcceptance === "PENDING" && (
                         <div className="flex gap-1 mt-1">
                           <button
                             onClick={() => handleStatusUpdate(request.id, true)}
@@ -1312,22 +1347,22 @@ const handleDownload = () => {
                           </button>
                         </div>
                       )} */}
-                    </tr>
-                  )
-                )}
-              </tbody>
-            </table>
+                      </tr>
+                    )
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-      </div>
-      )
-      }
-
+      )}
 
       {/* Fixed Bottom Navigation */}
       <div className="bg-[#FFFDF5] pb-2">
         <div className=" text-center">
-          <h3 style={{ background: "#E6E6FA", color: "black" ,fontSize:"24px"}}>
+          <h3
+            style={{ background: "#E6E6FA", color: "black", fontSize: "24px" }}
+          >
             Customised Summary
           </h3>
         </div>
@@ -1335,47 +1370,49 @@ const handleDownload = () => {
         <div className="max-w-[1366px] mx-auto px-2">
           <div className="flex justify-center items-center gap-4 mb-4  py-3 w-full rounded-lg">
             <div className="flex items-center gap-4 flex-wrap justify-center">
-                    <div className="flex items-center gap-1"> {/* Added this container */}
-
-              <div className="flex flex-col">
-                <label className="text-[24px] font-medium mb-1 text-black">
-                  From Date
-                </label>
-                <input
-                  type="date"
-                  value={format(customDateRange.startDate, "yyyy-MM-dd")}
-                  onChange={(e) => {
-                    const newDate = new Date(e.target.value);
-                    setCustomDateRange((prev) => ({
-                      ...prev,
-                      startDate: newDate,
-                      endDate: newDate > prev.endDate ? newDate : prev.endDate,
-                    }));
-                  }}
-                  className="w-fit bg-[#B2F3F5] border-2 border-red-500 text-black pl-2 -pr-10 py-1 rounded text-2xl"
-                  max={format(customDateRange.endDate, "yyyy-MM-dd")}
-                />
-              </div>
-              <div className="flex flex-col">
-                <label className="text-[24px] font-medium mb-1 text-black">
-                  To Date
-                </label>
-                <input
-                  type="date"
-                  value={format(customDateRange.endDate, "yyyy-MM-dd")}
-                  onChange={(e) => {
-                    const newDate = new Date(e.target.value);
-                    setCustomDateRange((prev) => ({
-                      ...prev,
-                      endDate: newDate,
-                      startDate:
-                        newDate < prev.startDate ? newDate : prev.startDate,
-                    }));
-                  }}
-                  className="w-fit bg-[#B2F3F5] border-2 border-red-500 text-black py-1 -pr-10 rounded text-2xl"
-                  min={format(customDateRange.startDate, "yyyy-MM-dd")}
-                />
-              </div>
+              <div className="flex items-center gap-1">
+                {" "}
+                {/* Added this container */}
+                <div className="flex flex-col">
+                  <label className="text-[24px] font-medium mb-1 text-black">
+                    From Date
+                  </label>
+                  <input
+                    type="date"
+                    value={format(customDateRange.startDate, "yyyy-MM-dd")}
+                    onChange={(e) => {
+                      const newDate = new Date(e.target.value);
+                      setCustomDateRange((prev) => ({
+                        ...prev,
+                        startDate: newDate,
+                        endDate:
+                          newDate > prev.endDate ? newDate : prev.endDate,
+                      }));
+                    }}
+                    className="w-fit bg-[#B2F3F5] border-2 border-red-500 text-black pl-2 -pr-10 py-1 rounded text-2xl"
+                    max={format(customDateRange.endDate, "yyyy-MM-dd")}
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label className="text-[24px] font-medium mb-1 text-black">
+                    To Date
+                  </label>
+                  <input
+                    type="date"
+                    value={format(customDateRange.endDate, "yyyy-MM-dd")}
+                    onChange={(e) => {
+                      const newDate = new Date(e.target.value);
+                      setCustomDateRange((prev) => ({
+                        ...prev,
+                        endDate: newDate,
+                        startDate:
+                          newDate < prev.startDate ? newDate : prev.startDate,
+                      }));
+                    }}
+                    className="w-fit bg-[#B2F3F5] border-2 border-red-500 text-black py-1 -pr-10 rounded text-2xl"
+                    min={format(customDateRange.startDate, "yyyy-MM-dd")}
+                  />
+                </div>
               </div>
 
               {/* <div className="w-fit text-center mt-2">
@@ -1393,22 +1430,23 @@ const handleDownload = () => {
                 Download XLSX
               </button> */}
 
-              <div className="flex flex-col items-center gap-1"> {/* Changed to column layout */}
-  <div className="w-full text-center">
-    <h3 className="bg-[#E6E6FA] text-black text-[18px] font-medium px-3 py-1 rounded mb-1">
-      For printing the summary,
-      <br />
-      click Download
-    </h3>
-  </div>
-
-  <button
-    onClick={handleDownload}
-    className="bg-[#FFB74D] border border-black px-6 py-1.5 rounded-full text-[24px] font-bold text-black hover:bg-[#FFA726]"
-  >
-    Download XLSX
-  </button>
-</div>
+              <div className="flex flex-col items-center gap-1">
+                {" "}
+                {/* Changed to column layout */}
+                <div className="w-full text-center">
+                  <h3 className="bg-[#E6E6FA] text-black text-[18px] font-medium px-3 py-1 rounded mb-1">
+                    For printing the summary,
+                    <br />
+                    click Download
+                  </h3>
+                </div>
+                <button
+                  onClick={handleDownload}
+                  className="bg-[#FFB74D] border border-black px-6 py-1.5 rounded-full text-[24px] font-bold text-black hover:bg-[#FFA726]"
+                >
+                  Download XLSX
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1422,12 +1460,12 @@ const handleDownload = () => {
             >
                Home
             </Link> */}
-          <button
-  onClick={() => window.location.href = '/dashboard'}
-  className="text-center w-full max-w-60 rounded-[50%] bg-cyan-200 text-black font-bold text-[24px] py-4 tracking-wider border border-[#b7b7d1] hover:bg-[#baffc9] transition"
->
-  Back
-</button>
+            <button
+              onClick={() => (window.location.href = "/dashboard")}
+              className="text-center w-full max-w-60 rounded-[50%] bg-cyan-200 text-black font-bold text-[24px] py-4 tracking-wider border border-[#b7b7d1] hover:bg-[#baffc9] transition"
+            >
+              Back
+            </button>
             {/* <Link href="/logout" className="bg-[#FFB74D] border border-black px-6 py-1.5 max-w-6 rounded-[50%] text-lg font-bold text-black">
               Logout
             </Link> */}
@@ -1437,8 +1475,6 @@ const handleDownload = () => {
                 await signOut({ redirect: true, callbackUrl: "/auth/login" });
               }}
               className="text-center w-full max-w-60 rounded-[50%] bg-emerald-200 text-black font-bold text-[24px] py-4 tracking-wider border border-[#b7b7d1] hover:bg-[#baffc9] transition"
-
-              
             >
               Logout
             </button>
