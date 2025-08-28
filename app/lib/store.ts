@@ -962,6 +962,12 @@ export const streamData = {
     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
     "both direction not affected": []
   },
+  "PUM-YD": {
+    "up direction affected": [],
+    "down direction affected": [],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
+    "both direction not affected": []
+  },
   "KTU-YD": {
     "up direction affected": [],
     "down direction affected": [],
