@@ -363,19 +363,15 @@ export default function ViewRequestPage() {
             ) : (
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <span className="text-xs font-medium">Stream:</span>
-                  <div className="py-1">{section.stream || "N/A"}</div>
+                  <span className="text-xs font-medium">Line:</span>
+                  <div className="py-1">{section.lineName || "N/A"}</div>
                 </div>
-                <div>
-                  <span className="text-xs font-medium">Road:</span>
-                  <div className="py-1">{section.road || "N/A"}</div>
-                </div>
-                {section.otherRoads && (
-                  <div className="col-span-2">
+                {section.otherLines && (
+                  <div>
                     <span className="text-xs font-medium">
-                      Other Roads Affected:
+                      Other Lines Affected:
                     </span>
-                    <div className="py-1">{section.otherRoads}</div>
+                    <div className="py-1">{section.otherLines}</div>
                   </div>
                 )}
               </div>

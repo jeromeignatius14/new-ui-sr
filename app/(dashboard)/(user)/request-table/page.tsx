@@ -795,7 +795,6 @@ const handleDownload = () => {
 
   return (
     <div className="min-h-screen bg-[#FFFDF5] max-w-[1366px] mx-auto px-2 relative ">
-
       {showRejectReasonPopup && (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
     <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md border border-gray-300">
@@ -1207,6 +1206,8 @@ const handleDownload = () => {
                       </td>
                       <td className="border border-black px-2 py-1 text-center whitespace-nowrap">
                         {request.DisconnAcceptance === "ACCEPTED" ? (
+                            <>
+                              {/*
                           <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
                             <svg
                               className="w-3 h-3 mr-1"
@@ -1219,8 +1220,19 @@ const handleDownload = () => {
                                 clipRule="evenodd"
                               />
                             </svg>
-                            Accepted
+                            Accepted 
                           </span>
+                              */}
+                              {request.isSanctioned ? (
+                                <span className="bg-green-100  p-2 text-green-600">
+                                  {request.overAllStatus}
+                                </span>
+                              ) : (
+                                <span className="text-gray-500 ">
+                                  {request.overAllStatus}
+                                </span>
+                              )}
+                            </>
                         ) : request.DisconnAcceptance === "REJECTED" ? (
                           <span className="inline-flex items-center px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
                             <svg
@@ -1316,7 +1328,6 @@ const handleDownload = () => {
       )
       }
 
-
       {/* Fixed Bottom Navigation */}
       <div className="bg-[#FFFDF5] pb-2">
         <div className=" text-center">
@@ -1328,7 +1339,7 @@ const handleDownload = () => {
         <div className="max-w-[1366px] mx-auto px-2">
           <div className="flex justify-center items-center gap-4 mb-4  py-3 w-full rounded-lg">
             <div className="flex items-center gap-4 flex-wrap justify-center">
-                    <div className="flex items-center gap-1"> {/* Added this container */}
+                    <div className="flex items-center gap-1">{" "} {/* Added this container */}
 
               <div className="flex flex-col">
                 <label className="text-[24px] font-medium mb-1 text-black">
@@ -1386,7 +1397,7 @@ const handleDownload = () => {
                 Download XLSX
               </button> */}
 
-              <div className="flex flex-col items-center gap-1"> {/* Changed to column layout */}
+              <div className="flex flex-col items-center gap-1">{" "} {/* Changed to column layout */}
   <div className="w-full text-center">
     <h3 className="bg-[#E6E6FA] text-black text-[18px] font-medium px-3 py-1 rounded mb-1">
       For printing the summary,
@@ -1394,7 +1405,6 @@ const handleDownload = () => {
       click Download
     </h3>
   </div>
-
   <button
     onClick={handleDownload}
     className="bg-[#FFB74D] border border-black px-6 py-1.5 rounded-full text-[24px] font-bold text-black hover:bg-[#FFA726]"
