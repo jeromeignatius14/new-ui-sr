@@ -137,6 +137,7 @@ import { useSession } from "next-auth/react";
 import { managerService, UserRequest } from "@/app/service/api/manager";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
+import formatTime from "@/app/utils/formatTime";
 
 interface OptionType {
   value: string;
@@ -301,6 +302,8 @@ useEffect(() => {
     console.log("Full reportData:", reportData);
 
     if (reportData && reportData.data) {
+
+      setHydrated(true);
       // Safe access of nested properties with detailed logging
       console.log(
         "pastBlockSummary raw data:",
@@ -416,6 +419,27 @@ useEffect(() => {
     toast.error("Failed to generate report");
   }
 };
+
+useEffect(() => {
+  const section = searchParams.get("section");
+  const blockType = searchParams.get("blockType");
+  const start = searchParams.get("startDate");
+  const end = searchParams.get("endDate");
+
+  if (section) setSelectedMajorSections(section.split(","));
+  if (blockType) setSelectedBlockTypes(blockType.split(","));
+  if (start && end) {
+    setValue("startDate", start);
+    setValue("endDate", end);
+  }
+
+  console.log("hydration check - searchParams:", hydrated)
+  if (!hydrated) {
+    handleSubmit(onSubmit)(); // ✅ only once
+    // setHydrated(true);
+  }
+
+}, [searchParams]);
 
   const formatDateInput = (value: string) => {
     // Format as DD/MM/YY
@@ -935,7 +959,9 @@ const formatDisplayDate = (dateStr: string) => {
                   <th className="border-2 border-black px-2 py-1">Major section</th>
                   <th className="border-2 border-black px-2 py-1">Block Section</th>
                   <th className="border-2 border-black px-2 py-1">Type</th>
-                  <th className="border-2 border-black px-2 py-1">Duration</th>
+                  <th className="border-2 border-black px-2 py-1">Activity</th>
+                  <th className="border-2 border-black px-2 py-1">Demand time</th>
+                  <th className="border-2 border-black px-2 py-1">Sanctioned time</th>
                   <th className="border-2 border-black px-2 py-1">Status</th>
                 </tr>
               </thead>
@@ -979,7 +1005,7 @@ const formatDisplayDate = (dateStr: string) => {
                           key={idx}
                           className={`${rowBgColor} hover:bg-[#F3F3F3]`}
                         >
-                           <td className="border-2 border-black px-2 py-1 text-black">
+                          <td className="border-2 border-black px-2 py-1 text-black">
                             {dayjs(block.Date).format("DD-MM-YY")}
                           </td>
                                                      <td className="border-2 border-black px-2 py-1 font-bold text-black">
@@ -994,15 +1020,29 @@ const formatDisplayDate = (dateStr: string) => {
                           <td className="border-2 border-black px-2 py-1 font-bold text-black">
                             {block.Section}
                           </td>
-                           <td className="border-2 border-black px-2 py-1 font-bold text-black">
+                          <td className="border-2 border-black px-2 py-1 font-bold text-black">
                             {block.MissionBlock}
                           </td>
-                         
                           <td className="border-2 border-black px-2 py-1 text-black">
                             {block.Type}
                           </td>
                           <td className="border-2 border-black px-2 py-1 text-black">
-                            {block.Duration}
+                            {block.Activity}
+                          </td>
+                          <td className="border-2 border-black px-2 py-1 text-black">
+                            {formatTime(block.DemandedTimeFrom)} to{" "}
+                            {formatTime(block.DemandedTimeTo)}
+                          </td>
+                          <td className="border-2 border-black px-2 py-1 text-black">
+                            {block.SanctionedTimeFrom &&
+                            block.SanctionedTimeTo ? (
+                              <>
+                                {formatTime(block.SanctionedTimeFrom)} to{" "}
+                                {formatTime(block.SanctionedTimeTo)}
+                              </>
+                            ) : (
+                              "Not Optimized Yet"
+                            )}
                           </td>
                           <td
                             className="border-2 border-black px-2 py-1 font-bold text-center text-black"
