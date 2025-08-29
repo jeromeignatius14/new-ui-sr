@@ -130,7 +130,7 @@ import Select, { MultiValue } from "react-select";
 import { toast } from "react-hot-toast";
 import { format } from "date-fns";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useGenerateReport } from "@/app/service/query/hq";
 import { MajorSection } from "@/app/lib/store";
 import { useSession } from "next-auth/react";
@@ -202,9 +202,7 @@ export default function GenerateReportPage() {
   const [loading, setLoading] = useState(false);
   const [reportGenerated, setReportGenerated] = useState(false);
   const [selectedLocations, setSelectedLocations] = useState<string[]>(["All"]);
-  const [selectedBlockTypes, setSelectedBlockTypes] = useState<string[]>([
-    "All",
-  ]);
+  const [selectedBlockTypes, setSelectedBlockTypes] = useState<string[]>([]);
 
   const [selectedMajorSections, setSelectedMajorSections] = useState<string[]>(
     []
@@ -213,11 +211,14 @@ export default function GenerateReportPage() {
     []
   );
   const router = useRouter();
+  const searchParams = useSearchParams(); 
+  // const []
   const {
     register,
     handleSubmit,
     control,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<FormData>();
   const { data: session } = useSession();
@@ -231,7 +232,31 @@ export default function GenerateReportPage() {
     blockType: ["All"],
   });
 
+useEffect(() => {
+  const section = searchParams.get("section");
+  const blockType = searchParams.get("blockType");
+  const start = searchParams.get("startDate");
+  const end = searchParams.get("endDate");
 
+  if (section) {
+    setSelectedMajorSections(section.split(","));
+  }
+  if (blockType) {
+    setSelectedBlockTypes(blockType.split(","));
+  }
+
+  // restore start date if exists
+  if (start) {
+    setValue("startDate", start);
+  }
+
+  // restore end date if exists
+  if (end) {
+    setValue("endDate", end);
+  }
+
+  handleSubmit(onSubmit)();
+}, [searchParams, setValue]);
 
 
 useEffect(() => {
@@ -346,39 +371,51 @@ useEffect(() => {
     }
   };
 
- 
+ const onSubmit = async (data: FormData) => {
+  if (!data.startDate || !data.endDate) {
+    toast.error("Please enter both start and end dates");
+    return;
+  }
 
-  const onSubmit = async (data: FormData) => {
-    // Validate dates
-    if (!data.startDate || !data.endDate) {
-      toast.error("Please enter both start and end dates");
-      return;
+  try {
+    // API format (dd/MM/yy)
+    const startDateApi = format(new Date(data.startDate), "dd/MM/yy");
+    const endDateApi = format(new Date(data.endDate), "dd/MM/yy");
+
+    // URL format (yyyy-MM-dd) for restoring later
+    const startDateUrl = format(new Date(data.startDate), "yyyy-MM-dd");
+    const endDateUrl = format(new Date(data.endDate), "yyyy-MM-dd");
+
+    // Update query params for API call
+    setQueryParams({
+      startDate: startDateApi,
+      endDate: endDateApi,
+      majorSections: selectedMajorSections,
+      department: session?.user?.department ? [session.user.department] : [""],
+      blockType: selectedBlockTypes,
+    });
+
+    // ✅ Push search params to URL (yyyy-MM-dd so inputs restore correctly)
+    const params = new URLSearchParams();
+    params.set("startDate", startDateUrl);
+    params.set("endDate", endDateUrl);
+
+    if (selectedMajorSections.length > 0) {
+      params.set("section", selectedMajorSections.join(","));
+    }
+    if (selectedBlockTypes.length > 0) {
+      params.set("blockType", selectedBlockTypes.join(","));
     }
 
-    try {
-      // Format dates to DD/MM/YY format for API
-      const startDate = new Date(data.startDate);
-      const endDate = new Date(data.endDate);
+    router.push(`?${params.toString()}`);
 
-      const formattedStartDate = format(startDate, "dd/MM/yy");
-      const formattedEndDate = format(endDate, "dd/MM/yy");
-
-      // Update query parameters
-      setQueryParams({
-        startDate: formattedStartDate,
-        endDate: formattedEndDate,
-        majorSections: selectedMajorSections,
-        department: session?.user?.department ? [session.user.department] : [""],
-        blockType: selectedBlockTypes,
-      });
-
-      // Trigger the query - react-query will handle the loading state
-      await refetch();
-    } catch (error) {
-      console.error("Error initiating report generation:", error);
-      toast.error("Failed to generate report");
-    }
-  };
+    // Trigger query
+    await refetch();
+  } catch (error) {
+    console.error("Error initiating report generation:", error);
+    toast.error("Failed to generate report");
+  }
+};
 
   const formatDateInput = (value: string) => {
     // Format as DD/MM/YY
@@ -464,9 +501,9 @@ const formatDisplayDate = (dateStr: string) => {
         </div> */}
       </div>
       {/* Wrap the main content in a max-w-screen-lg mx-auto w-full container */}
-      <div className="max-w-screen-lg mx-auto w-full">
+      <div className=" mx-auto w-full">
         {/* Filters Section */}
-        <div className="w-full bg-[#fffbe9] px-2 py-2">
+        <div className="w-full bg-[#fffbe9] px-2 py-2 max-w-screen-lg mx-auto">
           <div className="flex flex-row gap-8 items-end w-full flex-wrap">
             {/* Choose Section Dropdown */}
             {/* <div className="flex flex-col flex-1 min-w-[90px] max-w-[110px] w-full">
@@ -783,7 +820,7 @@ const formatDisplayDate = (dateStr: string) => {
                         {pastBlockSummary.reduce(
                           (sum, item) => sum + (item.Demanded || 0),
                           0
-                        )}
+                        ).toFixed(2)}
                       </td>
                       <td
                         className="border-2 border-black px-2 py-1"
@@ -792,7 +829,7 @@ const formatDisplayDate = (dateStr: string) => {
                         {pastBlockSummary.reduce(
                           (sum, item) => sum + (item.Approved || 0),
                           0
-                        )}
+                        ).toFixed(2)}
                       </td>
                       <td
                         className="border-2 border-black px-2 py-1"
@@ -801,7 +838,7 @@ const formatDisplayDate = (dateStr: string) => {
                         {pastBlockSummary.reduce(
                           (sum, item) => sum + (item.Granted || 0),
                           0
-                        )}
+                        ).toFixed(2)}
                       </td>
                       <td
                         className="border-2 border-black px-2 py-1"
@@ -819,7 +856,7 @@ const formatDisplayDate = (dateStr: string) => {
                         {pastBlockSummary.reduce(
                           (sum, item) => sum + (item.Availed || 0),
                           0
-                        )}
+                        ).toFixed(2)}
                       </td>
                       <td
                         className="border-2 border-black px-2 py-1"
@@ -838,7 +875,7 @@ const formatDisplayDate = (dateStr: string) => {
           </div>
         </div>
         {/* (B) Summary of Upcoming Blocks */}
-        <div className="w-full max-w-4xl mt-8">
+        <div className="w-full mt-8">
           <div className="flex w-full items-center">
             <div className="flex w-full gap-x-3">
               {" "}
@@ -894,7 +931,7 @@ const formatDisplayDate = (dateStr: string) => {
               <thead>
                 <tr className="bg-[#e49edd] text-black text-[24px] font-bold">
                   <th className="border-2 border-black px-2 py-1">Date</th>
-                  <th className="border-2 border-black px-2 py-1">DivisionId</th>
+                  <th className="border-2 border-black px-2 py-1">ID</th>
                   <th className="border-2 border-black px-2 py-1">Major section</th>
                   <th className="border-2 border-black px-2 py-1">Block Section</th>
                   <th className="border-2 border-black px-2 py-1">Type</th>
@@ -947,7 +984,7 @@ const formatDisplayDate = (dateStr: string) => {
                           </td>
                                                      <td className="border-2 border-black px-2 py-1 font-bold text-black">
  <Link 
-  href={``}
+  href={`/manage/view-request/${block.id}`}
   className="block w-full h-full"
 >
   {block.DivisionId}
