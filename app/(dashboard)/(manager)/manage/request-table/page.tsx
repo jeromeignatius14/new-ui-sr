@@ -1137,18 +1137,14 @@ const updateQueryParams = (updates: Record<string, string | string[] | null>) =>
           <input
             type="date"
             value={customDateRange.start}
-            onChange={(e) =>
-              setCustomDateRange((r) => ({ ...r, start: e.target.value }))
-            }
+            onChange={(e) => handleDateChange("start", e.target.value)}
             className="p-2 border-2 border-[#B57CF6] text-black bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B57CF6] text-2xl"
           />
           <span className="px-1 text-black font-medium">to</span>
           <input
             type="date"
             value={customDateRange.end}
-            onChange={(e) =>
-              setCustomDateRange((r) => ({ ...r, end: e.target.value }))
-            }
+            onChange={(e) => handleDateChange("end", e.target.value)}
             className="p-2 border-2 border-[#B57CF6] text-black bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B57CF6] text-2xl"
           />
         </div>
