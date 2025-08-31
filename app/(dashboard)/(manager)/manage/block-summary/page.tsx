@@ -203,9 +203,7 @@ export default function GenerateReportPage() {
   const [loading, setLoading] = useState(false);
   const [reportGenerated, setReportGenerated] = useState(false);
   const [selectedLocations, setSelectedLocations] = useState<string[]>(["All"]);
-  const [selectedBlockTypes, setSelectedBlockTypes] = useState<string[]>([
-    "All",
-  ]);
+  const [selectedBlockTypes, setSelectedBlockTypes] = useState<string[]>([]);
 
   const [selectedMajorSections, setSelectedMajorSections] = useState<string[]>(
     []
@@ -214,10 +212,8 @@ export default function GenerateReportPage() {
     []
   );
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const [hydrated, setHydrated] = useState(false);
-  
+  const searchParams = useSearchParams(); 
+  // const []
   const {
     register,
     handleSubmit,
@@ -237,7 +233,31 @@ export default function GenerateReportPage() {
     blockType: ["All"],
   });
 
+useEffect(() => {
+  const section = searchParams.get("section");
+  const blockType = searchParams.get("blockType");
+  const start = searchParams.get("startDate");
+  const end = searchParams.get("endDate");
 
+  if (section) {
+    setSelectedMajorSections(section.split(","));
+  }
+  if (blockType) {
+    setSelectedBlockTypes(blockType.split(","));
+  }
+
+  // restore start date if exists
+  if (start) {
+    setValue("startDate", start);
+  }
+
+  // restore end date if exists
+  if (end) {
+    setValue("endDate", end);
+  }
+
+  handleSubmit(onSubmit)();
+}, [searchParams, setValue]);
 
 
 useEffect(() => {
@@ -354,64 +374,51 @@ useEffect(() => {
     }
   };
 
+ const onSubmit = async (data: FormData) => {
+  if (!data.startDate || !data.endDate) {
+    toast.error("Please enter both start and end dates");
+    return;
+  }
 
-  const updateURLParams = (filters: {
-  startDate?: string;
-  endDate?: string;
-  sections?: string[];
-  blockType?: string[];
-}) => {
-  const params = new URLSearchParams();
+  try {
+    // API format (dd/MM/yy)
+    const startDateApi = format(new Date(data.startDate), "dd/MM/yy");
+    const endDateApi = format(new Date(data.endDate), "dd/MM/yy");
 
-  if (filters.startDate) params.set("startDate", filters.startDate);
-  if (filters.endDate) params.set("endDate", filters.endDate);
-  if (filters.sections?.length) params.set("section", filters.sections.join(","));
-  if (filters.blockType?.length) params.set("blockType", filters.blockType.join(","));
+    // URL format (yyyy-MM-dd) for restoring later
+    const startDateUrl = format(new Date(data.startDate), "yyyy-MM-dd");
+    const endDateUrl = format(new Date(data.endDate), "yyyy-MM-dd");
 
-  router.push(`?${params.toString()}`);
+    // Update query params for API call
+    setQueryParams({
+      startDate: startDateApi,
+      endDate: endDateApi,
+      majorSections: selectedMajorSections,
+      department: session?.user?.department ? [session.user.department] : [""],
+      blockType: selectedBlockTypes,
+    });
+
+    // ✅ Push search params to URL (yyyy-MM-dd so inputs restore correctly)
+    const params = new URLSearchParams();
+    params.set("startDate", startDateUrl);
+    params.set("endDate", endDateUrl);
+
+    if (selectedMajorSections.length > 0) {
+      params.set("section", selectedMajorSections.join(","));
+    }
+    if (selectedBlockTypes.length > 0) {
+      params.set("blockType", selectedBlockTypes.join(","));
+    }
+
+    router.push(`?${params.toString()}`);
+
+    // Trigger query
+    await refetch();
+  } catch (error) {
+    console.error("Error initiating report generation:", error);
+    toast.error("Failed to generate report");
+  }
 };
-
- 
-
-  const onSubmit = async (data: FormData) => {
-    // Validate dates
-    if (!data.startDate || !data.endDate) {
-      toast.error("Please enter both start and end dates");
-      return;
-    }
-
-    try {
-      // Format dates to DD/MM/YY format for API
-      const startDate = new Date(data.startDate);
-      const endDate = new Date(data.endDate);
-
-      const formattedStartDate = format(startDate, "dd/MM/yy");
-      const formattedEndDate = format(endDate, "dd/MM/yy");
-
-      // Update query parameters
-      setQueryParams({
-        startDate: formattedStartDate,
-        endDate: formattedEndDate,
-        majorSections: selectedMajorSections,
-        department: session?.user?.department ? [session.user.department] : [""],
-        blockType: selectedBlockTypes,
-      });
-
-       // Sync with URL so it survives refresh
-      updateURLParams({
-        startDate: data.startDate,
-        endDate: data.endDate,
-        sections: selectedMajorSections,
-        blockType: selectedBlockTypes,
-      });
-
-      // Trigger the query - react-query will handle the loading state
-      await refetch();
-    } catch (error) {
-      console.error("Error initiating report generation:", error);
-      toast.error("Failed to generate report");
-    }
-  };
 
 useEffect(() => {
   const section = searchParams.get("section");
@@ -872,7 +879,7 @@ const formatDisplayDate = (dateStr: string) => {
                         {pastBlockSummary.reduce(
                           (sum, item) => sum + (item.Availed || 0),
                           0
-                        )}
+                        ).toFixed(2)}
                       </td>
                       <td
                         className="border-2 border-black px-2 py-1"
@@ -947,7 +954,7 @@ const formatDisplayDate = (dateStr: string) => {
               <thead>
                 <tr className="bg-[#e49edd] text-black text-[24px] font-bold">
                   <th className="border-2 border-black px-2 py-1">Date</th>
-                  <th className="border-2 border-black px-2 py-1">DivisionId</th>
+                  <th className="border-2 border-black px-2 py-1">ID</th>
                   <th className="border-2 border-black px-2 py-1">Major section</th>
                   <th className="border-2 border-black px-2 py-1">Block Section</th>
                   <th className="border-2 border-black px-2 py-1">Type</th>

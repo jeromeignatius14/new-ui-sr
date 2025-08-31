@@ -841,6 +841,41 @@ export default function ManagerRequestTablePage() {
     }
   };
 
+  const handleDateChange = (key: "start" | "end", value: string) => {
+  setCustomDateRange((prev) => {
+    const updated = { ...prev, [key]: value };
+    updateQueryParams({ startDate: updated.start, endDate: updated.end });
+    return updated;
+  });
+};
+
+useEffect(() => {
+  const section = searchParams.get("section");
+  const sse = searchParams.get("sse");
+  const blockType = searchParams.get("blockType");
+  const start = searchParams.get("startDate");
+  const end = searchParams.get("endDate");
+
+  if (section) setSelectedSections(section.split(","));
+  if (sse) setSelectedSSEs(sse.split(","));
+  if (blockType) setBlockType(blockType.split(","));
+  if (start || end) setCustomDateRange({ start: start || "", end: end || "" });
+}, [searchParams]);
+
+const updateQueryParams = (updates: Record<string, string | string[] | null>) => {
+  const params = new URLSearchParams(searchParams.toString());
+
+  Object.entries(updates).forEach(([key, value]) => {
+    if (!value || (Array.isArray(value) && value.length === 0)) {
+      params.delete(key);
+    } else {
+      params.set(key, Array.isArray(value) ? value.join(",") : value);
+    }
+  });
+
+  router.replace(`?${params.toString()}`);
+};
+
   // Status mapping function for table display
   function getDisplayStatus(request: UserRequest) {
     // Sanctioned (light green)
@@ -1200,11 +1235,14 @@ export default function ManagerRequestTablePage() {
                     type="checkbox"
                     checked={blockType.includes(opt.value)}
                     onChange={() =>
-                      setBlockType((prev) =>
-                        prev.includes(opt.value)
+                      setBlockType((prev) => {
+                        const updated = prev.includes(opt.value)
                           ? prev.filter((s) => s !== opt.value)
-                          : [...prev, opt.value]
-                      )
+                          : [...prev, opt.value];
+
+                        updateQueryParams({ blockType: updated });
+                        return updated;
+                      })
                     }
                     className="mr-2 accent-[#B57CF6]"
                   />

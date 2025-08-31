@@ -57,26 +57,7 @@ interface DetailedData {
   Duration: number;
   Type: string;
   Status: string;
-}
-
-interface Data {
-  DivisionId: string;
-  Date: string;
-  Section: string;
-  Duration: number;
-  Type: string;
-  Status: string;
-  Activity?: string;
-}
-
-interface Data {
-  DivisionId: string;
-  Date: string;
-  Section: string;
-  Duration: number;
-  Type: string;
-  Status: string;
-  Activity?: string;
+  userId?: string;
 }
 
 const locationOptions: OptionType[] = [
@@ -300,20 +281,21 @@ const onSubmit = async (data: FormData) => {
     // Keep raw yyyy-MM-dd for URL and form
     const startDateRaw = data.startDate;
     const endDateRaw = data.endDate;
+    const startDate = new Date(data.startDate);
+    const endDate = new Date(data.endDate);
 
-    // Convert ONLY for API/query
-    const startDate = format(new Date(startDateRaw), "dd/MM/yy");
-    const endDate = format(new Date(endDateRaw), "dd/MM/yy");
-
-    // Update query state
-    setQueryParams({
-      startDate,
-      endDate,
-      majorSections: selectedMajorSections,
-      department: selectedDepartments,
-      blockType: selectedBlockTypes,
-      userId: session?.user?.id || "",
-    });
+      const formattedStartDate = format(startDate, "dd/MM/yy");
+      const formattedEndDate = format(endDate, "dd/MM/yy");
+ 
+      // Update query parameters
+      setQueryParams({
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+        majorSections: majorSectionOptions.map(opt => opt.value),
+        department: selectedDepartments,
+        blockType: selectedBlockTypes,
+        userId: session?.user?.id || "",
+      });
 
     // ✅ Keep yyyy-MM-dd in URL for reloads
     const params = new URLSearchParams();
@@ -359,7 +341,9 @@ const onSubmit = async (data: FormData) => {
     useState<string>("All");
   const sectionOptionsB: string[] = Array.from(
     new Set(
-      reportData?.data?.detailedData?.map((b: DetailedData) => b.Section) || []
+      reportData?.data?.detailedData
+        ?.filter((b: DetailedData) => b.userId === session?.user?.id)
+        .map((b: DetailedData) => b.Section) || []
     )
   );
   const filteredUpcomingBlocks: DetailedData[] =
@@ -736,7 +720,7 @@ const onSubmit = async (data: FormData) => {
               <thead>
                 <tr className="bg-[#e49edd] text-black text-lg font-bold">
                   <th className="border-2 border-black px-2 py-1">Date</th>
-                  <th className="border-2 border-black px-2 py-1">DivisionId</th>
+                  <th className="border-2 border-black px-2 py-1">ID</th>
                   <th className="border-2 border-black px-2 py-1">Major section</th>
                   <th className="border-2 border-black px-2 py-1">Block Section</th>
                   <th className="border-2 border-black px-2 py-1">Type</th>
