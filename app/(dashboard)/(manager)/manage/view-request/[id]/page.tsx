@@ -251,8 +251,9 @@ export default function ViewRequestPage() {
           Block Details
         </h1>
         <div className="flex gap-2">
-          <Link
-            href={data?.data ? getBackUrl(data.data) : '/manage/request-table'}
+          <button
+            // href={data?.data ? getBackUrl(data.data) : '/manage/request-table'}
+            onClick={() => window.history.back()}
   className="px-3 py-1 text-sm bg-white text-[#13529e] border border-black flex items-center gap-1"
 
           >
@@ -260,7 +261,7 @@ export default function ViewRequestPage() {
     <path d="M19 12H5M12 19l-7-7 7-7"/>
   </svg>
             Back
-          </Link>{request.status === "PENDING" && !request.managerAcceptance && (
+          </button>{request.status === "PENDING" && !request.managerAcceptance && (
             <>
               <button
                 onClick={handleAccept}  // Accept
