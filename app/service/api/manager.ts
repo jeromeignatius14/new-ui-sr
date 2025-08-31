@@ -33,6 +33,7 @@ export interface UsersResponse {
 }
 
 export interface UserRequest {
+    remarkByManager: string;
     sntDisconnectionAssignTo: string;
     powerBlockDisconnectionAssignTo: string;
     emergencyBlockRemarks: any;
