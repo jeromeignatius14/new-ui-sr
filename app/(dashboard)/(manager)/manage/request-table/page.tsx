@@ -841,10 +841,13 @@ export default function ManagerRequestTablePage() {
     }
   };
 
-  const handleDateChange = (key: "start" | "end", value: string) => {
+  const handleDateChange = (key: "start" | "end", value: string) => {    
   setCustomDateRange((prev) => {
     const updated = { ...prev, [key]: value };
-    updateQueryParams({ startDate: updated.start, endDate: updated.end });
+    updateQueryParams({ startDate: updated.start, endDate: updated.end, section:[]  , sse : [], blockType : [] });
+    setSelectedSections([]);
+    setSelectedSSEs([]);
+    setBlockType([]);
     return updated;
   });
 };
@@ -1065,8 +1068,11 @@ const updateQueryParams = (updates: Record<string, string | string[] | null>) =>
     //   </div>
     // );
   }
+
   return (
     <div className="min-h-screen bg-[#FFFDF5]">
+      
+
       {/* Top Yellow Bar */}
       <div className="w-full bg-[#FFF86B] py-2 flex flex-col items-center">
         <span className="text-[9vw] min-[430px]:text-4xl font-bold text-[#B57CF6] tracking-widest">
@@ -1112,8 +1118,18 @@ const updateQueryParams = (updates: Record<string, string | string[] | null>) =>
         </button>
       </div> */}
 <div className="mx-4">
-<div className="flex justify-center mb-8 mt-2 bg-[#E8E0FF] rounded-2xl">
-  <div className="w-full max-w-6xl rounded-t-2xl rounded-b-xl   p-0">
+<div className="flex justify-center mb-8 mt-2 bg-[#E8E0FF] rounded-2xl relative">
+
+{isLoading && (
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full h-full text-black bg-white/90 p-3 border flex items-center justify-center z-50">
+        <div className="text-center py-5">Loading approved requests...</div>
+        
+        
+        
+
+      </div>
+)}
+  <div className="w-full px-4 rounded-t-2xl rounded-b-xl   p-0">
     {/* Header */}
     <div className="bg-[#B57CF6] text-white text-center p-3 rounded-xl">
       <h1 className="text-2xl font-bold tracking-wide">View Summary of Sanctioned Blocks</h1>
@@ -1127,18 +1143,14 @@ const updateQueryParams = (updates: Record<string, string | string[] | null>) =>
           <input
             type="date"
             value={customDateRange.start}
-            onChange={(e) =>
-              setCustomDateRange((r) => ({ ...r, start: e.target.value }))
-            }
+            onChange={(e) => handleDateChange("start", e.target.value)}
             className="p-2 border-2 border-[#B57CF6] text-black bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B57CF6] text-2xl"
           />
           <span className="px-1 text-black font-medium">to</span>
           <input
             type="date"
             value={customDateRange.end}
-            onChange={(e) =>
-              setCustomDateRange((r) => ({ ...r, end: e.target.value }))
-            }
+            onChange={(e) => handleDateChange("end", e.target.value)}
             className="p-2 border-2 border-[#B57CF6] text-black bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B57CF6] text-2xl"
           />
         </div>
