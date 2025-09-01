@@ -739,7 +739,7 @@ const formatDisplayDate = (dateStr: string) => {
           </button>
         </div>
         {/* (A) Block Summary Table */}
-        <div className="w-full mt-4">
+        <div className="w-full px-8 mt-4">
           <div className="flex w-full justify-center">
             <div
               className="flex-1 bg-[#cfd4ff] text-[24px] font-bold border-2 border-black px-2 py-1 text-center"
