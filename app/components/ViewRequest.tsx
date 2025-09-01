@@ -254,7 +254,7 @@ export default function ViewRequest() {
                 </tr>
               ) : null}
 
-              {request.elementarySection && request?.user?.role !== "TRD" && (
+              {request.elementarySection && request.selectedDepartment === "TRD" && (
                 <tr>
                   <td className="py-1 font-medium">Elementary Section:</td>
                   <td className="py-1">{request.elementarySection}</td>
@@ -388,7 +388,7 @@ export default function ViewRequest() {
       )}
 
       <div className="flex flex-wrap gap-4 mb-4 w-full">
-        {request?.user?.role === "TRD" && (
+        {request.selectedDepartment !== "TRD" && (
           <div className="border border-black p-3 flex-1">
             <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
               System Disconnections
