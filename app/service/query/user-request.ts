@@ -91,6 +91,7 @@ export interface RequestItem {
     managerAcceptance: boolean;
     DisconnAcceptance: string | null;
     managerId: string | null;
+    managerResponseTiming: string | null;
     user: {
         id: string;
         name: string;

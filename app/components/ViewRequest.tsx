@@ -206,6 +206,10 @@ export default function ViewRequest() {
                 <td className="py-1 font-medium ">Request Type:</td>
                 <td className="py-1">{request.corridorType}</td>
               </tr>
+              <tr>
+                <td className="py-1 font-medium ">Manager Acceptance Time:</td>
+                <td className="py-1">{request.managerResponseTiming}</td>
+              </tr>
 
               {/* <tr>
                 <td className="py-1 font-medium">Depot:</td>
