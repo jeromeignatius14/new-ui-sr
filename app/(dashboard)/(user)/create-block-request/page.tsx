@@ -1244,7 +1244,10 @@ export default function CreateBlockRequestPage() {
         adminAcceptance: false,
         // selectedDepo: formData.sntDisconnectionAssignTo || "", 
         selectedDepo: userDepot || "",
-
+         ...(durationMins <= 45 && !formData.sigActionsNeeded && !formData.trdActionsNeeded && {
+          managerAcceptance: true,
+          isSanctioned: true,
+        }),
       };
 
       // ─── 7. Submit to backend ────────────────────────────────────────────
