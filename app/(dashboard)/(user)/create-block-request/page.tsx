@@ -94,8 +94,8 @@ const selectStyles = {
     backgroundColor: state.isSelected
       ? "#e0e7ef"
       : state.isFocused
-      ? "#f3f4f6"
-      : "white",
+        ? "#f3f4f6"
+        : "white",
     fontSize: "12px",
     padding: "4px 8px",
     "&:hover": {
@@ -128,16 +128,16 @@ const getSelectStyles = (hasError: boolean) => {
       borderColor: hasError
         ? "#dc2626"
         : state.isFocused
-        ? "#2461aa"
-        : "#45526c",
+          ? "#2461aa"
+          : "#45526c",
       borderWidth: hasError ? "2px" : "1px",
       borderRadius: "4px",
       padding: "2px",
       boxShadow: hasError
         ? "0 0 0 1px rgba(220, 38, 38, 0.2)"
         : state.isFocused
-        ? "0 0 0 1px rgba(37, 99, 176, 0.1)"
-        : "none",
+          ? "0 0 0 1px rgba(37, 99, 176, 0.1)"
+          : "none",
       fontSize: "14px",
       minHeight: "36px",
       "&:hover": {
@@ -310,7 +310,7 @@ function ReviewBlockRequestModal({
                   <div>
                     <b>Requirements:</b>{" "}
                     {formData.powerBlockRequirements &&
-                    formData.powerBlockRequirements.length > 0
+                      formData.powerBlockRequirements.length > 0
                       ? formData.powerBlockRequirements.join(", ")
                       : "-"}
                   </div>
@@ -336,7 +336,7 @@ function ReviewBlockRequestModal({
                   <div>
                     <b>Requirements:</b>{" "}
                     {formData.sntDisconnectionRequirements &&
-                    formData.sntDisconnectionRequirements.length > 0
+                      formData.sntDisconnectionRequirements.length > 0
                       ? formData.sntDisconnectionRequirements.join(", ")
                       : "-"}
                   </div>
@@ -399,8 +399,8 @@ const otherAffectedSelectStyles = {
     backgroundColor: state.isSelected
       ? "#e0e7ef"
       : state.isFocused
-      ? "#e5e7eb"
-      : "white",
+        ? "#e5e7eb"
+        : "white",
     fontSize: "13px",
     padding: "6px 10px",
     fontWeight: state.isSelected ? "bold" : "normal",
@@ -498,10 +498,10 @@ interface FormData {
   workType: string;
   activity: string;
   corridorTypeSelection:
-    | "Corridor"
-    | "Outside Corridor"
-    | "Urgent Block"
-    | null;
+  | "Corridor"
+  | "Outside Corridor"
+  | "Urgent Block"
+  | null;
   corridorType: "Corridor" | "Outside Corridor" | "Urgent Block" | null;
   selectedStream: string;
   selectedRoad: string;
@@ -681,18 +681,18 @@ export default function CreateBlockRequestPage() {
     userDepot === "OVERALL"
       ? locationSections
       : locationSections.filter((section) => {
-          const depotData: any = depot[section as keyof typeof depot];
-          if (!depotData) return false;
+        const depotData: any = depot[section as keyof typeof depot];
+        if (!depotData) return false;
 
-          if (!(userDept in depotData)) return false;
+        if (!(userDept in depotData)) return false;
 
-          return depotData[userDept].includes(userDepot);
-        });
+        return depotData[userDept].includes(userDepot);
+      });
 
   const selectedMajorSection = formData.selectedSection;
   const blockSectionOptions =
     selectedMajorSection &&
-    blockSection[selectedMajorSection as keyof typeof blockSection]
+      blockSection[selectedMajorSection as keyof typeof blockSection]
       ? blockSection[selectedMajorSection as keyof typeof blockSection]
       : [];
   const userDepartment = session?.user.department;
@@ -1164,21 +1164,21 @@ export default function CreateBlockRequestPage() {
       const processedSections = validSecs.map((s) =>
         s.type === "yard"
           ? {
-              ...s,
-              lineName: s.lineName || "",
-              otherLines: s.otherLines || "",
-              stream: s.stream || "",
-              road: s.road || "",
-              otherRoads: s.otherRoads || "",
-            }
+            ...s,
+            lineName: s.lineName || "",
+            otherLines: s.otherLines || "",
+            stream: s.stream || "",
+            road: s.road || "",
+            otherRoads: s.otherRoads || "",
+          }
           : {
-              ...s,
-              lineName: s.lineName || "",
-              otherLines: s.otherLines || "",
-              stream: "",
-              road: "",
-              otherRoads: "",
-            }
+            ...s,
+            lineName: s.lineName || "",
+            otherLines: s.otherLines || "",
+            stream: "",
+            road: "",
+            otherRoads: "",
+          }
       );
 
       // ─── 5. Flatten first fresh‑caution (backend still expects single set)
@@ -1189,6 +1189,15 @@ export default function CreateBlockRequestPage() {
         freshCautionSpeed: 0,
       };
 
+
+      // Calculate duration in minutes
+      const [fromH, fromM] = (formData.demandTimeFrom || "00:00").split(":").map(Number);
+      const [toH, toM] = (formData.demandTimeTo || "00:00").split(":").map(Number);
+      let start = fromH * 60 + fromM;
+      let end = toH * 60 + toM;
+      if (end < start) end += 24 * 60;
+      const durationMins = end - start;
+
       // ─── 6. Build payload ────────────────────────────────────────────────
       const submitData: UserRequestInput = {
         ...formData,
@@ -1198,17 +1207,17 @@ export default function CreateBlockRequestPage() {
         freshCautionRequired: formData.freshCautionRequired ?? false,
         sntDisconnectionRequirements: formData.sntDisconnectionRequired
           ? [
-              formData.sntDisconnectionPointNo.toString(),
-              formData.sntDisconnectionSignalNo.toString(),
-            ]
+            formData.sntDisconnectionPointNo.toString(),
+            formData.sntDisconnectionSignalNo.toString(),
+          ]
           : [],
         sntDisconnectionAssignTo: formData.sntDisconnectionAssignTo || "",
         powerBlockRequirements: formData.powerBlockRequired
           ? [
-              formData.powerBlockKmFrom.toString(),
-              formData.powerBlockKmTo.toString(),
-              formData.powerBlockRoad.toString(),
-            ]
+            formData.powerBlockKmFrom.toString(),
+            formData.powerBlockKmTo.toString(),
+            formData.powerBlockRoad.toString(),
+          ]
           : [],
         powerBlockDisconnectionAssignTo:
           formData.powerBlockDisconnectionAssignTo || "",
@@ -1235,18 +1244,19 @@ export default function CreateBlockRequestPage() {
           formData.date || "",
           formData.demandTimeTo || ""
         ),
-        duration:formatTimeToDatetime(formData.date || "",formData.duration||"" ),
+        duration: formatTimeToDatetime(formData.date || "", formData.duration || ""),
 
         processedLineSections: processedSections,
         adminAcceptance: false,
-        // selectedDepo: formData.sntDisconnectionAssignTo || "", 
-        selectedDepo: userDepot || "", 
-
+        selectedDepo: userDepot || "",
+        ...(durationMins <= 45 && !formData.sigActionsNeeded && !formData.trdActionsNeeded && {
+          managerAcceptance: true,
+          isSanctioned: true,
+        }),
       };
 
       // ─── 7. Submit to backend ────────────────────────────────────────────
       const response = await mutation.mutateAsync(submitData);
-
       if (response) {
         toast.success("Block request submitted successfully!");
         setSubmittedSummary({
@@ -1263,7 +1273,7 @@ export default function CreateBlockRequestPage() {
           //     formData.demandTimeTo || ""
           //   ) || "-",
           duration: formData.duration || "-",
-          
+
         });
 
         // Reset form + UI
@@ -1286,20 +1296,140 @@ export default function CreateBlockRequestPage() {
   };
 
   function isToday(dateString: string) {
-  if (!dateString) return false;
-  
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+    if (!dateString) return false;
 
-  const selectedDate = new Date(dateString);
-  selectedDate.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-  return (
-    selectedDate.getDate() === today.getDate() &&
-    selectedDate.getMonth() === today.getMonth() &&
-    selectedDate.getFullYear() === today.getFullYear()
-  );
-}
+    const selectedDate = new Date(dateString);
+    selectedDate.setHours(0, 0, 0, 0);
+
+    return (
+      selectedDate.getDate() === today.getDate() &&
+      selectedDate.getMonth() === today.getMonth() &&
+      selectedDate.getFullYear() === today.getFullYear()
+    );
+  }
+
+
+  // Refactor handleSubmit to work with reviewMode
+  //   const handleFormSubmit = async (e: React.FormEvent) => {
+  //     e.preventDefault();
+  //     if (!reviewMode) {
+  //       setReviewMode(true); // Enter review mode
+  //       return;
+  //     }
+  //     // Only submit in review mode
+  //     setFormSubmitting(true);
+  //     setFormError(null);
+  //     try {
+  //       const validationResult = handleFormValidation();
+  //       if (!validationResult.isValid) {
+  //         setErrors(validationResult.errors);
+  //         scrollToFirstError(validationResult.errors);
+  //         setFormSubmitting(false);
+  //         return;
+  //       }
+  //       const validProcessedSections = (
+  //         formData.processedLineSections || []
+  //       ).filter((section) => blockSectionValue.includes(section.block));
+  //       const processedSectionsWithDefaults = validProcessedSections.map(
+  //         (section) => {
+  //           if (section.type === "yard") {
+  //             return {
+  //               ...section,
+  //               lineName: section.lineName || "",
+  //               otherLines: section.otherLines || "",
+  //               stream: section.stream || "",
+  //               road: section.road || "",
+  //               otherRoads: section.otherRoads || "",
+  //             };
+  //           } else {
+  //             return {
+  //               ...section,
+  //               lineName: section.lineName || "",
+  //               otherLines: section.otherLines || "",
+  //               stream: "",
+  //               road: "",
+  //               otherRoads: "",
+  //             };
+  //           }
+  //         }
+  //       );
+  // //       const firstCaution = formData.freshCautions[0] || {
+  // //   freshCautionLocationFrom: "",
+  // //   freshCautionLocationTo: "",
+  // //   adjacentLinesAffected: "",
+  // //   freshCautionSpeed: 0,
+  // // };
+  //       const submitData: UserRequestInput = {
+  //         ...formData,
+  //         corridorType: formData.corridorTypeSelection,
+  //         sntDisconnectionRequired: formData.sntDisconnectionRequired ?? false,
+  //         powerBlockRequired: formData.powerBlockRequired ?? false,
+  //         freshCautionRequired: formData.freshCautionRequired ?? false,
+  //          adjacentLinesAffected: formData.freshCautions.map(c => c.adjacentLinesAffected).filter(Boolean).join(","),
+  //   freshCautionLocationFrom: formData.freshCautions.map(c => c.freshCautionLocationFrom).filter(Boolean).join(","),
+  //   freshCautionLocationTo: formData.freshCautions.map(c => c.freshCautionLocationTo).filter(Boolean).join(","),
+  //   freshCautionSpeed: Number(formData.freshCautions[0]?.freshCautionSpeed) || 0,
+  //         date: formatDateToISO(formData.date || ""),
+  //         demandTimeFrom: formatTimeToDatetime(
+  //           formData.date || "",
+  //           formData.demandTimeFrom || ""
+  //         ),
+  //         demandTimeTo: formatTimeToDatetime(
+  //           formData.date || "",
+  //           formData.demandTimeTo || ""
+  //         ),
+  //         processedLineSections: processedSectionsWithDefaults,
+  //         adminAcceptance: false,
+  //         selectedDepo: formData.selectedDepo,
+  //       };
+  //       const response = await mutation.mutateAsync(submitData);
+  //       if (response) {
+  //         toast.success("Block request submitted successfully!");
+  //         setSubmittedSummary({
+  //           date: submitData.date,
+  //           id: response.data?.divisionId || response.data?.id,
+  //           blockSection: submitData.missionBlock || "-",
+  //           lineOrRoad:
+  //             submitData.processedLineSections &&
+  //             submitData.processedLineSections.length > 0
+  //               ? submitData.processedLineSections
+  //                   .map((s: any) => s.lineName || s.road)
+  //                   .join(", ")
+  //               : "-",
+  //           duration:
+  //             getDurationFromTimes(
+  //               formData.demandTimeFrom || "",
+  //               formData.demandTimeTo || ""
+  //             ) || "-",
+  //         });
+  //         setFormData(initialFormData);
+  //         setBlockSectionValue([]);
+  //         setProcessedLineSections([]);
+  //         setSelectedActivities([]);
+  //         setCustomActivity("");
+  //         setErrors({});
+  //         setShowSuccessPage(true);
+  //         setReviewMode(false);
+  //       }
+  //     } catch (error: any) {
+  //       console.error("Form submission error:", error);
+  //       if (error.response) {
+  //         console.error("Error response data:", error.response.data);
+  //         console.error("Error response status:", error.response.status);
+  //         console.error("Error response headers:", error.response.headers);
+  //       }
+  //       setFormError(
+  //         error.message ||
+  //           "An error occurred while submitting the form. Please try again."
+  //       );
+  //       toast.error(error.message || "Failed to submit block request");
+  //     } finally {
+  //       setFormSubmitting(false);
+  //     }
+  //   };
 
   const handleFormValidation = () => {
     const errors: Record<string, string> = {};
@@ -1434,21 +1564,18 @@ export default function CreateBlockRequestPage() {
   };
 
   const getInputClassName = (fieldName: string) => {
-    return `w-full border-2 rounded-lg px-4 py-2 text-lg font-bold bg-white focus:outline-none focus:ring-2 focus:ring-purple-300 text-black placeholder-black text-xs px-2 py-1 ${
-      errors[fieldName] ? "border-red-600 ring-2 ring-red-300" : "border-black"
-    }`;
+    return `w-full border-2 rounded-lg px-4 py-2 text-lg font-bold bg-white focus:outline-none focus:ring-2 focus:ring-purple-300 text-black placeholder-black text-xs px-2 py-1 ${errors[fieldName] ? "border-red-600 ring-2 ring-red-300" : "border-black"
+      }`;
   };
 
   const getSelectClassName = (fieldName: string) => {
-    return `w-full border-2 rounded-lg px-4 py-2 text-lg font-bold bg-white focus:outline-none focus:ring-2 focus:ring-green-300 text-black placeholder-black text-xs px-2 py-1 ${
-      errors[fieldName] ? "border-red-600 ring-2 ring-red-300" : "border-black"
-    }`;
+    return `w-full border-2 rounded-lg px-4 py-2 text-lg font-bold bg-white focus:outline-none focus:ring-2 focus:ring-green-300 text-black placeholder-black text-xs px-2 py-1 ${errors[fieldName] ? "border-red-600 ring-2 ring-red-300" : "border-black"
+      }`;
   };
 
   const getTextareaClassName = (fieldName: string) => {
-    return `w-full border-2 rounded-lg px-4 py-2 text-lg bg-white focus:outline-none focus:ring-2 focus:ring-purple-300 text-black placeholder-black text-xs px-2 py-1 ${
-      errors[fieldName] ? "border-red-600 ring-2 ring-red-300" : "border-black"
-    }`;
+    return `w-full border-2 rounded-lg px-4 py-2 text-lg bg-white focus:outline-none focus:ring-2 focus:ring-purple-300 text-black placeholder-black text-xs px-2 py-1 ${errors[fieldName] ? "border-red-600 ring-2 ring-red-300" : "border-black"
+      }`;
   };
 
   useEffect(() => {
@@ -1968,13 +2095,13 @@ export default function CreateBlockRequestPage() {
                       <div className="text-black text-[24px]">
                         {submittedSummary?.date
                           ? new Date(submittedSummary.date).toLocaleDateString(
-                              "en-GB",
-                              {
-                                year: "2-digit",
-                                month: "2-digit",
-                                day: "2-digit",
-                              }
-                            )
+                            "en-GB",
+                            {
+                              year: "2-digit",
+                              month: "2-digit",
+                              day: "2-digit",
+                            }
+                          )
                           : "-"}
                       </div>
                     </td>
@@ -2033,9 +2160,9 @@ export default function CreateBlockRequestPage() {
                 className="w-full rounded-2xl bg-[#e6e6fa] text-black font-bold text-[24px] py-4 tracking-wider border border-[#b7b7d1] hover:bg-[#f0eaff] transition"
                 onClick={() => {
                   setFormData({
-      ...initialFormData,
-      selectedDepartment: session?.user?.department || ""
-    });
+                    ...initialFormData,
+                    selectedDepartment: session?.user?.department || ""
+                  });
                   setBlockSectionValue([]);
                   setProcessedLineSections([]);
                   setSelectedActivities([]);
@@ -2184,11 +2311,10 @@ export default function CreateBlockRequestPage() {
                         <div className="flex flex-row gap-2">
                           <button
                             type="button"
-                            className={`px-5 py-2 rounded-lg border-2 text-[24px] font-extrabold shadow-sm focus:outline-none transition-all ${
-                              formData.corridorTypeSelection === "Corridor"
-                                ? "bg-[#e6f7c6] border-black text-black"
-                                : "bg-white border-[#b6e6c6] text-[#888]"
-                            }`}
+                            className={`px-5 py-2 rounded-lg border-2 text-[24px] font-extrabold shadow-sm focus:outline-none transition-all ${formData.corridorTypeSelection === "Corridor"
+                              ? "bg-[#e6f7c6] border-black text-black"
+                              : "bg-white border-[#b6e6c6] text-[#888]"
+                              }`}
                             onClick={() =>
                               handleInputChange({
                                 target: {
@@ -2202,12 +2328,11 @@ export default function CreateBlockRequestPage() {
                           </button>
                           <button
                             type="button"
-                            className={`px-5 py-2 rounded-lg border-2 text-[24px] font-extrabold shadow-sm focus:outline-none transition-all ${
-                              formData.corridorTypeSelection ===
+                            className={`px-5 py-2 rounded-lg border-2 text-[24px] font-extrabold shadow-sm focus:outline-none transition-all ${formData.corridorTypeSelection ===
                               "Outside Corridor"
-                                ? "bg-[#ffe082] border-black text-black"
-                                : "bg-white border-[#ffe082] text-[#888]"
-                            }`}
+                              ? "bg-[#ffe082] border-black text-black"
+                              : "bg-white border-[#ffe082] text-[#888]"
+                              }`}
                             onClick={() =>
                               handleInputChange({
                                 target: {
@@ -2314,25 +2439,25 @@ export default function CreateBlockRequestPage() {
                 //     }));
                 //   }
                 // }}
-                 onChange={(selected) => {
-    const values = selected
-      ? selected.map((opt: any) => opt.value)
-      : [];
-    
-    // Update this line to check user department
-    const maxSelections = userDepartment === "TRD" ? 4 : 2;
-    
-    if (values.length <= maxSelections) {
-      setBlockSectionValue(values);
-      setFormData((prev) => ({
-        ...prev,
-        missionBlock: values.join(","),
-        processedLineSections: (
-          prev.processedLineSections || []
-        ).filter((s: any) => values.includes(s.block)),
-      }));
-    }
-  }}
+                onChange={(selected) => {
+                  const values = selected
+                    ? selected.map((opt: any) => opt.value)
+                    : [];
+
+                  // Update this line to check user department
+                  const maxSelections = userDepartment === "TRD" ? 4 : 2;
+
+                  if (values.length <= maxSelections) {
+                    setBlockSectionValue(values);
+                    setFormData((prev) => ({
+                      ...prev,
+                      missionBlock: values.join(","),
+                      processedLineSections: (
+                        prev.processedLineSections || []
+                      ).filter((s: any) => values.includes(s.block)),
+                    }));
+                  }
+                }}
                 classNamePrefix="react-select"
                 styles={{
                   control: (base) => ({
@@ -2378,8 +2503,8 @@ export default function CreateBlockRequestPage() {
                     backgroundColor: state.isSelected
                       ? "#ffe082"
                       : state.isFocused
-                      ? "#ffe08299"
-                      : "#ffe6b3",
+                        ? "#ffe08299"
+                        : "#ffe6b3",
                     color: "black",
                     fontWeight: "bold",
                     fontSize: "24px",
@@ -2400,15 +2525,15 @@ export default function CreateBlockRequestPage() {
                 }}
                 // placeholder="Select up to 2 Block Sections/Yards"
                 placeholder={
-  userDepartment === "TRD" 
-    ? "Select up to 4 Block Sections/Yards" 
-    : "Select up to 2 Block Sections/Yards"
-}
+                  userDepartment === "TRD"
+                    ? "Select up to 4 Block Sections/Yards"
+                    : "Select up to 2 Block Sections/Yards"
+                }
                 closeMenuOnSelect={false}
                 // isOptionDisabled={() => blockSectionValue.length >= 2}
-                isOptionDisabled={() => 
-    blockSectionValue.length >= (userDepartment === "TRD" ? 4 : 2)
-  }
+                isOptionDisabled={() =>
+                  blockSectionValue.length >= (userDepartment === "TRD" ? 4 : 2)
+                }
                 required
               />
               {errors.missionBlock && (
@@ -2422,15 +2547,15 @@ export default function CreateBlockRequestPage() {
               const isYard = block.includes("-YD");
               const lineOrRoadOptions = isYard
                 ? getAllRoadsForYard(block).map((road: string) => ({
-                    value: road,
-                    label: road,
-                  }))
+                  value: road,
+                  label: road,
+                }))
                 : (lineData[block as keyof typeof lineData] || []).map(
-                    (line: string) => ({
-                      value: line,
-                      label: line,
-                    })
-                  );
+                  (line: string) => ({
+                    value: line,
+                    label: line,
+                  })
+                );
               const sectionEntry: any =
                 (formData.processedLineSections || []).find(
                   (s: any) => s.block === block
@@ -2566,8 +2691,8 @@ export default function CreateBlockRequestPage() {
                           backgroundColor: state.isSelected
                             ? "#b6e6f7"
                             : state.isFocused
-                            ? "#b6e6f799"
-                            : "#e6f7fa",
+                              ? "#b6e6f799"
+                              : "#e6f7fa",
                           color: "black",
                           fontWeight: "bold",
                           fontSize: "22px",
@@ -2615,246 +2740,246 @@ export default function CreateBlockRequestPage() {
             <div className="w-full mt-1 mb-4 p-6 rounded-2xl border-4 border-[#b6e6c6] bg-gradient-to-br from-[#f7f7a1] to-[#f0f0c0] flex flex-col gap-4 shadow-xl min-w-0 hover:shadow-2xl transition-shadow duration-300">
               {/* Preferred Slot label */}
               {/* Time selectors and duration row - always single line, scrollable if needed */}
-            <div className="flex flex-col flex-nowrap items-center w-full overflow-x-auto py-4 space-y-4 border-2 border-[#b7cbe8] rounded-2xl bg-gradient-to-b from-[#fffbe9] to-[#fff7d6]">
-  <span
-    className="text-black font-bold text-[24px] mb-1 tracking-wide"
-    style={{ lineHeight: "1", marginLeft: "4px" }}
-  >
-    Preferred Slot
-  </span>
-  <div className="flex flex-row flex-wrap items-center justify-center gap-2 px-3 py-2 text-2xl">
-    <div className="bg-white border-2 border-[#2c3e50] text-[#2c3e50] font-bold text-2xl px-2 py-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3498db]  shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200">
-      <select
-        name="demandTimeFromHour"
-        value={
-          formData.demandTimeFrom
-            ? formData.demandTimeFrom.split(":")[0]
-            : ""
-        }
-        onChange={(e) => {
-          const hour = e.target.value;
-          const min = formData.demandTimeFrom
-            ? formData.demandTimeFrom.split(":")[1]
-            : "00";
-          handleInputChange({
-            target: {
-              name: "demandTimeFrom",
-              value: `${hour}:${min}`,
-            },
-          } as any);
-        }}
-        className="appearance-none text-center"
-        required
-      >
-        <option value="">--</option>
-        {[...Array(24).keys()].map((h) => {
-          const hourStr = h.toString().padStart(2, "0");
-          // If selected date is today, disable past hours
-          if (isToday(formData.date)) {
-            const now = new Date();
-            const currentHour = now.getHours();
-            // Only allow hours that are at least current hour + 1
-            if (h < currentHour + 1) {
-              return null; // Skip rendering this option
-            }
-          }
-          return (
-            <option key={h} value={hourStr}>
-              {hourStr}
-            </option>
-          );
-        })}
-      </select>
-      <span className="text-[#2c3e50] font-bold text-[24px]">:</span>
-      <select
-        name="demandTimeFromMin"
-        value={
-          formData.demandTimeFrom
-            ? formData.demandTimeFrom.split(":")[1]
-            : ""
-        }
-        onChange={(e) => {
-          const min = e.target.value;
-          const hour = formData.demandTimeFrom
-            ? formData.demandTimeFrom.split(":")[0]
-            : "00";
-          handleInputChange({
-            target: {
-              name: "demandTimeFrom",
-              value: `${hour}:${min}`,
-            },
-          } as any);
-        }}
-        className="appearance-none text-center"
-        required
-      >
-        <option value="">--</option>
-        {[...Array(12).keys()].map((m) => (
-          <option
-            key={m}
-            value={(m * 5).toString().padStart(2, "0")}
-          >
-            {(m * 5).toString().padStart(2, "0")}
-          </option>
-        ))}
-      </select>
-    </div>
-    <span className="text-[#2c3e50] font-bold text-[24px] px-2">
-      TO
-    </span>
-    <div className="bg-white border-2 border-[#2c3e50] text-[#2c3e50] font-bold text-2xl px-2 py-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3498db]  text-center shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200">
-      <select
-        name="demandTimeToHour"
-        value={
-          formData.demandTimeTo
-            ? formData.demandTimeTo.split(":")[0]
-            : ""
-        }
-        onChange={(e) => {
-          const hour = e.target.value;
-          const min = formData.demandTimeTo
-            ? formData.demandTimeTo.split(":")[1]
-            : "00";
-          handleInputChange({
-            target: {
-              name: "demandTimeTo",
-              value: `${hour}:${min}`,
-            },
-          } as any);
-        }}
-        className="appearance-none text-center"
-        required
-      >
-        <option value="">--</option>
-        {[...Array(24).keys()].map((h) => {
-          const hourStr = h.toString().padStart(2, "0");
-          // If selected date is today, ensure "To" time is after "From" time
-          if (isToday(formData.date)) {
-            const fromHour = formData.demandTimeFrom 
-              ? parseInt(formData.demandTimeFrom.split(":")[0])
-              : new Date().getHours() + 1;
-            // Only allow hours that are after the from time
-            if (h <= fromHour) {
-              return null; // Skip rendering this option
-            }
-          }
-          return (
-            <option key={h} value={hourStr}>
-              {hourStr}
-            </option>
-          );
-        })}
-      </select>
-      <span className="text-[#2c3e50] font-bold text-[24px]">:</span>
-      <select
-        name="demandTimeToMin"
-        value={
-          formData.demandTimeTo
-            ? formData.demandTimeTo.split(":")[1]
-            : ""
-        }
-        onChange={(e) => {
-          const min = e.target.value;
-          const hour = formData.demandTimeTo
-            ? formData.demandTimeTo.split(":")[0]
-            : "00";
-          handleInputChange({
-            target: {
-              name: "demandTimeTo",
-              value: `${hour}:${min}`,
-            },
-          } as any);
-        }}
-        className="appearance-none text-center"
-        required
-      >
-        <option value="">--</option>
-        {[...Array(12).keys()].map((m) => (
-          <option
-            key={m}
-            value={(m * 5).toString().padStart(2, "0")}
-          >
-            {(m * 5).toString().padStart(2, "0")}
-          </option>
-        ))}
-      </select>
-    </div>
-  </div>
-  <span className="text-[#2c3e50] font-bold text-[24px] mb-1 tracking-wide">
-    Duration
-  </span>
- 
-<div className="flex flex-row flex-wrap items-center justify-center gap-2 px-3 py-2 text-2xl">
-  <div className="bg-white border-2 border-[#2c3e50] text-[#2c3e50] font-bold text-2xl px-2 py-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3498db] shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200">
-    {/* Duration Hours */}
-    <select
-      name="durationHour"
-      value={formData.duration ? formData.duration.split(":")[0] : ""}
-      onChange={(e) => {
-        const hour = e.target.value;
-        const min = formData.duration
-          ? formData.duration.split(":")[1]
-          : "00";
-        handleInputChange({
-          target: {
-            name: "duration",
-            value: `${hour}:${min}`,
-          },
-        } as any);
-      }}
-      className="appearance-none text-center"
-      required
-    >
-      <option value="">--</option>
-      {[...Array(25).keys()].map((h) => (
-        <option key={h} value={h.toString().padStart(2, "0")}>
-          {h.toString().padStart(2, "0")}
-        </option>
-      ))}
-    </select>
+              <div className="flex flex-col flex-nowrap items-center w-full overflow-x-auto py-4 space-y-4 border-2 border-[#b7cbe8] rounded-2xl bg-gradient-to-b from-[#fffbe9] to-[#fff7d6]">
+                <span
+                  className="text-black font-bold text-[24px] mb-1 tracking-wide"
+                  style={{ lineHeight: "1", marginLeft: "4px" }}
+                >
+                  Preferred Slot
+                </span>
+                <div className="flex flex-row flex-wrap items-center justify-center gap-2 px-3 py-2 text-2xl">
+                  <div className="bg-white border-2 border-[#2c3e50] text-[#2c3e50] font-bold text-2xl px-2 py-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3498db]  shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200">
+                    <select
+                      name="demandTimeFromHour"
+                      value={
+                        formData.demandTimeFrom
+                          ? formData.demandTimeFrom.split(":")[0]
+                          : ""
+                      }
+                      onChange={(e) => {
+                        const hour = e.target.value;
+                        const min = formData.demandTimeFrom
+                          ? formData.demandTimeFrom.split(":")[1]
+                          : "00";
+                        handleInputChange({
+                          target: {
+                            name: "demandTimeFrom",
+                            value: `${hour}:${min}`,
+                          },
+                        } as any);
+                      }}
+                      className="appearance-none text-center"
+                      required
+                    >
+                      <option value="">--</option>
+                      {[...Array(24).keys()].map((h) => {
+                        const hourStr = h.toString().padStart(2, "0");
+                        // If selected date is today, disable past hours
+                        if (isToday(formData.date)) {
+                          const now = new Date();
+                          const currentHour = now.getHours();
+                          // Only allow hours that are at least current hour + 1
+                          if (h < currentHour + 1) {
+                            return null; // Skip rendering this option
+                          }
+                        }
+                        return (
+                          <option key={h} value={hourStr}>
+                            {hourStr}
+                          </option>
+                        );
+                      })}
+                    </select>
+                    <span className="text-[#2c3e50] font-bold text-[24px]">:</span>
+                    <select
+                      name="demandTimeFromMin"
+                      value={
+                        formData.demandTimeFrom
+                          ? formData.demandTimeFrom.split(":")[1]
+                          : ""
+                      }
+                      onChange={(e) => {
+                        const min = e.target.value;
+                        const hour = formData.demandTimeFrom
+                          ? formData.demandTimeFrom.split(":")[0]
+                          : "00";
+                        handleInputChange({
+                          target: {
+                            name: "demandTimeFrom",
+                            value: `${hour}:${min}`,
+                          },
+                        } as any);
+                      }}
+                      className="appearance-none text-center"
+                      required
+                    >
+                      <option value="">--</option>
+                      {[...Array(12).keys()].map((m) => (
+                        <option
+                          key={m}
+                          value={(m * 5).toString().padStart(2, "0")}
+                        >
+                          {(m * 5).toString().padStart(2, "0")}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <span className="text-[#2c3e50] font-bold text-[24px] px-2">
+                    TO
+                  </span>
+                  <div className="bg-white border-2 border-[#2c3e50] text-[#2c3e50] font-bold text-2xl px-2 py-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3498db]  text-center shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200">
+                    <select
+                      name="demandTimeToHour"
+                      value={
+                        formData.demandTimeTo
+                          ? formData.demandTimeTo.split(":")[0]
+                          : ""
+                      }
+                      onChange={(e) => {
+                        const hour = e.target.value;
+                        const min = formData.demandTimeTo
+                          ? formData.demandTimeTo.split(":")[1]
+                          : "00";
+                        handleInputChange({
+                          target: {
+                            name: "demandTimeTo",
+                            value: `${hour}:${min}`,
+                          },
+                        } as any);
+                      }}
+                      className="appearance-none text-center"
+                      required
+                    >
+                      <option value="">--</option>
+                      {[...Array(24).keys()].map((h) => {
+                        const hourStr = h.toString().padStart(2, "0");
+                        // If selected date is today, ensure "To" time is after "From" time
+                        if (isToday(formData.date)) {
+                          const fromHour = formData.demandTimeFrom
+                            ? parseInt(formData.demandTimeFrom.split(":")[0])
+                            : new Date().getHours() + 1;
+                          // Only allow hours that are after the from time
+                          if (h <= fromHour) {
+                            return null; // Skip rendering this option
+                          }
+                        }
+                        return (
+                          <option key={h} value={hourStr}>
+                            {hourStr}
+                          </option>
+                        );
+                      })}
+                    </select>
+                    <span className="text-[#2c3e50] font-bold text-[24px]">:</span>
+                    <select
+                      name="demandTimeToMin"
+                      value={
+                        formData.demandTimeTo
+                          ? formData.demandTimeTo.split(":")[1]
+                          : ""
+                      }
+                      onChange={(e) => {
+                        const min = e.target.value;
+                        const hour = formData.demandTimeTo
+                          ? formData.demandTimeTo.split(":")[0]
+                          : "00";
+                        handleInputChange({
+                          target: {
+                            name: "demandTimeTo",
+                            value: `${hour}:${min}`,
+                          },
+                        } as any);
+                      }}
+                      className="appearance-none text-center"
+                      required
+                    >
+                      <option value="">--</option>
+                      {[...Array(12).keys()].map((m) => (
+                        <option
+                          key={m}
+                          value={(m * 5).toString().padStart(2, "0")}
+                        >
+                          {(m * 5).toString().padStart(2, "0")}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <span className="text-[#2c3e50] font-bold text-[24px] mb-1 tracking-wide">
+                  Duration
+                </span>
 
-    <span className="text-[#2c3e50] font-bold text-[24px]">:</span>
+                <div className="flex flex-row flex-wrap items-center justify-center gap-2 px-3 py-2 text-2xl">
+                  <div className="bg-white border-2 border-[#2c3e50] text-[#2c3e50] font-bold text-2xl px-2 py-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3498db] shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200">
+                    {/* Duration Hours */}
+                    <select
+                      name="durationHour"
+                      value={formData.duration ? formData.duration.split(":")[0] : ""}
+                      onChange={(e) => {
+                        const hour = e.target.value;
+                        const min = formData.duration
+                          ? formData.duration.split(":")[1]
+                          : "00";
+                        handleInputChange({
+                          target: {
+                            name: "duration",
+                            value: `${hour}:${min}`,
+                          },
+                        } as any);
+                      }}
+                      className="appearance-none text-center"
+                      required
+                    >
+                      <option value="">--</option>
+                      {[...Array(25).keys()].map((h) => (
+                        <option key={h} value={h.toString().padStart(2, "0")}>
+                          {h.toString().padStart(2, "0")}
+                        </option>
+                      ))}
+                    </select>
 
-    {/* Duration Minutes */}
-    <select
-      name="durationMin"
-      value={formData.duration ? formData.duration.split(":")[1] : ""}
-      onChange={(e) => {
-        const min = e.target.value;
-        const hour = formData.duration
-          ? formData.duration.split(":")[0]
-          : "00";
-        handleInputChange({
-          target: {
-            name: "duration",
-            value: `${hour}:${min}`,
-          },
-        } as any);
-      }}
-      className="appearance-none text-center"
-      required
-    >
-      <option value="">--</option>
-      {[...Array(12).keys()].map((m) => (
-        <option
-          key={m}
-          value={(m * 5).toString().padStart(2, "0")}
-        >
-          {(m * 5).toString().padStart(2, "0")}
-        </option>
-      ))}
-    </select>
-  </div>
-</div>
+                    <span className="text-[#2c3e50] font-bold text-[24px]">:</span>
 
-  {/* <span className="bg-white border-2 border-[#2c3e50] rounded-lg px-6 py-2 text-2xl font-bold text-[#2c3e50] min-w-[120px] text-center shadow-md hover:shadow-lg transition-shadow duration-200">
+                    {/* Duration Minutes */}
+                    <select
+                      name="durationMin"
+                      value={formData.duration ? formData.duration.split(":")[1] : ""}
+                      onChange={(e) => {
+                        const min = e.target.value;
+                        const hour = formData.duration
+                          ? formData.duration.split(":")[0]
+                          : "00";
+                        handleInputChange({
+                          target: {
+                            name: "duration",
+                            value: `${hour}:${min}`,
+                          },
+                        } as any);
+                      }}
+                      className="appearance-none text-center"
+                      required
+                    >
+                      <option value="">--</option>
+                      {[...Array(12).keys()].map((m) => (
+                        <option
+                          key={m}
+                          value={(m * 5).toString().padStart(2, "0")}
+                        >
+                          {(m * 5).toString().padStart(2, "0")}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* <span className="bg-white border-2 border-[#2c3e50] rounded-lg px-6 py-2 text-2xl font-bold text-[#2c3e50] min-w-[120px] text-center shadow-md hover:shadow-lg transition-shadow duration-200">
     {getDurationFromTimes(
       formData.demandTimeFrom || "",
       formData.demandTimeTo || ""
     ) || "--"}
   </span> */}
-  
-</div>
+
+              </div>
               {/* Site Location row */}
               <div className="flex flex-row items-center gap-4 w-full pl-1">
                 <div className="flex flex-col items-center bg-gradient-to-b from-[#fffbe9] to-[#fff7d6] border-2 border-[#b7cbe8] rounded-xl px-4 py-5 space-y-4 w-full shadow-md hover:shadow-lg transition-shadow duration-200">
@@ -2980,7 +3105,7 @@ export default function CreateBlockRequestPage() {
               {/* Activity dropdown */}
             </div>
           )}
-          
+
 
           {/* Type of Work and Activity - horizontal, pastel green */}
           <div className="w-full flex flex-row  items-center bg-[#e6f7c6] rounded-2xl p-3 mb-8 border-2 border-[#b6e6c6] shadow">
@@ -3084,33 +3209,33 @@ export default function CreateBlockRequestPage() {
           </div>
 
           {/* {userDepartment === "TRD" && ( */}
-            <div className="w-full flex flex-row  items-center bg-[#e6f7c6] rounded-2xl p-3 mb-8 border-2 border-[#b6e6c6] shadow">
-              {/* Type of Work dropdown */}
-              <div className="flex-1 pr-2 ">
-                <label
-                  htmlFor="repercussions"
-                  className="block text-[24px] text-nowrap font-bold text-black mb-2"
-                >
-                  Movement Restriction
-                </label>
-                <input
-                  id="repercussions"
-                  name="repercussions"
-                  value={formData.repercussions || ""}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="Movement Restriction"
-                  className="w-full border-2 border-[#2c3e50] rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200"
-                  aria-label="Route from location"
-                />
-                {errors.repercussions && (
-                  <span className="text-[24px] text-[#e07a5f] font-medium mt-2 block">
-                    {errors.repercussions}
-                  </span>
-                )}
-              </div>
-              {/* Activity dropdown */}
+          <div className="w-full flex flex-row  items-center bg-[#e6f7c6] rounded-2xl p-3 mb-8 border-2 border-[#b6e6c6] shadow">
+            {/* Type of Work dropdown */}
+            <div className="flex-1 pr-2 ">
+              <label
+                htmlFor="repercussions"
+                className="block text-[24px] text-nowrap font-bold text-black mb-2"
+              >
+                Movement Restriction
+              </label>
+              <input
+                id="repercussions"
+                name="repercussions"
+                value={formData.repercussions || ""}
+                onChange={handleInputChange}
+                required
+                placeholder="Movement Restriction"
+                className="w-full border-2 border-[#2c3e50] rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200"
+                aria-label="Route from location"
+              />
+              {errors.repercussions && (
+                <span className="text-[24px] text-[#e07a5f] font-medium mt-2 block">
+                  {errors.repercussions}
+                </span>
+              )}
             </div>
+            {/* Activity dropdown */}
+          </div>
           {/* )} */}
 
 
@@ -3177,11 +3302,11 @@ export default function CreateBlockRequestPage() {
                             const isYard = block.includes("-YD");
                             return isYard
                               ? getAllRoadsForYard(block).map((r) => (
-                                  <option key={r} value={r} />
-                                ))
+                                <option key={r} value={r} />
+                              ))
                               : (
-                                  lineData[block as keyof typeof lineData] || []
-                                ).map((l) => <option key={l} value={l} />);
+                                lineData[block as keyof typeof lineData] || []
+                              ).map((l) => <option key={l} value={l} />);
                           })}
                         </datalist>
 
@@ -3345,9 +3470,9 @@ export default function CreateBlockRequestPage() {
                           Select Depo
                         </option>
                         {selectedMajorSection &&
-                        session?.user.department &&
-                        depot[selectedMajorSection] &&
-                        depot[selectedMajorSection]["TRD"] ? (
+                          session?.user.department &&
+                          depot[selectedMajorSection] &&
+                          depot[selectedMajorSection]["TRD"] ? (
                           depot[selectedMajorSection]["TRD"].map(
                             (depotOption: string, index) => (
                               <option key={index} value={depotOption}>
@@ -3373,334 +3498,334 @@ export default function CreateBlockRequestPage() {
 
               {/* S&T Disconnection Section */}
               {session?.user.department !== "S&T" && (
-                 <div className="w-full mt-2 bg-teal-200 rounded-2xl">
-                <div className="flex justify-between items-center mb-1 bg-teal-400 rounded-2xl  px-2">
-                  <span className="text-black font-bold text-[24px]">
-                    S&T Disconnection Needed?
-                  </span>
-                  <select
-                    name="sntDisconnectionRequired"
-                    value={formData.sntDisconnectionRequired ? "Y" : "N"}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        sntDisconnectionRequired: e.target.value === "Y",
-                      })
-                    }
-                    className="ml-2 pr-8 border-2  border-black rounded 
+                <div className="w-full mt-2 bg-teal-200 rounded-2xl">
+                  <div className="flex justify-between items-center mb-1 bg-teal-400 rounded-2xl  px-2">
+                    <span className="text-black font-bold text-[24px]">
+                      S&T Disconnection Needed?
+                    </span>
+                    <select
+                      name="sntDisconnectionRequired"
+                      value={formData.sntDisconnectionRequired ? "Y" : "N"}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          sntDisconnectionRequired: e.target.value === "Y",
+                        })
+                      }
+                      className="ml-2 pr-8 border-2  border-black rounded 
                 px-1 my-3 text-2xl font-bold bg-white text-black placeholder-black"
-                    style={{
-                      appearance: "none",
-                      backgroundImage: `url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9L12 15L18 9' stroke='%23000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-                      backgroundRepeat: "no-repeat",
-                      backgroundPosition: "right 0.5rem center",
-                      backgroundSize: "1.2rem",
-                    }}
-                  >
-                    <option value="N">N</option>
-                    <option value="Y">Y</option>
-                  </select>
-                  {renderError("sntDisconnectionRequired")}
-                </div>
-                {/* ───── S&T Disconnection ───── */}
-                {formData.sntDisconnectionRequired && (
-                  <div className="flex flex-col items-center gap-2 mt-2 pb-2">
-                    <div className="flex flex-row flex-wrap gap-1 w-full">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 w-full">
-                        {/* Point No. Section */}
-                        <div className="w-full bg-[#f8fafc] border border-[#b71c1c] rounded-lg p-2">
-                          <label className="text-black font-bold text-2xl mb-3 flex items-center gap-2">
-                            Point No.
-                          </label>
-                          <div className="flex flex-col gap-1">
-                            {(
-                              formData.sntDisconnectionPointNo?.split(",") || [
-                                "",
-                              ]
-                            ).map((point, index, arr) => (
-                              <div
-                                className="flex items-center gap-1 relative group"
-                                key={index}
-                              >
-                                <input
-                                  type="text"
-                                  value={point}
-                                  onChange={(e) => {
-                                    const points = [
-                                      ...(formData.sntDisconnectionPointNo?.split(
-                                        ","
-                                      ) || []),
-                                    ];
-                                    points[index] = e.target.value;
-                                    handleInputChange({
-                                      target: {
-                                        name: "sntDisconnectionPointNo",
-                                        value: points
-                                          .filter((p) => p.trim() !== "")
-                                          .join(","),
-                                      },
-                                    } as React.ChangeEvent<HTMLInputElement>);
-                                  }}
-                                  placeholder={`Point No. ${index + 1}`}
-                                  required
-                                  className="w-full border-2 border-[#b71c1c] bg-[#fffbe9] text-black placeholder-black px-1 text-2xl"
-                                />
-                                {arr.length > 1 && (
-                                  <button
-                                    type="button"
-                                    aria-label="Remove point"
-                                    onClick={() => {
-                                      const points =
-                                        formData.sntDisconnectionPointNo?.split(
+                      style={{
+                        appearance: "none",
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9L12 15L18 9' stroke='%23000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                        backgroundRepeat: "no-repeat",
+                        backgroundPosition: "right 0.5rem center",
+                        backgroundSize: "1.2rem",
+                      }}
+                    >
+                      <option value="N">N</option>
+                      <option value="Y">Y</option>
+                    </select>
+                    {renderError("sntDisconnectionRequired")}
+                  </div>
+                  {/* ───── S&T Disconnection ───── */}
+                  {formData.sntDisconnectionRequired && (
+                    <div className="flex flex-col items-center gap-2 mt-2 pb-2">
+                      <div className="flex flex-row flex-wrap gap-1 w-full">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 w-full">
+                          {/* Point No. Section */}
+                          <div className="w-full bg-[#f8fafc] border border-[#b71c1c] rounded-lg p-2">
+                            <label className="text-black font-bold text-2xl mb-3 flex items-center gap-2">
+                              Point No.
+                            </label>
+                            <div className="flex flex-col gap-1">
+                              {(
+                                formData.sntDisconnectionPointNo?.split(",") || [
+                                  "",
+                                ]
+                              ).map((point, index, arr) => (
+                                <div
+                                  className="flex items-center gap-1 relative group"
+                                  key={index}
+                                >
+                                  <input
+                                    type="text"
+                                    value={point}
+                                    onChange={(e) => {
+                                      const points = [
+                                        ...(formData.sntDisconnectionPointNo?.split(
                                           ","
-                                        ) || [];
-                                      const updated = points.filter(
-                                        (_, i) => i !== index
-                                      );
+                                        ) || []),
+                                      ];
+                                      points[index] = e.target.value;
                                       handleInputChange({
                                         target: {
                                           name: "sntDisconnectionPointNo",
-                                          value: updated.join(","),
+                                          value: points
+                                            .filter((p) => p.trim() !== "")
+                                            .join(","),
                                         },
                                       } as React.ChangeEvent<HTMLInputElement>);
                                     }}
-                                    className="text-red-600 hover:text-white hover:bg-red-600 rounded-full p-1 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-400"
-                                    style={{ lineHeight: 0 }}
+                                    placeholder={`Point No. ${index + 1}`}
+                                    required
+                                    className="w-full border-2 border-[#b71c1c] bg-[#fffbe9] text-black placeholder-black px-1 text-2xl"
+                                  />
+                                  {arr.length > 1 && (
+                                    <button
+                                      type="button"
+                                      aria-label="Remove point"
+                                      onClick={() => {
+                                        const points =
+                                          formData.sntDisconnectionPointNo?.split(
+                                            ","
+                                          ) || [];
+                                        const updated = points.filter(
+                                          (_, i) => i !== index
+                                        );
+                                        handleInputChange({
+                                          target: {
+                                            name: "sntDisconnectionPointNo",
+                                            value: updated.join(","),
+                                          },
+                                        } as React.ChangeEvent<HTMLInputElement>);
+                                      }}
+                                      className="text-red-600 hover:text-white hover:bg-red-600 rounded-full p-1 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-400"
+                                      style={{ lineHeight: 0 }}
+                                    >
+                                      <svg
+                                        width="20"
+                                        height="20"
+                                        fill="none"
+                                        viewBox="0 0 20 20"
+                                      >
+                                        <circle
+                                          cx="10"
+                                          cy="10"
+                                          r="10"
+                                          fill="#fff"
+                                        />
+                                        <path
+                                          d="M6 6l8 8M14 6l-8 8"
+                                          stroke="#b71c1c"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                        />
+                                      </svg>
+                                    </button>
+                                  )}
+                                </div>
+                              ))}
+                              {(formData.sntDisconnectionPointNo
+                                ?.split(",")
+                                .filter((p) => p.trim() !== "").length || 0) <
+                                2 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const points =
+                                        formData.sntDisconnectionPointNo
+                                          ?.split(",")
+                                          .filter((p) => p.trim() !== "") || [];
+                                      points.push("");
+                                      handleInputChange({
+                                        target: {
+                                          name: "sntDisconnectionPointNo",
+                                          value: points.join(","),
+                                        },
+                                      } as React.ChangeEvent<HTMLInputElement>);
+                                    }}
+                                    className="flex items-center gap-1 mt-2 px-3 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-base font-semibold rounded shadow hover:from-green-700 hover:to-green-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-green-400"
                                   >
                                     <svg
-                                      width="20"
-                                      height="20"
+                                      width="18"
+                                      height="18"
                                       fill="none"
                                       viewBox="0 0 20 20"
                                     >
-                                      <circle
-                                        cx="10"
-                                        cy="10"
-                                        r="10"
-                                        fill="#fff"
-                                      />
+                                      <circle cx="10" cy="10" r="10" fill="#fff" />
                                       <path
-                                        d="M6 6l8 8M14 6l-8 8"
-                                        stroke="#b71c1c"
+                                        d="M10 5v10M5 10h10"
+                                        stroke="#166534"
                                         strokeWidth="2"
                                         strokeLinecap="round"
                                       />
                                     </svg>
+                                    Add Point
                                   </button>
                                 )}
-                              </div>
-                            ))}
-                            {(formData.sntDisconnectionPointNo
-                              ?.split(",")
-                              .filter((p) => p.trim() !== "").length || 0) <
-                              2 && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const points =
-                                    formData.sntDisconnectionPointNo
-                                      ?.split(",")
-                                      .filter((p) => p.trim() !== "") || [];
-                                  points.push("");
-                                  handleInputChange({
-                                    target: {
-                                      name: "sntDisconnectionPointNo",
-                                      value: points.join(","),
-                                    },
-                                  } as React.ChangeEvent<HTMLInputElement>);
-                                }}
-                                className="flex items-center gap-1 mt-2 px-3 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-base font-semibold rounded shadow hover:from-green-700 hover:to-green-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-green-400"
-                              >
-                                <svg
-                                  width="18"
-                                  height="18"
-                                  fill="none"
-                                  viewBox="0 0 20 20"
-                                >
-                                  <circle cx="10" cy="10" r="10" fill="#fff" />
-                                  <path
-                                    d="M10 5v10M5 10h10"
-                                    stroke="#166534"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                  />
-                                </svg>
-                                Add Point
-                              </button>
-                            )}
+                            </div>
                           </div>
-                        </div>
 
-                        {/* Signal No. Section */}
-                        <div className="w-full bg-[#f8fafc] border border-[#b71c1c] rounded-lg p-2">
-                          <label className="text-black font-bold text-2xl mb-3 flex items-center gap-2">
-                            Signal No.
-                          </label>
-                          <div className="flex flex-col gap-1">
-                            {(
-                              formData.sntDisconnectionSignalNo?.split(",") || [
-                                "",
-                              ]
-                            ).map((point, index, arr) => (
-                              <div
-                                className="flex items-center gap-1 relative group"
-                                key={index}
-                              >
-                                <input
-                                  type="text"
-                                  value={point}
-                                  onChange={(e) => {
-                                    const points = [
-                                      ...(formData.sntDisconnectionSignalNo?.split(
-                                        ","
-                                      ) || []),
-                                    ];
-                                    points[index] = e.target.value;
-                                    handleInputChange({
-                                      target: {
-                                        name: "sntDisconnectionSignalNo",
-                                        value: points
-                                          .filter((p) => p.trim() !== "")
-                                          .join(","),
-                                      },
-                                    } as React.ChangeEvent<HTMLInputElement>);
-                                  }}
-                                  placeholder={`Signal No. ${index + 1}`}
-                                  required
-                                  className="w-full border-2 border-[#b71c1c] bg-[#fffbe9] text-black placeholder-black px-1 text-2xl"
-                                />
-                                {arr.length > 1 && (
-                                  <button
-                                    type="button"
-                                    aria-label="Remove point"
-                                    onClick={() => {
-                                      const points =
-                                        formData.sntDisconnectionSignalNo?.split(
+                          {/* Signal No. Section */}
+                          <div className="w-full bg-[#f8fafc] border border-[#b71c1c] rounded-lg p-2">
+                            <label className="text-black font-bold text-2xl mb-3 flex items-center gap-2">
+                              Signal No.
+                            </label>
+                            <div className="flex flex-col gap-1">
+                              {(
+                                formData.sntDisconnectionSignalNo?.split(",") || [
+                                  "",
+                                ]
+                              ).map((point, index, arr) => (
+                                <div
+                                  className="flex items-center gap-1 relative group"
+                                  key={index}
+                                >
+                                  <input
+                                    type="text"
+                                    value={point}
+                                    onChange={(e) => {
+                                      const points = [
+                                        ...(formData.sntDisconnectionSignalNo?.split(
                                           ","
-                                        ) || [];
-                                      const updated = points.filter(
-                                        (_, i) => i !== index
-                                      );
+                                        ) || []),
+                                      ];
+                                      points[index] = e.target.value;
                                       handleInputChange({
                                         target: {
                                           name: "sntDisconnectionSignalNo",
-                                          value: updated.join(","),
+                                          value: points
+                                            .filter((p) => p.trim() !== "")
+                                            .join(","),
                                         },
                                       } as React.ChangeEvent<HTMLInputElement>);
                                     }}
-                                    className="text-red-600 hover:text-white hover:bg-red-600 rounded-full p-1 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-400"
-                                    style={{ lineHeight: 0 }}
+                                    placeholder={`Signal No. ${index + 1}`}
+                                    required
+                                    className="w-full border-2 border-[#b71c1c] bg-[#fffbe9] text-black placeholder-black px-1 text-2xl"
+                                  />
+                                  {arr.length > 1 && (
+                                    <button
+                                      type="button"
+                                      aria-label="Remove point"
+                                      onClick={() => {
+                                        const points =
+                                          formData.sntDisconnectionSignalNo?.split(
+                                            ","
+                                          ) || [];
+                                        const updated = points.filter(
+                                          (_, i) => i !== index
+                                        );
+                                        handleInputChange({
+                                          target: {
+                                            name: "sntDisconnectionSignalNo",
+                                            value: updated.join(","),
+                                          },
+                                        } as React.ChangeEvent<HTMLInputElement>);
+                                      }}
+                                      className="text-red-600 hover:text-white hover:bg-red-600 rounded-full p-1 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-400"
+                                      style={{ lineHeight: 0 }}
+                                    >
+                                      <svg
+                                        width="20"
+                                        height="20"
+                                        fill="none"
+                                        viewBox="0 0 20 20"
+                                      >
+                                        <circle
+                                          cx="10"
+                                          cy="10"
+                                          r="10"
+                                          fill="#fff"
+                                        />
+                                        <path
+                                          d="M6 6l8 8M14 6l-8 8"
+                                          stroke="#b71c1c"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                        />
+                                      </svg>
+                                    </button>
+                                  )}
+                                </div>
+                              ))}
+                              {(formData.sntDisconnectionSignalNo
+                                ?.split(",")
+                                .filter((p) => p.trim() !== "").length || 0) <
+                                2 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const points =
+                                        formData.sntDisconnectionSignalNo
+                                          ?.split(",")
+                                          .filter((p) => p.trim() !== "") || [];
+                                      points.push("");
+                                      handleInputChange({
+                                        target: {
+                                          name: "sntDisconnectionSignalNo",
+                                          value: points.join(","),
+                                        },
+                                      } as React.ChangeEvent<HTMLInputElement>);
+                                    }}
+                                    className="flex items-center gap-1 mt-2 px-3 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-base font-semibold rounded shadow hover:from-green-700 hover:to-green-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-green-400"
                                   >
                                     <svg
-                                      width="20"
-                                      height="20"
+                                      width="18"
+                                      height="18"
                                       fill="none"
                                       viewBox="0 0 20 20"
                                     >
-                                      <circle
-                                        cx="10"
-                                        cy="10"
-                                        r="10"
-                                        fill="#fff"
-                                      />
+                                      <circle cx="10" cy="10" r="10" fill="#fff" />
                                       <path
-                                        d="M6 6l8 8M14 6l-8 8"
-                                        stroke="#b71c1c"
+                                        d="M10 5v10M5 10h10"
+                                        stroke="#166534"
                                         strokeWidth="2"
                                         strokeLinecap="round"
                                       />
                                     </svg>
+                                    Add Signal
                                   </button>
                                 )}
-                              </div>
-                            ))}
-                            {(formData.sntDisconnectionSignalNo
-                              ?.split(",")
-                              .filter((p) => p.trim() !== "").length || 0) <
-                              2 && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const points =
-                                    formData.sntDisconnectionSignalNo
-                                      ?.split(",")
-                                      .filter((p) => p.trim() !== "") || [];
-                                  points.push("");
-                                  handleInputChange({
-                                    target: {
-                                      name: "sntDisconnectionSignalNo",
-                                      value: points.join(","),
-                                    },
-                                  } as React.ChangeEvent<HTMLInputElement>);
-                                }}
-                                className="flex items-center gap-1 mt-2 px-3 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-base font-semibold rounded shadow hover:from-green-700 hover:to-green-800 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-green-400"
-                              >
-                                <svg
-                                  width="18"
-                                  height="18"
-                                  fill="none"
-                                  viewBox="0 0 20 20"
-                                >
-                                  <circle cx="10" cy="10" r="10" fill="#fff" />
-                                  <path
-                                    d="M10 5v10M5 10h10"
-                                    stroke="#166534"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                  />
-                                </svg>
-                                Add Signal
-                              </button>
-                            )}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="flex flex-row flex-wrap gap-1 w-full">
-                      <span className="text-black font-bold text-2xl">
-                        Assign To:
-                      </span>
-                      <select
-                        name="sntDisconnectionAssignTo"
-                        value={formData.sntDisconnectionAssignTo}
-                        onChange={handleInputChange}
-                        required
-                        className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black placeholder-black px-1 w-full text-2xl"
-                      >
-                        <option value="" disabled>
-                          Select Depo
-                        </option>
-                        {selectedMajorSection &&
-                        session?.user.department &&
-                        depot[selectedMajorSection] &&
-                        depot[selectedMajorSection]["S&T"] ? (
-                          depot[selectedMajorSection]["S&T"].map(
-                            (depotOption: string, index) => (
-                              <option key={index} value={depotOption}>
-                                {depotOption}
-                              </option>
-                            )
-                          )
-                        ) : (
-                          <option value="" disabled>
-                            Select Major Section first
-                          </option>
-                        )}
-                      </select>
-                      {errors.sntDisconnectionAssignTo && (
-                        <span className="text-xs text-red-700 font-medium mt-1 block">
-                          {errors.sntDisconnectionAssignTo}
+                      <div className="flex flex-row flex-wrap gap-1 w-full">
+                        <span className="text-black font-bold text-2xl">
+                          Assign To:
                         </span>
-                      )}
+                        <select
+                          name="sntDisconnectionAssignTo"
+                          value={formData.sntDisconnectionAssignTo}
+                          onChange={handleInputChange}
+                          required
+                          className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black placeholder-black px-1 w-full text-2xl"
+                        >
+                          <option value="" disabled>
+                            Select Depo
+                          </option>
+                          {selectedMajorSection &&
+                            session?.user.department &&
+                            depot[selectedMajorSection] &&
+                            depot[selectedMajorSection]["S&T"] ? (
+                            depot[selectedMajorSection]["S&T"].map(
+                              (depotOption: string, index) => (
+                                <option key={index} value={depotOption}>
+                                  {depotOption}
+                                </option>
+                              )
+                            )
+                          ) : (
+                            <option value="" disabled>
+                              Select Major Section first
+                            </option>
+                          )}
+                        </select>
+                        {errors.sntDisconnectionAssignTo && (
+                          <span className="text-xs text-red-700 font-medium mt-1 block">
+                            {errors.sntDisconnectionAssignTo}
+                          </span>
+                        )}
 
-                      {/* {false && ( */}
+                        {/* {false && ( */}
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
               )}
-             
+
             </div>
           )}
 
@@ -3800,9 +3925,8 @@ export default function CreateBlockRequestPage() {
             {reviewMode ? (
               <button
                 type="submit"
-                className={`w-full bg-[#eeb8f7] border-2 border-black rounded-[50%] max-w-72 px-6 py-2 text-lg font-extrabold text-white hover:brightness-90 ${
-                  formSubmitting ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+                className={`w-full bg-[#eeb8f7] border-2 border-black rounded-[50%] max-w-72 px-6 py-2 text-lg font-extrabold text-white hover:brightness-90 ${formSubmitting ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 disabled={formSubmitting}
                 style={{
                   borderRadius: "50%",
@@ -3815,9 +3939,8 @@ export default function CreateBlockRequestPage() {
             ) : (
               <button
                 type="submit"
-                className={`w-full bg-[#eeb8f7] border-2 border-black rounded-[50%] max-w-72 px-6 py-2 text-lg font-extrabold text-white hover:brightness-90 ${
-                  formSubmitting ? "brightness-95 cursor-not-allowed" : ""
-                }`}
+                className={`w-full bg-[#eeb8f7] border-2 border-black rounded-[50%] max-w-72 px-6 py-2 text-lg font-extrabold text-white hover:brightness-90 ${formSubmitting ? "brightness-95 cursor-not-allowed" : ""
+                  }`}
                 disabled={formSubmitting}
               >
                 {formSubmitting ? "SUBMITTING..." : "SUBMIT"}
