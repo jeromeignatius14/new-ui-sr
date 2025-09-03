@@ -1242,11 +1242,9 @@ export default function CreateBlockRequestPage() {
         ),
         processedLineSections: processedSections,
         adminAcceptance: false,
+        // selectedDepo: formData.sntDisconnectionAssignTo || "", 
         selectedDepo: userDepot || "",
-        ...(durationMins <= 45 && !formData.sigActionsNeeded && !formData.trdActionsNeeded && {
-          managerAcceptance: true,
-          isSanctioned: true,
-        }),
+
       };
 
       // ─── 7. Submit to backend ────────────────────────────────────────────
@@ -2491,8 +2489,8 @@ export default function CreateBlockRequestPage() {
                           <button
                             type="button"
                             className={`px-5 py-2 rounded-lg border-2 text-[24px] font-extrabold shadow-sm focus:outline-none transition-all ${formData.corridorTypeSelection === "Corridor"
-                              ? "bg-[#e6f7c6] border-black text-black"
-                              : "bg-white border-[#b6e6c6] text-[#888]"
+                                ? "bg-[#e6f7c6] border-black text-black"
+                                : "bg-white border-[#b6e6c6] text-[#888]"
                               }`}
                             onClick={() =>
                               handleInputChange({
@@ -2508,9 +2506,9 @@ export default function CreateBlockRequestPage() {
                           <button
                             type="button"
                             className={`px-5 py-2 rounded-lg border-2 text-[24px] font-extrabold shadow-sm focus:outline-none transition-all ${formData.corridorTypeSelection ===
-                              "Outside Corridor"
-                              ? "bg-[#ffe082] border-black text-black"
-                              : "bg-white border-[#ffe082] text-[#888]"
+                                "Outside Corridor"
+                                ? "bg-[#ffe082] border-black text-black"
+                                : "bg-white border-[#ffe082] text-[#888]"
                               }`}
                             onClick={() =>
                               handleInputChange({
@@ -2623,8 +2621,8 @@ export default function CreateBlockRequestPage() {
                     ? selected.map((opt: any) => opt.value)
                     : [];
 
-                  // Update this line to check user department
-                  const maxSelections = userDepartment === "TRD" ? 4 : 2;
+                  // Update this line to check user department with max 6 for TRD
+                  const maxSelections = userDepartment === "TRD" ? 6 : 2;
 
                   if (values.length <= maxSelections) {
                     setBlockSectionValue(values);
@@ -2705,13 +2703,13 @@ export default function CreateBlockRequestPage() {
                 // placeholder="Select up to 2 Block Sections/Yards"
                 placeholder={
                   userDepartment === "TRD"
-                    ? "Select up to 4 Block Sections/Yards"
+                    ? "Select up to 6 Block Sections/Yards"
                     : "Select up to 2 Block Sections/Yards"
                 }
                 closeMenuOnSelect={false}
                 // isOptionDisabled={() => blockSectionValue.length >= 2}
                 isOptionDisabled={() =>
-                  blockSectionValue.length >= (userDepartment === "TRD" ? 4 : 2)
+                  blockSectionValue.length >= (userDepartment === "TRD" ? 6 : 2)
                 }
                 required
               />
