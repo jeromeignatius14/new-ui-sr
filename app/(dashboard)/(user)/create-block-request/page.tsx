@@ -3034,15 +3034,15 @@ export default function CreateBlockRequestPage() {
                       {[...Array(24).keys()].map((h) => {
                         const hourStr = h.toString().padStart(2, "0");
                         // If selected date is today, ensure "To" time is after "From" time
-                        if (isToday(formData.date)) {
-                          const fromHour = formData.demandTimeFrom
-                            ? parseInt(formData.demandTimeFrom.split(":")[0])
-                            : new Date().getHours() + 1;
-                          // Only allow hours that are after the from time
-                          if (h <= fromHour) {
-                            return null; // Skip rendering this option
-                          }
-                        }
+                        // if (isToday(formData.date)) {
+                        //   const fromHour = formData.demandTimeFrom
+                        //     ? parseInt(formData.demandTimeFrom.split(":")[0])
+                        //     : new Date().getHours() + 1;
+                        //   // Only allow hours that are after the from time
+                        //   if (h <= fromHour) {
+                        //     return null; // Skip rendering this option
+                        //   }
+                        // }
                         return (
                           <option key={h} value={hourStr}>
                             {hourStr}
