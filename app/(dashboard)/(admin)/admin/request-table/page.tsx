@@ -7,9 +7,11 @@ import { format, parseISO } from "date-fns";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import dayjs from "dayjs";
+import { useRouter } from "next/navigation";
 
 export default function AdminRequestTablePage() {
   const { data: session } = useSession();
+  const router = useRouter();
   const [customDateRange, setCustomDateRange] = useState({
     start: "",
     end: "",
@@ -650,7 +652,8 @@ if (activeSummaryFilters.section.length > 0) {
         { label: "TRD", value: TRDRequest }].map((item, index) => (
         <div
           key={index}
-          className="flex items-center justify-between w-fit bg-gradient-to-r from-[#FFB3B3] to-[#FFD5D5] text-[#B22222] font-bold py-2 px-0.5 rounded-xl border-2 border-[#FF6B6B] text-[22px] shadow-md hover:shadow-lg transition-all"
+          className="flex items-center justify-between w-fit bg-gradient-to-r from-[#FFB3B3] to-[#f18b8b] text-[#B22222] font-bold py-2 px-0.5 rounded-xl border-2 border-[#FF6B6B] text-[22px] shadow-md hover:shadow-lg transition-all cursor-pointer"
+          onClick={() => router.push(`/admin/optimise-table?dept=${encodeURIComponent(item.label)}`)}
         >
           <span>{item.label}</span>
           <span className="bg-white rounded-full w-12 h-12 flex items-center justify-center text-[24px] shadow-inner border-2 border-[#FFB3B3]">
