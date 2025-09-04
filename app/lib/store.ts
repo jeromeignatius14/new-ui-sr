@@ -4416,7 +4416,7 @@ export const depot: DepotStructure = {
   },
   "MAS-AJJ": {
     'TRD': ["BBQ", "AVD", "TRL", "AJJ"],
-    'S&T': ["BBQ", "TRL", "AJJE"],
+    'S&T': ["BBQ", "TRL", "AJJE","MSB"],
     'ENGG': ["WSTA", "WSTB", "AVD", "TRLA", "TRLB", "AJJ","BRIDGE"]
   },
   "AJJ-KPD": {
