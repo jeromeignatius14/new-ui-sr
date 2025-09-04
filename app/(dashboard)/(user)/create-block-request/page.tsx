@@ -1242,8 +1242,8 @@ export default function CreateBlockRequestPage() {
         ),
         processedLineSections: processedSections,
         adminAcceptance: false,
-        // selectedDepo: formData.sntDisconnectionAssignTo || "", 
-        selectedDepo: userDepot || "",
+        selectedDepo: formData.sntDisconnectionAssignTo || "", 
+        //selectedDepo: userDepot || "",
          ...(durationMins <= 45 && !formData.sigActionsNeeded && !formData.trdActionsNeeded && {
           managerAcceptance: true,
           isSanctioned: true,
