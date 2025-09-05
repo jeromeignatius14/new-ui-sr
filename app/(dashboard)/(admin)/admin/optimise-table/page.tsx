@@ -254,11 +254,10 @@ export default function OptimiseTablePage() {
 
   // Update URL when currentWeekStart changes
   useEffect(() => {
-    const params = new URLSearchParams(searchParams.toString());
+   const params = new URLSearchParams(searchParams.toString());
     params.set("date", format(currentWeekStart, "yyyy-MM-dd"));
     router.push(`?${params.toString()}`, { scroll: false });
   }, [currentWeekStart, router, searchParams]);
-
 
   // Edit state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -270,11 +269,7 @@ export default function OptimiseTablePage() {
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
   const [showDateValidationAlert, setShowDateValidationAlert] = useState(false);
-  const [deptFilter, setDeptFilter] = useState<string>(() => {
-    const deptParam = searchParams.get("dept");
-    // Check if deptParam exists and matches one of our department options
-    return deptParam && ['ENGG', 'S&T', 'TRD'].includes(decodeURIComponent(deptParam)) ? decodeURIComponent(deptParam) : 'ALL';
-  });
+  const [deptFilter, setDeptFilter] = useState<string>('ALL');
   const [workTypeFilter, setWorkTypeFilter] = useState<string>('ALL');
   const [activityFilter, setActivityFilter] = useState<string>('ALL');
   const [timeSlotFilter, setTimeSlotFilter] = useState<string>('ALL');
@@ -282,16 +277,6 @@ export default function OptimiseTablePage() {
   const [showWorkTypeDropdown, setShowWorkTypeDropdown] = useState(false);
   const [showActivityDropdown, setShowActivityDropdown] = useState(false);
   const [showTimeSlotDropdown, setShowTimeSlotDropdown] = useState(false);
-
-  // Update URL when deptFilter changes
-  useEffect(() => {
-    // Only update URL if dept filter changes to something other than ALL
-    if (deptFilter !== 'ALL') {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("dept", encodeURIComponent(deptFilter));
-      router.push(`?${params.toString()}`, { scroll: false });
-    }
-  }, [deptFilter, router, searchParams]);
 
   // Helper function to check if request matches time slot
   const matchesTimeSlot = (request: UserRequest): boolean => {
@@ -447,34 +432,25 @@ export default function OptimiseTablePage() {
 
 
 
-  // Initialize selectedDate to current date on first load
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
-    // Check for URL parameter that indicates a week change has happened
-    const dateParam = searchParams.get("date");
-    const hasWeekChanged = localStorage.getItem("weekChanged") === "true";
-    
-    if (hasWeekChanged) {
-      // If week has been changed, use Monday of that week
-      const monday = startOfWeek(currentWeekStart, { weekStartsOn: 1 });
-      return monday;
-    } else {
-      // On first load or no week change, use current date (today)
-      const today = new Date();
-      
-      // Ensure today is within the current week boundaries
-      const monday = startOfWeek(currentWeekStart, { weekStartsOn: 1 });
-      const sunday = endOfWeek(monday, { weekStartsOn: 1 });
-      
-      if (today >= monday && today <= sunday) {
-        return today;
-      } else {
-        // If today is outside the current week, use Monday
-        return monday;
+    // Try to get saved date from localStorage
+    const savedDate = localStorage.getItem("urgentSelectedDate");
+    if (savedDate) {
+      const parsedDate = new Date(savedDate);
+      if (!isNaN(parsedDate.getTime())) {
+        return parsedDate;
       }
     }
+    // Fallback to the start of week if no saved date
+    return startOfWeek(currentWeekStart, { weekStartsOn: 1 });
   });
-  
-  // No need for additional useEffect since we handle everything in the initial state
+  // Set selectedDate only when minDate is ready
+  // amazonq-ignore-next-line
+  useEffect(() => {
+    if (minDate && !selectedDate) {
+      setSelectedDate(startOfWeek(currentWeekStart, { weekStartsOn: 1 }));
+    }
+  }, []);
 
 
   // --- Custom: Only show requests that are pending with me, not sanctioned, and after today ---
@@ -830,25 +806,16 @@ export default function OptimiseTablePage() {
     }
   };
 
-  // Function to navigate by weeks (always 7 days regardless of mode)
+  // Function to navigate to previous or next period (day for urgent, week for non-urgent)
   const handleWeekChange = (direction: "prev" | "next") => {
     setCurrentWeekStart((prev) => {
       let newDate;
-      // Always move by week (7 days)
-      const weekIncrement = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
-      newDate = direction === "prev"
-        ? new Date(prev.getTime() - weekIncrement)
-        : new Date(prev.getTime() + weekIncrement);
-        
-      // Calculate the Monday of the new week
-      const newWeekMonday = startOfWeek(newDate, { weekStartsOn: 1 });
-      
-      // When changing weeks, always set to Monday of the new week
-      setSelectedDate(newWeekMonday);
-      
-      // Mark that a week change has happened
-      localStorage.setItem("weekChanged", "true");
-      
+      if (isUrgentMode) {
+        newDate = direction === "prev" ? subDays(prev, 1) : addDays(prev, 1);
+      } else {
+        newDate = direction === "prev" ? subDays(prev, 7) : addDays(prev, 7);
+      }
+      setSelectedDate(startOfWeek(newDate, { weekStartsOn: 1 }));
       return newDate;
     });
   };
@@ -1120,7 +1087,7 @@ export default function OptimiseTablePage() {
             </button>
             {showDeptDropdown && (
               <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[120px]">
-                {['ALL', 'ENGG', 'S&T', 'TRD'].map((dept) => (
+                {['ALL', 'S&T', 'ENGG', 'TRD'].map((dept) => (
                   <button
                     key={dept}
                     onClick={() => {
@@ -1128,18 +1095,6 @@ export default function OptimiseTablePage() {
                       setWorkTypeFilter('ALL');
                       setActivityFilter('ALL');
                       setShowDeptDropdown(false);
-
-                      // Update URL with dept parameter
-                      if (dept !== 'ALL') {
-                        const params = new URLSearchParams(searchParams.toString());
-                        params.set("dept", encodeURIComponent(dept));
-                        router.push(`?${params.toString()}`, { scroll: false });
-                      } else {
-                        // Remove dept parameter if ALL is selected
-                        const params = new URLSearchParams(searchParams.toString());
-                        params.delete("dept");
-                        router.push(`?${params.toString()}`, { scroll: false });
-                      }
                     }}
                     className={`block w-full text-left px-3 py-2 hover:bg-gray-100 text-black ${deptFilter === dept ? 'bg-blue-100' : ''
                       }`}
@@ -1328,7 +1283,7 @@ export default function OptimiseTablePage() {
               // No need to manually save here - the DaySwitcher handles it
             }}
             minDate={startOfWeek(currentWeekStart, { weekStartsOn: 1 })}
-            maxDate={addDays(weekStart, 2)}
+            maxDate={addDays(weekStart, 7)}
             storageKey="urgentSelectedDate" // Unique key for urgent block
           />
           <h2 className="border-b-2 pb-2 border-[#13529e] text-[24px] font-semibold text-[#13529e]">Urgent Blocks</h2>
