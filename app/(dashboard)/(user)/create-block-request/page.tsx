@@ -1242,12 +1242,13 @@ export default function CreateBlockRequestPage() {
         ),
         processedLineSections: processedSections,
         adminAcceptance: false,
-        selectedDepo: formData.sntDisconnectionAssignTo || "", 
+        selectedDepo: formData.sntDisconnectionAssignTo || "",
         //selectedDepo: userDepot || "",
-         ...(durationMins <= 45 && !formData.sigActionsNeeded && !formData.trdActionsNeeded && {
+        ...(durationMins <= 45 && !formData.sigActionsNeeded && !formData.trdActionsNeeded && {
           managerAcceptance: true,
           isSanctioned: true,
         }),
+        activity: formData.activity === "others" ? customActivity : formData.activity
       };
 
       // ─── 7. Submit to backend ────────────────────────────────────────────
@@ -2492,8 +2493,8 @@ export default function CreateBlockRequestPage() {
                           <button
                             type="button"
                             className={`px-5 py-2 rounded-lg border-2 text-[24px] font-extrabold shadow-sm focus:outline-none transition-all ${formData.corridorTypeSelection === "Corridor"
-                                ? "bg-[#e6f7c6] border-black text-black"
-                                : "bg-white border-[#b6e6c6] text-[#888]"
+                              ? "bg-[#e6f7c6] border-black text-black"
+                              : "bg-white border-[#b6e6c6] text-[#888]"
                               }`}
                             onClick={() =>
                               handleInputChange({
@@ -2509,9 +2510,9 @@ export default function CreateBlockRequestPage() {
                           <button
                             type="button"
                             className={`px-5 py-2 rounded-lg border-2 text-[24px] font-extrabold shadow-sm focus:outline-none transition-all ${formData.corridorTypeSelection ===
-                                "Outside Corridor"
-                                ? "bg-[#ffe082] border-black text-black"
-                                : "bg-white border-[#ffe082] text-[#888]"
+                              "Outside Corridor"
+                              ? "bg-[#ffe082] border-black text-black"
+                              : "bg-white border-[#ffe082] text-[#888]"
                               }`}
                             onClick={() =>
                               handleInputChange({
@@ -3108,7 +3109,10 @@ export default function CreateBlockRequestPage() {
                       value={formData.workLocationFrom || ""}
                       onChange={(e) => {
                         const value = e.target.value;
-                        if (value.length === 4) {
+                        const prevValue = formData.workLocationFrom || "";
+                        
+                        // Only auto-add slash if user is typing forward (adding a 4th character)
+                        if (value.length === 4 && value.length > prevValue.length) {
                           handleInputChange({
                             target: {
                               name: "workLocationFrom",
@@ -3133,7 +3137,10 @@ export default function CreateBlockRequestPage() {
                       value={formData.workLocationTo || ""}
                       onChange={(e) => {
                         const value = e.target.value;
-                        if (value.length === 4) {
+                        const prevValue = formData.workLocationTo || "";
+                        
+                        // Only auto-add slash if user is typing forward (adding a 4th character)
+                        if (value.length === 4 && value.length > prevValue.length) {
                           handleInputChange({
                             target: {
                               name: "workLocationTo",
