@@ -3967,7 +3967,7 @@ export let streamData = {
     "Both Direction Affected": ["Rd 1", "Rd 2", "Rd 3"],
     "Both Direction Not Affected": []
   },
-  "CJ(O)-YD": {
+  "CJ-YD": {
     "Up Direction Affected": [],
     "Down Direction Affected": [],
     "Both Direction Affected": ["Rd 1", "Rd 2", "Rd 3"],
@@ -4313,8 +4313,7 @@ export let lineData = {
   'WJ-NTT': ['SINGLE LINE'],
   'WJ-CJ': ['SINGLE LINE'],
   'NTT-CJ(O)': ['SINGLE LINE'],
-  'CJ(O)-CJ(E)': ['SINGLE LINE'],
-  'CJ(E)-TMLP': ['SINGLE LINE'],
+  'CJ-TMLP': ['SINGLE LINE'],
   'TMLP-TKO': ['SINGLE LINE'],
   'TMLP-MLPM': ['SINGLE LINE'],
   'TKO-MLPM': ['SINGLE LINE'],
