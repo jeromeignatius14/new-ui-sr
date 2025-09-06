@@ -28,10 +28,10 @@ export function WeeklySwitcher({
   };
 
   const handleWeekChange = (direction: "prev" | "next") => {
-    // Calculate week increment (always use 7 days for week switcher regardless of mode)
+    // Update URL with new date
     const newDate = direction === "prev"
-      ? new Date(currentWeekStart.getTime() - (7 * 24 * 60 * 60 * 1000))
-      : new Date(currentWeekStart.getTime() + (7 * 24 * 60 * 60 * 1000));
+      ? new Date(currentWeekStart.getTime() - (isUrgentMode ? 24 : 7 * 24) * 60 * 60 * 1000)
+      : new Date(currentWeekStart.getTime() + (isUrgentMode ? 24 : 7 * 24) * 60 * 60 * 1000);
 
     const params = new URLSearchParams(searchParams.toString());
     params.set('date', format(newDate, 'yyyy-MM-dd'));
@@ -49,16 +49,17 @@ export function WeeklySwitcher({
         onClick={() => handleWeekChange("prev")}
         className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200"
       >
-        Previous Week
+        Previous {isUrgentMode ? "Day" : "Week"}
       </button>
       <span className="text-sm font-medium text-black dark:text-black">
-        Week: {formatDateRange()}
+        {isUrgentMode ? "Date: " : "Week: "}
+        {formatDateRange()}
       </span>
       <button
         onClick={() => handleWeekChange("next")}
         className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200"
       >
-        Next Week
+        Next {isUrgentMode ? "Day" : "Week"}
       </button>
     </div>
   );

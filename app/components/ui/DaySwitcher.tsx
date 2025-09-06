@@ -1,5 +1,4 @@
-import { format, addDays, subDays, isBefore, isAfter, isSameDay, startOfWeek, endOfWeek, weeksToDays } from "date-fns";
-import { useRouter, useSearchParams } from "next/navigation";
+import { format, addDays, subDays, isBefore, isAfter, startOfWeek, endOfWeek } from "date-fns";
 
 interface DaySwitcherProps {
   currentDate: Date;
@@ -17,12 +16,9 @@ export function DaySwitcher({
   storageKey = "selectedDate", // Default key
 }: DaySwitcherProps) {
 
-  // Ensure minDate is the start of the week (Monday)
-  const weekStart = startOfWeek(minDate, { weekStartsOn: 1 });
-  // Ensure maxDate is the end of the week (Sunday)
-  const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
-  const canGoPrev = currentDate > minDate && !isSameDay(currentDate, minDate);
-  const canGoNext = !isSameDay(currentDate, maxDate) && currentDate < maxDate;
+
+  const canGoPrev = currentDate > minDate;
+  const canGoNext = currentDate < maxDate;
 
   const handleDateChange = (direction: "prev" | "next") => {
     const newDate =
@@ -30,10 +26,9 @@ export function DaySwitcher({
         ? subDays(currentDate, 1)
         : addDays(currentDate, 1);
 
-    // Make sure we stay within the current week boundaries
     if (
-      (direction === "prev" && newDate < weekStart) ||
-      (direction === "next" && newDate > weekEnd)
+      (direction === "prev" && !canGoPrev) ||
+      (direction === "next" && !canGoNext)
     ) {
       return;
     }
@@ -52,10 +47,7 @@ export function DaySwitcher({
         <button
           onClick={() => handleDateChange("prev")}
           disabled={!canGoPrev}
-          className={`px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded ${!canGoPrev
-            ? "opacity-40 bg-gray-200 dark:bg-gray-700 cursor-not-allowed"
-            : "bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200"
-            }`}
+          className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Previous Day
         </button>
@@ -65,10 +57,7 @@ export function DaySwitcher({
         <button
           onClick={() => handleDateChange("next")}
           disabled={!canGoNext}
-          className={`px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded ${!canGoNext
-            ? "opacity-40 bg-gray-200 dark:bg-gray-700 cursor-not-allowed"
-            : "bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200"
-            }`}
+          className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Next Day
         </button>

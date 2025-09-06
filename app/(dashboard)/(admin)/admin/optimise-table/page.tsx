@@ -242,22 +242,20 @@ export default function OptimiseTablePage() {
     if (dateParam) {
       const parsedDate = new Date(dateParam);
       if (!isNaN(parsedDate.getTime())) {
-        // If there's a date param, we're likely not on first load
-        localStorage.setItem("weekChanged", "false");
         return parsedDate;
       }
     }
-    // On first load, reset the week changed flag
-    localStorage.setItem("weekChanged", "false");
     return new Date();
   });
 
   // Update URL when currentWeekStart changes
   useEffect(() => {
-   const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(searchParams.toString());
     params.set("date", format(currentWeekStart, "yyyy-MM-dd"));
     router.push(`?${params.toString()}`, { scroll: false });
   }, [currentWeekStart, router, searchParams]);
+
+
 
   // Edit state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -269,7 +267,11 @@ export default function OptimiseTablePage() {
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
   const [showDateValidationAlert, setShowDateValidationAlert] = useState(false);
-  const [deptFilter, setDeptFilter] = useState<string>('ALL');
+  const [deptFilter, setDeptFilter] = useState<string>(() => {
+    const deptParam = searchParams.get("dept");
+    // Check if deptParam exists and matches one of our department options
+    return deptParam && ['ENGG', 'S&T', 'TRD'].includes(decodeURIComponent(deptParam)) ? decodeURIComponent(deptParam) : 'ALL';
+  });
   const [workTypeFilter, setWorkTypeFilter] = useState<string>('ALL');
   const [activityFilter, setActivityFilter] = useState<string>('ALL');
   const [timeSlotFilter, setTimeSlotFilter] = useState<string>('ALL');
@@ -277,6 +279,16 @@ export default function OptimiseTablePage() {
   const [showWorkTypeDropdown, setShowWorkTypeDropdown] = useState(false);
   const [showActivityDropdown, setShowActivityDropdown] = useState(false);
   const [showTimeSlotDropdown, setShowTimeSlotDropdown] = useState(false);
+
+  // Update URL when deptFilter changes
+  useEffect(() => {
+    // Only update URL if dept filter changes to something other than ALL
+    if (deptFilter !== 'ALL') {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("dept", encodeURIComponent(deptFilter));
+      router.push(`?${params.toString()}`, { scroll: false });
+    }
+  }, [deptFilter, router, searchParams]);
 
   // Helper function to check if request matches time slot
   const matchesTimeSlot = (request: UserRequest): boolean => {
@@ -441,8 +453,9 @@ export default function OptimiseTablePage() {
         return parsedDate;
       }
     }
-    // Fallback to the start of week if no saved date
-    return startOfWeek(currentWeekStart, { weekStartsOn: 1 });
+
+    // Fallback to the today if no saved date
+    return new Date();
   });
   // Set selectedDate only when minDate is ready
   // amazonq-ignore-next-line
@@ -1095,6 +1108,18 @@ export default function OptimiseTablePage() {
                       setWorkTypeFilter('ALL');
                       setActivityFilter('ALL');
                       setShowDeptDropdown(false);
+
+                      // Update URL with dept parameter
+                      if (dept !== 'ALL') {
+                        const params = new URLSearchParams(searchParams.toString());
+                        params.set("dept", encodeURIComponent(dept));
+                        router.push(`?${params.toString()}`, { scroll: false });
+                      } else {
+                        // Remove dept parameter if ALL is selected
+                        const params = new URLSearchParams(searchParams.toString());
+                        params.delete("dept");
+                        router.push(`?${params.toString()}`, { scroll: false });
+                      }
                     }}
                     className={`block w-full text-left px-3 py-2 hover:bg-gray-100 text-black ${deptFilter === dept ? 'bg-blue-100' : ''
                       }`}
@@ -1283,7 +1308,7 @@ export default function OptimiseTablePage() {
               // No need to manually save here - the DaySwitcher handles it
             }}
             minDate={startOfWeek(currentWeekStart, { weekStartsOn: 1 })}
-            maxDate={addDays(weekStart, 7)}
+            maxDate={addDays(startOfWeek(currentWeekStart, { weekStartsOn: 1 }), 6)}
             storageKey="urgentSelectedDate" // Unique key for urgent block
           />
           <h2 className="border-b-2 pb-2 border-[#13529e] text-[24px] font-semibold text-[#13529e]">Urgent Blocks</h2>
