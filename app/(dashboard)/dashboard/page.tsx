@@ -266,7 +266,7 @@ if (session?.user?.role === "SM") {
     const managerCug = response.data?.data?.managerPhone;
 
     if (managerCug) {
-      window.location.href = `rbms://app?cugNumber=${managerCug}&token=W1IU66ZFEBFBF6C1dGmouN6PVyHARQJg`;
+      window.location.href = `https://smr-dashboard.plattorian.tech/?cugNumber=${managerCug}&token=W1IU66ZFEBFBF6C1dGmouN6PVyHARQJg`
     } else {
       alert("Manager CUG number not found");
     }
