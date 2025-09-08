@@ -254,6 +254,27 @@ export default function ViewRequest() {
                 </tr>
               ) : null}
 
+              {/* Calculating Duration */}
+                <tr>
+                <td className="py-1 font-medium">Duration:</td>
+                <td className="py-1">
+                  {(() => {
+                  if (!request.demandTimeFrom || !request.demandTimeTo) return "N/A";
+                  try {
+                    const from = new Date(request.demandTimeFrom);
+                    const to = new Date(request.demandTimeTo);
+                    const diffMs = to.getTime() - from.getTime();
+                    if (diffMs < 0) return "Invalid duration";
+                    const diffMins = Math.floor(diffMs / 60000);
+                    const hours = Math.floor(diffMins / 60);
+                    const mins = diffMins % 60;
+                    return `${hours}h ${mins}m`;
+                  } catch {
+                    return "Invalid duration";
+                  }
+                  })()}
+                </td>
+                </tr>
               {request.elementarySection && request.selectedDepartment === "TRD" && (
                 <tr>
                   <td className="py-1 font-medium">Elementary Section:</td>
@@ -453,7 +474,7 @@ export default function ViewRequest() {
                       <td className="py-1 font-medium">S&T Lines:</td>
                       <td className="py-1">
                         {request.sntDisconnectionLineFrom &&
-                        request.sntDisconnectionLineTo
+                          request.sntDisconnectionLineTo
                           ? `${request.sntDisconnectionLineFrom} to ${request.sntDisconnectionLineTo}`
                           : "-"}
                       </td>
