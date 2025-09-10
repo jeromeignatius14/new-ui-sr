@@ -3386,7 +3386,7 @@ export let Activity = {
     'TRT ',
     'UTV', 'DTS',
     'T28', 'SQRS',
-    'RGM working','SBCM'
+    'RGM working','SBCM',"MFI","PCTM",
   ],
   'Non-Machine': ['Rail renewal',
     'Welding work',
