@@ -4379,6 +4379,7 @@ export let lineData = {
   'MTMY-VLCY': ['UP line', 'Down line'],
   
   //new
+  'MSB-RPM': ['Up slow', 'Down slow','3rd line', '4th line'],
   'RPM-WST': ['Up slow', 'Down slow'],
   'WST-VPY': ['DN line', 'UP line'],
   'WST-BBQ': ['DN line', 'UP line'],
