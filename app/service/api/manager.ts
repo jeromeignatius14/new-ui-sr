@@ -364,4 +364,12 @@ export const managerService = {
         const response = await axiosInstance.post('/api/user-request/manager/bulk-reject', { ids, reason });
         return response.data;
     },
+
+    /**
+     * Edit a user request's date and time details
+     */
+    editUserRequest: async (id: string, data: { date: string; demandTimeFrom: string; demandTimeTo: string }): Promise<{ status: boolean; message: string }> => {
+        const response = await axiosInstance.put(`/api/user-request/manager/edit/${id}`, data);
+        return response.data;
+    },
 };
