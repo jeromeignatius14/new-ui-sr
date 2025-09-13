@@ -205,11 +205,11 @@ export default function OptimiseTablePage() {
   const searchParams = useSearchParams();
   const { isUrgentMode } = useUrgentMode();
   const queryClient = useQueryClient();
-const [isModalOpen, setIsModalOpen] = useState(false);
-const [isNonUrgentModalOpen, setIsNonUrgentModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isNonUrgentModalOpen, setIsNonUrgentModalOpen] = useState(false);
 
-const [remark, setRemark] = useState("");
-const [selectedRequests, setSelectedRequests] = useState<UserRequest[]>([]);
+  const [remark, setRemark] = useState("");
+  const [selectedRequests, setSelectedRequests] = useState<UserRequest[]>([]);
   // Initialize currentWeekStart from URL parameter or default to current date
   const [currentWeekStart, setCurrentWeekStart] = useState(() => {
     const dateParam = searchParams.get("date");
@@ -240,6 +240,161 @@ const [selectedRequests, setSelectedRequests] = useState<UserRequest[]>([]);
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
+  const [showDateValidationAlert, setShowDateValidationAlert] = useState(false);
+  const [deptFilter, setDeptFilter] = useState<string>(() => {
+    const deptParam = searchParams.get("dept");
+    // Check if deptParam exists and matches one of our department options
+    return deptParam && ['ENGG', 'S&T', 'TRD'].includes(decodeURIComponent(deptParam)) ? decodeURIComponent(deptParam) : 'ALL';
+  });
+  const [workTypeFilter, setWorkTypeFilter] = useState<string>('ALL');
+  const [activityFilter, setActivityFilter] = useState<string>('ALL');
+  const [timeSlotFilter, setTimeSlotFilter] = useState<string>('ALL');
+  const [showDeptDropdown, setShowDeptDropdown] = useState(false);
+  const [showWorkTypeDropdown, setShowWorkTypeDropdown] = useState(false);
+  const [showActivityDropdown, setShowActivityDropdown] = useState(false);
+  const [showTimeSlotDropdown, setShowTimeSlotDropdown] = useState(false);
+
+  // Update URL when deptFilter changes
+  useEffect(() => {
+    // Only update URL if dept filter changes to something other than ALL
+    if (deptFilter !== 'ALL') {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("dept", encodeURIComponent(deptFilter));
+      router.push(`?${params.toString()}`, { scroll: false });
+    }
+  }, [deptFilter, router, searchParams]);
+
+  // Effect for closing dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+
+      // Close department dropdown if clicking outside
+      if (showDeptDropdown && !target.closest('[data-dropdown="department"]')) {
+        setShowDeptDropdown(false);
+      }
+
+      // Close work type dropdown if clicking outside
+      if (showWorkTypeDropdown && !target.closest('[data-dropdown="worktype"]')) {
+        setShowWorkTypeDropdown(false);
+      }
+
+      // Close activity dropdown if clicking outside
+      if (showActivityDropdown && !target.closest('[data-dropdown="activity"]')) {
+        setShowActivityDropdown(false);
+      }
+
+      // Close time slot dropdown if clicking outside
+      if (showTimeSlotDropdown && !target.closest('[data-dropdown="timeslot"]')) {
+        setShowTimeSlotDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDeptDropdown, showWorkTypeDropdown, showActivityDropdown, showTimeSlotDropdown]);
+
+  // Helper function to check if request matches time slot
+  const matchesTimeSlot = (request: UserRequest): boolean => {
+    if (timeSlotFilter === 'ALL') return true;
+    if (!request.demandTimeFrom) return false;
+
+    try {
+      const demandTime = new Date(request.demandTimeFrom);
+      if (isNaN(demandTime.getTime())) return false;
+
+      const hour = demandTime.getUTCHours();
+
+      switch (timeSlotFilter) {
+        case 'Morning (4:00-12:00)':
+          return hour >= 4 && hour < 12;
+        case 'Afternoon (12:00-20:00)':
+          return hour >= 12 && hour < 20;
+        case 'Night (20:00-4:00)':
+          return hour >= 20 || hour < 4;
+        default:
+          return true;
+      }
+    } catch (e) {
+      console.error("Error parsing time:", e);
+      return false;
+    }
+  };
+
+  // Helper function to check if request matches work type
+  const matchesWorkType = (request: UserRequest): boolean => {
+    if (workTypeFilter === 'ALL') return true;
+
+    // For Engineering
+    if (request.selectedDepartment === 'ENGG') {
+      if (request.workType && request.workType.includes('Machine')) {
+        return workTypeFilter === 'Machine';
+      } else {
+        return workTypeFilter === 'Non-Machine';
+      }
+    }
+
+    // For S&T
+    if (request.selectedDepartment === 'S&T') {
+      return workTypeFilter === 'Gear';
+    }
+
+    // For TRD
+    if (request.selectedDepartment === 'TRD') {
+      if (request.workType && request.workType.includes('Tw')) {
+        return workTypeFilter === 'Tw';
+      } else {
+        return workTypeFilter === 'Lt';
+      }
+    }
+
+    return false;
+  };
+
+  // Helper function for getting workTypes for a department
+  const getWorkTypesForDept = (dept: string): string[] => {
+    if (dept === 'ENGG') return ['Machine', 'Non-Machine'];
+    if (dept === 'S&T') return ['Gear'];
+    if (dept === 'TRD') return ['Tw', 'Lt'];
+    return [];
+  };
+
+  // Helper function for getting activities for a work type
+  const getActivitiesForWorkType = (workTypeSelected: string): string[] => {
+    // Return common activities first, then specific ones
+    if (workTypeSelected === 'ALL') return [];
+
+    if (workTypeSelected === 'Gear') {
+      return ['Point', 'EI', 'Signal', 'DC Track', 'AFTC', 'SSDAC', 'MSDAC', 'Panel', 'LC Gate Mechanical', 'LC Gate ELB'];
+    }
+
+    if (workTypeSelected === 'Tw' || workTypeSelected === 'Lt') {
+      return ['AOH', 'POH', 'IOH', 'RE POH', 'RD WORK', 'TURN OUT CHECKING', 'CROSS OVER CHECKING'];
+    }
+
+    if (workTypeSelected === 'Machine') {
+      return ['BCM', 'DTE', 'CSM', 'DUOMAT', 'UNIMAT', 'MPT', 'BRM', 'TRT', 'UTV', 'DTS', 'T28', 'SQRS'];
+    }
+
+    if (workTypeSelected === 'Non-Machine') {
+      return ['Rail renewal', 'Welding work', 'Destressing work', 'Switch renewal', 'CMS Crossing renewal', 'SEJ Renewal'];
+    }
+
+    return [];
+  };
+
+  // Helper function for matching activity
+  const matchesActivity = (request: UserRequest): boolean => {
+    if (activityFilter === 'ALL') return true;
+    if (!request.activity) return false;
+
+    // Check if the activity exactly matches or is a substring (more flexible matching)
+    return request.activity === activityFilter ||
+      request.activity.includes(activityFilter) ||
+      activityFilter.includes(request.activity);
+  };
 
   // For urgent mode, use the same day for start and end
   // For non-urgent mode, use Monday to Sunday
@@ -298,11 +453,22 @@ const [selectedRequests, setSelectedRequests] = useState<UserRequest[]>([]);
   // Filter requests based on urgent mode
   const filteredRequests =
     data?.data?.requests?.filter((request: UserRequest) => {
-      return isUrgentMode //false
+      // First check if it matches urgent mode filter
+      const matchesUrgentMode = isUrgentMode //false
         ? request.corridorType === "Urgent Block" ||
         request.workType === "EMERGENCY"
         : request.corridorType !== "Urgent Block" &&
         request.workType !== "EMERGENCY";
+
+      if (!matchesUrgentMode) return false;
+
+      // Apply additional filters
+      if (deptFilter !== 'ALL' && request.selectedDepartment !== deptFilter) return false;
+      if (!matchesWorkType(request)) return false;
+      if (!matchesActivity(request)) return false;
+      if (!matchesTimeSlot(request)) return false;
+
+      return true;
     }) || [];
 
   const UrgentRequests =
@@ -369,17 +535,17 @@ const [selectedRequests, setSelectedRequests] = useState<UserRequest[]>([]);
 
 
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
-  // Try to get saved date from localStorage
-  const savedDate = localStorage.getItem("urgentSelectedDate");
-  if (savedDate) {
-    const parsedDate = new Date(savedDate);
-    if (!isNaN(parsedDate.getTime())) {
-      return parsedDate;
+    // Try to get saved date from localStorage
+    const savedDate = localStorage.getItem("urgentSelectedDate");
+    if (savedDate) {
+      const parsedDate = new Date(savedDate);
+      if (!isNaN(parsedDate.getTime())) {
+        return parsedDate;
+      }
     }
-  }
-  // Fallback to the start of week if no saved date
-  return startOfWeek(currentWeekStart, { weekStartsOn: 1 });
-});
+    // Fallback to the start of week if no saved date
+    return startOfWeek(currentWeekStart, { weekStartsOn: 1 });
+  });
   // Set selectedDate only when minDate is ready
   useEffect(() => {
     if (minDate && !selectedDate) {
@@ -390,27 +556,36 @@ const [selectedRequests, setSelectedRequests] = useState<UserRequest[]>([]);
   const urgentRequestDate = UrgentRequests.filter((req: any) => {
     const requestDate =
       typeof req.date === "string" ? parseISO(req.date) : req.date;
-    return isSameDay(requestDate, selectedDate);
-  }).filter((request: UserRequest) => !request.isSanctioned)
-    .sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime());
+
+    // Check date
+    if (!isSameDay(requestDate, selectedDate)) return false;
+
+    // Apply additional filters
+    if (deptFilter !== 'ALL' && req.selectedDepartment !== deptFilter) return false;
+    if (!matchesWorkType(req)) return false;
+    if (!matchesActivity(req)) return false;
+    if (!matchesTimeSlot(req)) return false;
+
+    return !req.isSanctioned;
+  }).sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime());
 
   // --- Custom: Only show requests that are pending with me, not sanctioned, and after today ---
-const today = new Date();
-today.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-const pendingRequests = (data?.data?.requests || []).filter((request: UserRequest) => {
-  if (!request.status || request.status.toUpperCase() !== "APPROVED") return false;
-  if (request.isSanctioned) return false;
-  if (!request.date) return false;
+  const pendingRequests = (data?.data?.requests || []).filter((request: UserRequest) => {
+    if (!request.status || request.status.toUpperCase() !== "APPROVED") return false;
+    if (request.isSanctioned) return false;
+    if (!request.date) return false;
 
-  const reqDate = new Date(request.date);
-  reqDate.setHours(0, 0, 0, 0);
+    const reqDate = new Date(request.date);
+    reqDate.setHours(0, 0, 0, 0);
 
-  // Include requests for today and future dates
-  return reqDate >= today;
-});
+    // Include requests for today and future dates
+    return reqDate >= today;
+  });
 
-// console.log("pendingRequests.length", pendingRequests.length);
+  // console.log("pendingRequests.length", pendingRequests.length);
   // Group and sort
   // const urgentRequests = pendingRequests
   //   .filter((r: UserRequest) => r.corridorType === "Urgent Block" || r.workType === "EMERGENCY")
@@ -423,86 +598,98 @@ const pendingRequests = (data?.data?.requests || []).filter((request: UserReques
   //   .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
 
-const urgentRequests = pendingRequests
+  const urgentRequests = pendingRequests
     .filter((r: UserRequest) => {
-        // First check if it's an urgent request
-        const isUrgent = r.corridorType === "Urgent Block" || r.workType === "EMERGENCY";
-        if (!isUrgent) return false;
+      // First check if it's an urgent request
+      const isUrgent = r.corridorType === "Urgent Block" || r.workType === "EMERGENCY";
+      if (!isUrgent) return false;
 
-        // Handle cases where both flags are true
-        if (r.powerBlockRequired && r.sntDisconnectionRequired) {
-            return r.trdActionsNeeded && r.sigActionsNeeded;
-        }
+      // Handle cases where both flags are true
+      if (r.powerBlockRequired && r.sntDisconnectionRequired) {
+        return r.trdActionsNeeded && r.sigActionsNeeded;
+      }
 
-        // Handle powerBlockRequired case
-        if (r.powerBlockRequired) {
-            return r.trdActionsNeeded;
-        }
+      // Handle powerBlockRequired case
+      if (r.powerBlockRequired) {
+        return r.trdActionsNeeded;
+      }
 
-        // Handle sntDisconnectionRequired case
-        if (r.sntDisconnectionRequired) {
-            return r.sigActionsNeeded;
-        }
+      // Handle sntDisconnectionRequired case
+      if (r.sntDisconnectionRequired) {
+        return r.sigActionsNeeded;
+      }
 
-        // If neither special flag is true, just return the urgent status
-        return true;
+      // If neither special flag is true, just return the urgent status
+      return true;
     })
     .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
 
 
-const corridorRequestsFiltered = pendingRequests
+  const corridorRequestsFiltered = pendingRequests
     .filter((r: UserRequest) => {
-        // First check if it's an urgent request
-        const isCorridor = r.corridorType === "Corridor" ||r.corridorType === "Corridor Block";
-        if (!isCorridor) return false;
+      // First check if it's a corridor request
+      const isCorridor = r.corridorType === "Corridor" || r.corridorType === "Corridor Block";
+      if (!isCorridor) return false;
 
-        // Handle cases where both flags are true
-        if (r.powerBlockRequired && r.sntDisconnectionRequired) {
-            return r.trdActionsNeeded && r.sigActionsNeeded;
-        }
+      // Apply our new filters
+      if (deptFilter !== 'ALL' && r.selectedDepartment !== deptFilter) return false;
+      if (!matchesWorkType(r)) return false;
+      if (!matchesActivity(r)) return false;
+      if (!matchesTimeSlot(r)) return false;
 
-        // Handle powerBlockRequired case
-        if (r.powerBlockRequired) {
-            return r.trdActionsNeeded;
-        }
+      // Handle cases where both flags are true
+      if (r.powerBlockRequired && r.sntDisconnectionRequired) {
+        return r.trdActionsNeeded && r.sigActionsNeeded;
+      }
 
-        // Handle sntDisconnectionRequired case
-        if (r.sntDisconnectionRequired) {
-            return r.sigActionsNeeded;
-        }
+      // Handle powerBlockRequired case
+      if (r.powerBlockRequired) {
+        return r.trdActionsNeeded;
+      }
 
-        // If neither special flag is true, just return the urgent status
-        return true;
+      // Handle sntDisconnectionRequired case
+      if (r.sntDisconnectionRequired) {
+        return r.sigActionsNeeded;
+      }
+
+      // If neither special flag is true, just return the status
+      return true;
     })
     .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
 
 
 
-const nonCorridorRequestsFiltered = pendingRequests
+  const nonCorridorRequestsFiltered = pendingRequests
     .filter((r: UserRequest) => {
-        // First check if it's an urgent request
-        const isNoncorridor = r.corridorType === "Outside Corridor" ||r.corridorType === "Non-Corridor Block";
-        if (!isNoncorridor) return false;
+      // First check if it's a non-corridor request
+      const isNoncorridor = r.corridorType === "Outside Corridor" || r.corridorType === "Non-Corridor Block";
+      if (!isNoncorridor) return false;
 
-        // Handle cases where both flags are true
-        if (r.powerBlockRequired && r.sntDisconnectionRequired) {
-            return r.trdActionsNeeded && r.sigActionsNeeded;
-        }
+      // Apply our new filters
+      if (deptFilter !== 'ALL' && r.selectedDepartment !== deptFilter) return false;
+      if (!matchesWorkType(r)) return false;
+      if (!matchesActivity(r)) return false;
+      if (!matchesTimeSlot(r)) return false;
 
-        // Handle powerBlockRequired case
-        if (r.powerBlockRequired) {
-            return r.trdActionsNeeded;
-        }
+      // Handle cases where both flags are true
+      if (r.powerBlockRequired && r.sntDisconnectionRequired) {
+        return r.trdActionsNeeded && r.sigActionsNeeded;
+      }
 
-        // Handle sntDisconnectionRequired case
-        if (r.sntDisconnectionRequired) {
-            return r.sigActionsNeeded;
-        }
+      // Handle powerBlockRequired case
+      if (r.powerBlockRequired) {
+        return r.trdActionsNeeded;
+      }
 
-        // If neither special flag is true, just return the urgent status
-        return true;
+      // Handle sntDisconnectionRequired case
+      if (r.sntDisconnectionRequired) {
+        return r.sigActionsNeeded;
+      }
+
+      // If neither special flag is true, just return the status
+      return true;
     })
     .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
@@ -625,14 +812,14 @@ const nonCorridorRequestsFiltered = pendingRequests
     }
   };
 
-  const handleSendUrgentRequests = async (requests : UserRequest[],remark:string) => {
+  const handleSendUrgentRequests = async (requests: UserRequest[], remark: string) => {
     try {
       const UrgentRequestsData =
         requests?.filter(
-            (request: UserRequest) =>
-              request.optimizeTimeFrom != null &&
-              request.optimizeTimeTo != null
-          )
+          (request: UserRequest) =>
+            request.optimizeTimeFrom != null &&
+            request.optimizeTimeTo != null
+        )
           .map((request: UserRequest) => ({
             id: request.id,
             optimizeTimeFrom: request.optimizeTimeFrom,
@@ -661,15 +848,15 @@ const nonCorridorRequestsFiltered = pendingRequests
     }
   };
 
-  const handleSendNonUrgentRequests = async (requests : UserRequest[],remark:string) => {
+  const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: string) => {
     try {
       // Only send the required fields for each non-urgent request
       const nonUrgentRequestsData =
         requests?.filter(
-            (request: UserRequest) =>
-              request.optimizeTimeFrom != null &&
-              request.optimizeTimeTo != null
-          )
+          (request: UserRequest) =>
+            request.optimizeTimeFrom != null &&
+            request.optimizeTimeTo != null
+        )
           .map((request: UserRequest) => ({
             id: request.id,
             optimizeTimeFrom: request.optimizeTimeFrom,
@@ -743,7 +930,7 @@ const nonCorridorRequestsFiltered = pendingRequests
 
   const handleOptimize = async () => {
 
-    const preData = isUrgentRequests ? urgentRequestDate : [...corridorRequestsFiltered, ...  nonCorridorRequestsFiltered]
+    const preData = isUrgentRequests ? urgentRequestDate : [...corridorRequestsFiltered, ...nonCorridorRequestsFiltered]
     if (!preData) return;
     try {
       // Preprocess the requests
@@ -940,11 +1127,11 @@ const nonCorridorRequestsFiltered = pendingRequests
   }
 
 
-        
+
 
   return (
 
-    
+
     <div className="min-h-screen w-screen flex flex-col justify-between bg-white p-3 border border-black">
       <div>
         {/* Overall Title */}
@@ -955,6 +1142,159 @@ const nonCorridorRequestsFiltered = pendingRequests
           </div>
         )}
 
+        {/* Filters UI */}
+        <div className="flex gap-4 mb-4 p-3 bg-gray-50 border border-gray-300 rounded">
+          {/* Department Filter */}
+          <div className="relative" data-dropdown="department">
+            <button
+              onClick={() => setShowDeptDropdown(!showDeptDropdown)}
+              className="px-4 py-2 bg-white border border-black rounded flex items-center gap-2 text-black"
+            >
+              Dept: {deptFilter}
+              <span>▼</span>
+            </button>
+            {showDeptDropdown && (
+              <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[120px]">
+                {['ALL', 'S&T', 'ENGG', 'TRD'].map((dept) => (
+                  <button
+                    key={dept}
+                    onClick={() => {
+                      setDeptFilter(dept);
+                      setWorkTypeFilter('ALL');
+                      setActivityFilter('ALL');
+                      setShowDeptDropdown(false);
+
+                      // Update URL with dept parameter
+                      if (dept !== 'ALL') {
+                        const params = new URLSearchParams(searchParams.toString());
+                        params.set("dept", encodeURIComponent(dept));
+                        router.push(`?${params.toString()}`, { scroll: false });
+                      } else {
+                        // Remove dept parameter if ALL is selected
+                        const params = new URLSearchParams(searchParams.toString());
+                        params.delete("dept");
+                        router.push(`?${params.toString()}`, { scroll: false });
+                      }
+                    }}
+                    className={`block w-full text-left px-3 py-2 hover:bg-gray-100 text-black ${deptFilter === dept ? 'bg-blue-100' : ''
+                      }`}
+                  >
+                    {dept}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Work Type Filter */}
+          <div className="relative" data-dropdown="worktype">
+            <button
+              onClick={() => deptFilter !== 'ALL' && setShowWorkTypeDropdown(!showWorkTypeDropdown)}
+              className={`px-4 py-2 bg-white border border-black rounded flex items-center gap-2 text-black ${deptFilter === 'ALL' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                }`}
+              disabled={deptFilter === 'ALL'}
+            >
+              Work Type: {workTypeFilter}
+              <span>▼</span>
+            </button>
+            {showWorkTypeDropdown && deptFilter !== 'ALL' && (
+              <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[150px]">
+                {['ALL', ...getWorkTypesForDept(deptFilter)].map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => {
+                      setWorkTypeFilter(type);
+                      setActivityFilter('ALL');
+                      setShowWorkTypeDropdown(false);
+                    }}
+                    className={`block w-full text-left px-3 py-2 hover:bg-gray-100 text-black ${workTypeFilter === type ? 'bg-blue-100' : ''
+                      }`}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Activity Filter */}
+          <div className="relative" data-dropdown="activity">
+            <button
+              onClick={() => workTypeFilter !== 'ALL' && setShowActivityDropdown(!showActivityDropdown)}
+              className={`px-4 py-2 bg-white border border-black rounded flex items-center gap-2 text-black ${workTypeFilter === 'ALL' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                }`}
+              disabled={workTypeFilter === 'ALL'}
+            >
+              Activity: {activityFilter}
+              <span>▼</span>
+            </button>
+            {showActivityDropdown && workTypeFilter !== 'ALL' && (
+              <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[150px] max-h-[300px] overflow-y-auto">
+                {['ALL', ...getActivitiesForWorkType(workTypeFilter)].map((activity) => (
+                  <button
+                    key={activity}
+                    onClick={() => {
+                      setActivityFilter(activity);
+                      setShowActivityDropdown(false);
+                    }}
+                    className={`block w-full text-left px-3 py-2 hover:bg-gray-100 text-black ${activityFilter === activity ? 'bg-blue-100' : ''
+                      }`}
+                  >
+                    {activity}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Time Slot Filter */}
+          <div className="relative" data-dropdown="timeslot">
+            <button
+              onClick={() => setShowTimeSlotDropdown(!showTimeSlotDropdown)}
+              className="px-4 py-2 bg-white border border-black rounded flex items-center gap-2 text-black"
+            >
+              Time: {timeSlotFilter}
+              <span>▼</span>
+            </button>
+            {showTimeSlotDropdown && (
+              <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[150px]">
+                {['ALL', 'Morning (4:00-12:00)', 'Afternoon (12:00-20:00)', 'Night (20:00-4:00)'].map((slot) => (
+                  <button
+                    key={slot}
+                    onClick={() => {
+                      setTimeSlotFilter(slot);
+                      setShowTimeSlotDropdown(false);
+                    }}
+                    className={`block w-full text-left px-3 py-2 hover:bg-gray-100 text-black ${timeSlotFilter === slot ? 'bg-blue-100' : ''
+                      }`}
+                  >
+                    {slot}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          {/* Clear All Filters Button */}
+          <div>
+            <button
+              onClick={() => {
+                setDeptFilter('ALL');
+                setWorkTypeFilter('ALL');
+                setActivityFilter('ALL');
+                setTimeSlotFilter('ALL');
+
+                // Clear URL parameters
+                const params = new URLSearchParams(searchParams.toString());
+                params.delete("dept");
+                router.push(`?${params.toString()}`, { scroll: false });
+              }}
+              className="px-4 py-2 bg-red-500 text-white border border-red-600 rounded hover:bg-red-600 transition-colors"
+            >
+              Clear All
+            </button>
+          </div>
+
+        </div>
         {/* Week Switcher at the top */}
         <div className="border-b-2 border-[#13529e] pb-3 flex justify-between items-center mb-4">
           <WeeklySwitcher
@@ -963,68 +1303,67 @@ const nonCorridorRequestsFiltered = pendingRequests
             weekStartsOn={1}
           />
         </div>
-{isOptimizeDialogOpen && (() => {
-  // Calculate the requests to be optimized for dialog preview
-  const preData = isUrgentRequests ? urgentRequestDate : [...corridorRequestsFiltered, ...nonCorridorRequestsFiltered];
-  const requestsToOptimize = preData.filter(
-    (request: UserRequest) => {
-      const requestDate = format(parseISO(request.date), "yyyy-MM-dd");
-      const selected = format(selectedDate, "yyyy-MM-dd");
-      return isUrgentRequests
-        ? request.corridorType === "Urgent Block" && requestDate === selected
-        : request.corridorType !== "Urgent Block";
-    }
-  );
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
-      <div className="bg-white p-6 w-full max-w-md border border-black">
-        <div className="border-b-2 border-[#13529e] pb-3 mb-4 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <h2 className="text-lg font-bold text-[#13529e]">
-              Optimize Requests
-            </h2>
-            <span
-              className={`px-3 py-1 text-sm rounded-full ${
-                isUrgentMode
-                  ? "bg-red-100 text-red-800"
-                  : "bg-blue-100 text-blue-800"
-              } border border-black`}
-            >
-              {isUrgentMode ? "Urgent Mode" : "Normal Mode"}
-            </span>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setIsOptimizeDialogOpen(false)}
-              className="px-4 py-1 text-sm bg-white text-[#13529e] border border-black"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => handleOptimize()}
-              disabled={optimizeMutation.isPending}
-              className="px-4 py-1 text-sm bg-[#13529e] text-white border border-black disabled:opacity-50"
-            >
-              {optimizeMutation.isPending ? "Optimizing..." : "Optimize"}
-            </button>
-          </div>
-        </div>
-        <div className="mb-4 space-y-2">
-          <p>Are you sure you want to optimize the requests for:</p>
-          <p className="font-medium">
-            Week: {format(weekStart, "dd MMM")} -{" "}
-            {format(weekEnd, "dd MMM yyyy")}
-          </p>
-          <p className="font-medium">
-    {isUrgentRequests
-      ? `Total Block Request for Urgent: ${requestsToOptimize.length}`
-      : `Total Block Request for Corridor and Outside Corridor: ${requestsToOptimize.length}`}
-  </p>
-        </div>
-      </div>
-    </div>
-  );
-})()}
+        {isOptimizeDialogOpen && (() => {
+          // Calculate the requests to be optimized for dialog preview
+          const preData = isUrgentRequests ? urgentRequestDate : [...corridorRequestsFiltered, ...nonCorridorRequestsFiltered];
+          const requestsToOptimize = preData.filter(
+            (request: UserRequest) => {
+              const requestDate = format(parseISO(request.date), "yyyy-MM-dd");
+              const selected = format(selectedDate, "yyyy-MM-dd");
+              return isUrgentRequests
+                ? request.corridorType === "Urgent Block" && requestDate === selected
+                : request.corridorType !== "Urgent Block";
+            }
+          );
+          return (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
+              <div className="bg-white p-6 w-full max-w-md border border-black">
+                <div className="border-b-2 border-[#13529e] pb-3 mb-4 flex justify-between items-center">
+                  <div className="flex items-center gap-4">
+                    <h2 className="text-lg font-bold text-[#13529e]">
+                      Optimize Requests
+                    </h2>
+                    <span
+                      className={`px-3 py-1 text-sm rounded-full ${isUrgentMode
+                          ? "bg-red-100 text-red-800"
+                          : "bg-blue-100 text-blue-800"
+                        } border border-black`}
+                    >
+                      {isUrgentMode ? "Urgent Mode" : "Normal Mode"}
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setIsOptimizeDialogOpen(false)}
+                      className="px-4 py-1 text-sm bg-white text-[#13529e] border border-black"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => handleOptimize()}
+                      disabled={optimizeMutation.isPending}
+                      className="px-4 py-1 text-sm bg-[#13529e] text-white border border-black disabled:opacity-50"
+                    >
+                      {optimizeMutation.isPending ? "Optimizing..." : "Optimize"}
+                    </button>
+                  </div>
+                </div>
+                <div className="mb-4 space-y-2">
+                  <p>Are you sure you want to optimize the requests for:</p>
+                  <p className="font-medium">
+                    Week: {format(weekStart, "dd MMM")} -{" "}
+                    {format(weekEnd, "dd MMM yyyy")}
+                  </p>
+                  <p className="font-medium">
+                    {isUrgentRequests
+                      ? `Total Block Request for Urgent: ${requestsToOptimize.length}`
+                      : `Total Block Request for Corridor and Outside Corridor: ${requestsToOptimize.length}`}
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
         {/* Urgent Blocks Section - now at the top */}
         <div className="mt-4 mb-8">
           <h2 className="border-b-2 pb-2 border-[#13529e] text-[24px] font-semibold text-[#13529e]">Urgent Blocks</h2>
@@ -1049,15 +1388,15 @@ const nonCorridorRequestsFiltered = pendingRequests
             </button>
           </div>
           <DaySwitcher
-  currentDate={selectedDate}
-  onDateChange={(newDate) => {
-    setSelectedDate(newDate);
-    // No need to manually save here - the DaySwitcher handles it
-  }}
-  minDate={startOfWeek(currentWeekStart, { weekStartsOn: 1 })}
-  maxDate={addDays(weekStart, 7)}
-  storageKey="urgentSelectedDate" // Unique key for urgent block
-/>
+            currentDate={selectedDate}
+            onDateChange={(newDate) => {
+              setSelectedDate(newDate);
+              // No need to manually save here - the DaySwitcher handles it
+            }}
+            minDate={startOfWeek(currentWeekStart, { weekStartsOn: 1 })}
+            maxDate={addDays(weekStart, 7)}
+            storageKey="urgentSelectedDate" // Unique key for urgent block
+          />
           {/* <DaySwitcher
             currentDate={selectedDate}
             onDateChange={(newDate) => setSelectedDate(newDate)}
@@ -1090,7 +1429,7 @@ const nonCorridorRequestsFiltered = pendingRequests
                 )}
                 {urgentRequestDate.map((request: UserRequest) => (
                   <tr key={`request-${request.id}-${request.date}`} className={`hover:bg-blue-50 transition-colors ${request.optimizeTimeFrom && request.optimizeTimeTo ? "bg-green-50" : ""}`}>
-                     <td className="border border-black p-2 text-[24px]">
+                    <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (
                         <input
                           type="date"
@@ -1190,33 +1529,33 @@ const nonCorridorRequestsFiltered = pendingRequests
                               //       handleSendUrgentRequests([request]);
                               //   }
                               // }
-                           onClick={() => {
-                                  setSelectedRequests([request]); // save clicked request
-                                   setIsModalOpen(true);           // open popup
-                              }}                                                 
+                              onClick={() => {
+                                setSelectedRequests([request]); // save clicked request
+                                setIsModalOpen(true);           // open popup
+                              }}
                             >
                               Sanction
                             </button>
-                              <button
-                                className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
-                                onClick={() => setModifyReturnOpenId(request.id)}
-                              >
-                                Modify/Return
-                              </button>
+                            <button
+                              className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
+                              onClick={() => setModifyReturnOpenId(request.id)}
+                            >
+                              Modify/Return
+                            </button>
                           </>
                         )}
                       </div>
                     </td>
                     <td className="border border-black p-2 text-[24px]">
-  <div className="flex gap-2">
-    <Link
-      href={`/admin/view-request/${request.id}?from=request-table`}
-      className="px-2 py-1 bg-blue-600 text-white border border-black rounded inline-block text-center"
-    >
-      View
-    </Link>
-  </div>
-</td>
+                      <div className="flex gap-2">
+                        <Link
+                          href={`/admin/view-request/${request.id}?from=request-table`}
+                          className="px-2 py-1 bg-blue-600 text-white border border-black rounded inline-block text-center"
+                        >
+                          View
+                        </Link>
+                      </div>
+                    </td>
 
                   </tr>
                 ))}
@@ -1283,7 +1622,7 @@ const nonCorridorRequestsFiltered = pendingRequests
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
                     <ColumnHeader icon="action" title="Actions" />
                   </th>
-                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
                     <ColumnHeader icon="view" title="View" />
                   </th>
                 </tr>
@@ -1299,221 +1638,7 @@ const nonCorridorRequestsFiltered = pendingRequests
                     </td>
                   </tr>
                 )}
-                {corridorRequestsFiltered.sort((a:any, b:any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
-                  <tr
-                    key={`request-${request.id}-${request.date}`}
-                    className={`hover:bg-blue-50 transition-colors ${request.optimizeTimeFrom && request.optimizeTimeTo
-                      ? "bg-green-50"
-                      : ""
-                      }`}
-                  >
-                    <td className="border border-black p-2 text-[24px]">
-                      {editingId === request.id ? (
-                        <input
-                          type="date"
-                          value={editDate}
-                          onChange={(e) => setEditDate(e.target.value)}
-                          className="w-28 border p-1 text-sm rounded"
-                        />
-                      ) : (
-                        dayjs(request.date).format("DD-MM-YY")
-                      )}
-                    </td>
-                    <td className="border border-black p-2 text-[24px]">
-                      {request.selectedDepartment}
-                    </td>
-                    <td className="border border-black p-2 text-[24px]">
-                      {request.selectedSection}
-                    </td>
-                    <td className="border border-black p-2 text-[24px]">
-                      {request.selectedDepo}
-                    </td>
-                    <td className="border border-black p-2 text-[24px]">
-                      {request.missionBlock}
-                    </td>
-                    <td className="border border-black p-2 text-[24px]">
-                      {getLineOrRoad(request)}
-                    </td>
-                    <td className="border border-black p-2 text-[24px]">
-                      {formatTime(request.demandTimeFrom)} -{" "}
-                      {formatTime(request.demandTimeTo)}
-                    </td>
-                    <td className="border border-black p-2 text-[24px]">
-                      {editingId === request.id ? (
-                        <div className="flex gap-1 items-center">
-                          <input
-                            type="time"
-                            value={timeFrom}
-                            onChange={(e) => setTimeFrom(e.target.value)}
-                            className="w-20 border p-1 text-sm rounded"
-                          />
-                          <span>-</span>
-                          <input
-                            type="time"
-                            value={timeTo}
-                            onChange={(e) => setTimeTo(e.target.value)}
-                            className="w-20 border p-1 text-sm rounded"
-                          />
-                        </div>
-                      ) : (
-                        <>
-                          {request.optimizeTimeFrom &&
-                            request.optimizeTimeFrom !== "WrongRequest"
-                            ? formatTime(request.optimizeTimeFrom)
-                            : "N/A"}{" "}
-                          -{" "}
-                          {request.optimizeTimeTo &&
-                            request.optimizeTimeTo !== "WrongRequest"
-                            ? formatTime(request.optimizeTimeTo)
-                            : "N/A"}
-                        </>
-                      )}
-                    </td>
-
-                    <td className="border border-black p-2 text-[24px]">
-                      {request.activity}
-                    </td>
-
-                    <td className="border border-black p-2 text-[24px]">
-                      <div className="flex gap-2">
-                       {request.optimizeStatus === false ? (
-                          <span>Not Yet Optimized</span>
-                        ) : editingId === request.id ? (
-                          <>
-                            <button
-                              onClick={() => handleUpdateClick(request.id)}
-                              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-                              disabled={updateOptimizedTimes.isPending}
-                            >
-                              {updateOptimizedTimes.isPending ? "Saving..." : "Save"}
-                            </button>
-                            <button
-                              onClick={handleCancelEdit}
-                              className="px-2 py-1 text-[24px] bg-gray-400 text-white border border-black rounded"
-                            >
-                              Cancel
-                            </button>
-                          </>
-                        ) : modifyReturnOpenId === request.id ? (
-                          <>
-                            <button
-                              className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-                              onClick={() => { setEditingId(request.id); setEditDate(request.date.split("T")[0]); setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : ""); setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : ""); setModifyReturnOpenId(null); }}
-                            >
-                              Modify
-                            </button>
-                            <button
-                              className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
-                              onClick={() => { handleRejectClick(request.id); setModifyReturnOpenId(null); }}
-                            >
-                              Return
-                            </button>
-                            <button
-                              className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
-                              onClick={() => setModifyReturnOpenId(null)}
-                            >
-                              Cancel
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-                              // onClick={
-                              //   () => {
-                              //       handleSendNonUrgentRequests([request]);
-                              //   }
-                              // }
-                              onClick={() => {
-                                 setSelectedRequests([request]); // save clicked request
-                                   setIsNonUrgentModalOpen(true);           // open popup
-                                       }}
-                            >
-                              Sanction
-                            </button>
-                              <button
-                                className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
-                                onClick={() => setModifyReturnOpenId(request.id)}
-                              >
-                                Modify/Return
-                              </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                                      <td className="border border-black p-2 text-[24px]">
-  <div className="flex gap-2">
-    <Link
-      href={`/admin/view-request/${request.id}?from=request-table`}
-      className="px-2 py-1 bg-blue-600 text-white border border-black rounded inline-block text-center"
-    >
-      View
-    </Link>
-  </div>
-</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Non-Corridor Requests Section */}
-        <div>
-          <h2 className="text-[24px] font-semibold mb-2 text-[#13529e]">Non-Corridor Requests</h2>
-          <div className="overflow-x-auto max-h-[70vh] overflow-y-auto rounded-lg border border-gray-300 shadow-sm">
-            <table className="w-full border-collapse text-black bg-white">
-              <thead className="sticky top-0 z-10 bg-gray-100 shadow">
-                <tr className="bg-gray-50">
-                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
-                    <ColumnHeader icon="date" title="Date" />
-                  </th>
-                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
-                    <ColumnHeader icon="date" title="Dept" />
-                  </th>
-                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
-                    <ColumnHeader icon="section" title="Major Section" />
-                  </th>
-                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
-                    <ColumnHeader icon="section" title="SSE" />
-                  </th>
-                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
-                    <ColumnHeader icon="section" title="Block Section" />
-                  </th>
-                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
-                    <ColumnHeader icon="line" title="Line / Road" />
-                  </th>
-                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
-                    <ColumnHeader icon="time" title="Demanded" />
-                  </th>
-                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
-                    <ColumnHeader icon="time" title="Optimize" />
-                  </th>
-
-                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
-                    <ColumnHeader icon="work" title="Activity" />
-                  </th>
-
-                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
-                    <ColumnHeader icon="action" title="Actions" />
-                  </th>
-                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
-                    <ColumnHeader icon="view" title="View" />
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {nonCorridorRequestsFiltered.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={12}
-                      className="border border-black p-2 text-[24px] text-left"
-                    >
-                      No requests found.
-                    </td>
-                  </tr>
-                )}
-                {nonCorridorRequestsFiltered.sort((a:any, b:any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
+                {corridorRequestsFiltered.sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
                   <tr
                     key={`request-${request.id}-${request.date}`}
                     className={`hover:bg-blue-50 transition-colors ${request.optimizeTimeFrom && request.optimizeTimeTo
@@ -1639,32 +1764,246 @@ const nonCorridorRequestsFiltered = pendingRequests
                               //   }
                               // }
                               onClick={() => {
-                               setSelectedRequests([request]); // save clicked request
+                                setSelectedRequests([request]); // save clicked request
                                 setIsNonUrgentModalOpen(true);           // open popup
-                               }}
+                              }}
                             >
                               Sanction
                             </button>
-                              <button
-                                className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
-                                onClick={() => setModifyReturnOpenId(request.id)}
-                              >
-                                Modify/Return
-                              </button>
+                            <button
+                              className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
+                              onClick={() => setModifyReturnOpenId(request.id)}
+                            >
+                              Modify/Return
+                            </button>
                           </>
                         )}
                       </div>
                     </td>
                     <td className="border border-black p-2 text-[24px]">
-  <div className="flex gap-2">
-    <Link
-      href={`/admin/view-request/${request.id}?from=request-table`}
-      className="px-2 py-1 bg-blue-600 text-white border border-black rounded inline-block text-center"
-    >
-      View
-    </Link>
-  </div>
-</td>
+                      <div className="flex gap-2">
+                        <Link
+                          href={`/admin/view-request/${request.id}?from=request-table`}
+                          className="px-2 py-1 bg-blue-600 text-white border border-black rounded inline-block text-center"
+                        >
+                          View
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Non-Corridor Requests Section */}
+        <div>
+          <h2 className="text-[24px] font-semibold mb-2 text-[#13529e]">Non-Corridor Requests</h2>
+          <div className="overflow-x-auto max-h-[70vh] overflow-y-auto rounded-lg border border-gray-300 shadow-sm">
+            <table className="w-full border-collapse text-black bg-white">
+              <thead className="sticky top-0 z-10 bg-gray-100 shadow">
+                <tr className="bg-gray-50">
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="date" title="Date" />
+                  </th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="date" title="Dept" />
+                  </th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="section" title="Major Section" />
+                  </th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="section" title="SSE" />
+                  </th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="section" title="Block Section" />
+                  </th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="line" title="Line / Road" />
+                  </th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="time" title="Demanded" />
+                  </th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="time" title="Optimize" />
+                  </th>
+
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="work" title="Activity" />
+                  </th>
+
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="action" title="Actions" />
+                  </th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="view" title="View" />
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {nonCorridorRequestsFiltered.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={12}
+                      className="border border-black p-2 text-[24px] text-left"
+                    >
+                      No requests found.
+                    </td>
+                  </tr>
+                )}
+                {nonCorridorRequestsFiltered.sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
+                  <tr
+                    key={`request-${request.id}-${request.date}`}
+                    className={`hover:bg-blue-50 transition-colors ${request.optimizeTimeFrom && request.optimizeTimeTo
+                      ? "bg-green-50"
+                      : ""
+                      }`}
+                  >
+                    <td className="border border-black p-2 text-[24px]">
+                      {editingId === request.id ? (
+                        <input
+                          type="date"
+                          value={editDate}
+                          onChange={(e) => setEditDate(e.target.value)}
+                          className="w-28 border p-1 text-sm rounded"
+                        />
+                      ) : (
+                        dayjs(request.date).format("DD-MM-YY")
+                      )}
+                    </td>
+                    <td className="border border-black p-2 text-[24px]">
+                      {request.selectedDepartment}
+                    </td>
+                    <td className="border border-black p-2 text-[24px]">
+                      {request.selectedSection}
+                    </td>
+                    <td className="border border-black p-2 text-[24px]">
+                      {request.selectedDepo}
+                    </td>
+                    <td className="border border-black p-2 text-[24px]">
+                      {request.missionBlock}
+                    </td>
+                    <td className="border border-black p-2 text-[24px]">
+                      {getLineOrRoad(request)}
+                    </td>
+                    <td className="border border-black p-2 text-[24px]">
+                      {formatTime(request.demandTimeFrom)} -{" "}
+                      {formatTime(request.demandTimeTo)}
+                    </td>
+                    <td className="border border-black p-2 text-[24px]">
+                      {editingId === request.id ? (
+                        <div className="flex gap-1 items-center">
+                          <input
+                            type="time"
+                            value={timeFrom}
+                            onChange={(e) => setTimeFrom(e.target.value)}
+                            className="w-20 border p-1 text-sm rounded"
+                          />
+                          <span>-</span>
+                          <input
+                            type="time"
+                            value={timeTo}
+                            onChange={(e) => setTimeTo(e.target.value)}
+                            className="w-20 border p-1 text-sm rounded"
+                          />
+                        </div>
+                      ) : (
+                        <>
+                          {request.optimizeTimeFrom &&
+                            request.optimizeTimeFrom !== "WrongRequest"
+                            ? formatTime(request.optimizeTimeFrom)
+                            : "N/A"}{" "}
+                          -{" "}
+                          {request.optimizeTimeTo &&
+                            request.optimizeTimeTo !== "WrongRequest"
+                            ? formatTime(request.optimizeTimeTo)
+                            : "N/A"}
+                        </>
+                      )}
+                    </td>
+
+                    <td className="border border-black p-2 text-[24px]">
+                      {request.activity}
+                    </td>
+
+                    <td className="border border-black p-2 text-[24px]">
+                      <div className="flex gap-2">
+                        {request.optimizeStatus === false ? (
+                          <span>Not Yet Optimized</span>
+                        ) : editingId === request.id ? (
+                          <>
+                            <button
+                              onClick={() => handleUpdateClick(request.id)}
+                              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
+                              disabled={updateOptimizedTimes.isPending}
+                            >
+                              {updateOptimizedTimes.isPending ? "Saving..." : "Save"}
+                            </button>
+                            <button
+                              onClick={handleCancelEdit}
+                              className="px-2 py-1 text-[24px] bg-gray-400 text-white border border-black rounded"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : modifyReturnOpenId === request.id ? (
+                          <>
+                            <button
+                              className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+                              onClick={() => { setEditingId(request.id); setEditDate(request.date.split("T")[0]); setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : ""); setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : ""); setModifyReturnOpenId(null); }}
+                            >
+                              Modify
+                            </button>
+                            <button
+                              className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
+                              onClick={() => { handleRejectClick(request.id); setModifyReturnOpenId(null); }}
+                            >
+                              Return
+                            </button>
+                            <button
+                              className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
+                              onClick={() => setModifyReturnOpenId(null)}
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
+                              // onClick={
+                              //   () => {
+                              //       handleSendNonUrgentRequests([request]);
+                              //   }
+                              // }
+                              onClick={() => {
+                                setSelectedRequests([request]); // save clicked request
+                                setIsNonUrgentModalOpen(true);           // open popup
+                              }}
+                            >
+                              Sanction
+                            </button>
+                            <button
+                              className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
+                              onClick={() => setModifyReturnOpenId(request.id)}
+                            >
+                              Modify/Return
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                    <td className="border border-black p-2 text-[24px]">
+                      <div className="flex gap-2">
+                        <Link
+                          href={`/admin/view-request/${request.id}?from=request-table`}
+                          className="px-2 py-1 bg-blue-600 text-white border border-black rounded inline-block text-center"
+                        >
+                          View
+                        </Link>
+                      </div>
+                    </td>
 
                   </tr>
                 ))}
@@ -1672,72 +2011,72 @@ const nonCorridorRequestsFiltered = pendingRequests
             </table>
           </div>
         </div>
-{isModalOpen && (
-  <div className="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm z-50">
-    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-      <h2 className="text-xl font-bold mb-4" style={{color:"black"}}>Repurcussion</h2>
-      <textarea
-        className="w-full border p-2 rounded mb-4 text-black"
-        rows={4}
-        placeholder="Enter reason..."
-        value={remark}
-        onChange={(e) => setRemark(e.target.value)}
-      />
-      <div className="flex justify-end gap-2">
-        <button
-          className="px-4 py-2 bg-gray-400 text-white rounded"
-          onClick={() => setIsModalOpen(false)}
-        >
-          Cancel
-        </button>
-        <button
-          className="px-4 py-2 bg-green-600 text-white rounded"
-          onClick={() => {
-            handleSendUrgentRequests(selectedRequests, remark);
-            setIsModalOpen(false);
-            setRemark("");
-          }}
-        >
-          Submit
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-{isNonUrgentModalOpen && (
-  <div className="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm z-50">
-    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-      <h2 className="text-xl font-bold mb-4" style={{color:"black"}}>Repurcussion</h2>
-      <textarea
-        className="w-full border p-2 rounded mb-4 text-black"
-        rows={4}
-        placeholder="Enter reason..."
-        value={remark}
-        onChange={(e) => setRemark(e.target.value)}
-      />
-      <div className="flex justify-end gap-2">
-        <button
-          className="px-4 py-2 bg-gray-400 text-white rounded"
-          onClick={() => setIsNonUrgentModalOpen(false)}
-        >
-          Cancel
-        </button>
-        <button
-          className="px-4 py-2 bg-green-600 text-white rounded"
-          onClick={() => {
-            handleSendNonUrgentRequests(selectedRequests, remark);
-            setIsNonUrgentModalOpen(false);
-            setRemark("");
-          }}
-        >
-          Submit
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+        {isModalOpen && (
+          <div className="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+              <h2 className="text-xl font-bold mb-4" style={{ color: "black" }}>Repurcussion</h2>
+              <textarea
+                className="w-full border p-2 rounded mb-4 text-black"
+                rows={4}
+                placeholder="Enter reason..."
+                value={remark}
+                onChange={(e) => setRemark(e.target.value)}
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  className="px-4 py-2 bg-gray-400 text-white rounded"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-4 py-2 bg-green-600 text-white rounded"
+                  onClick={() => {
+                    handleSendUrgentRequests(selectedRequests, remark);
+                    setIsModalOpen(false);
+                    setRemark("");
+                  }}
+                >
+                  Submit
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {isNonUrgentModalOpen && (
+          <div className="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+              <h2 className="text-xl font-bold mb-4" style={{ color: "black" }}>Repurcussion</h2>
+              <textarea
+                className="w-full border p-2 rounded mb-4 text-black"
+                rows={4}
+                placeholder="Enter reason..."
+                value={remark}
+                onChange={(e) => setRemark(e.target.value)}
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  className="px-4 py-2 bg-gray-400 text-white rounded"
+                  onClick={() => setIsNonUrgentModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-4 py-2 bg-green-600 text-white rounded"
+                  onClick={() => {
+                    handleSendNonUrgentRequests(selectedRequests, remark);
+                    setIsNonUrgentModalOpen(false);
+                    setRemark("");
+                  }}
+                >
+                  Submit
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         {/* Optimization Dialog */}
-        {showRejectionModal  && (
+        {showRejectionModal && (
           <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-20">
             <div className="bg-white p-4 rounded shadow-lg z-30">
               <h3 className="font-bold text-lg mb-2">Reason for Rejection</h3>
@@ -1779,14 +2118,14 @@ const nonCorridorRequestsFiltered = pendingRequests
       </div>
       <div>
         <div className="flex justify-center gap-3 mb-2 mt-8">
-          
-         <a
-  href="/admin/request-table"
-  className="flex items-center gap-1 bg-[#E6E6FA] border border-black px-8 py-1.5 rounded-[50%] text-[24px] font-bold"
-  style={{ color: "black" }}
->
-  Back
-</a>
+
+          <a
+            href="/admin/request-table"
+            className="flex items-center gap-1 bg-[#E6E6FA] border border-black px-8 py-1.5 rounded-[50%] text-[24px] font-bold"
+            style={{ color: "black" }}
+          >
+            Back
+          </a>
         </div>
 
         <div className="text-[10px] text-gray-600 mt-2 border-t border-black pt-1 text-right">
