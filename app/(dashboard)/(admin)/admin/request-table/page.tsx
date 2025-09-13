@@ -7,9 +7,13 @@ import { format, parseISO } from "date-fns";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import dayjs from "dayjs";
+import { useRouter } from "next/navigation";
+
 
 export default function AdminRequestTablePage() {
   const { data: session } = useSession();
+  const router = useRouter();
+
   const [customDateRange, setCustomDateRange] = useState({
     start: "",
     end: "",
@@ -182,82 +186,82 @@ export default function AdminRequestTablePage() {
   const allRequests = data?.data?.requests || [];
   // console.log(allRequests);
 
-// const TotalRequests = allRequests.filter((r: UserRequest) => {
-//     if (r.isSanctioned) return false;
-//     if (!r.date) return false;
-//     if (pendingDept ) return false;
-//     const reqDate = new Date(r.date);
-//     reqDate.setHours(0, 0, 0, 0);
-//     return reqDate > today;
-//   }).length;
+  // const TotalRequests = allRequests.filter((r: UserRequest) => {
+  //     if (r.isSanctioned) return false;
+  //     if (!r.date) return false;
+  //     if (pendingDept ) return false;
+  //     const reqDate = new Date(r.date);
+  //     reqDate.setHours(0, 0, 0, 0);
+  //     return reqDate > today;
+  //   }).length;
 
-//   const ENGGRequest = allRequests.filter((r: UserRequest) => {
-//     if ( r.isSanctioned) return false;
-//     if (!r.date) return false;
-//     if ( r.selectedDepartment !== "ENGG") return false;
-//     const reqDate = new Date(r.date);
-//     reqDate.setHours(0, 0, 0, 0);
-//     return reqDate > today;
-//   }).length;
+  //   const ENGGRequest = allRequests.filter((r: UserRequest) => {
+  //     if ( r.isSanctioned) return false;
+  //     if (!r.date) return false;
+  //     if ( r.selectedDepartment !== "ENGG") return false;
+  //     const reqDate = new Date(r.date);
+  //     reqDate.setHours(0, 0, 0, 0);
+  //     return reqDate > today;
+  //   }).length;
 
 
-//   const SandTRequest = allRequests.filter((r: UserRequest) => {
-//     if (r.isSanctioned) return false;
-//     if (!r.date) return false;
-//     if ( r.selectedDepartment !== "S&T") return false;
-//     const reqDate = new Date(r.date);
-//     reqDate.setHours(0, 0, 0, 0);
-//     return reqDate > today;
-//   }).length;
+  //   const SandTRequest = allRequests.filter((r: UserRequest) => {
+  //     if (r.isSanctioned) return false;
+  //     if (!r.date) return false;
+  //     if ( r.selectedDepartment !== "S&T") return false;
+  //     const reqDate = new Date(r.date);
+  //     reqDate.setHours(0, 0, 0, 0);
+  //     return reqDate > today;
+  //   }).length;
 
-//   const TRDRequest = allRequests.filter((r: UserRequest) => {
-//     if (r.isSanctioned) return false;
-//     if (!r.date) return false;
-//     if ( r.selectedDepartment !== "TRD") return false;
-//     const reqDate = new Date(r.date);
-//     reqDate.setHours(0, 0, 0, 0);
-//     return reqDate > today;
-//   }).length;
-const TotalRequests = allRequests.filter((r: UserRequest) => {
-   if (!r.date) return false;
+  //   const TRDRequest = allRequests.filter((r: UserRequest) => {
+  //     if (r.isSanctioned) return false;
+  //     if (!r.date) return false;
+  //     if ( r.selectedDepartment !== "TRD") return false;
+  //     const reqDate = new Date(r.date);
+  //     reqDate.setHours(0, 0, 0, 0);
+  //     return reqDate > today;
+  //   }).length;
+  const TotalRequests = allRequests.filter((r: UserRequest) => {
+    if (!r.date) return false;
 
-  const reqDate = new Date(r.date);
-  reqDate.setHours(0, 0, 0, 0);
-  return (
-    !r.isSanctioned &&
-    (r.overAllStatus === "with optg.")&&
-    reqDate > today
-  );
-}).length;
+    const reqDate = new Date(r.date);
+    reqDate.setHours(0, 0, 0, 0);
+    return (
+      !r.isSanctioned &&
+      (r.overAllStatus === "with optg.") &&
+      reqDate > today
+    );
+  }).length;
 
-const ENGGRequest = allRequests.filter((r: UserRequest) => {
-   if (!r.date) return false;
+  const ENGGRequest = allRequests.filter((r: UserRequest) => {
+    if (!r.date) return false;
 
-  const reqDate = new Date(r.date);
-  reqDate.setHours(0, 0, 0, 0);
-  return (
-    !r.isSanctioned &&
-    r.selectedDepartment === "ENGG" &&
-    (r.overAllStatus === "with optg.")&&
-    reqDate > today
-  );
-}).length;
+    const reqDate = new Date(r.date);
+    reqDate.setHours(0, 0, 0, 0);
+    return (
+      !r.isSanctioned &&
+      r.selectedDepartment === "ENGG" &&
+      (r.overAllStatus === "with optg.") &&
+      reqDate > today
+    );
+  }).length;
 
-const SandTRequest = allRequests.filter((r: UserRequest) => {
-   if (!r.date) return false;
+  const SandTRequest = allRequests.filter((r: UserRequest) => {
+    if (!r.date) return false;
 
-  const reqDate = new Date(r.date);
-  reqDate.setHours(0, 0, 0, 0);
-  return (
-    !r.isSanctioned &&
-    r.selectedDepartment === "S&T" &&
-    (r.overAllStatus === "with optg.")&&
-    reqDate > today
-  );
-}).length;
+    const reqDate = new Date(r.date);
+    reqDate.setHours(0, 0, 0, 0);
+    return (
+      !r.isSanctioned &&
+      r.selectedDepartment === "S&T" &&
+      (r.overAllStatus === "with optg.") &&
+      reqDate > today
+    );
+  }).length;
 
-const TRDRequest = allRequests.filter((r: UserRequest) => {
-   if (!r.date) return false;
+  const TRDRequest = allRequests.filter((r: UserRequest) => {
+    if (!r.date) return false;
 
   const reqDate = new Date(r.date);
   reqDate.setHours(0, 0, 0, 0);
@@ -287,10 +291,10 @@ const TRDRequest = allRequests.filter((r: UserRequest) => {
         "Status",
         "Demanded From Time (HH:MM)",
         "Demanded To Time (HH:MM)",
-        "Sanctioned From Time (HH:MM)", 
-        "Sanctioned To Time (HH:MM)",   
+        "Sanctioned From Time (HH:MM)",
+        "Sanctioned To Time (HH:MM)",
         "Corridor Type",
-        "Department", 
+        "Department",
         "SSE Name",
         "Work Location",
         "Remarks",
@@ -305,17 +309,17 @@ const TRDRequest = allRequests.filter((r: UserRequest) => {
         const endTime = request.demandTimeTo
           ? new Date(request.demandTimeTo).toISOString().slice(11, 16)
           : "N/A";
-const sanctionedFrom = request.sanctionedTimeFrom
-  ? new Date(request.sanctionedTimeFrom).toISOString().slice(11, 16)
-  : request.optimizeTimeFrom
-    ? new Date(request.optimizeTimeFrom).toISOString().slice(11, 16)
-    : "N/A";
+        const sanctionedFrom = request.sanctionedTimeFrom
+          ? new Date(request.sanctionedTimeFrom).toISOString().slice(11, 16)
+          : request.optimizeTimeFrom
+            ? new Date(request.optimizeTimeFrom).toISOString().slice(11, 16)
+            : "N/A";
 
-const sanctionedTo = request.sanctionedTimeTo
-  ? new Date(request.sanctionedTimeTo).toISOString().slice(11, 16)
-  : request.optimizeTimeTo
-    ? new Date(request.optimizeTimeTo).toISOString().slice(11, 16)
-    : "N/A";
+        const sanctionedTo = request.sanctionedTimeTo
+          ? new Date(request.sanctionedTimeTo).toISOString().slice(11, 16)
+          : request.optimizeTimeTo
+            ? new Date(request.optimizeTimeTo).toISOString().slice(11, 16)
+            : "N/A";
 
         return [
           formatDate(request.date), // DD-MM-YYYY
@@ -368,34 +372,34 @@ const sanctionedTo = request.sanctionedTimeTo
   //       : [...prev.blockType, value],
   //   }));
   // };
-  
-const handlePendingBlockTypeChange = (value: string) => {
-  setPendingSummaryFilters((prev) => {
-    const allBlockTypeValues = blockTypeOptions.slice(1).map(opt => opt.value); // All values except "ALL"
-    
-    if (value === "ALL") {
-      // Toggle between selecting all and selecting none
-      const shouldSelectAll = prev.blockType.length < allBlockTypeValues.length;
-      return {
-        ...prev,
-        blockType: shouldSelectAll ? [...allBlockTypeValues] : []
-      };
-    } else {
-      // Normal selection logic for individual types
-      let newBlockTypes;
-      if (prev.blockType.includes(value)) {
-        newBlockTypes = prev.blockType.filter(v => v !== value);
+
+  const handlePendingBlockTypeChange = (value: string) => {
+    setPendingSummaryFilters((prev) => {
+      const allBlockTypeValues = blockTypeOptions.slice(1).map(opt => opt.value); // All values except "ALL"
+
+      if (value === "ALL") {
+        // Toggle between selecting all and selecting none
+        const shouldSelectAll = prev.blockType.length < allBlockTypeValues.length;
+        return {
+          ...prev,
+          blockType: shouldSelectAll ? [...allBlockTypeValues] : []
+        };
       } else {
-        newBlockTypes = [...prev.blockType, value];
+        // Normal selection logic for individual types
+        let newBlockTypes;
+        if (prev.blockType.includes(value)) {
+          newBlockTypes = prev.blockType.filter(v => v !== value);
+        } else {
+          newBlockTypes = [...prev.blockType, value];
+        }
+
+        return {
+          ...prev,
+          blockType: newBlockTypes
+        };
       }
-      
-      return {
-        ...prev,
-        blockType: newBlockTypes
-      };
-    }
-  });
-}
+    });
+  }
   // Section
   const handlePendingSectionChange = (value: string) => {
     setPendingSummaryFilters((prev) => ({
@@ -430,26 +434,26 @@ const handlePendingBlockTypeChange = (value: string) => {
     summaryFilteredRequests = summaryFilteredRequests.filter((r) => r.date <= activeSummaryFilters.end);
   }
   // Block type
- if (activeSummaryFilters.blockType.length > 0) {
-  // Only filter if not all types are selected
-  const allTypesSelected = activeSummaryFilters.blockType.length === blockTypeOptions.length - 1;
-  if (!allTypesSelected) {
-    summaryFilteredRequests = summaryFilteredRequests.filter((r) => 
-      activeSummaryFilters.blockType.includes(r.corridorType)
-    );
+  if (activeSummaryFilters.blockType.length > 0) {
+    // Only filter if not all types are selected
+    const allTypesSelected = activeSummaryFilters.blockType.length === blockTypeOptions.length - 1;
+    if (!allTypesSelected) {
+      summaryFilteredRequests = summaryFilteredRequests.filter((r) =>
+        activeSummaryFilters.blockType.includes(r.corridorType)
+      );
+    }
   }
-}
   // Section
-// In the filtering section, modify the section filter part:
-if (activeSummaryFilters.section.length > 0) {
-  // Only filter if not all sections are selected
-  const allSectionsSelected = activeSummaryFilters.section.length === sectionOptions.length;
-  if (!allSectionsSelected) {
-    summaryFilteredRequests = summaryFilteredRequests.filter((r) => 
-      activeSummaryFilters.section.includes(r.selectedSection)
-    );
+  // In the filtering section, modify the section filter part:
+  if (activeSummaryFilters.section.length > 0) {
+    // Only filter if not all sections are selected
+    const allSectionsSelected = activeSummaryFilters.section.length === sectionOptions.length;
+    if (!allSectionsSelected) {
+      summaryFilteredRequests = summaryFilteredRequests.filter((r) =>
+        activeSummaryFilters.section.includes(r.selectedSection)
+      );
+    }
   }
-}
   // Dept
   if (activeSummaryFilters.dept) {
     summaryFilteredRequests = summaryFilteredRequests.filter((r) => r.selectedDepartment === activeSummaryFilters.dept);
@@ -495,30 +499,31 @@ if (activeSummaryFilters.section.length > 0) {
 
       {/* Requests Pending With Me CTA */}
       <div className="flex justify-center mt-8 mb-6">
-  <div className="w-full max-w-2xl rounded-2xl border-4 border-[#FF6B6B] bg-gradient-to-b from-[#FFF0F0] to-[#FFE5E5] shadow-xl p-0 transform hover:scale-[1.02] transition-all duration-300">
-    <div className="text-[28px] font-bold text-[#B22222] text-center py-4 tracking-wide border-b-2 border-[#FFB3B3]">
-      REQUESTS PENDING WITH ME
-    </div>
-    <div className="text-center text-[26px] text-[#B22222] pt-3 font-semibold">
-      Total Pending: <span className="text-[32px]">{TotalRequests}</span>
-    </div>
+        <div className="w-full max-w-2xl rounded-2xl border-4 border-[#FF6B6B] bg-gradient-to-b from-[#FFF0F0] to-[#FFE5E5] shadow-xl p-0 transform hover:scale-[1.02] transition-all duration-300">
+          <div className="text-[28px] font-bold text-[#B22222] text-center py-4 tracking-wide border-b-2 border-[#FFB3B3]">
+            REQUESTS PENDING WITH ME
+          </div>
+          <div className="text-center text-[26px] text-[#B22222] pt-3 font-semibold">
+            Total Pending: <span className="text-[32px]">{TotalRequests}</span>
+          </div>
 
-    {/* Cards Responsive Fix */}
-    <div className="flex flex-wrap justify-center items-center gap-1 py-4">
-      {[{ label: "ENGG", value: ENGGRequest },
-        { label: "S&T", value: SandTRequest },
-        { label: "TRD", value: TRDRequest }].map((item, index) => (
-        <div
-          key={index}
-          className="flex items-center justify-between w-fit bg-gradient-to-r from-[#FFB3B3] to-[#FFD5D5] text-[#B22222] font-bold py-2 px-0.5 rounded-xl border-2 border-[#FF6B6B] text-[22px] shadow-md hover:shadow-lg transition-all"
-        >
-          <span>{item.label}</span>
-          <span className="bg-white rounded-full w-12 h-12 flex items-center justify-center text-[24px] shadow-inner border-2 border-[#FFB3B3]">
-            {item.value}
-          </span>
-        </div>
-      ))}
-    </div>
+          {/* Cards Responsive Fix */}
+          <div className="flex flex-wrap justify-center items-center gap-1 py-4">
+            {[{ label: "ENGG", value: ENGGRequest },
+            { label: "S&T", value: SandTRequest },
+            { label: "TRD", value: TRDRequest }].map((item, index) => (
+              <div
+                key={index}
+                onClick={() => router.push(`/admin/optimise-table?dept=${encodeURIComponent(item.label)}`)}
+                className="flex items-center justify-between w-fit bg-gradient-to-r from-[#FFB3B3] to-[#FFD5D5] text-[#B22222] font-bold py-2 px-0.5 rounded-xl border-2 border-[#FF6B6B] text-[22px] shadow-md hover:shadow-lg transition-all"
+              >
+                <span>{item.label}</span>
+                <span className="bg-white rounded-full w-12 h-12 flex items-center justify-center text-[24px] shadow-inner border-2 border-[#FFB3B3]">
+                  {item.value}
+                </span>
+              </div>
+            ))}
+          </div>
 
     <Link
       href="/admin/optimise-table"
@@ -571,38 +576,38 @@ if (activeSummaryFilters.section.length > 0) {
                   Type
                   <span className="ml-1 text-sm">▼</span>
                 </button>
-              {blockTypeDropdownOpen && (
-  <div className="absolute z-10 mt-2 w-40 bg-white border-2 border-[#00B4D8] rounded shadow-lg">
-    {blockTypeOptions.map((opt) => {
-      const allBlockTypeValues = blockTypeOptions.slice(1).map(o => o.value);
-      const allSelected = allBlockTypeValues.every(val => 
-        pendingSummaryFilters.blockType.includes(val)
-      );
-      
-      return (
-        <label
-          key={opt.value}
-          className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-[20px]"
-        >
-          <input
-            type="checkbox"
-            checked={
-              opt.value === "ALL" 
-                ? allSelected
-                : pendingSummaryFilters.blockType.includes(opt.value)
-            }
-          onChange={() => {
-  handlePendingBlockTypeChange(opt.value);
-  setBlockTypeDropdownOpen(false); 
-}}
-            className="mr-2 accent-[#B57CF6]"
-          />
-          {opt.label}
-        </label>
-      );
-    })}
-  </div>
-)}
+                {blockTypeDropdownOpen && (
+                  <div className="absolute z-10 mt-2 w-40 bg-white border-2 border-[#00B4D8] rounded shadow-lg">
+                    {blockTypeOptions.map((opt) => {
+                      const allBlockTypeValues = blockTypeOptions.slice(1).map(o => o.value);
+                      const allSelected = allBlockTypeValues.every(val =>
+                        pendingSummaryFilters.blockType.includes(val)
+                      );
+
+                      return (
+                        <label
+                          key={opt.value}
+                          className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-[20px]"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={
+                              opt.value === "ALL"
+                                ? allSelected
+                                : pendingSummaryFilters.blockType.includes(opt.value)
+                            }
+                            onChange={() => {
+                              handlePendingBlockTypeChange(opt.value);
+                              setBlockTypeDropdownOpen(false);
+                            }}
+                            className="mr-2 accent-[#B57CF6]"
+                          />
+                          {opt.label}
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
               {/* Section Dropdown (Multi-select) */}
               <div className="relative inline-block">
@@ -613,65 +618,65 @@ if (activeSummaryFilters.section.length > 0) {
                   Section
                   <span className="ml-1 text-sm">▼</span>
                 </button>
-            {sectionDropdownOpen && (
-  <div className="absolute z-50 mt-2 w-40 bg-white border-2 border-[#00B4D8] rounded shadow-lg max-h-60 overflow-y-auto">
-    {/* Add ALL option at the top */}
-    <label className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-[20px] border-b border-gray-200">
-      <input
-        type="checkbox"
-        checked={
-          pendingSummaryFilters.section.length === sectionOptions.length ||
-          (sectionOptions.length === 0 && pendingSummaryFilters.section.length > 0)
-        }
-        onChange={() => {
-          if (pendingSummaryFilters.section.length === sectionOptions.length) {
-            // If all are selected, deselect all
-            setPendingSummaryFilters(prev => ({
-              ...prev,
-              section: []
-            }));
-          } else {
-            // Select all available sections
-            setPendingSummaryFilters(prev => ({
-              ...prev,
-              section: [...sectionOptions]
-            }));
-          }
-          setSectionDropdownOpen(false);
-        }}
-        className="mr-2 accent-[#B57CF6]"
-      />
-      ALL
-    </label>
-    
-    {sectionOptions.map((section) => (
-      <label
-        key={section}
-        className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-[20px]"
-      >
-        <input
-          type="checkbox"
-          checked={pendingSummaryFilters.section.includes(section)}
-          onChange={() => {
-            setPendingSummaryFilters(prev => {
-              const newSections = prev.section.includes(section)
-                ? prev.section.filter(s => s !== section)
-                : [...prev.section, section];
-              
-              return {
-                ...prev,
-                section: newSections
-              };
-            });
-            setSectionDropdownOpen(false);
-          }}
-          className="mr-2 accent-[#B57CF6]"
-        />
-        {section}
-      </label>
-    ))}
-  </div>
-)}
+                {sectionDropdownOpen && (
+                  <div className="absolute z-50 mt-2 w-40 bg-white border-2 border-[#00B4D8] rounded shadow-lg max-h-60 overflow-y-auto">
+                    {/* Add ALL option at the top */}
+                    <label className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-[20px] border-b border-gray-200">
+                      <input
+                        type="checkbox"
+                        checked={
+                          pendingSummaryFilters.section.length === sectionOptions.length ||
+                          (sectionOptions.length === 0 && pendingSummaryFilters.section.length > 0)
+                        }
+                        onChange={() => {
+                          if (pendingSummaryFilters.section.length === sectionOptions.length) {
+                            // If all are selected, deselect all
+                            setPendingSummaryFilters(prev => ({
+                              ...prev,
+                              section: []
+                            }));
+                          } else {
+                            // Select all available sections
+                            setPendingSummaryFilters(prev => ({
+                              ...prev,
+                              section: [...sectionOptions]
+                            }));
+                          }
+                          setSectionDropdownOpen(false);
+                        }}
+                        className="mr-2 accent-[#B57CF6]"
+                      />
+                      ALL
+                    </label>
+
+                    {sectionOptions.map((section) => (
+                      <label
+                        key={section}
+                        className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-[20px]"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={pendingSummaryFilters.section.includes(section)}
+                          onChange={() => {
+                            setPendingSummaryFilters(prev => {
+                              const newSections = prev.section.includes(section)
+                                ? prev.section.filter(s => s !== section)
+                                : [...prev.section, section];
+
+                              return {
+                                ...prev,
+                                section: newSections
+                              };
+                            });
+                            setSectionDropdownOpen(false);
+                          }}
+                          className="mr-2 accent-[#B57CF6]"
+                        />
+                        {section}
+                      </label>
+                    ))}
+                  </div>
+                )}
               </div>
               {/* Dept Dropdown */}
               <div className="relative inline-block">
@@ -724,7 +729,7 @@ if (activeSummaryFilters.section.length > 0) {
                       </tr>
                     </thead>
                     <tbody>
-                      {sanctionedRequests.sort((a:any, b:any) => new Date(a.sanctionedTimeFrom || a.optimizeTimeFrom).getTime() - new Date(b.sanctionedTimeTo || b.optimizeTimeTo).getTime()).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(
+                      {sanctionedRequests.sort((a: any, b: any) => new Date(a.sanctionedTimeFrom || a.optimizeTimeFrom).getTime() - new Date(b.sanctionedTimeTo || b.optimizeTimeTo).getTime()).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(
                         (request: UserRequest, idx: number) => {
                           const status = getStatusDisplay(request);
                           return (
@@ -755,10 +760,10 @@ if (activeSummaryFilters.section.length > 0) {
                               <td className="border border-black p-1">
                                 {`${formatTime(
                                   request.sanctionedTimeFrom ||
-                                    request.optimizeTimeFrom
+                                  request.optimizeTimeFrom
                                 )} - ${formatTime(
                                   request.sanctionedTimeTo ||
-                                    request.optimizeTimeTo
+                                  request.optimizeTimeTo
                                 )}`}
                               </td>
                               <td className="border border-black p-1">
@@ -790,38 +795,38 @@ if (activeSummaryFilters.section.length > 0) {
               </div>
             )}
             {/* Info Texts */}
-      <div className="text-center mt-1 mb-3">
-        <h3 className="inline-flex py-1 px-6 rounded-full text-black text-base font-medium text-[14px]">
-          Click ID to see details of a Block.
-        </h3>
-        <h3 className="rounded-full pb-2 px-4 text-black text-[14px] font-medium">
-          For printing the complete table, click to download in{" "}
-          <span className="font-bold text-[#00B4D8] text-[14px]">
-            .xlsx format
-          </span>
-        </h3>
-                <button
-          onClick={() => handleDownloadExcel(sanctionedRequests)}
-          className="w-fit bg-[#FFA07A] hover:bg-[#FFBFAE] px-12 py-3 rounded-[50%] border-2 border-[#FF6B6B] font-bold text-[24px] text-[#5D3587] shadow transition"
-        >
-          Download
-        </button>
-      </div>
+            <div className="text-center mt-1 mb-3">
+              <h3 className="inline-flex py-1 px-6 rounded-full text-black text-base font-medium text-[14px]">
+                Click ID to see details of a Block.
+              </h3>
+              <h3 className="rounded-full pb-2 px-4 text-black text-[14px] font-medium">
+                For printing the complete table, click to download in{" "}
+                <span className="font-bold text-[#00B4D8] text-[14px]">
+                  .xlsx format
+                </span>
+              </h3>
+              <button
+                onClick={() => handleDownloadExcel(sanctionedRequests)}
+                className="w-fit bg-[#FFA07A] hover:bg-[#FFBFAE] px-12 py-3 rounded-[50%] border-2 border-[#FF6B6B] font-bold text-[24px] text-[#5D3587] shadow transition"
+              >
+                Download
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      
+
       {/* <Link href="/admin/revise-block"  className="mb-8">
             <button className="w-fit px-10 rounded-full bg-[#ffd180] border border-black py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
               REVISE THE BLOCK FOR THE DAY
             </button>
           </Link> */}
-          <Link href="/admin/sanction-table-data"  className="mb-8">
-            <button className="w-fit px-10 rounded-full bg-[#c7c7f7] border border-black py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
-              BLOCK SUMMARY REPORT
-            </button>
-          </Link>
+      <Link href="/admin/sanction-table-data" className="mb-8">
+        <button className="w-fit px-10 rounded-full bg-[#c7c7f7] border border-black py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
+          BLOCK SUMMARY REPORT
+        </button>
+      </Link>
 
       {/* Sticky Action Bar at Bottom */}
       <div className=" w-full bg-white border-t-2 border-[#A084E8] py-4 flex flex-col justify-center items-center gap-8 z-50 ">

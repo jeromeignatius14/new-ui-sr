@@ -205,11 +205,11 @@ export default function OptimiseTablePage() {
   const searchParams = useSearchParams();
   const { isUrgentMode } = useUrgentMode();
   const queryClient = useQueryClient();
-const [isModalOpen, setIsModalOpen] = useState(false);
-const [isNonUrgentModalOpen, setIsNonUrgentModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isNonUrgentModalOpen, setIsNonUrgentModalOpen] = useState(false);
 
-const [remark, setRemark] = useState("");
-const [selectedRequests, setSelectedRequests] = useState<UserRequest[]>([]);
+  const [remark, setRemark] = useState("");
+  const [selectedRequests, setSelectedRequests] = useState<UserRequest[]>([]);
   // Initialize currentWeekStart from URL parameter or default to current date
   const [currentWeekStart, setCurrentWeekStart] = useState(() => {
     const dateParam = searchParams.get("date");
@@ -240,6 +240,161 @@ const [selectedRequests, setSelectedRequests] = useState<UserRequest[]>([]);
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [currentRequestId, setCurrentRequestId] = useState<string | null>(null);
+  const [showDateValidationAlert, setShowDateValidationAlert] = useState(false);
+  const [deptFilter, setDeptFilter] = useState<string>(() => {
+    const deptParam = searchParams.get("dept");
+    // Check if deptParam exists and matches one of our department options
+    return deptParam && ['ENGG', 'S&T', 'TRD'].includes(decodeURIComponent(deptParam)) ? decodeURIComponent(deptParam) : 'ALL';
+  });
+  const [workTypeFilter, setWorkTypeFilter] = useState<string>('ALL');
+  const [activityFilter, setActivityFilter] = useState<string>('ALL');
+  const [timeSlotFilter, setTimeSlotFilter] = useState<string>('ALL');
+  const [showDeptDropdown, setShowDeptDropdown] = useState(false);
+  const [showWorkTypeDropdown, setShowWorkTypeDropdown] = useState(false);
+  const [showActivityDropdown, setShowActivityDropdown] = useState(false);
+  const [showTimeSlotDropdown, setShowTimeSlotDropdown] = useState(false);
+
+  // Update URL when deptFilter changes
+  useEffect(() => {
+    // Only update URL if dept filter changes to something other than ALL
+    if (deptFilter !== 'ALL') {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("dept", encodeURIComponent(deptFilter));
+      router.push(`?${params.toString()}`, { scroll: false });
+    }
+  }, [deptFilter, router, searchParams]);
+
+  // Effect for closing dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+
+      // Close department dropdown if clicking outside
+      if (showDeptDropdown && !target.closest('[data-dropdown="department"]')) {
+        setShowDeptDropdown(false);
+      }
+
+      // Close work type dropdown if clicking outside
+      if (showWorkTypeDropdown && !target.closest('[data-dropdown="worktype"]')) {
+        setShowWorkTypeDropdown(false);
+      }
+
+      // Close activity dropdown if clicking outside
+      if (showActivityDropdown && !target.closest('[data-dropdown="activity"]')) {
+        setShowActivityDropdown(false);
+      }
+
+      // Close time slot dropdown if clicking outside
+      if (showTimeSlotDropdown && !target.closest('[data-dropdown="timeslot"]')) {
+        setShowTimeSlotDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDeptDropdown, showWorkTypeDropdown, showActivityDropdown, showTimeSlotDropdown]);
+
+  // Helper function to check if request matches time slot
+  const matchesTimeSlot = (request: UserRequest): boolean => {
+    if (timeSlotFilter === 'ALL') return true;
+    if (!request.demandTimeFrom) return false;
+
+    try {
+      const demandTime = new Date(request.demandTimeFrom);
+      if (isNaN(demandTime.getTime())) return false;
+
+      const hour = demandTime.getUTCHours();
+
+      switch (timeSlotFilter) {
+        case 'Morning (4:00-12:00)':
+          return hour >= 4 && hour < 12;
+        case 'Afternoon (12:00-20:00)':
+          return hour >= 12 && hour < 20;
+        case 'Night (20:00-4:00)':
+          return hour >= 20 || hour < 4;
+        default:
+          return true;
+      }
+    } catch (e) {
+      console.error("Error parsing time:", e);
+      return false;
+    }
+  };
+
+  // Helper function to check if request matches work type
+  const matchesWorkType = (request: UserRequest): boolean => {
+    if (workTypeFilter === 'ALL') return true;
+
+    // For Engineering
+    if (request.selectedDepartment === 'ENGG') {
+      if (request.workType && request.workType.includes('Machine')) {
+        return workTypeFilter === 'Machine';
+      } else {
+        return workTypeFilter === 'Non-Machine';
+      }
+    }
+
+    // For S&T
+    if (request.selectedDepartment === 'S&T') {
+      return workTypeFilter === 'Gear';
+    }
+
+    // For TRD
+    if (request.selectedDepartment === 'TRD') {
+      if (request.workType && request.workType.includes('Tw')) {
+        return workTypeFilter === 'Tw';
+      } else {
+        return workTypeFilter === 'Lt';
+      }
+    }
+
+    return false;
+  };
+
+  // Helper function for getting workTypes for a department
+  const getWorkTypesForDept = (dept: string): string[] => {
+    if (dept === 'ENGG') return ['Machine', 'Non-Machine'];
+    if (dept === 'S&T') return ['Gear'];
+    if (dept === 'TRD') return ['Tw', 'Lt'];
+    return [];
+  };
+
+  // Helper function for getting activities for a work type
+  const getActivitiesForWorkType = (workTypeSelected: string): string[] => {
+    // Return common activities first, then specific ones
+    if (workTypeSelected === 'ALL') return [];
+
+    if (workTypeSelected === 'Gear') {
+      return ['Point', 'EI', 'Signal', 'DC Track', 'AFTC', 'SSDAC', 'MSDAC', 'Panel', 'LC Gate Mechanical', 'LC Gate ELB'];
+    }
+
+    if (workTypeSelected === 'Tw' || workTypeSelected === 'Lt') {
+      return ['AOH', 'POH', 'IOH', 'RE POH', 'RD WORK', 'TURN OUT CHECKING', 'CROSS OVER CHECKING'];
+    }
+
+    if (workTypeSelected === 'Machine') {
+      return ['BCM', 'DTE', 'CSM', 'DUOMAT', 'UNIMAT', 'MPT', 'BRM', 'TRT', 'UTV', 'DTS', 'T28', 'SQRS'];
+    }
+
+    if (workTypeSelected === 'Non-Machine') {
+      return ['Rail renewal', 'Welding work', 'Destressing work', 'Switch renewal', 'CMS Crossing renewal', 'SEJ Renewal'];
+    }
+
+    return [];
+  };
+
+  // Helper function for matching activity
+  const matchesActivity = (request: UserRequest): boolean => {
+    if (activityFilter === 'ALL') return true;
+    if (!request.activity) return false;
+
+    // Check if the activity exactly matches or is a substring (more flexible matching)
+    return request.activity === activityFilter ||
+      request.activity.includes(activityFilter) ||
+      activityFilter.includes(request.activity);
+  };
 
   // For urgent mode, use the same day for start and end
   // For non-urgent mode, use Monday to Sunday
@@ -298,11 +453,22 @@ const [selectedRequests, setSelectedRequests] = useState<UserRequest[]>([]);
   // Filter requests based on urgent mode
   const filteredRequests =
     data?.data?.requests?.filter((request: UserRequest) => {
-      return isUrgentMode //false
+      // First check if it matches urgent mode filter
+      const matchesUrgentMode = isUrgentMode //false
         ? request.corridorType === "Urgent Block" ||
         request.workType === "EMERGENCY"
         : request.corridorType !== "Urgent Block" &&
         request.workType !== "EMERGENCY";
+
+      if (!matchesUrgentMode) return false;
+
+      // Apply additional filters
+      if (deptFilter !== 'ALL' && request.selectedDepartment !== deptFilter) return false;
+      if (!matchesWorkType(request)) return false;
+      if (!matchesActivity(request)) return false;
+      if (!matchesTimeSlot(request)) return false;
+
+      return true;
     }) || [];
 
   const UrgentRequests =
@@ -390,9 +556,18 @@ const [selectedRequests, setSelectedRequests] = useState<UserRequest[]>([]);
   const urgentRequestDate = UrgentRequests.filter((req: any) => {
     const requestDate =
       typeof req.date === "string" ? parseISO(req.date) : req.date;
-    return isSameDay(requestDate, selectedDate);
-  }).filter((request: UserRequest) => !request.isSanctioned)
-    .sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime());
+
+    // Check date
+    if (!isSameDay(requestDate, selectedDate)) return false;
+
+    // Apply additional filters
+    if (deptFilter !== 'ALL' && req.selectedDepartment !== deptFilter) return false;
+    if (!matchesWorkType(req)) return false;
+    if (!matchesActivity(req)) return false;
+    if (!matchesTimeSlot(req)) return false;
+
+    return !req.isSanctioned;
+  }).sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime());
 
   // --- Custom: Only show requests that are pending with me, not sanctioned, and after today ---
 const today = new Date();
@@ -615,7 +790,7 @@ const nonCorridorRequestsFiltered = pendingRequests
     }
   };
 
-  const handleSendUrgentRequests = async (requests : UserRequest[],remark:string) => {
+  const handleSendUrgentRequests = async (requests: UserRequest[], remark: string) => {
     try {
       const UrgentRequestsData =
         requests?.filter(
@@ -651,7 +826,7 @@ const nonCorridorRequestsFiltered = pendingRequests
     }
   };
 
-  const handleSendNonUrgentRequests = async (requests : UserRequest[],remark:string) => {
+  const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: string) => {
     try {
       // Only send the required fields for each non-urgent request
       const nonUrgentRequestsData =
@@ -945,6 +1120,159 @@ const nonCorridorRequestsFiltered = pendingRequests
           </div>
         )}
 
+        {/* Filters UI */}
+        <div className="flex gap-4 mb-4 p-3 bg-gray-50 border border-gray-300 rounded">
+          {/* Department Filter */}
+          <div className="relative" data-dropdown="department">
+            <button
+              onClick={() => setShowDeptDropdown(!showDeptDropdown)}
+              className="px-4 py-2 bg-white border border-black rounded flex items-center gap-2 text-black"
+            >
+              Dept: {deptFilter}
+              <span>▼</span>
+            </button>
+            {showDeptDropdown && (
+              <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[120px]">
+                {['ALL', 'S&T', 'ENGG', 'TRD'].map((dept) => (
+                  <button
+                    key={dept}
+                    onClick={() => {
+                      setDeptFilter(dept);
+                      setWorkTypeFilter('ALL');
+                      setActivityFilter('ALL');
+                      setShowDeptDropdown(false);
+
+                      // Update URL with dept parameter
+                      if (dept !== 'ALL') {
+                        const params = new URLSearchParams(searchParams.toString());
+                        params.set("dept", encodeURIComponent(dept));
+                        router.push(`?${params.toString()}`, { scroll: false });
+                      } else {
+                        // Remove dept parameter if ALL is selected
+                        const params = new URLSearchParams(searchParams.toString());
+                        params.delete("dept");
+                        router.push(`?${params.toString()}`, { scroll: false });
+                      }
+                    }}
+                    className={`block w-full text-left px-3 py-2 hover:bg-gray-100 text-black ${deptFilter === dept ? 'bg-blue-100' : ''
+                      }`}
+                  >
+                    {dept}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Work Type Filter */}
+          <div className="relative" data-dropdown="worktype">
+            <button
+              onClick={() => deptFilter !== 'ALL' && setShowWorkTypeDropdown(!showWorkTypeDropdown)}
+              className={`px-4 py-2 bg-white border border-black rounded flex items-center gap-2 text-black ${deptFilter === 'ALL' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                }`}
+              disabled={deptFilter === 'ALL'}
+            >
+              Work Type: {workTypeFilter}
+              <span>▼</span>
+            </button>
+            {showWorkTypeDropdown && deptFilter !== 'ALL' && (
+              <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[150px]">
+                {['ALL', ...getWorkTypesForDept(deptFilter)].map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => {
+                      setWorkTypeFilter(type);
+                      setActivityFilter('ALL');
+                      setShowWorkTypeDropdown(false);
+                    }}
+                    className={`block w-full text-left px-3 py-2 hover:bg-gray-100 text-black ${workTypeFilter === type ? 'bg-blue-100' : ''
+                      }`}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Activity Filter */}
+          <div className="relative" data-dropdown="activity">
+            <button
+              onClick={() => workTypeFilter !== 'ALL' && setShowActivityDropdown(!showActivityDropdown)}
+              className={`px-4 py-2 bg-white border border-black rounded flex items-center gap-2 text-black ${workTypeFilter === 'ALL' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                }`}
+              disabled={workTypeFilter === 'ALL'}
+            >
+              Activity: {activityFilter}
+              <span>▼</span>
+            </button>
+            {showActivityDropdown && workTypeFilter !== 'ALL' && (
+              <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[150px] max-h-[300px] overflow-y-auto">
+                {['ALL', ...getActivitiesForWorkType(workTypeFilter)].map((activity) => (
+                  <button
+                    key={activity}
+                    onClick={() => {
+                      setActivityFilter(activity);
+                      setShowActivityDropdown(false);
+                    }}
+                    className={`block w-full text-left px-3 py-2 hover:bg-gray-100 text-black ${activityFilter === activity ? 'bg-blue-100' : ''
+                      }`}
+                  >
+                    {activity}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Time Slot Filter */}
+          <div className="relative" data-dropdown="timeslot">
+            <button
+              onClick={() => setShowTimeSlotDropdown(!showTimeSlotDropdown)}
+              className="px-4 py-2 bg-white border border-black rounded flex items-center gap-2 text-black"
+            >
+              Time: {timeSlotFilter}
+              <span>▼</span>
+            </button>
+            {showTimeSlotDropdown && (
+              <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[150px]">
+                {['ALL', 'Morning (4:00-12:00)', 'Afternoon (12:00-20:00)', 'Night (20:00-4:00)'].map((slot) => (
+                  <button
+                    key={slot}
+                    onClick={() => {
+                      setTimeSlotFilter(slot);
+                      setShowTimeSlotDropdown(false);
+                    }}
+                    className={`block w-full text-left px-3 py-2 hover:bg-gray-100 text-black ${timeSlotFilter === slot ? 'bg-blue-100' : ''
+                      }`}
+                  >
+                    {slot}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          {/* Clear All Filters Button */}
+          <div>
+            <button
+              onClick={() => {
+                setDeptFilter('ALL');
+                setWorkTypeFilter('ALL');
+                setActivityFilter('ALL');
+                setTimeSlotFilter('ALL');
+
+                // Clear URL parameters
+                const params = new URLSearchParams(searchParams.toString());
+                params.delete("dept");
+                router.push(`?${params.toString()}`, { scroll: false });
+              }}
+              className="px-4 py-2 bg-red-500 text-white border border-red-600 rounded hover:bg-red-600 transition-colors"
+            >
+              Clear All
+            </button>
+          </div>
+
+        </div>
         {/* Week Switcher at the top */}
         <div className="border-b-2 border-[#13529e] pb-3 flex justify-between items-center mb-4">
           <WeeklySwitcher
@@ -1180,10 +1508,10 @@ const nonCorridorRequestsFiltered = pendingRequests
                               //       handleSendUrgentRequests([request]);
                               //   }
                               // }
-                           onClick={() => {
-                                  setSelectedRequests([request]); // save clicked request
-                                   setIsModalOpen(true);           // open popup
-                              }}                                                 
+                              onClick={() => {
+                                setSelectedRequests([request]); // save clicked request
+                                setIsModalOpen(true);           // open popup
+                              }}
                             >
                               Sanction
                             </button>
@@ -1415,9 +1743,9 @@ const nonCorridorRequestsFiltered = pendingRequests
                               //   }
                               // }
                               onClick={() => {
-                                 setSelectedRequests([request]); // save clicked request
-                                   setIsNonUrgentModalOpen(true);           // open popup
-                                       }}
+                                setSelectedRequests([request]); // save clicked request
+                                setIsNonUrgentModalOpen(true);           // open popup
+                              }}
                             >
                               Sanction
                             </button>
@@ -1629,9 +1957,9 @@ const nonCorridorRequestsFiltered = pendingRequests
                               //   }
                               // }
                               onClick={() => {
-                               setSelectedRequests([request]); // save clicked request
+                                setSelectedRequests([request]); // save clicked request
                                 setIsNonUrgentModalOpen(true);           // open popup
-                               }}
+                              }}
                             >
                               Sanction
                             </button>
@@ -1662,70 +1990,70 @@ const nonCorridorRequestsFiltered = pendingRequests
             </table>
           </div>
         </div>
-{isModalOpen && (
-  <div className="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm z-50">
-    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-      <h2 className="text-xl font-bold mb-4" style={{color:"black"}}>Repurcussion</h2>
-      <textarea
-        className="w-full border p-2 rounded mb-4 text-black"
-        rows={4}
-        placeholder="Enter reason..."
-        value={remark}
-        onChange={(e) => setRemark(e.target.value)}
-      />
-      <div className="flex justify-end gap-2">
-        <button
-          className="px-4 py-2 bg-gray-400 text-white rounded"
-          onClick={() => setIsModalOpen(false)}
-        >
-          Cancel
-        </button>
-        <button
-          className="px-4 py-2 bg-green-600 text-white rounded"
-          onClick={() => {
-            handleSendUrgentRequests(selectedRequests, remark);
-            setIsModalOpen(false);
-            setRemark("");
-          }}
-        >
-          Submit
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-{isNonUrgentModalOpen && (
-  <div className="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm z-50">
-    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-      <h2 className="text-xl font-bold mb-4" style={{color:"black"}}>Repurcussion</h2>
-      <textarea
-        className="w-full border p-2 rounded mb-4 text-black"
-        rows={4}
-        placeholder="Enter reason..."
-        value={remark}
-        onChange={(e) => setRemark(e.target.value)}
-      />
-      <div className="flex justify-end gap-2">
-        <button
-          className="px-4 py-2 bg-gray-400 text-white rounded"
-          onClick={() => setIsNonUrgentModalOpen(false)}
-        >
-          Cancel
-        </button>
-        <button
-          className="px-4 py-2 bg-green-600 text-white rounded"
-          onClick={() => {
-            handleSendNonUrgentRequests(selectedRequests, remark);
-            setIsNonUrgentModalOpen(false);
-            setRemark("");
-          }}
-        >
-          Submit
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+        {isModalOpen && (
+          <div className="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+              <h2 className="text-xl font-bold mb-4" style={{ color: "black" }}>Repurcussion</h2>
+              <textarea
+                className="w-full border p-2 rounded mb-4 text-black"
+                rows={4}
+                placeholder="Enter reason..."
+                value={remark}
+                onChange={(e) => setRemark(e.target.value)}
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  className="px-4 py-2 bg-gray-400 text-white rounded"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-4 py-2 bg-green-600 text-white rounded"
+                  onClick={() => {
+                    handleSendUrgentRequests(selectedRequests, remark);
+                    setIsModalOpen(false);
+                    setRemark("");
+                  }}
+                >
+                  Submit
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {isNonUrgentModalOpen && (
+          <div className="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+              <h2 className="text-xl font-bold mb-4" style={{ color: "black" }}>Repurcussion</h2>
+              <textarea
+                className="w-full border p-2 rounded mb-4 text-black"
+                rows={4}
+                placeholder="Enter reason..."
+                value={remark}
+                onChange={(e) => setRemark(e.target.value)}
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  className="px-4 py-2 bg-gray-400 text-white rounded"
+                  onClick={() => setIsNonUrgentModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-4 py-2 bg-green-600 text-white rounded"
+                  onClick={() => {
+                    handleSendNonUrgentRequests(selectedRequests, remark);
+                    setIsNonUrgentModalOpen(false);
+                    setRemark("");
+                  }}
+                >
+                  Submit
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         {/* Optimization Dialog */}
         {showRejectionModal  && (
           <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-20">
