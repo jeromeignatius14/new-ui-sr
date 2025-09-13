@@ -13,6 +13,8 @@ import { useSession } from "next-auth/react";
 import { managerService, UserRequest } from "@/app/service/api/manager";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
+import formatTime from "@/app/utils/formatTime";
+
 
 interface OptionType {
   value: string;
@@ -287,8 +289,8 @@ export default function GenerateReportPage() {
     upcomingSectionFilter === "All"
       ? reportData?.data?.detailedData || []
       : reportData?.data?.detailedData?.filter(
-          (b: DetailedData) => b.Section === upcomingSectionFilter
-        ) || [];
+        (b: DetailedData) => b.Section === upcomingSectionFilter
+      ) || [];
   function formatDateB(dateString: string) {
     if (!dateString) return "";
     // Accepts both MM/DD/YYYY and DD/MM/YYYY
@@ -398,90 +400,90 @@ export default function GenerateReportPage() {
                 menuPosition="fixed"
               />
             </div> */}
-                     <div className="flex flex-col flex-1 min-w-[90px] max-w-[110px] w-full">
-      <span className="text-[24px] font-bold text-black mb-1 whitespace-nowrap">
-        Choose Section
-      </span>
-      <Select
-        options={majorSectionOptions}
-        isMulti={true}
-        value={majorSectionOptions.filter((opt) =>
-          selectedMajorSections.includes(opt.value)
-        )}
-        onChange={(opts) => handleMajorSectionChange(opts)}
-        classNamePrefix="section-select"
-        styles={{
-          container: (base) => ({
-            ...base,
-            width: "100%",
-            maxWidth: "110px",
-            minWidth: "90px",
-          }),
-          control: (base, state) => ({
-            ...base,
-            borderColor: "#00bfff",
-            borderWidth: 2,
-            borderRadius: 0,
-            minHeight: 32,
-            fontSize: 24,
-            width: "100%",
-            maxWidth: "110px",
-            minWidth: "90px",
-            // Show only the count in the input
-            "&:after": selectedMajorSections.length > 0 ? {
-              content: `"${selectedMajorSections.length}"`,
-              position: 'absolute',
-              left: 8,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: '#000',
-              fontWeight: 'bold',
-              pointerEvents: 'none',
-            } : {},
-          }),
-          input: (base) => ({
-            ...base,
-            opacity: 0, // Hide the default input
-            width: 0,
-          }),
-          placeholder: (base) => ({
-            ...base,
-            display: selectedMajorSections.length > 0 ? 'none' : 'block',
-          }),
-          option: (base, state) => ({
-            ...base,
-            backgroundColor: state.isSelected ? "#b7e3ee" : "#fff",
-            color: "#000",
-            fontWeight: "bold",
-            fontSize: 24,
-          }),
-          menu: (base) => ({ ...base, zIndex: 50 }),
-          multiValue: (base) => ({
-            ...base,
-            backgroundColor: "#e0e0ff",
-            color: "#000",
-            display: 'none', // Hide the chips in the input
-          }),
-          multiValueLabel: (base) => ({
-            ...base,
-            color: "#000",
-            fontWeight: "bold",
-          }),
-          multiValueRemove: (base) => ({
-            ...base,
-            color: "#b07be0",
-            ":hover": { backgroundColor: "#b07be0", color: "white" },
-          }),
-        }}
-        placeholder="Section"
-        closeMenuOnSelect={false}
-        hideSelectedOptions={false}
-        menuPortalTarget={
-          typeof window !== "undefined" ? document.body : undefined
-        }
-        menuPosition="fixed"
-      />
-    </div>
+            <div className="flex flex-col flex-1 min-w-[90px] max-w-[110px] w-full">
+              <span className="text-[24px] font-bold text-black mb-1 whitespace-nowrap">
+                Choose Section
+              </span>
+              <Select
+                options={majorSectionOptions}
+                isMulti={true}
+                value={majorSectionOptions.filter((opt) =>
+                  selectedMajorSections.includes(opt.value)
+                )}
+                onChange={(opts) => handleMajorSectionChange(opts)}
+                classNamePrefix="section-select"
+                styles={{
+                  container: (base) => ({
+                    ...base,
+                    width: "100%",
+                    maxWidth: "110px",
+                    minWidth: "90px",
+                  }),
+                  control: (base, state) => ({
+                    ...base,
+                    borderColor: "#00bfff",
+                    borderWidth: 2,
+                    borderRadius: 0,
+                    minHeight: 32,
+                    fontSize: 24,
+                    width: "100%",
+                    maxWidth: "110px",
+                    minWidth: "90px",
+                    // Show only the count in the input
+                    "&:after": selectedMajorSections.length > 0 ? {
+                      content: `"${selectedMajorSections.length}"`,
+                      position: 'absolute',
+                      left: 8,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      color: '#000',
+                      fontWeight: 'bold',
+                      pointerEvents: 'none',
+                    } : {},
+                  }),
+                  input: (base) => ({
+                    ...base,
+                    opacity: 0, // Hide the default input
+                    width: 0,
+                  }),
+                  placeholder: (base) => ({
+                    ...base,
+                    display: selectedMajorSections.length > 0 ? 'none' : 'block',
+                  }),
+                  option: (base, state) => ({
+                    ...base,
+                    backgroundColor: state.isSelected ? "#b7e3ee" : "#fff",
+                    color: "#000",
+                    fontWeight: "bold",
+                    fontSize: 24,
+                  }),
+                  menu: (base) => ({ ...base, zIndex: 50 }),
+                  multiValue: (base) => ({
+                    ...base,
+                    backgroundColor: "#e0e0ff",
+                    color: "#000",
+                    display: 'none', // Hide the chips in the input
+                  }),
+                  multiValueLabel: (base) => ({
+                    ...base,
+                    color: "#000",
+                    fontWeight: "bold",
+                  }),
+                  multiValueRemove: (base) => ({
+                    ...base,
+                    color: "#b07be0",
+                    ":hover": { backgroundColor: "#b07be0", color: "white" },
+                  }),
+                }}
+                placeholder="Section"
+                closeMenuOnSelect={false}
+                hideSelectedOptions={false}
+                menuPortalTarget={
+                  typeof window !== "undefined" ? document.body : undefined
+                }
+                menuPosition="fixed"
+              />
+            </div>
             {/* Select Period */}
             <div className="flex flex-col flex-1 min-w-[180px] w-full">
               <div className="flex justify-center w-full mb-1">
@@ -517,11 +519,10 @@ export default function GenerateReportPage() {
           {blockTypeOptions.map((opt) => (
             <button
               key={opt.value}
-              className={`rounded-full px-3 py-1 text-[24px] font-semibold border border-[#b7e3ee] flex items-center gap-1 transition-colors duration-150 ${
-                selectedBlockTypes.includes(opt.value)
-                  ? "bg-[#b7e3ee] text-black"
-                  : "bg-[#e0e0ff] text-black"
-              }`}
+              className={`rounded-full px-3 py-1 text-[24px] font-semibold border border-[#b7e3ee] flex items-center gap-1 transition-colors duration-150 ${selectedBlockTypes.includes(opt.value)
+                ? "bg-[#b7e3ee] text-black"
+                : "bg-[#e0e0ff] text-black"
+                }`}
               onClick={() => toggleBlockType(opt.value)}
               type="button"
             >
@@ -538,18 +539,17 @@ export default function GenerateReportPage() {
             <button
               key={opt.value}
               className={`rounded-full px-3 py-1 text-[24px] font-semibold border flex items-center gap-1 transition-colors duration-150
-                ${
-                  opt.value === "Engineering"
-                    ? selectedDepartments.includes(opt.value)
-                      ? "bg-[#e49edd] border-[#b07be0] text-black"
-                      : "bg-[#f3e6f7] border-[#b07be0] text-black"
-                    : opt.value === "ST"
+                ${opt.value === "Engineering"
+                  ? selectedDepartments.includes(opt.value)
+                    ? "bg-[#e49edd] border-[#b07be0] text-black"
+                    : "bg-[#f3e6f7] border-[#b07be0] text-black"
+                  : opt.value === "ST"
                     ? selectedDepartments.includes(opt.value)
                       ? "bg-[#fff35c] border-[#e0e0e0] text-black"
                       : "bg-[#fffbe9] border-[#e0e0e0] text-black"
                     : selectedDepartments.includes(opt.value)
-                    ? "bg-[#c7f7c7] border-[#7be09b] text-black"
-                    : "bg-[#e0fff0] border-[#7be09b] text-black"
+                      ? "bg-[#c7f7c7] border-[#7be09b] text-black"
+                      : "bg-[#e0fff0] border-[#7be09b] text-black"
                 }`}
               onClick={() => toggleDepartment(opt.value)}
               type="button"
@@ -620,9 +620,8 @@ export default function GenerateReportPage() {
                 ) : (
                   pastBlockSummary.map((summary: any, idx: number) => (
                     <tr
-                      className={`font-bold ${
-                        idx % 2 === 0 ? "bg-[#f4dcf1]" : "bg-white"
-                      }`}
+                      className={`font-bold ${idx % 2 === 0 ? "bg-[#f4dcf1]" : "bg-white"
+                        }`}
                       key={idx}
                     >
                       <td
@@ -683,10 +682,9 @@ export default function GenerateReportPage() {
                         className="border-2 border-black px-2 py-1 text-center"
                         style={{ color: "black" }}
                       >
-                        {pastBlockSummary.reduce(
-                          (sum, item) => sum + (item.Demanded || 0),
-                          0
-                        )}
+                        {pastBlockSummary
+                          .reduce((sum, item) => sum + (item.Demanded || 0), 0)
+                          .toFixed(2)}
                       </td>
                       <td
                         className="border-2 border-black px-2 py-1 text-center"
@@ -695,7 +693,7 @@ export default function GenerateReportPage() {
                         {pastBlockSummary.reduce(
                           (sum, item) => sum + (item.Approved || 0),
                           0
-                        )}
+                        ).toFixed(2)}
                       </td>
                       <td
                         className="border-2 border-black px-2 py-1 text-center"
@@ -704,13 +702,13 @@ export default function GenerateReportPage() {
                         {pastBlockSummary.reduce(
                           (sum, item) => sum + (item.Granted || 0),
                           0
-                        )}
+                        ).toFixed(2)}
                       </td>
                       <td
                         className="border-2 border-black px-2 py-1 text-center"
                         style={{ color: "black" }}
                       >
-               {pastBlockSummary.reduce(
+                        {pastBlockSummary.reduce(
                           (sum, item) => sum + (item.PercentGranted || 0),
                           0
                         )}
@@ -728,7 +726,7 @@ export default function GenerateReportPage() {
                         className="border-2 border-black px-2 py-1 text-center"
                         style={{ color: "black" }}
                       >
-                   {pastBlockSummary.reduce(
+                        {pastBlockSummary.reduce(
                           (sum, item) => sum + (item.PercentAvailed || 0),
                           0
                         )}
@@ -741,7 +739,7 @@ export default function GenerateReportPage() {
           </div>
         </div>
         {/* (B) Summary of Upcoming Blocks */}
-        <div className="w-full max-w-4xl mt-8">
+        <div className="w-full max-w-5xl mt-8">
           <div className="flex w-full items-center">
             <div className="flex-1 bg-[#f1a983] text-[24px] font-bold border-2 border-black px-2 py-1">
               (B) Summary of Upcoming Blocks
@@ -831,12 +829,14 @@ export default function GenerateReportPage() {
             <table className="w-full border-2 border-black mt-1 text-[24px]">
               <thead>
                 <tr className="bg-[#e49edd] text-black text-[24px] font-bold">
-                  
                   <th className="border-2 border-black px-2 py-1">Date</th>
                   <th className="border-2 border-black px-2 py-1">RequestId</th>
                   <th className="border-2 border-black px-2 py-1">Major section</th>
                   <th className="border-2 border-black px-2 py-1">Block Section</th>
                   <th className="border-2 border-black px-2 py-1">Type</th>
+                  <th className="border-2 border-black px-2 py-1">Activity</th>
+                  <th className="border-2 border-black px-2 py-1">Demand time</th>
+                  <th className="border-2 border-black px-2 py-1">Sanctioned time</th>
                   <th className="border-2 border-black px-2 py-1">Duration</th>
                   <th className="border-2 border-black px-2 py-1">Status</th>
                 </tr>
@@ -862,18 +862,18 @@ export default function GenerateReportPage() {
                       if (block.overAllStatus === "Sanctioned") {
                         statusLabel = "Sanctioned";
                         statusStyle = { background: "#fff86b", color: "#222" };
-                      }else if (block.overAllStatus === "with optg.") {
+                      } else if (block.overAllStatus === "with optg.") {
                         statusLabel = "with optg.";
                         statusStyle = { background: "#d47ed4", color: "#222" };
-                      } 
-                       else if (block.Status === "PENDING") {
+                      }
+                      else if (block.Status === "PENDING") {
                         statusLabel = "Pending with dept control";
                         statusStyle = { background: "#d47ed4", color: "#222" };
                       } else if (block.Status === "REJECTED") {
                         statusLabel = "Returned by Optg";
                         statusStyle = { background: "#ff4e36", color: "#fff" };
                       } else {
-                        statusLabel = block.overAllStatus||block.Status;
+                        statusLabel = block.overAllStatus || block.Status;
                       }
 
                       // Row background alternates between pink and white
@@ -885,27 +885,45 @@ export default function GenerateReportPage() {
                           key={idx}
                           className={`${rowBgColor} hover:bg-[#F3F3F3]`}
                         >
-                           <td className="border-2 border-black px-2 py-1 text-black">
-                            {dayjs(block.Date).format("DD-MM-YY")}
+                          <td className="border-2 border-black px-2 py-1 text-black">
+                            {formatDateB(block.Date)}
 
                           </td>
-                         <td className="border-2 border-black px-2 py-1 font-bold text-black">
-  <Link 
-    href={``}
-    className="block w-full h-full"
-  >
-    {block.DivisionId}
-  </Link>
-</td>
+                          <td className="border-2 border-black px-2 py-1 font-bold text-black">
+                            <Link
+                              href={`/admin/view-request/${block.id}?from=block-summary`}
+                              className="block w-full h-full"
+                            >
+                              {block.DivisionId}
+                            </Link>
+                          </td>
                           <td className="border-2 border-black px-2 py-1 font-bold text-black">
                             {block.Section}
                           </td>
-                           <td className="border-2 border-black px-2 py-1 font-bold text-black">
+                          <td className="border-2 border-black px-2 py-1 font-bold text-black">
                             {block.MissionBlock}
                           </td>
-                         
+
                           <td className="border-2 border-black px-2 py-1 text-black">
                             {block.Type}
+                          </td>
+                          <td className="border-2 border-black px-2 py-1 text-black">
+                            {block.Activity}
+                          </td>
+                          <td className="border-2 border-black px-2 py-1 text-black">
+                            {formatTime(block.DemandedTimeFrom)} to{" "}
+                            {formatTime(block.DemandedTimeTo)}
+                          </td>
+                          <td className="border-2 border-black px-2 py-1 text-black">
+                            {block.SanctionedTimeFrom &&
+                              block.SanctionedTimeTo ? (
+                              <>
+                                {formatTime(block.SanctionedTimeFrom)} to{" "}
+                                {formatTime(block.SanctionedTimeTo)}
+                              </>
+                            ) : (
+                              "Not Optimized Yet"
+                            )}
                           </td>
                           <td className="border-2 border-black px-2 py-1 text-black">
                             {block.Duration}

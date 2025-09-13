@@ -1006,7 +1006,7 @@ const formatDisplayDate = (dateStr: string) => {
                           className={`${rowBgColor} hover:bg-[#F3F3F3]`}
                         >
                           <td className="border-2 border-black px-2 py-1 text-black">
-                            {dayjs(block.Date).format("DD-MM-YY")}
+                            {formatDateB(block.Date)}
                           </td>
                           <td className="border-2 border-black px-2 py-1 font-bold text-black">
                             <Link
