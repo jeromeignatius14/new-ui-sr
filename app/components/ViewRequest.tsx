@@ -254,27 +254,29 @@ export default function ViewRequest() {
                 </tr>
               ) : null}
 
-              {/* Calculating Duration */}
-                <tr>
+              {/* Parsing Duration */}
+              <tr>
                 <td className="py-1 font-medium">Duration:</td>
                 <td className="py-1">
-                  {(() => {
-                  if (!request.demandTimeFrom || !request.demandTimeTo) return "N/A";
-                  try {
-                    const from = new Date(request.demandTimeFrom);
-                    const to = new Date(request.demandTimeTo);
-                    const diffMs = to.getTime() - from.getTime();
-                    if (diffMs < 0) return "Invalid duration";
-                    const diffMins = Math.floor(diffMs / 60000);
-                    const hours = Math.floor(diffMins / 60);
-                    const mins = diffMins % 60;
-                    return `${hours}h ${mins}m`;
-                  } catch {
-                    return "Invalid duration";
-                  }
-                  })()}
+                  {request.duration ?
+                    (() => {
+                      try {
+                          const parts = request.duration.split('T');
+                          if (parts.length === 2) {
+                            const timePart = parts[1];
+                            const [hours, minutes] = timePart.split(':');
+                            return `${parseInt(hours)}h ${minutes.padStart(2, '0')}m`;
+                          }
+                        // If all parsing fails, return the original value
+                        return request.duration;
+                      } catch (e) {
+                        return request.duration;
+                      }
+                    })()
+                    : "N/A"}
                 </td>
-                </tr>
+              </tr>
+
               {request.elementarySection && request.selectedDepartment === "TRD" && (
                 <tr>
                   <td className="py-1 font-medium">Elementary Section:</td>

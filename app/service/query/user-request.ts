@@ -48,6 +48,7 @@ export interface RequestItem {
     workLocationTo: string;
     demandTimeFrom: string;
     demandTimeTo: string;
+    duration: string | null;
     sigDisconnection: boolean;
     elementarySection: string | null;
     elementarySectionTo: string | null;
