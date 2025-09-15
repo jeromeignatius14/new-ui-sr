@@ -4447,7 +4447,7 @@ export const depot: DepotStructure = {
   "MSB-VLCY": {
     'TRD': ["MSB", "MS"],
     'S&T': ["MSB", "MS"],
-    'ENGG': ["MSB", "MS","BRIDGE"]
+    'ENGG': ["MSB", "MS","BRIDGE","WSTB"]
   }
 };
 
