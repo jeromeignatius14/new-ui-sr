@@ -6,7 +6,7 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { managerService, UserRequest } from "@/app/service/api/manager";
-import { useBulkAcceptRequests, useBulkRejectRequests } from "@/app/service/mutation/manager";
+import { useBulkAcceptRequests, useBulkRejectRequests, useEditUserRequest } from "@/app/service/mutation/manager";
 import { toast } from "react-hot-toast";
 import { notFound } from "next/navigation";
 
@@ -19,6 +19,14 @@ export default function PendingRequestsPage() {
     const [showSuccessModal, setShowSuccessModal] = useState<null | string>(null);
     const [isAccepting, setIsAccepting] = useState(false);
     const [isRejecting, setIsRejecting] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [requestToEdit, setRequestToEdit] = useState<UserRequest | null>(null);
+    const [editFormData, setEditFormData] = useState({
+        date: "",
+        demandTimeFrom: "",
+        demandTimeTo: ""
+    });
+    const [isEditing, setIsEditing] = useState(false);
 let someId=""
 if(session?.user?.id!=="852e95b1-a568-4571-99e4-96bf7e02ba01"&&session?.user.department==="ENGG"&&session?.user.role==="DEPT_CONTROLLER")
   {
@@ -97,6 +105,9 @@ if(session?.user?.id!=="852e95b1-a568-4571-99e4-96bf7e02ba01"&&session?.user.dep
             toast.error("Failed to process request. Please try again.");
         },
     });
+
+    // Edit request mutation
+    const editMutation = useEditUserRequest();
 
     // Handle accept request
     // const handleAccept = async (id: string) => {
@@ -214,6 +225,143 @@ const handleAccept = async (
             newSelected.add(id);
         }
         setSelectedRequests(newSelected);
+    };
+
+    // Handle open edit modal
+    const handleEditClick = (request: UserRequest) => {
+        setRequestToEdit(request);
+        // Format date and time values correctly to populate the form
+        const date = request.date ? new Date(request.date) : new Date();
+        const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        
+        // Get time values, ensuring they're in HH:MM format
+        let timeFrom = "00:00";
+        let timeTo = "00:00";
+        
+        if (request.demandTimeFrom) {
+            try {
+                const fromDate = new Date(request.demandTimeFrom);
+                if (!isNaN(fromDate.getTime())) {
+                    const hours = fromDate.getUTCHours().toString().padStart(2, '0');
+                    const minutes = fromDate.getUTCMinutes().toString().padStart(2, '0');
+                    timeFrom = `${hours}:${minutes}`;
+                } else if (request.demandTimeFrom.includes(':')) {
+                    // Already in HH:MM format
+                    timeFrom = request.demandTimeFrom.substring(0, 5);
+                }
+            } catch (e) {
+                console.error("Error formatting time from:", e);
+            }
+        }
+        
+        if (request.demandTimeTo) {
+            try {
+                const toDate = new Date(request.demandTimeTo);
+                if (!isNaN(toDate.getTime())) {
+                    const hours = toDate.getUTCHours().toString().padStart(2, '0');
+                    const minutes = toDate.getUTCMinutes().toString().padStart(2, '0');
+                    timeTo = `${hours}:${minutes}`;
+                } else if (request.demandTimeTo.includes(':')) {
+                    // Already in HH:MM format
+                    timeTo = request.demandTimeTo.substring(0, 5);
+                }
+            } catch (e) {
+                console.error("Error formatting time to:", e);
+            }
+        }
+        
+        setEditFormData({
+            date: formattedDate,
+            demandTimeFrom: timeFrom,
+            demandTimeTo: timeTo
+        });
+        setShowEditModal(true);
+    };
+
+    // Handle edit form input changes
+    const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setEditFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    // Handle edit time input changes
+    const handleTimeChange = (field: 'demandTimeFrom' | 'demandTimeTo', part: 'hour' | 'minute', value: string) => {
+        const currentTime = editFormData[field] || '00:00';
+        const [currentHour, currentMinute] = currentTime.split(':');
+        
+        let newTime = currentTime;
+        if (part === 'hour') {
+            newTime = `${value.padStart(2, '0')}:${currentMinute}`;
+        } else {
+            newTime = `${currentHour}:${value.padStart(2, '0')}`;
+        }
+        
+        setEditFormData(prev => ({
+            ...prev,
+            [field]: newTime
+        }));
+    };
+
+    // Handle save edit
+    const handleSaveEdit = async () => {
+        if (!requestToEdit) return;
+        
+        setIsEditing(true);
+        try {
+            // Format the date and time values as ISO date-time strings
+            const formattedData = {
+                date: `${editFormData.date}T00:00:00.000Z`,
+                demandTimeFrom: `${editFormData.date}T${editFormData.demandTimeFrom}:00.000Z`,
+                demandTimeTo: `${editFormData.date}T${editFormData.demandTimeTo}:00.000Z`,
+            };
+            
+            await editMutation.mutateAsync({
+                id: requestToEdit.id,
+                data: formattedData
+            });
+            
+            // Immediate UI update
+            if (data?.data?.requests) {
+                // Create a new array to trigger re-render
+                const updatedRequests = [...data.data.requests].map((req: UserRequest) => {
+                    if (req.id === requestToEdit.id) {
+                        return {
+                            ...req,
+                            date: formattedData.date,
+                            demandTimeFrom: formattedData.demandTimeFrom,
+                            demandTimeTo: formattedData.demandTimeTo
+                        };
+                    }
+                    return req;
+                });
+                
+                // Immediate UI update
+                data.data.requests = updatedRequests;
+            }
+            
+            setShowEditModal(false);
+            setIsEditing(false);
+        } catch (error) {
+            console.error("Error updating request:", error);
+            setIsEditing(false);
+        }
+    };
+
+    // Calculate duration between two time strings
+    const getDuration = (from: string, to: string) => {
+        if (!from || !to) return "";
+        const [fromH, fromM] = from.split(":").map(Number);
+        const [toH, toM] = to.split(":").map(Number);
+        let start = fromH * 60 + fromM;
+        let end = toH * 60 + toM;
+        if (end < start) end += 24 * 60;
+        const diff = end - start;
+        const hours = Math.floor(diff / 60);
+        const mins = diff % 60;
+        return `${hours}h ${mins}m`;
     };
 
 //   const handleBulkAccept = async () => {
@@ -575,6 +723,13 @@ const handleBulkAccept = async () => {
                                     <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-[#E6E6FA] text-center align-middle w-32">
                                         <div className="flex gap-2 justify-center flex-col md:flex-row">
                                             <button
+                                                onClick={() => handleEditClick(request)}
+                                                disabled={isAccepting || isRejecting || isEditing}
+                                                className="px-2 py-1 text-xs md:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 font-bold"
+                                            >
+                                                E
+                                            </button>
+                                            <button
                                                 onClick={() => handleAccept(request.id, request.date, request.corridorType)}
                                                 disabled={isAccepting || isRejecting}
                                                 className="px-2 py-1 text-xs md:text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 font-bold"
@@ -720,6 +875,136 @@ const handleBulkAccept = async () => {
     </div>
   </div>
 )}
+
+            {/* Edit Modal */}
+            {showEditModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-md w-full">
+                        <h3 className="text-lg font-bold mb-4 text-black">Edit Request</h3>
+                        
+                        {/* Date Input */}
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Date of Block
+                            </label>
+                            <input
+                                type="date"
+                                name="date"
+                                value={editFormData.date}
+                                onChange={handleEditFormChange}
+                                className="w-full p-2 border border-gray-300 rounded text-black"
+                                min={(() => {
+                                    const today = new Date();
+                                    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                                })()}
+                                max={(() => {
+                                    const today = new Date();
+                                    today.setDate(today.getDate() + 30);
+                                    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                                })()}
+                                required
+                            />
+                        </div>
+                        
+                        {/* Time From Input */}
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Demand Time From
+                            </label>
+                            <div className="flex items-center">
+                                <select
+                                    value={editFormData.demandTimeFrom ? editFormData.demandTimeFrom.split(":")[0] : ""}
+                                    onChange={(e) => handleTimeChange('demandTimeFrom', 'hour', e.target.value)}
+                                    className="w-20 p-2 border border-gray-300 rounded-l text-black"
+                                >
+                                    <option value="">--</option>
+                                    {[...Array(24).keys()].map((h) => (
+                                        <option key={h} value={h.toString().padStart(2, '0')}>
+                                            {h.toString().padStart(2, '0')}
+                                        </option>
+                                    ))}
+                                </select>
+                                <span className="px-2 text-gray-700">:</span>
+                                <select
+                                    value={editFormData.demandTimeFrom ? editFormData.demandTimeFrom.split(":")[1] : ""}
+                                    onChange={(e) => handleTimeChange('demandTimeFrom', 'minute', e.target.value)}
+                                    className="w-20 p-2 border border-gray-300 rounded-r text-black"
+                                >
+                                    <option value="">--</option>
+                                    {[...Array(12).keys()].map((m) => (
+                                        <option key={m} value={(m * 5).toString().padStart(2, '0')}>
+                                            {(m * 5).toString().padStart(2, '0')}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        {/* Time To Input */}
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Demand Time To
+                            </label>
+                            <div className="flex items-center">
+                                <select
+                                    value={editFormData.demandTimeTo ? editFormData.demandTimeTo.split(":")[0] : ""}
+                                    onChange={(e) => handleTimeChange('demandTimeTo', 'hour', e.target.value)}
+                                    className="w-20 p-2 border border-gray-300 rounded-l text-black"
+                                >
+                                    <option value="">--</option>
+                                    {[...Array(24).keys()].map((h) => (
+                                        <option key={h} value={h.toString().padStart(2, '0')}>
+                                            {h.toString().padStart(2, '0')}
+                                        </option>
+                                    ))}
+                                </select>
+                                <span className="px-2 text-gray-700">:</span>
+                                <select
+                                    value={editFormData.demandTimeTo ? editFormData.demandTimeTo.split(":")[1] : ""}
+                                    onChange={(e) => handleTimeChange('demandTimeTo', 'minute', e.target.value)}
+                                    className="w-20 p-2 border border-gray-300 rounded-r text-black"
+                                >
+                                    <option value="">--</option>
+                                    {[...Array(12).keys()].map((m) => (
+                                        <option key={m} value={(m * 5).toString().padStart(2, '0')}>
+                                            {(m * 5).toString().padStart(2, '0')}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        {/* Duration Display */}
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Duration
+                            </label>
+                            <div className="p-2 border border-gray-300 rounded bg-gray-50 text-black">
+                                {getDuration(editFormData.demandTimeFrom || "", editFormData.demandTimeTo || "") || "--"}
+                            </div>
+                        </div>
+                        
+                        <div className="flex justify-end gap-2">
+                            <button
+                                onClick={() => {
+                                    setShowEditModal(false);
+                                    setRequestToEdit(null);
+                                }}
+                                className="px-4 py-2 text-sm bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSaveEdit}
+                                disabled={isEditing}
+                                className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                            >
+                                {isEditing ? "Saving..." : "Save Changes"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

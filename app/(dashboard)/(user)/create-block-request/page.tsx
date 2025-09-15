@@ -1105,40 +1105,40 @@ export default function CreateBlockRequestPage() {
 
     try {
       // ─── 2. Fetch existing requests and run block check ──────────────────
-      // const existing = await userRequestService.getUserRequests(1, 100);
-      // const requests: any[] = Array.isArray(existing?.data.requests)
-      //   ? existing.data.requests
-      //   : [];
-      // const now = Date.now();
+      const existing = await userRequestService.getUserRequests(1, 100);
+      const requests: any[] = Array.isArray(existing?.data.requests)
+        ? existing.data.requests
+        : [];
+      const now = Date.now();
 
-      // let hasUnavailedSanctionedBlock = false;
+      let hasUnavailedSanctionedBlock = false;
 
-      // for (let i = 0; i < requests.length; i++) {
-      //   const req = requests[i];
-      //   if (
-      //     req?.isSanctioned === true && // sanctioned
-      //     req?.availedResponse === null && // not availed
-      //     req?.sanctionedTimeFrom // has date
-      //   ) {
-      //     const sanctionMs = new Date(req.sanctionedTimeFrom).getTime();
-      //     if (!Number.isNaN(sanctionMs) && now >= sanctionMs) {
-      //       // sanction start time is in the past (covers >24 h automatically)
-      //       hasUnavailedSanctionedBlock = true;
-      //       break;
-      //     }
-      //   }
-      // }
-      // console.log("level 1 passed");
+      for (let i = 0; i < requests.length; i++) {
+        const req = requests[i];
+         if (
+           req?.isSanctioned === true && // sanctioned
+           req?.availedResponse === null && // not availed
+           req?.sanctionedTimeFrom // has date
+         ) {
+           const sanctionMs = new Date(req.sanctionedTimeFrom).getTime();
+           if (!Number.isNaN(sanctionMs) && now >= sanctionMs) {
+             // sanction start time is in the past (covers >24 h automatically)
+             hasUnavailedSanctionedBlock = true;
+             break;
+           }
+         }
+       }
+       console.log("level 1 passed");
 
-      // if (hasUnavailedSanctionedBlock && !proceedAnyway) {
-      //   const link = `https://mobile-bms.plattrtechstudio.com/?cugNumber=${
-      //     session?.user?.phone
-      //   }&section=${formData.missionBlock || "MAS-GDR"}`;
-      //   setPopupLink(link);
-      //   setShowPopup(true);
-      //   setFormSubmitting(false);
-      //   return;
-      // }
+       if (hasUnavailedSanctionedBlock && !proceedAnyway) {
+         const link = `https://mobile-bms.plattrtechstudio.com/?cugNumber=${
+           session?.user?.phone
+         }&section=${formData.missionBlock || "MAS-GDR"}`;
+         setPopupLink(link);
+         setShowPopup(true);
+         setFormSubmitting(false);
+         return;
+       }
 
       console.log("level 2 passed");
       // ─── 3. Client‑side validation ───────────────────────────────────────
@@ -3981,7 +3981,7 @@ export default function CreateBlockRequestPage() {
             >
               Back
             </button>
-            {/* {showPopup && (
+            {showPopup && (
               <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-white/20">
                 <div className="bg-white p-4 rounded shadow-lg w-[90%] max-w-sm text-center border border-gray-300">
                   <h2 className="text-lg font-semibold mb-2 text-black">
@@ -3995,8 +3995,11 @@ export default function CreateBlockRequestPage() {
                       onClick={() => {
                         setShowPopup(false);
                         setProceedAnyway(true);
-                        // Re-trigger the submit or logic
-                        // handleFormSubmit; // Call the same handler again
+                        // Re-trigger the submit automatically
+                        setTimeout(() => {
+                          const fakeEvent = { preventDefault: () => {} } as React.FormEvent<HTMLFormElement>;
+                          handleFormSubmit(fakeEvent);
+                        }, 100);
                       }}
                       className="bg-gray-300 text-black px-4 py-1 rounded hover:bg-gray-400"
                     >
@@ -4018,7 +4021,7 @@ export default function CreateBlockRequestPage() {
                   </div>
                 </div>
               </div>
-            )} */}
+            )}
 
             {showReviewModal && (
               <ReviewBlockRequestModal

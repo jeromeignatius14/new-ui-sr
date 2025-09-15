@@ -104,3 +104,28 @@ export const useBulkRejectRequests = () => {
     });
 };
 
+export const useEditUserRequest = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ 
+            id, 
+            data 
+        }: { 
+            id: string; 
+            data: { 
+                date: string; 
+                demandTimeFrom: string; 
+                demandTimeTo: string 
+            } 
+        }) => managerService.editUserRequest(id, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['pendingRequests'] });
+            queryClient.invalidateQueries({ queryKey: ['requests'] });
+        },
+        onError: (error: any) => {
+            toast.error(error.message || 'Failed to update request');
+        }
+    });
+};
+
