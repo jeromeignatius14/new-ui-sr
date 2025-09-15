@@ -1085,6 +1085,12 @@ export default function CreateBlockRequestPage() {
   // Add reviewMode state
   const [reviewMode, setReviewMode] = useState(false);
 
+  const parseDuration = (duration: string | null): number => {
+    if (!duration) return 0;
+    const [hours, minutes] = duration.split(":").map(Number);
+    return hours * 60 + minutes;
+  }
+
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log("level entry");
@@ -1196,7 +1202,6 @@ export default function CreateBlockRequestPage() {
       let start = fromH * 60 + fromM;
       let end = toH * 60 + toM;
       if (end < start) end += 24 * 60;
-      const durationMins = end - start;
 
       // ─── 6. Build payload ────────────────────────────────────────────────
       const submitData: UserRequestInput = {
@@ -1249,12 +1254,11 @@ export default function CreateBlockRequestPage() {
         processedLineSections: processedSections,
         adminAcceptance: false,
         selectedDepo: userDepot || "",
-        ...(durationMins <= 45 && !formData.sigActionsNeeded && !formData.trdActionsNeeded && {
+        ...(formData.duration && parseDuration(formData.duration) <= 45 && !formData.sigActionsNeeded && !formData.trdActionsNeeded && {
           managerAcceptance: true,
           isSanctioned: true,
         }),
       };
-
       // ─── 7. Submit to backend ────────────────────────────────────────────
       const response = await mutation.mutateAsync(submitData);
       if (response) {
