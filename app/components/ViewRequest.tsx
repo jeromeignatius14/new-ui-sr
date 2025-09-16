@@ -40,7 +40,7 @@ export default function ViewRequest() {
   };
 
   const formatTime = (dateString: string): string => {
-    if (!dateString) return "Invalid time";
+    if (!dateString) return "N/A";
     try {
       const timePart = dateString.includes("T")
         ? dateString.split("T")[1]
