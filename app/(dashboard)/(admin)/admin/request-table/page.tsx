@@ -230,7 +230,7 @@ export default function AdminRequestTablePage() {
     return (
       !r.isSanctioned &&
       (r.overAllStatus === "with optg.") &&
-      reqDate > today
+      reqDate >=today
     );
   }).length;
 
@@ -243,7 +243,7 @@ export default function AdminRequestTablePage() {
       !r.isSanctioned &&
       r.selectedDepartment === "ENGG" &&
       (r.overAllStatus === "with optg.") &&
-      reqDate > today
+      reqDate >=today
     );
   }).length;
 
@@ -256,7 +256,7 @@ export default function AdminRequestTablePage() {
       !r.isSanctioned &&
       r.selectedDepartment === "S&T" &&
       (r.overAllStatus === "with optg.") &&
-      reqDate > today
+      reqDate >=today
     );
   }).length;
 
@@ -269,7 +269,7 @@ export default function AdminRequestTablePage() {
       !r.isSanctioned &&
       r.selectedDepartment === "TRD" &&
       (r.overAllStatus === "with optg.") &&
-      reqDate > today
+      reqDate >=today
     );
   }).length;
   // const handleDownloadCSV = () => {
