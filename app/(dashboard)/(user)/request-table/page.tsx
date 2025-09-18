@@ -1058,7 +1058,8 @@ const handleDownload = () => {
                       {request.isSanctioned === true ? (
                         <>
                           {request.sanctionedTimeFrom === null || request.sanctionedTimeTo === null ? (
-                            <span className="text-gray-500">00:00 - 00:00</span>
+                            <span className="text-gray-500"> {formatTime(request.optimisedTimeFrom)} -{" "}
+                              {formatTime(request.optimisedTimeTo)}</span>
                           ) : (
                             <>
                               {formatTime(request.sanctionedTimeFrom)} -{" "}
@@ -1074,7 +1075,7 @@ const handleDownload = () => {
                       {request.isSanctioned === true ? "Y" : "N"}
                     </td>
                     <td className="border border-black px-2 py-1 bg-[#E6E6FA] text-center align-middle w-32">
-                      {request.isSanctioned === true ? (
+                      {request.isSanctioned === true&&request.userResponse==="" ? (
                         <>
                           {request.userResponse === "ACCEPTED" ? (
                             <div className="px-2 py-1 bg-green-100 text-green-800 mx-auto">
@@ -1087,7 +1088,7 @@ const handleDownload = () => {
                       ) : (
                         <>
                           <span className="text-gray-500">
-                            {request.overAllStatus}
+                            {request.userAcceptanceForSanction===false&&request.userResponse!=="ACCEPTED"?"Rejected by SSE":request.overAllStatus}
                           </span>
                           {/* {(() => {
     if (request.managerAcceptance === false&&request.remarkByManager===null ) {
