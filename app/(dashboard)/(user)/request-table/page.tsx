@@ -1075,7 +1075,7 @@ const handleDownload = () => {
                       {request.isSanctioned === true ? "Y" : "N"}
                     </td>
                     <td className="border border-black px-2 py-1 bg-[#E6E6FA] text-center align-middle w-32">
-                      {request.isSanctioned === true&&request.userResponse==="" ? (
+                      {request.isSanctioned === true ? (
                         <>
                           {request.userResponse === "ACCEPTED" ? (
                             <div className="px-2 py-1 bg-green-100 text-green-800 mx-auto">
@@ -1088,7 +1088,7 @@ const handleDownload = () => {
                       ) : (
                         <>
                           <span className="text-gray-500">
-                            {(request.userAcceptanceForSanction===false&&request.userResponse!==""&&request.isSanctioned===true)?"Rejected by SSE":request.overAllStatus}
+                            {request.overAllStatus}
                           </span>
                           {/* {(() => {
     if (request.managerAcceptance === false&&request.remarkByManager===null ) {
