@@ -184,7 +184,8 @@ export default function ViewRequest() {
               </tr>
               <tr>
                 <td className="py-1 font-medium">Created Date:</td>
-                <td className="py-1">{formatDate(request.createdAt)}</td>
+                <td className="py-1"> {request.createdAt.split(/[T ]/)[0].split("-").reverse().join("-")}</td>
+                
               </tr>
               <tr>
                 <td className="py-1 font-medium">Created Time:</td>
@@ -206,7 +207,20 @@ export default function ViewRequest() {
                 <td className="py-1 font-medium ">Request Type:</td>
                 <td className="py-1">{request.corridorType}</td>
               </tr>
-
+              <tr>
+                <td className="py-1 font-medium ">Manager Acceptance Date:</td>
+                <td className="py-1">
+                  {request.managerResponseTiming
+                    ? request.managerResponseTiming.split(/[T ]/)[0].split("-").reverse().join("-")
+                    : "N/A"}
+                </td>
+              </tr>
+                   <tr>
+                <td className="py-1 font-medium ">Manager Acceptance Time:</td>
+                <td className="py-1">
+                  {formatTime(request.managerResponseTiming ?? "")}
+                </td>
+              </tr>
               {/* <tr>
                 <td className="py-1 font-medium">Depot:</td>
                 <td className="py-1">{request.selectedDepo}</td>
