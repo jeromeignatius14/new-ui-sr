@@ -1088,7 +1088,7 @@ const handleDownload = () => {
                       ) : (
                         <>
                           <span className="text-gray-500">
-                            {request.userAcceptanceForSanction===false&&request.userResponse!=="ACCEPTED"?"Rejected by SSE":request.overAllStatus}
+                            {(request.userAcceptanceForSanction===false&&request.userResponse!==""&&request.isSanctioned===true)?"Rejected by SSE":request.overAllStatus}
                           </span>
                           {/* {(() => {
     if (request.managerAcceptance === false&&request.remarkByManager===null ) {
