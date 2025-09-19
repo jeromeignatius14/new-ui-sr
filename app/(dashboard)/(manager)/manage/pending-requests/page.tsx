@@ -150,11 +150,11 @@ const handleAccept = async (
     blockEnd.setDate(blockStart.getDate() + 8); // Sunday next week
     blockEnd.setHours(23, 59, 59, 999);
 
-    // Block requests within [Saturday ... next Sunday]
-    if (requestDate >= blockStart && requestDate <= blockEnd) {
-      alert("You cannot accept requests from tomorrow to next Sunday on Friday after 12 PM.");
-      return;
-    }
+    // // Block requests within [Saturday ... next Sunday]
+    // if (requestDate >= blockStart && requestDate <= blockEnd) {
+    //   alert("You cannot accept requests from tomorrow to next Sunday on Friday after 12 PM.");
+    //   return;
+    // }
   }
 
   if (confirm("Are you sure you want to accept this request?")) {
@@ -447,11 +447,11 @@ const handleBulkAccept = async () => {
       const requestDate = new Date(request.date);
       const isUrgent = request.corridorType === "Urgent Block";
 
-      // Block non-urgent requests within the weekend period
-      if (!isUrgent && requestDate >= blockStart && requestDate <= blockEnd) {
-        alert(`You cannot accept request ${request.divisionId || request.id} (${formatDate(request.date)}) because it falls within the weekend period (Saturday to next Sunday) on Friday after 12 PM.`);
-        return;
-      }
+    //   // Block non-urgent requests within the weekend period
+    //   if (!isUrgent && requestDate >= blockStart && requestDate <= blockEnd) {
+    //     alert(`You cannot accept request ${request.divisionId || request.id} (${formatDate(request.date)}) because it falls within the weekend period (Saturday to next Sunday) on Friday after 12 PM.`);
+    //     return;
+    //   }
     }
   }
 
