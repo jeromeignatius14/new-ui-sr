@@ -153,11 +153,11 @@ const handleAccept = async (
     blockEnd.setDate(blockStart.getDate() + 8); // Sunday next week
     blockEnd.setHours(23, 59, 59, 999);
 
-    // Block requests within [Saturday ... next Sunday]
-    if (requestDate >= blockStart && requestDate <= blockEnd) {
-      alert("You cannot accept requests from tomorrow to next Sunday on Friday after 12 PM.");
-      return;
-    }
+    // // Block requests within [Saturday ... next Sunday]
+    // if (requestDate >= blockStart && requestDate <= blockEnd) {
+    //   alert("You cannot accept requests from tomorrow to next Sunday on Friday after 12 PM.");
+    //   return;
+    // }
   }
 
   if (confirm("Are you sure you want to accept this request?")) {
