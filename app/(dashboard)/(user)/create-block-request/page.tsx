@@ -3296,7 +3296,7 @@ export default function CreateBlockRequestPage() {
                       }}
                       maxLength={7}
                       placeholder="From"
-                      className="border-0 rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-0 w-[120px] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200"
+                      className="border-2 border-[#2c3e50] rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] w-[120px] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200"
                       required
                     />
                     <span className="font-bold text-[#2c3e50] text-[24px]">
@@ -3322,7 +3322,7 @@ export default function CreateBlockRequestPage() {
                       }}
                       maxLength={7}
                       placeholder="To"
-                      className=""
+                      className="border-2 border-[#2c3e50] rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] w-[120px] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200"
                       required
                     />
                   </div>
