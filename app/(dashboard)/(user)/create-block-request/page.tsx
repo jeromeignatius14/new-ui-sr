@@ -183,195 +183,354 @@ function ReviewBlockRequestModal({
   readOnly,
 }: ReviewModalProps) {
   if (!isOpen) return null;
+
+  // Debug log to see what's being passed
+  console.log("ReviewModal Safety Info:", {
+    freshCaution: formData.freshCautionRequired,
+    powerBlock: formData.powerBlockRequired,
+    sntDisconnection: formData.sntDisconnectionRequired,
+    department: formData.selectedDepartment,
+    typeOfFreshCaution: typeof formData.freshCautionRequired,
+    typeOfPowerBlock: typeof formData.powerBlockRequired,
+    typeOfSntDisconnection: typeof formData.sntDisconnectionRequired
+  });
+
+  // Helper function to render safety information based on department
+  const renderSafetyInfo = () => {
+    const department = formData.selectedDepartment;
+
+    // TRD department: Don't show any safety information
+    if (department === "TRD") {
+      return null;
+    }
+
+    // Helper function to check if a safety requirement is enabled
+    const isEnabled = (value: any): boolean => {
+      return value === true || value === "Y" || value === "true" || value === "yes" || value === "Yes";
+    };
+
+    // For other departments (ENGG and S&T)
+    return (
+      <div className="space-y-2 mt-5">
+        <h2 className="font-bold">Safety Information</h2>
+
+        {/* Fresh Caution - Show for both ENGG and S&T */}
+        <div className="text-[14px]">
+          <div className="font-semibold">Fresh Caution Imposed:</div>
+          <div>{isEnabled(formData.freshCautionRequired) ? "" : "No"}</div>
+
+          {/* Show fresh caution details only if it's enabled */}
+          {isEnabled(formData.freshCautionRequired) && (
+            <div className="ml-4 mt-2 space-y-1 text-sm">
+              {formData.freshCautions && formData.freshCautions.map((caution: any, index: number) => (
+                <div key={index} className="">
+                  {caution.freshCautionLocationFrom && (
+                    <div><span className="font-semibold">Location From:</span> {caution.freshCautionLocationFrom}</div>
+                  )}
+                  {caution.freshCautionLocationTo && (
+                    <div><span className="font-semibold">Location To:</span> {caution.freshCautionLocationTo}</div>
+                  )}
+                  {caution.freshCautionSpeed && (
+                    <div><span className="font-semibold">Speed (km/hr):</span> {caution.freshCautionSpeed}</div>
+                  )}
+                  {caution.adjacentLinesAffected && (
+                    <div><span className="font-semibold">Adjacent Lines Affected:</span> {caution.adjacentLinesAffected}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Power Block - Show for both ENGG and S&T */}
+        <div>
+          <div className="font-semibold text-[14px]">Power Block:</div>
+          <div>{isEnabled(formData.powerBlockRequired) ? "" : "No"}</div>
+
+          {/* Show power block details only if it's enabled */}
+          {isEnabled(formData.powerBlockRequired) && (
+            <div className="ml-4 mt-2 space-y-1 text-sm">
+              {formData.elementarySection && (
+                <div><span className="font-semibold">Elementary Section:</span> {formData.elementarySection}</div>
+              )}
+              {formData.powerBlockKmFrom && (
+                <div><span className="font-semibold">KM From:</span> {formData.powerBlockKmFrom}</div>
+              )}
+              {formData.powerBlockKmTo && (
+                <div><span className="font-semibold">KM To:</span> {formData.powerBlockKmTo}</div>
+              )}
+              {formData.powerBlockRoad && (
+                <div><span className="font-semibold">Road:</span> {formData.powerBlockRoad}</div>
+              )}
+              {formData.powerBlockRequirements && formData.powerBlockRequirements.length > 0 && (
+                <div>
+                  <span className="font-semibold">Requirements:</span>{" "}
+                  {formData.powerBlockRequirements.join(", ")}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* S&T Disconnection - Show only for ENGG */}
+        {department === "ENGG" && (
+          <div>
+            <div className="font-semibold text-[14px]">S&T Disconnection:</div>
+            <div>{isEnabled(formData.sntDisconnectionRequired) ? "" : "No"}</div>
+
+            {/* Show S&T disconnection details only if it's enabled */}
+            {isEnabled(formData.sntDisconnectionRequired) && (
+              <div className="ml-4 mt-2 space-y-1 text-sm">
+                {formData.sntDisconnectionLineFrom && (
+                  <div><span className="font-semibold">Line From:</span> {formData.sntDisconnectionLineFrom}</div>
+                )}
+                {formData.sntDisconnectionLineTo && (
+                  <div><span className="font-semibold">Line To:</span> {formData.sntDisconnectionLineTo}</div>
+                )}
+                {formData.sntDisconnectionPointNo && (
+                  <div><span className="font-semibold">Point No:</span> {formData.sntDisconnectionPointNo}</div>
+                )}
+                {formData.sntDisconnectionSignalNo && (
+                  <div><span className="font-semibold">Signal No:</span> {formData.sntDisconnectionSignalNo}</div>
+                )}
+                {formData.sntDisconnectionRequirements && formData.sntDisconnectionRequirements.length > 0 && (
+                  <div>
+                    <span className="font-semibold">Requirements:</span>{" "}
+                    {formData.sntDisconnectionRequirements.join(", ")}
+                  </div>
+                )}
+                {formData.sntDisconnectionAssignTo && (
+                  <div><span className="font-semibold">Assign To:</span> {formData.sntDisconnectionAssignTo}</div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-      <div className="bg-[#d6f7fa] rounded-2xl shadow-2xl max-w-2xl w-full p-0 border-4 border-[#222] relative overflow-y-auto max-h-[90vh]">
-        <div className="bg-[#f7f7a1] rounded-t-xl p-4 border-b-2 border-[#b6f7e6] text-center">
-          <span
-            className="text-3xl font-extrabold text-[#b07be0] tracking-wide"
-            style={{ fontFamily: "Arial Black, Arial, sans-serif" }}
-          >
-            RBMS
-          </span>
+      <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full p-6 relative overflow-y-auto max-h-[90vh] text-gray-600">
+        <h2 className="text-xl font-bold mb-6 text-center">Confirm Your Request</h2>
+
+        <div className="bg-blue-50 p-4 rounded-lg mb-6">
+          <p className="mb-2 font-bold">Your request for traffic block in {blockSectionValue.join(", ")} Block Section on {formData.date} from {formData.demandTimeFrom} hrs to {formData.demandTimeTo} hrs and is ready to be submitted.</p>
+          <p className="text-sm text-gray-600">Please review all details below before final submission.</p>
         </div>
-        <div className="bg-[#c6e6f7] rounded-b-xl p-6 pt-4">
-          <h2 className="text-2xl font-extrabold text-center mb-4 text-[#222]">
-            Review the Block Request Before Submission
-          </h2>
-          <div className="space-y-3 text-black text-base">
-            <div className="flex flex-wrap gap-4">
-              <div className="flex-1 min-w-[180px]">
-                <b>Date of Block:</b> {formData.date}
-              </div>
-              <div className="flex-1 min-w-[180px]">
-                <b>Major Section:</b> {formData.selectedSection}
-              </div>
-              <div className="flex-1 min-w-[180px]">
-                <b>Depot/SSE:</b> {formData.selectedDepo}
-              </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div>
+            <h3 className="font-bold mb-2">Basic Information</h3>
+            <div className="grid grid-cols-2 gap-2 text-[14px]">
+              <div className="text-gray-600 font-bold">Date:</div>
+              <div>{formData.date}</div>
+
+              <div className="text-gray-600 font-bold">Department:</div>
+              <div>{formData.selectedDepartment}</div>
+
+              <div className="text-gray-600 font-bold">Major Section:</div>
+              <div>{formData.selectedSection}</div>
+
+              <div className="text-gray-600 font-bold">Depot/SSE:</div>
+              <div>{formData.selectedDepo}</div>
+
+              <div className="text-gray-600 font-bold">Work Type:</div>
+              <div>{formData.workType}</div>
+
+              {(formData.activity || customActivity) && (
+                <>
+                  <div className="text-gray-600 font-bold">Work Description:</div>
+                  <div>{formData.activity || customActivity}</div>
+                </>
+              )}
+
+              <div className="text-gray-600 font-bold">Demanded Time:</div>
+              <div>{formData.demandTimeFrom} to {formData.demandTimeTo}</div>
             </div>
-            <div className="flex flex-wrap gap-4 mb-2">
-              <div className="flex-1 min-w-[180px]">
-                <b>Block Section/Yard:</b> {blockSectionValue.join(", ")}
-              </div>
-              <div className="flex-1 min-w-[180px]">
-                <b>Line/Road:</b>{" "}
-                {processedLineSections
-                  .map((s: any) => s.lineName || s.road)
-                  .join(", ")}
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-4 mb-2">
-              <div className="flex-1 min-w-[180px]">
-                <b>Type of Block:</b> {formData.corridorTypeSelection}
-              </div>
-              <div className="flex-1 min-w-[180px]">
-                <b>Planned/Emergency:</b>{" "}
-                {formData.corridorTypeSelection === "Urgent Block"
-                  ? "Emergency"
-                  : "Planned"}
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-4 my-2 text-2xl">
-              <div className="flex-1 min-w-[180px] ">
-                <b>Preferred Slot:</b> {formData.demandTimeFrom} to{" "}
-                {formData.demandTimeTo}
-              </div>
-              <div className="flex-1 min-w-[180px]">
-                <b>Duration:</b>{" "}
-                {formData.demandTimeFrom && formData.demandTimeTo
-                  ? getDuration(formData.demandTimeFrom, formData.demandTimeTo)
-                  : ""}
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-4 mb-2">
-              <div className="flex-1 min-w-[180px]">
-                <b>Type of Work:</b> {formData.workType}
-              </div>
-              <div className="flex-1 min-w-[180px]">
-                <b>Activity:</b>{" "}
-                {selectedActivities && selectedActivities.length > 0
-                  ? selectedActivities.join(", ")
-                  : formData.activity || customActivity}
-              </div>
-            </div>
-            {formData.emergencyBlockRemarks && (
-              <div className="mb-2">
-                <b>Reason for Non-Corridor/Urgent Block:</b>{" "}
-                {formData.emergencyBlockRemarks}
+
+            {/* Moved safety info here for ENGG and S&T departments */}
+            {formData.selectedDepartment !== "TRD" && renderSafetyInfo()}
+
+            {formData.requestremarks && formData.requestremarks.trim() !== "" && (
+              <div className="mt-4">
+                <h3 className="font-bold">Remarks</h3>
+                <div>{formData.requestremarks}</div>
               </div>
             )}
-            {formData.remarks && (
-              <div className="mb-2">
-                <b>Remarks:</b> {formData.remarks}
-              </div>
-            )}
-            <div className="mt-4 mb-2 p-3 rounded-xl border-2 border-[#f7d6f7] bg-[#f7d6f7]">
-              <div className="text-lg font-extrabold text-[#13529e] mb-2">
-                Caution Requirements
-              </div>
-              <div>
-                <b>Fresh Caution Imposed:</b>{" "}
-                {formData.freshCautionRequired === "Y" ? "Yes" : "No"}
-              </div>
-              {formData.freshCautionRequired === "Y" && (
-                <div className="space-y-1 mt-2">
-                  <div>
-                    <b>Location From:</b>{" "}
-                    {formData.freshCautionLocationFrom || "-"}
-                  </div>
-                  <div>
-                    <b>Location To:</b> {formData.freshCautionLocationTo || "-"}
-                  </div>
-                  <div>
-                    <b>Speed (km/hr):</b> {formData.freshCautionSpeed || "-"}
-                  </div>
-                  <div>
-                    <b>Adjacent Lines Affected:</b>{" "}
-                    {formData.adjacentLinesAffected || "-"}
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="mt-4 mb-2 p-3 rounded-xl border-2 border-[#e6f7c6] bg-[#e6f7c6]">
-              <div className="text-lg font-extrabold text-[#13529e] mb-2">
-                Power Block Requirements
-              </div>
-              <div>
-                <b>Power Block Needed:</b>{" "}
-                {formData.powerBlockRequired === "Y" ? "Yes" : "No"}
-              </div>
-              {formData.powerBlockRequired === "Y" && (
-                <div className="space-y-1 mt-2">
-                  <div>
-                    <b>Elementary Section:</b>{" "}
-                    {formData.elementarySection || "-"}
-                  </div>
-                  <div>
-                    <b>Requirements:</b>{" "}
-                    {formData.powerBlockRequirements &&
-                      formData.powerBlockRequirements.length > 0
-                      ? formData.powerBlockRequirements.join(", ")
-                      : "-"}
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="mt-4 mb-2 p-3 rounded-xl border-2 border-[#d6e6f7] bg-[#d6e6f7]">
-              <div className="text-lg font-extrabold text-[#13529e] mb-2">
-                S&T Disconnection Requirements
-              </div>
-              <div>
-                <b>S&T Disconnection Needed:</b>{" "}
-                {formData.sntDisconnectionRequired === "Y" ? "Yes" : "No"}
-              </div>
-              {formData.sntDisconnectionRequired === "Y" && (
-                <div className="space-y-1 mt-2">
-                  <div>
-                    <b>Line From:</b> {formData.sntDisconnectionLineFrom || "-"}
-                  </div>
-                  <div>
-                    <b>Line To:</b> {formData.sntDisconnectionLineTo || "-"}
-                  </div>
-                  <div>
-                    <b>Requirements:</b>{" "}
-                    {formData.sntDisconnectionRequirements &&
-                      formData.sntDisconnectionRequirements.length > 0
-                      ? formData.sntDisconnectionRequirements.join(", ")
-                      : "-"}
-                  </div>
-                  <div>
-                    <b>Assign To:</b> {formData.sntDisconnectionAssignTo || "-"}
-                  </div>
-                </div>
-              )}
-            </div>
-            {/* Add more fields as needed for full review */}
           </div>
-          <div className="flex justify-between items-center gap-4 mt-8">
+
+          <div>
+            <h3 className="font-bold mb-2">Selected Lines/Roads</h3>
+            <div className="mb-4 space-y-2 text-[14px] text-gray-600">
+              {processedLineSections && processedLineSections.length > 0 ? (
+                processedLineSections.map((section: any, index: number) => (
+                  <div key={index}>
+                    <div className="font-medium text-gray-800">{section.block} {section.type === "yard" ? "(Yard)" : "(Block Section)"}</div>
+
+                    {/* Display Lines with UP/DOWN direction */}
+                    {section.lineName && (
+                      <div className="ml-2 mb-1">
+                        {section.lineName.toLowerCase().includes('up') ? (
+                          <div className="flex items-center">
+                            <span className="font-medium bg-green-100 text-green-800 px-2 rounded mr-2">UP</span>
+                            <span>{section.lineName.replace(/up\s*/i, '').trim()}</span>
+                            {section.type === "block" && section.lineName.toLowerCase().includes('slow') &&
+                              <span className="ml-2 text-amber-600 font-medium">slow in block</span>
+                            }
+                          </div>
+                        ) : section.lineName.toLowerCase().includes('down') ? (
+                          <div className="flex items-center">
+                            <span className="font-medium bg-red-100 text-red-800 px-2 rounded mr-2">DOWN</span>
+                            <span>{section.lineName.replace(/down\s*/i, '').trim()}</span>
+                            {section.type === "block" && section.lineName.toLowerCase().includes('slow') &&
+                              <span className="ml-2 text-amber-600 font-medium">slow in block</span>
+                            }
+                          </div>
+                        ) : (
+                          <div className="flex items-center">
+                            <span className="font-medium">Line:</span>
+                            <span className="ml-1">{section.lineName}</span>
+                            {section.type === "block" && section.lineName.toLowerCase().includes('slow') &&
+                              <span className="ml-2 text-amber-600 font-medium">slow in block</span>
+                            }
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Display Roads with numbered formatting */}
+                    {section.road && (
+                      <div className="ml-2">
+                        {section.road.match(/rd\s*\d+/i) ? (
+                          <div className="flex items-center">
+                            <span className="font-medium bg-blue-100 text-blue-800 px-2 rounded mr-2">
+                              {section.road.match(/rd\s*\d+/i)[0].toUpperCase()}
+                            </span>
+                            <span>{section.road.replace(/rd\s*\d+/i, '').trim()}</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center">
+                            <span className="font-medium">Road:</span>
+                            <span className="ml-1">{section.road}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                blockSectionValue.map((block, index) => (
+                  <div key={index} className="">
+                    <div className="font-medium text-gray-800">{block}</div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Always show Other Affected Lines/Roads section */}
+            <div className="mt-4">
+              <h3 className="font-bold mb-2">Other Affected Lines/Roads:</h3>
+              {processedLineSections && processedLineSections.some((s: any) => s.otherLines?.trim() || s.otherRoads?.trim()) ? (
+                <div className="">
+                  {processedLineSections.map((s: any, index) => (
+                    <React.Fragment key={`other-${index}`}>
+                      {s.otherLines?.trim() && (
+                        <div className="mb-2">
+                          <div className="font-medium mb-1">{s.block} - Other Lines:</div>
+                          <div className="ml-2">
+                            {s.otherLines.split(',').map((line: string, idx: number) => {
+                              const trimmedLine = line.trim();
+                              if (trimmedLine.toLowerCase().includes('up')) {
+                                return (
+                                  <div key={`line-${idx}`} className="flex items-center mb-1">
+                                    <span className="font-medium bg-green-100 text-green-800 px-2 rounded mr-2">UP</span>
+                                    <span>{trimmedLine.replace(/up\s*/i, '').trim()}</span>
+                                  </div>
+                                );
+                              } else if (trimmedLine.toLowerCase().includes('down')) {
+                                return (
+                                  <div key={`line-${idx}`} className="flex items-center mb-1">
+                                    <span className="font-medium bg-red-100 text-red-800 px-2 rounded mr-2">DOWN</span>
+                                    <span>{trimmedLine.replace(/down\s*/i, '').trim()}</span>
+                                  </div>
+                                );
+                              } else {
+                                return (
+                                  <div key={`line-${idx}`} className="mb-1">
+                                    {trimmedLine}
+                                  </div>
+                                );
+                              }
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {s.otherRoads?.trim() && (
+                        <div className="mb-2">
+                          <div className="font-medium mb-1">{s.block} - Other Roads:</div>
+                          <div className="ml-2">
+                            {s.otherRoads.split(',').map((road: string, idx: number) => {
+                              const trimmedRoad = road.trim();
+                              const roadMatch = trimmedRoad.match(/rd\s*\d+/i);
+
+                              if (roadMatch) {
+                                return (
+                                  <div key={`road-${idx}`} className="flex items-center mb-1">
+                                    <span className="font-medium bg-blue-100 text-blue-800 px-2 rounded mr-2">
+                                      {roadMatch[0].toUpperCase()}
+                                    </span>
+                                    <span>{trimmedRoad.replace(/rd\s*\d+/i, '').trim()}</span>
+                                  </div>
+                                );
+                              } else {
+                                return (
+                                  <div key={`road-${idx}`} className="mb-1">
+                                    {trimmedRoad}
+                                  </div>
+                                );
+                              }
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-[14px] text-gray-600">None</div>
+              )}
+            </div>
+
+            {(formData.workLocationFrom?.trim() || formData.trdWorkLocation?.trim()) && (
+              <div className="mt-4">
+                <h3 className="font-bold">Work Location</h3>
+                <div className="text-[14px] text-gray-600">
+                  {formData.workLocationFrom || formData.trdWorkLocation}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="text-center mt-4">
+          <div className="flex justify-center gap-6">
             <button
               onClick={onClose}
-              className="flex-1 px-4 py-2 rounded-lg border-2 border-[#222] bg-[#e6e6fa] text-black font-bold text-lg hover:bg-[#d1d1e0] transition"
+              className="px-6 py-2 bg-gray-200 rounded-md text-gray-800 font-medium hover:bg-gray-300"
             >
-              Back to Editing
+              Go Back to Editing
             </button>
-            {readOnly ? (
-              <button
-                onClick={onClose}
-                className="flex-1 px-4 py-2 rounded-full border-2 border-[#c48ad6] bg-[#eeb8f7] text-white font-extrabold text-lg shadow-lg hover:bg-[#e6aee0] transition disabled:opacity-60 disabled:cursor-not-allowed"
-                disabled={formSubmitting}
-              >
-                CLOSE
-              </button>
-            ) : (
-              <button
-                onClick={onConfirm}
-                className="flex-1 px-4 py-2 rounded-full border-2 border-[#c48ad6] bg-[#eeb8f7] text-white font-extrabold text-lg shadow-lg hover:bg-[#e6aee0] transition disabled:opacity-60 disabled:cursor-not-allowed"
-                disabled={formSubmitting}
-              >
-                CLICK TO CONFIRM
-              </button>
-            )}
+
+            <button
+              onClick={onConfirm}
+              className="px-6 py-2 bg-blue-500 text-white font-medium rounded-md hover:bg-blue-600 disabled:opacity-60 disabled:cursor-not-allowed"
+              disabled={formSubmitting}
+            >
+              Submit Request
+            </button>
           </div>
         </div>
       </div>
@@ -655,7 +814,16 @@ export default function CreateBlockRequestPage() {
   const [showPopup, setShowPopup] = useState(false);
   const [popupLink, setPopupLink] = useState("");
   const [proceedAnyway, setProceedAnyway] = useState(false);
-  // const selectedDepo = "AJJE";   //temprory fix we need to change it
+  
+  // Initialize the depot from session when the session loads
+  useEffect(() => {
+    if (session?.user?.depot) {
+      setFormData(prev => ({
+        ...prev,
+        selectedDepo: session.user.depot
+      }));
+    }
+  }, [session]);
   const mutation = useCreateUserRequest();
   const userLocation = session?.user.location;
   // const majorSectionOptions =
@@ -1093,7 +1261,8 @@ export default function CreateBlockRequestPage() {
 
     // ─── 1. Review‑mode guard ──────────────────────────────────────────────
     if (!reviewMode) {
-      setReviewMode(true);
+      // Instead of immediately setting reviewMode, show the confirmation modal
+      setShowReviewModal(true);
       return;
     }
 
@@ -2442,6 +2611,11 @@ export default function CreateBlockRequestPage() {
         className="w-full max-w-3xl mt-0 p-6 bg-[#c6e6f7] border-4  border-black rounded-3xl shadow-xl mx-3"
         style={{ minWidth: 350 }}
       >
+        {/* Display Depot/SSE information */}
+        <div className="mb-4 bg-white p-3 border-2 border-black rounded-lg">
+          <span className="text-lg font-bold text-black">Depot/SSE:</span>
+          <span className="ml-2 text-lg font-semibold text-gray-700">{formData.selectedDepo || session?.user?.depot || "Not assigned"}</span>
+        </div>
         <form onSubmit={handleFormSubmit} className="space-y-10">
           <div className="grid grid-cols-1 gap-y-8 mb-8">
             {/* Date of Block */}
@@ -3120,7 +3294,7 @@ export default function CreateBlockRequestPage() {
                       }}
                       maxLength={7}
                       placeholder="From"
-                      className="border-2 border-[#2c3e50] rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] w-[120px] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200"
+                      className="border-0 rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-0 w-[120px] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200"
                       required
                     />
                     <span className="font-bold text-[#2c3e50] text-[24px]">
@@ -3132,7 +3306,8 @@ export default function CreateBlockRequestPage() {
                       value={formData.workLocationTo || ""}
                       onChange={(e) => {
                         const value = e.target.value;
-                        if (value.length === 4) {
+                        const prevValue = formData.workLocationTo || "";
+                        if (value.length === 4 && value.length > prevValue.length) {
                           handleInputChange({
                             target: {
                               name: "workLocationTo",
@@ -3145,7 +3320,7 @@ export default function CreateBlockRequestPage() {
                       }}
                       maxLength={7}
                       placeholder="To"
-                      className="border-2 border-[#2c3e50] rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] w-[120px] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200"
+                      className=""
                       required
                     />
                   </div>
@@ -3364,12 +3539,14 @@ export default function CreateBlockRequestPage() {
                   <select
                     name="freshCautionRequired"
                     value={formData.freshCautionRequired ? "Y" : "N"}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const value = e.target.value === "Y";
+                      console.log("Setting freshCautionRequired to:", value);
                       setFormData({
                         ...formData,
-                        freshCautionRequired: e.target.value === "Y",
-                      })
-                    }
+                        freshCautionRequired: value,
+                      });
+                    }}
                     className="ml-2 pr-8 border-2  border-black rounded 
                   px-1 my-3 text-2xl font-bold bg-white text-black placeholder-black"
                     style={{
@@ -3503,12 +3680,14 @@ export default function CreateBlockRequestPage() {
                   <select
                     name="powerBlockRequired"
                     value={formData.powerBlockRequired ? "Y" : "N"}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const value = e.target.value === "Y";
+                      console.log("Setting powerBlockRequired to:", value);
                       setFormData({
                         ...formData,
-                        powerBlockRequired: e.target.value === "Y",
-                      })
-                    }
+                        powerBlockRequired: value,
+                      });
+                    }}
                     className="ml-2 pr-8 border-2  border-black  
                 px-1 my-3 text-2xl font-bold bg-white text-black placeholder-black"
                     style={{
@@ -3620,12 +3799,14 @@ export default function CreateBlockRequestPage() {
                     <select
                       name="sntDisconnectionRequired"
                       value={formData.sntDisconnectionRequired ? "Y" : "N"}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const value = e.target.value === "Y";
+                        console.log("Setting sntDisconnectionRequired to:", value);
                         setFormData({
                           ...formData,
-                          sntDisconnectionRequired: e.target.value === "Y",
-                        })
-                      }
+                          sntDisconnectionRequired: value,
+                        });
+                      }}
                       className="ml-2 pr-8 border-2  border-black rounded 
                 px-1 my-3 text-2xl font-bold bg-white text-black placeholder-black"
                       style={{
@@ -4017,49 +4198,31 @@ export default function CreateBlockRequestPage() {
               </div>
             )}
 
-            {showReviewModal && (
-              <ReviewBlockRequestModal
-                isOpen={showReviewModal}
-                onClose={() => setShowReviewModal(false)}
-                onConfirm={() => {
-                  setReviewMode(true);
-                  setShowReviewModal(false);
-                  // Programmatically submit the form
-                  const form = document.querySelector("form");
-                  if (form) form.requestSubmit();
-                }}
-                formData={formData}
-                blockSectionValue={blockSectionValue}
-                processedLineSections={processedLineSections}
-                selectedActivities={selectedActivities}
-                customActivity={customActivity}
-                formSubmitting={formSubmitting}
-              />
-            )}
-            {reviewMode ? (
-              <button
-                type="submit"
-                className={`w-full bg-[#eeb8f7] border-2 border-black rounded-[50%] max-w-72 px-6 py-2 text-lg font-extrabold text-white hover:brightness-90 ${formSubmitting ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                disabled={formSubmitting}
-                style={{
-                  borderRadius: "50%",
-                  letterSpacing: "1px",
-                  border: "none",
-                }}
-              >
-                {formSubmitting ? "SUBMITTING..." : "CLICK TO CONFIRM"}
-              </button>
-            ) : (
-              <button
-                type="submit"
-                className={`w-full bg-[#eeb8f7] border-2 border-black rounded-[50%] max-w-72 px-6 py-2 text-lg font-extrabold text-white hover:brightness-90 ${formSubmitting ? "brightness-95 cursor-not-allowed" : ""
-                  }`}
-                disabled={formSubmitting}
-              >
-                {formSubmitting ? "SUBMITTING..." : "SUBMIT"}
-              </button>
-            )}
+            <ReviewBlockRequestModal
+              isOpen={showReviewModal}
+              onClose={() => setShowReviewModal(false)}
+              onConfirm={() => {
+                setReviewMode(true);
+                setShowReviewModal(false);
+                // Programmatically submit the form
+                const form = document.querySelector("form");
+                if (form) form.requestSubmit();
+              }}
+              formData={formData}
+              blockSectionValue={blockSectionValue}
+              processedLineSections={processedLineSections}
+              selectedActivities={selectedActivities}
+              customActivity={customActivity}
+              formSubmitting={formSubmitting}
+            />
+            <button
+              type="submit"
+              className={`w-full bg-[#eeb8f7] border-2 border-black rounded-[50%] max-w-72 px-6 py-2 text-lg font-extrabold text-white hover:brightness-90 ${formSubmitting ? "brightness-95 cursor-not-allowed" : ""
+                }`}
+              disabled={formSubmitting}
+            >
+              {formSubmitting ? "SUBMITTING..." : "SUBMIT REQUEST"}
+            </button>
             <ToastContainer />
           </div>
         </form>
