@@ -373,28 +373,28 @@ export default function RequestTablePage() {
   const userName = session?.user?.name || "User";
   const userRole = session?.user?.role || "USER";
   const selectedDepo = session?.user?.depot || "";
-  const userDepartement=session?.user?.department||""
+  const userDepartement = session?.user?.department || ""
 
   const [rejectRemarkPopup, setRejectRemarkPopup] = useState(false);
   const [rejectRemarks, setRejectRemarks] = useState("");
   const [rejectReqId, setRejectReqId] = useState("");
-const [rejectReason, setRejectReason] = useState("");
-const [showRejectReasonPopup, setShowRejectReasonPopup] = useState(false);
-const [requestToReject, setRequestToReject] = useState<{
-  id: string;
-  userDepartement: string;
-  mobileView: string;
-} | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [showRejectReasonPopup, setShowRejectReasonPopup] = useState(false);
+  const [requestToReject, setRequestToReject] = useState<{
+    id: string;
+    userDepartement: string;
+    mobileView: string;
+  } | null>(null);
 
-const [acceptReason, setAcceptReason] = useState("");
-const [showAcceptReasonPopup, setShowAcceptReasonPopup] = useState(false);
-const [requestToAccept, setRequestToAccept] = useState<{
-  id: string;
-  userDepartement: string;
-  mobileView: string;
-  requestDateStr: string;
-  corridorType: string;
-} | null>(null);
+  const [acceptReason, setAcceptReason] = useState("");
+  const [showAcceptReasonPopup, setShowAcceptReasonPopup] = useState(false);
+  const [requestToAccept, setRequestToAccept] = useState<{
+    id: string;
+    userDepartement: string;
+    mobileView: string;
+    requestDateStr: string;
+    corridorType: string;
+  } | null>(null);
 
   const { data: otherRequestsData, refetch } = useGetOtherRequests(
     selectedDepo,
@@ -437,117 +437,117 @@ const [requestToAccept, setRequestToAccept] = useState<{
   // };
 
 
-const handleStatusUpdate = async (
-  id: string, 
-  accept: boolean, 
-  userDepartement: string, 
-  mobileView: string,
-  requestDateStr: string,
-  corridorType: string
-) => {
-  if (accept) {
-    // Apply the same restrictions for accept actions
-    const now = new Date();
-    const requestDate = new Date(requestDateStr);
+  const handleStatusUpdate = async (
+    id: string,
+    accept: boolean,
+    userDepartement: string,
+    mobileView: string,
+    requestDateStr: string,
+    corridorType: string
+  ) => {
+    if (accept) {
+      // Apply the same restrictions for accept actions
+      const now = new Date();
+      const requestDate = new Date(requestDateStr);
 
-    const today = now.getDay(); // 5 = Friday
-    const hour = now.getHours();
-    const minute = now.getMinutes();
+      const today = now.getDay(); // 5 = Friday
+      const hour = now.getHours();
+      const minute = now.getMinutes();
 
-    const isUrgent = corridorType === "Urgent Block";
-    const isFridayAfterNoon = today === 5 && (hour > 12 || (hour === 12 && minute >= 0));
+      const isUrgent = corridorType === "Urgent Block";
+      const isFridayAfterNoon = today === 5 && (hour > 12 || (hour === 12 && minute >= 0));
 
-    if (!isUrgent && isFridayAfterNoon) {
-      // Define block start = tomorrow (Saturday)
-      const blockStart = new Date(now);
-      blockStart.setDate(now.getDate() + 1); // Saturday
-      blockStart.setHours(0, 0, 0, 0);
+      if (!isUrgent && isFridayAfterNoon) {
+        // Define block start = tomorrow (Saturday)
+        const blockStart = new Date(now);
+        blockStart.setDate(now.getDate() + 1); // Saturday
+        blockStart.setHours(0, 0, 0, 0);
 
-      // Define block end = Sunday next week
-      const blockEnd = new Date(blockStart);
-      blockEnd.setDate(blockStart.getDate() + 8); // Sunday next week
-      blockEnd.setHours(23, 59, 59, 999);
+        // Define block end = Sunday next week
+        const blockEnd = new Date(blockStart);
+        blockEnd.setDate(blockStart.getDate() + 8); // Sunday next week
+        blockEnd.setHours(23, 59, 59, 999);
 
-      // Block requests within [Saturday ... next Sunday]
-      if (requestDate >= blockStart && requestDate <= blockEnd) {
-        alert("You cannot accept requests from tomorrow to next Sunday on Friday after 12 PM.");
-        return;
+        // Block requests within [Saturday ... next Sunday]
+        if (requestDate >= blockStart && requestDate <= blockEnd) {
+          alert("You cannot accept requests from tomorrow to next Sunday on Friday after 12 PM.");
+          return;
+        }
       }
-    }
 
-    // If all checks pass, proceed with acceptance
-    // updateOtherRequest(
-    //   {
-    //     id,
-    //     accept,
-    //     userDepartement,
-    //     mobileView
-    //   },
-    //   {
-    //     onSuccess: () => {
-    //       refetch();
-    //     },
-    //   }
-    // );
-    setRequestToAccept({ id, userDepartement, mobileView, requestDateStr, corridorType });
-    setShowAcceptReasonPopup(true);
-  } else {
-    // For reject actions, just set up the rejection dialog
-    setRequestToReject({ id, userDepartement, mobileView });
-    setShowRejectReasonPopup(true);
-  }
-};
+      // If all checks pass, proceed with acceptance
+      // updateOtherRequest(
+      //   {
+      //     id,
+      //     accept,
+      //     userDepartement,
+      //     mobileView
+      //   },
+      //   {
+      //     onSuccess: () => {
+      //       refetch();
+      //     },
+      //   }
+      // );
+      setRequestToAccept({ id, userDepartement, mobileView, requestDateStr, corridorType });
+      setShowAcceptReasonPopup(true);
+    } else {
+      // For reject actions, just set up the rejection dialog
+      setRequestToReject({ id, userDepartement, mobileView });
+      setShowRejectReasonPopup(true);
+    }
+  };
 
   const handleConfirmReject = () => {
-  if (!requestToReject || !rejectReason.trim()) return;
-  
-  updateOtherRequest(
-    {
-      id: requestToReject.id,
-      accept: false,
-      userDepartement: requestToReject.userDepartement,
-      mobileView: requestToReject.mobileView,
-      disconnectionRequestRejectRemarks: rejectReason // Make sure your API accepts this field
-    },
-    {
-      onSuccess: () => {
-        refetch();
-        setShowRejectReasonPopup(false);
-        setRejectReason("");
-        setRequestToReject(null);
-        toast.success("Request rejected successfully");
+    if (!requestToReject || !rejectReason.trim()) return;
+
+    updateOtherRequest(
+      {
+        id: requestToReject.id,
+        accept: false,
+        userDepartement: requestToReject.userDepartement,
+        mobileView: requestToReject.mobileView,
+        disconnectionRequestRejectRemarks: rejectReason // Make sure your API accepts this field
       },
-      onError: () => {
-        toast.error("Failed to reject request");
+      {
+        onSuccess: () => {
+          refetch();
+          setShowRejectReasonPopup(false);
+          setRejectReason("");
+          setRequestToReject(null);
+          toast.success("Request rejected successfully");
+        },
+        onError: () => {
+          toast.error("Failed to reject request");
+        }
       }
-    }
-  );
-};
-const handleConfirmAccept = () => {
-  if (!requestToAccept || !acceptReason.trim()) return;
-  
-  updateOtherRequest(
-    {
-      id: requestToAccept.id,
-      accept: true,
-      userDepartement: requestToAccept.userDepartement,
-      mobileView: requestToAccept.mobileView,
-      disconnectionRequestRejectRemarks: acceptReason // Make sure your API accepts this field
-    },
-    {
-      onSuccess: () => {
-        refetch();
-        setShowAcceptReasonPopup(false);
-        setAcceptReason("");
-        setRequestToAccept(null);
-        toast.success("Request accepted successfully");
+    );
+  };
+  const handleConfirmAccept = () => {
+    if (!requestToAccept || !acceptReason.trim()) return;
+
+    updateOtherRequest(
+      {
+        id: requestToAccept.id,
+        accept: true,
+        userDepartement: requestToAccept.userDepartement,
+        mobileView: requestToAccept.mobileView,
+        disconnectionRequestRejectRemarks: acceptReason // Make sure your API accepts this field
       },
-      onError: () => {
-        toast.error("Failed to accept request");
+      {
+        onSuccess: () => {
+          refetch();
+          setShowAcceptReasonPopup(false);
+          setAcceptReason("");
+          setRequestToAccept(null);
+          toast.success("Request accepted successfully");
+        },
+        onError: () => {
+          toast.error("Failed to accept request");
+        }
       }
-    }
-  );
-};
+    );
+  };
   // Fetch requests data
   const { data, isLoading, error } = useQuery({
     queryKey: [
@@ -599,7 +599,7 @@ const handleConfirmAccept = () => {
 
   // Reject Mutation
   const rejectMutation = useMutation({
-    mutationFn:({ id, reason }: { id: string; reason: string })  => userRequestService.rejectUserRequestRemark(id, reason),
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => userRequestService.rejectUserRequestRemark(id, reason),
     onSuccess: () => {
       toast.success("Request rejected successfully!");
       queryClient.invalidateQueries({ queryKey: ["user-requests"] }); // Refresh data
@@ -610,28 +610,28 @@ const handleConfirmAccept = () => {
       console.error(error);
     },
   });
-    const handleReject = async (id: string, reason: string) => {
+  const handleReject = async (id: string, reason: string) => {
     if (confirm("Are you sure you want to reject this request?")) {
-      await rejectMutation.mutateAsync({id,reason});
+      await rejectMutation.mutateAsync({ id, reason });
 
       // This will refetch the correct query and update UI
       await queryClient.invalidateQueries({ queryKey: ["requests"] });
     }
   };
 
- const handleAccept = async (id: string) => {
-  if (confirm("Are you sure you want to accept this request?")) {
-    try {
-      await acceptMutation.mutateAsync(id);
-      // This will refetch the correct query and update UI
-      await queryClient.invalidateQueries({ queryKey: ["requests"] });
-      toast.success("Request accepted successfully!");
-    } catch (error) {
-      toast.error("Failed to accept request.");
-      console.error(error);
+  const handleAccept = async (id: string) => {
+    if (confirm("Are you sure you want to accept this request?")) {
+      try {
+        await acceptMutation.mutateAsync(id);
+        // This will refetch the correct query and update UI
+        await queryClient.invalidateQueries({ queryKey: ["requests"] });
+        toast.success("Request accepted successfully!");
+      } catch (error) {
+        toast.error("Failed to accept request.");
+        console.error(error);
+      }
     }
-  }
-};
+  };
 
 
   // For managers, show all requests in the selected date range
@@ -748,67 +748,67 @@ const handleConfirmAccept = () => {
   //   }
   // };
 
-// ... (other imports remain the same)
+  // ... (other imports remain the same)
 
-const handleDownload = () => {
-  try {
-    if (!data?.data?.requests || data.data.requests.length === 0) {
-      console.log("No data available to download");
-      return;
+  const handleDownload = () => {
+    try {
+      if (!data?.data?.requests || data.data.requests.length === 0) {
+        console.log("No data available to download");
+        return;
+      }
+
+      // Apply date filter
+      const filteredRequests = data.data.requests.filter((request: any) => {
+        const requestDate = new Date(request.date);
+        const startDate = new Date(customDateRange.startDate);
+        const endDate = new Date(customDateRange.endDate);
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+        return requestDate >= startDate && requestDate <= endDate;
+      });
+
+      if (filteredRequests.length === 0) {
+        toast.error("No data found for selected date range.");
+        return;
+      }
+
+      const excelData = filteredRequests.map((request: any) => ({
+        "Date": formatDate(request.date),
+        "Block Section": request.missionBlock || "N/A",
+        "UP/DN/SL/Rpad No.": request.processedLineSections[0].lineName || request.processedLineSections[0].road || "N/A",
+        "Activity": request.activity || "N/A",
+        "Duration": formatDuration(request.demandTimeFrom, request.demandTimeTo),
+        "Status": request.adminRequestStatus === "ACCEPTED" ? "Y" : "N",
+        "Sanctioned From": request.sanctionedTimeFrom ? formatTime(request.sanctionedTimeFrom) : "N/A",
+        "Sanctioned To": request.sanctionedTimeTo ? formatTime(request.sanctionedTimeTo) : "N/A",
+        "Accept/Reject Status": request.userResponse || "Pending",
+        "Major section": request.selectedSection || "N/A",
+        "Corridor Type": request.corridorType || "N/A",
+        "DivisionId": request.divisionId || "N/A",
+        "OverAllStatus": request.overAllStatus || "N/A",
+      }));
+
+      console.log(excelData);
+
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Block Requests");
+
+      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `block_requests_${format(new Date(), "dd-MM-yyyy")}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success("Excel file downloaded successfully");
+    } catch (error) {
+      console.error("Download error:", error);
+      toast.error("Failed to download Excel file. Please try again.");
     }
-
-    // Apply date filter
-    const filteredRequests = data.data.requests.filter((request: any) => {
-      const requestDate = new Date(request.date);
-      const startDate = new Date(customDateRange.startDate);
-      const endDate = new Date(customDateRange.endDate);
-      startDate.setHours(0, 0, 0, 0);
-      endDate.setHours(23, 59, 59, 999);
-      return requestDate >= startDate && requestDate <= endDate;
-    });
-
-    if (filteredRequests.length === 0) {
-      toast.error("No data found for selected date range.");
-      return;
-    }
-
-    const excelData = filteredRequests.map((request: any) => ({
-      "Date": formatDate(request.date),
-      "Block Section": request.missionBlock || "N/A",
-      "UP/DN/SL/Rpad No.": request.processedLineSections[0].lineName || request.processedLineSections[0].road|| "N/A",
-      "Activity": request.activity || "N/A",
-      "Duration": formatDuration(request.demandTimeFrom, request.demandTimeTo),
-      "Status": request.adminRequestStatus === "ACCEPTED" ? "Y" : "N",
-      "Sanctioned From": request.sanctionedTimeFrom ? formatTime(request.sanctionedTimeFrom) : "N/A",
-      "Sanctioned To": request.sanctionedTimeTo ? formatTime(request.sanctionedTimeTo) : "N/A",
-      "Accept/Reject Status": request.userResponse || "Pending",
-      "Major section": request.selectedSection || "N/A",
-      "Corridor Type": request.corridorType || "N/A",
-      "DivisionId": request.divisionId || "N/A",
-      "OverAllStatus":request.overAllStatus || "N/A",
-    }));
-
-    console.log(excelData);
-
-    const workbook = XLSX.utils.book_new();
-    const worksheet = XLSX.utils.json_to_sheet(excelData);
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Block Requests");
-
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `block_requests_${format(new Date(), "dd-MM-yyyy")}.xlsx`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    toast.success("Excel file downloaded successfully");
-  } catch (error) {
-    console.error("Download error:", error);
-    toast.error("Failed to download Excel file. Please try again.");
-  }
-};
+  };
   // Pagination component
   const Pagination = () => {
     if (!data?.data?.totalPages || data.data.totalPages <= 1) return null;
@@ -876,39 +876,39 @@ const handleDownload = () => {
         </div>
       )}
 
-{showAcceptReasonPopup && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-    <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md border border-gray-300">
-      <h2 className="text-lg font-bold mb-2 text-black">Reason for Acceptance</h2>
-      <textarea
-        className="w-full border border-gray-400 rounded p-2 mb-4 text-black"
-        rows={3}
-        value={acceptReason}
-        onChange={(e) => setAcceptReason(e.target.value)}
-        placeholder="Please specify the reason for acceptance..."
-        autoFocus
-      />
-      <div className="flex justify-end gap-2">
-        <button
-          className="px-4 py-1 rounded bg-gray-200 text-black font-semibold"
-          onClick={() => {
-            setShowAcceptReasonPopup(false);
-            setAcceptReason("");
-          }}
-        >
-          Cancel
-        </button>
-        <button
-          className="px-4 py-1 rounded bg-green-600 text-white font-semibold"
-          disabled={!acceptReason.trim() || isMutating}
-          onClick={handleConfirmAccept}
-        >
-          {isMutating ? "Accepting..." : "Confirm Accept"}
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+      {showAcceptReasonPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md border border-gray-300">
+            <h2 className="text-lg font-bold mb-2 text-black">Reason for Acceptance</h2>
+            <textarea
+              className="w-full border border-gray-400 rounded p-2 mb-4 text-black"
+              rows={3}
+              value={acceptReason}
+              onChange={(e) => setAcceptReason(e.target.value)}
+              placeholder="Please specify the reason for acceptance..."
+              autoFocus
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                className="px-4 py-1 rounded bg-gray-200 text-black font-semibold"
+                onClick={() => {
+                  setShowAcceptReasonPopup(false);
+                  setAcceptReason("");
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-1 rounded bg-green-600 text-white font-semibold"
+                disabled={!acceptReason.trim() || isMutating}
+                onClick={handleConfirmAccept}
+              >
+                {isMutating ? "Accepting..." : "Confirm Accept"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {rejectRemarkPopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
@@ -1014,7 +1014,7 @@ const handleDownload = () => {
                     Demanded
                   </th>
                   <th className="border border-black px-2 py-1 whitespace-nowrap w-[10%]">
-                     Offered
+                    Offered
                   </th>
                   <th className="border border-black px-2 py-1 whitespace-nowrap w-[10%]">
                     Status
@@ -1045,7 +1045,7 @@ const handleDownload = () => {
                       {request.missionBlock}
                     </td>
                     <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
-                      {request.processedLineSections[0].lineName ||request.processedLineSections[0].road|| "N/A"}
+                      {request.processedLineSections[0].lineName || request.processedLineSections[0].road || "N/A"}
                     </td>
                     <td className="border border-black px-2 py-1 text-black">
                       {request.activity}
@@ -1154,7 +1154,7 @@ const handleDownload = () => {
     //   return <span className="text-red-400">return to optg by remarks</span>;
     // }
   })()} */}
-</>
+                        </>
                       )}
                     </td>
                   </tr>
@@ -1165,75 +1165,75 @@ const handleDownload = () => {
         </div>
       </div>
 
-      { session?.user?.department !== "ENGG" && (
-      <div className="flex justify-center mt-3 mb-6">
-        <div className="w-full rounded-2xl border-2 border-[#B5B5B5] bg-[#F5E7B2] shadow p-0">
-          <div className="text-[24px] font-bold text-black text-center py-2">
-            SUMMARY OF OTHER REQUEST FOR NEXT 10 DAYS
-          </div>
-          <div className="italic text-center text-[24px] text-black pb-2">
-            (Click ID to see full details or to Edit)
-          </div>
+      {session?.user?.department !== "ENGG" && (
+        <div className="flex justify-center mt-3 mb-6">
+          <div className="w-full rounded-2xl border-2 border-[#B5B5B5] bg-[#F5E7B2] shadow p-0">
+            <div className="text-[24px] font-bold text-black text-center py-2">
+              SUMMARY OF OTHER REQUEST FOR NEXT 10 DAYS
+            </div>
+            <div className="italic text-center text-[24px] text-black pb-2">
+              (Click ID to see full details or to Edit)
+            </div>
 
-          {/* Table */}
-          <div className="overflow-x-auto rounded-xl mx-2 mb-2">
-            <table className="w-full border border-black rounded-xl overflow-hidden text-[24px]">
-              <thead>
-                <tr className="bg-[#D6F3FF] text-black">
-                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[12%]">
-                    Date
-                  </th>
-                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[8%]">
-                    ID
-                  </th>
-                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[25%]">
-                    Block Section
-                  </th>
-                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[15%]">
-                    Line/Road
-                  </th>
-                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[20%]">
-                    Activity
-                  </th>
-                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[20%]">
-                    Demanded
-                  </th>
-                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[20%]">
-                    Offered
-                  </th>
-                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[10%]">
-                    Duration
-                  </th>
+            {/* Table */}
+            <div className="overflow-x-auto rounded-xl mx-2 mb-2">
+              <table className="w-full border border-black rounded-xl overflow-hidden text-[24px]">
+                <thead>
+                  <tr className="bg-[#D6F3FF] text-black">
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[12%]">
+                      Date
+                    </th>
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[8%]">
+                      ID
+                    </th>
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[25%]">
+                      Block Section
+                    </th>
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[15%]">
+                      Line/Road
+                    </th>
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[20%]">
+                      Activity
+                    </th>
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[20%]">
+                      Demanded
+                    </th>
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[20%]">
+                      Offered
+                    </th>
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[10%]">
+                      Duration
+                    </th>
 
-                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[10%]">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {otherRequestsData?.data.requests.map(
-                  (request: any, idx: number) => (
-                    <tr
-                      key={request.id}
-                      className={
-                        idx % 2 === 0 ? "bg-[#FFF86B]" : "bg-[#E6E6FA]"
-                      }
-                    >
-                      <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
-                        {formatDate(request.date)}
-                      </td>
-                      <td className="border border-black px-2 py-1 whitespace-nowrap text-center">
-                        <Link
-                          href={`/view-request/${request.id}?from=request-table`}
-                          className="text-black hover:underline"
-                        >
-                          {request.divisionId || request.id.slice(-4)}
-                        </Link>
-                      </td>
-                      <td className="border border-black px-2 py-1 text-black">
-                        {request.missionBlock}
-                      </td>
-                  {/* <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[10%]">
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {otherRequestsData?.data.requests.map(
+                    (request: any, idx: number) => (
+                      <tr
+                        key={request.id}
+                        className={
+                          idx % 2 === 0 ? "bg-[#FFF86B]" : "bg-[#E6E6FA]"
+                        }
+                      >
+                        <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                          {formatDate(request.date)}
+                        </td>
+                        <td className="border border-black px-2 py-1 whitespace-nowrap text-center">
+                          <Link
+                            href={`/view-request/${request.id}?from=request-table`}
+                            className="text-black hover:underline"
+                          >
+                            {request.divisionId || request.id.slice(-4)}
+                          </Link>
+                        </td>
+                        <td className="border border-black px-2 py-1 text-black">
+                          {request.missionBlock}
+                        </td>
+                        {/* <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
                       {session?.user.department === "S&T"
                         ? request.processedLineSections
                             .map((section: any) =>
@@ -1249,7 +1249,7 @@ const handleDownload = () => {
                             .filter(Boolean)
                             .join(", ") || "N/A"}
                     </td> */}
-                    <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                        <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
                           {request.processedLineSections
                             .map((section: any) =>
                               section.type === "line"
@@ -1272,7 +1272,7 @@ const handleDownload = () => {
                           {request.isSanctioned === true ? (
                             <>
                               {request.sanctionedTimeFrom === null ||
-                              request.sanctionedTimeTo === null ? (
+                                request.sanctionedTimeTo === null ? (
                                 <span className="text-gray-500">
                                   00:00 - 00:00
                                 </span>
@@ -1338,62 +1338,72 @@ const handleDownload = () => {
                               Rejected
                             </span>
                           ) : (
-                            <div className="flex gap-2 justify-center">
-                              <button
-                                onClick={() =>
-                                  handleStatusUpdate(
-                                    request.id,
-                                    true,
-                                    userDepartement,
-                                    "mobileView",
-                                    request.date,
-                                    request.corridorType
-                                  )
-                                }
-                                disabled={isMutating}
-                                className="px-3 py-1 bg-green-50 hover:bg-green-100 text-green-700 text-xs rounded-md border border-green-200 flex items-center transition-colors"
-                              >
-                                <svg
-                                  className="w-3 h-3 mr-1"
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                >
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                    clipRule="evenodd"
-                                  />
-                                </svg>
-                                Accept
-                              </button>
-                              <button
-                                onClick={() =>
-                                  handleStatusUpdate(
-                                    request.id,
-                                    false,
-                                    userDepartement,
-                                    "mobileView",
-                                    request.date,
-                                    request.corridorType
-                                  )
-                                }
-                                disabled={isMutating}
-                                className="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-700 text-xs rounded-md border border-red-200 flex items-center transition-colors"
-                              >
-                                <svg
-                                  className="w-3 h-3 mr-1"
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                >
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                    clipRule="evenodd"
-                                  />
-                                </svg>
-                                Reject
-                              </button>
-                            </div>
+                            <>
+                              {/* Show Accept/Reject buttons based on department and action needed conditions */}
+                              {((userDepartement === "SIG" || userDepartement === "S&T") && request.sigActionsNeeded === false) ||
+                                (userDepartement === "TRD" && request.trdActionsNeeded === false) ? (
+                                <div className="flex gap-2 justify-center">
+                                  <button
+                                    onClick={() =>
+                                      handleStatusUpdate(
+                                        request.id,
+                                        true,
+                                        userDepartement,
+                                        "mobileView",
+                                        request.date,
+                                        request.corridorType
+                                      )
+                                    }
+                                    disabled={isMutating}
+                                    className="px-3 py-1 bg-green-50 hover:bg-green-100 text-green-700 text-xs rounded-md border border-green-200 flex items-center transition-colors"
+                                  >
+                                    <svg
+                                      className="w-3 h-3 mr-1"
+                                      fill="currentColor"
+                                      viewBox="0 0 20 20"
+                                    >
+                                      <path
+                                        fillRule="evenodd"
+                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                        clipRule="evenodd"
+                                      />
+                                    </svg>
+                                    Accept
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      handleStatusUpdate(
+                                        request.id,
+                                        false,
+                                        userDepartement,
+                                        "mobileView",
+                                        request.date,
+                                        request.corridorType
+                                      )
+                                    }
+                                    disabled={isMutating}
+                                    className="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-700 text-xs rounded-md border border-red-200 flex items-center transition-colors"
+                                  >
+                                    <svg
+                                      className="w-3 h-3 mr-1"
+                                      fill="currentColor"
+                                      viewBox="0 0 20 20"
+                                    >
+                                      <path
+                                        fillRule="evenodd"
+                                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                        clipRule="evenodd"
+                                      />
+                                    </svg>
+                                    Reject
+                                  </button>
+                                </div>
+                              ) : (
+                                <span className="bg-green-100  p-2 text-green-600">
+                                  {request.overAllStatus}
+                                </span>
+                              )}
+                            </>
                           )}
                         </td>
                         {/* {request.DisconnAcceptance === "PENDING" && (
