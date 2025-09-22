@@ -3977,47 +3977,47 @@ export const location = {
 export const depot: DepotStructure = {
   "SRR-CHTS": {
     "S&T": ["TCR", "AWY", "ERS","WKI"],
-    "ENGG": ["TCR", "CKI", "AWY", "ERS"],
+    "ENGG": ["TCR", "CKI", "AWY", "ERS","CN"],
     "TRD": ["TCR", "CKI", "ERS"]
   },
   "TCR-GUV": {
     "S&T": ["TCR"],
-    "ENGG": ["TCR"],
-    "TRD": ["TCR","BRI/QLN"]
+    "ENGG": ["TCR","CN","BRI/QLN"],
+    "TRD": ["TCR"]
   },
  "ERS-KTYM-KYJ": {
     "S&T": ["ERS", "KYTM", "KYJ","PVRD","CNGR"],
-    "ENGG": ["ERS", "PVRD", "KTYM", "MVLK","BRI/QLN"],
+    "ENGG": ["ERS", "PVRD", "KTYM", "MVLK","BRI/QLN","CN"],
     "TRD": ["ERS", "KTYM", "KYJ"]
   },
   "ERS-ALLP-KYJ": {
     "S&T": ["ERS", "KYJ", "ALLP"],
-    "ENGG": ["ERS", "ALLP", "MVLK","BRI/QLN"],
+    "ENGG": ["ERS", "ALLP", "MVLK","BRI/QLN","CN"],
     "TRD": ["ERS", "ALLP", "KYJ"]
   },
  "KYJ-QLN": {
     "S&T": ["KYJ", "QLN","KPY"],
-    "ENGG": ["MVLK", "QLN","BRI/QLN"],
+    "ENGG": ["MVLK", "QLN","BRI/QLN","CN"],
     "TRD": ["KYJ", "QLN"]
   },
   "QLN-TVC": {
     "S&T": ["QLN", "TVC"],
-    "ENGG": ["QLN", "VAK", "TVC","BRI/QLN"],
+    "ENGG": ["QLN", "VAK", "TVC","BRI/QLN","CN"],
     "TRD": ["QLN", "KZK"]
   },
   "TVC-NCJ": {
     "S&T": ["TVC", "NCJ"],
-    "ENGG": ["TVC", "NCJ","BRI/QLN"],
+    "ENGG": ["TVC", "NCJ","BRI/QLN","CN"],
     "TRD": ["KZK", "NCJ"]
   },
  "NCJ-TEN": {
     "S&T": ["NCJ"],
-    "ENGG": ["NCJ","BRI/QLN"],
+    "ENGG": ["NCJ","BRI/QLN","CN"],
     "TRD": ["NCJ", "NNN"]
   },
   "NCJ-CAPE": {
     "S&T": ["NCJ"],
-    "ENGG": ["NCJ","BRI/QLN"],
+    "ENGG": ["NCJ","BRI/QLN","CN"],
     "TRD": ["NCJ"]
   }
 };
