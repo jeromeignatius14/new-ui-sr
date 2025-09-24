@@ -3123,7 +3123,7 @@ export let blockSection = {
     "VARD-KRPP", "KRPP-ETM", "ETM-KTYM", "KTYM-CGV", "CGV-CGY",
     "CGY-TRVL", "TRVL-CNGR", "CNGR-MVLK", "MVLK-KYJ",
     "ERS-YD", "TRTR-YD", "MNTT-YD", "PVRD-YD", "VARD-YD", "KRPP-YD", "ETM-YD",
-    "KYTM-YD", "CGV-YD", "CGY-YD", "TVRL-YD", "CNGR-YD", "MVLK-YD", "KYJ-YD"
+    "KTYM-YD", "CGV-YD", "CGY-YD", "TVRL-YD", "CNGR-YD", "MVLK-YD", "KYJ-YD"
   ],
   "ERS-ALLP-KYJ": [
     "ERS-KUMM", "KUMM-TUVR", "TUVR-SRTL", "SRTL-MAKM", "MAKM-ALLP",
@@ -3492,7 +3492,7 @@ export const streamData = {
     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
     "both direction not affected": []
   },
-  "KYTM-YD": {
+  "KTYM-YD": {
     "up direction affected": [],
     "down direction affected": [],
     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6", "Rd 7"],
@@ -3986,7 +3986,7 @@ export const depot: DepotStructure = {
     "TRD": ["TCR"]
   },
  "ERS-KTYM-KYJ": {
-    "S&T": ["ERS", "KYTM", "KYJ","PVRD","CNGR"],
+    "S&T": ["ERS", "KTYM", "KYJ","PVRD","CNGR"],
     "ENGG": ["ERS", "PVRD", "KTYM", "MVLK","BRI/QLN","CN"],
     "TRD": ["ERS", "KTYM", "KYJ"]
   },
@@ -4029,7 +4029,7 @@ export const depotOnLocation = {
     "AWY",
     "ERS",
     "CKI",
-    "KYTM",
+    "KTYM",
     "KYJ",
     "PVRD",
     "KTYM",
