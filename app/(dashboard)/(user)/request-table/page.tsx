@@ -673,30 +673,34 @@ export default function RequestTablePage() {
     }));
   };
   // AcceptOrRejectButton is declared but not used
-  const AcceptOrRejectButton = (request: any) => (
-    <div className="flex gap-2 justify-center flex-col md:flex-row">
-      {/* Accept Button */}
-      <button
-        onClick={() => handleAccept(request.id)}
-        disabled={acceptMutation.isPending || rejectMutation.isPending}
-        className="px-2 py-1 text-xs md:text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 font-bold"
-      >
-        {acceptMutation.isPending ? "Processing..." : "Accept"}
-      </button>
+  // Accept or Reject button component
+  const AcceptOrRejectButton = (request: any) => {
+    // For USER role, show buttons for interaction
+    return (
+      <div className="flex gap-2 justify-center flex-col md:flex-row">
+        {/* Accept Button */}
+        <button
+          onClick={() => handleAccept(request.id)}
+          disabled={acceptMutation.isPending || rejectMutation.isPending}
+          className="px-2 py-1 text-xs md:text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 font-bold"
+        >
+          {acceptMutation.isPending ? "Processing..." : "Accept"}
+        </button>
 
-      {/* Reject Button */}
-      <button
-        onClick={() => {
-          setRejectRemarkPopup(true);
-          setRejectReqId(request.id);
-        }}
-        disabled={acceptMutation.isPending || rejectMutation.isPending}
-        className="px-2 py-1 text-xs md:text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-bold"
-      >
-        {rejectMutation.isPending ? "Processing..." : "Reject"}
-      </button>
-    </div>
-  );
+        {/* Reject Button */}
+        <button
+          onClick={() => {
+            setRejectRemarkPopup(true);
+            setRejectReqId(request.id);
+          }}
+          disabled={acceptMutation.isPending || rejectMutation.isPending}
+          className="px-2 py-1 text-xs md:text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-bold"
+        >
+          {rejectMutation.isPending ? "Processing..." : "Reject"}
+        </button>
+      </div>
+    );
+  };
 
   // Handle Excel download
   // const handleDownload = () => {
@@ -772,17 +776,18 @@ export default function RequestTablePage() {
         return;
       }
 
-    const excelData = filteredRequests.map((request: any) => ({
-      "Date": formatDate(request.date),
-      "Block Section": request.missionBlock || "N/A",
-      "UP/DN/SL/Rpad No.": request.lineDirection || "N/A",
-      "Activity": request.activity || "N/A",
-      "Duration": formatDuration(request.demandTimeFrom, request.demandTimeTo),
-      "Status": request.adminRequestStatus === "ACCEPTED" ? "Y" : "N",
-      "Sanctioned From": request.sanctionedTimeFrom ? formatTime(request.sanctionedTimeFrom) : "N/A",
-      "Sanctioned To": request.sanctionedTimeTo ? formatTime(request.sanctionedTimeTo) : "N/A",
-      "Accept/Reject Status": request.userResponse || "Pending"
-    }));
+      const excelData = filteredRequests.map((request: any) => ({
+        "Date": formatDate(request.date),
+        "Block Section": request.missionBlock || "N/A",
+        "UP/DN/SL/Rpad No.": request.lineDirection || "N/A",
+        "Activity": request.activity || "N/A",
+        "Duration": formatDuration(request.demandTimeFrom, request.demandTimeTo),
+        "Status": request.adminRequestStatus === "ACCEPTED" ? "Y" : "N",
+        "Sanctioned From": request.sanctionedTimeFrom ? formatTime(request.sanctionedTimeFrom) : "N/A",
+        "Sanctioned To": request.sanctionedTimeTo ? formatTime(request.sanctionedTimeTo) : "N/A",
+        "Accept/Reject Status": request.userResponse || "Pending",
+        "Requested By": `${request.user?.name || "Unknown"} (${request.user?.role || "N/A"})`
+      }));
 
       console.log(excelData);
 
@@ -974,7 +979,7 @@ export default function RequestTablePage() {
       <div className="flex justify-center mt-3 mb-6">
         <div className="w-full rounded-2xl border-2 border-[#B5B5B5] bg-[#F5E7B2] shadow p-0">
           <div className="text-[24px] font-bold text-black text-center py-2">
-            SUMMARY OF NEXT 10 DAYS
+            SUMMARY OF OUR REQUEST FOR NEXT 10 DAYS
           </div>
           <div className="italic text-center text-[24px] text-black pb-2">
             (Click ID to see full details or to Edit)
@@ -1009,8 +1014,11 @@ export default function RequestTablePage() {
                   <th className="border border-black px-2 py-1 whitespace-nowrap w-[10%]">
                     Status
                   </th>
+                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[15%]">
+                    Requested By
+                  </th>
                   <th className="border border-black px-2 py-1 whitespace-nowrap w-[10%]">
-                    Accept Offered Timing?
+                    Accept the offer timings
                   </th>
                 </tr>
               </thead>
@@ -1063,6 +1071,15 @@ export default function RequestTablePage() {
                     <td className="border border-black px-2 py-1 text-center whitespace-nowrap text-black">
                       {request.isSanctioned === true ? "Y" : "N"}
                     </td>
+                    <td className="border border-black px-2 py-1 text-center whitespace-nowrap text-black">
+                      <div className="flex flex-col items-center">
+                        <span>{request.user?.name || "Unknown"}</span>
+                        {request.user?.role && (
+                          <span className="text-xs text-gray-600">{request.user?.role}</span>
+                        )}
+                      </div>
+                    </td>
+
                     <td className="border border-black px-2 py-1 bg-[#E6E6FA] text-center align-middle w-32">
                       {request.isSanctioned === true ? (
                         <>
@@ -1115,7 +1132,9 @@ export default function RequestTablePage() {
 
  else if (request.managerAcceptance === true && request.sigActionsNeeded === false&&request.sigResponse!==""&&request.sntDisconnectionRequired===true) {
       return <span className="text-gray-500">return to applicant by s&t</span>;
-    }
+    }<th className="border border-black px-2 py-1 whitespace-nowrap w-[10%]">
+                    Accept the offer timings
+                  </th>
 
 
 
@@ -1164,65 +1183,70 @@ export default function RequestTablePage() {
               (Click ID to see full details or to Edit)
             </div>
 
-          {/* Table */}
-          <div className="overflow-x-auto rounded-xl mx-2 mb-2">
-            <table className="w-full border border-black rounded-xl overflow-hidden text-[24px]">
-              <thead>
-                <tr className="bg-[#D6F3FF] text-black">
-                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[12%]">
-                    Date
-                  </th>
-                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[8%]">
-                    ID
-                  </th>
-                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[25%]">
-                    Block Section
-                  </th>
-                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[15%]">
-                    UP/DN/SL/Rpad
-                  </th>
-                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[20%]">
-                    Activity
-                  </th>
-                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[20%]">
-                    Demanded
-                  </th>
-                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[20%]">
-                    Offered
-                  </th>
-                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[10%]">
-                    Duration
-                  </th>
-
-                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[10%]">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {otherRequestsData?.data.requests.map(
-                  (request: any, idx: number) => (
-                    <tr
-                      key={request.id}
-                      className={
-                        idx % 2 === 0 ? "bg-[#FFF86B]" : "bg-[#E6E6FA]"
-                      }
-                    >
-                      <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
-                        {formatDate(request.date)}
-                      </td>
-                      <td className="border border-black px-2 py-1 whitespace-nowrap text-center">
-                        <Link
-                          href={`/view-request/${request.id}?from=request-table`}
-                          className="text-black hover:underline"
-                        >
-                          {request.divisionId || request.id.slice(-4)}
-                        </Link>
-                      </td>
-                      <td className="border border-black px-2 py-1 text-black">
-                        {request.missionBlock}
-                      </td>
-                   {/* <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+            {/* Table */}
+            <div className="overflow-x-auto rounded-xl mx-2 mb-2">
+              <table className="w-full border border-black rounded-xl overflow-hidden text-[24px]">
+                <thead>
+                  <tr className="bg-[#D6F3FF] text-black">
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[12%]">
+                      Date
+                    </th>
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[8%]">
+                      ID
+                    </th>
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[25%]">
+                      Block Section
+                    </th>
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[15%]">
+                      UP/DN/SL/Rpad
+                    </th>
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[20%]">
+                      Activity
+                    </th>
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[20%]">
+                      Demanded
+                    </th>
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[20%]">
+                      Offered
+                    </th>
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[10%]">
+                      Duration
+                    </th>
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[10%]">
+                      Status
+                    </th>
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[15%]">
+                      Requested By
+                    </th>
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[10%]">
+                      Accept the offer timings
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {otherRequestsData?.data.requests.map(
+                    (request: any, idx: number) => (
+                      <tr
+                        key={request.id}
+                        className={
+                          idx % 2 === 0 ? "bg-[#FFF86B]" : "bg-[#E6E6FA]"
+                        }
+                      >
+                        <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                          {formatDate(request.date)}
+                        </td>
+                        <td className="border border-black px-2 py-1 whitespace-nowrap text-center">
+                          <Link
+                            href={`/view-request/${request.id}?from=request-table`}
+                            className="text-black hover:underline"
+                          >
+                            {request.divisionId || request.id.slice(-4)}
+                          </Link>
+                        </td>
+                        <td className="border border-black px-2 py-1 text-black">
+                          {request.missionBlock}
+                        </td>
+                        {/* <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
                       {session?.user.department === "S&T"
                         ? request.processedLineSections
                             .map((section: any) =>
@@ -1250,47 +1274,48 @@ export default function RequestTablePage() {
     .join(", ") || "N/A"}
 </td>
 
-                      <td className="border border-black px-2 py-1 text-black">
-                        {request.activity}
-                      </td>
-                                          <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
-                      {formatTime(request.demandTimeFrom)} -{" "}
-                      {formatTime(request.demandTimeTo)}
-                    </td>
-                    <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
-                      {request.isSanctioned === true ? (
-                        <>
-                          {request.sanctionedTimeFrom === null || request.sanctionedTimeTo === null ? (
-                            <span className="text-gray-500">00:00 - 00:00</span>
-                          ) : (
+                        <td className="border border-black px-2 py-1 text-black">
+                          {request.activity}
+                        </td>
+                        <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                          {formatTime(request.demandTimeFrom)} -{" "}
+                          {formatTime(request.demandTimeTo)}
+                        </td>
+                        <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                          {request.isSanctioned === true ? (
                             <>
-                              {formatTime(request.sanctionedTimeFrom)} -{" "}
-                              {formatTime(request.sanctionedTimeTo)}
+                              {request.sanctionedTimeFrom === null || request.sanctionedTimeTo === null ? (
+                                <span className="text-gray-500">00:00 - 00:00</span>
+                              ) : (
+                                <>
+                                  {formatTime(request.sanctionedTimeFrom)} -{" "}
+                                  {formatTime(request.sanctionedTimeTo)}
+                                </>
+                              )}
                             </>
+                          ) : (
+                            <span className="text-gray-500">N/A</span>
                           )}
-                        </>
-                      ) : (
-                        <span className="text-gray-500">N/A</span>
-                      )}
-                    </td>
-                      <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
-                        
-                                {request.duration
-      ? formatTime(request.duration)
-      : (() => {
-          const from = new Date(request.demandTimeFrom);
-          const to = new Date(request.demandTimeTo);
-          const diffMs = to.getTime() - from.getTime();
-          const diffMins = Math.floor(diffMs / 60000);
-          const hours = String(Math.floor(diffMins / 60)).padStart(2, "0");
-          const minutes = String(diffMins % 60).padStart(2, "0");
-          return `${hours}:${minutes}`;
-        })()}
-
-
-                      </td>
-                      <td className="border border-black px-2 py-1 text-center whitespace-nowrap">
-                        {request.DisconnAcceptance === "ACCEPTED" ? (
+                        </td>
+                        <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                          {formatDuration(
+                            request.demandTimeFrom,
+                            request.demandTimeTo
+                          )}
+                        </td>
+                        <td className="border border-black px-2 py-1 text-center whitespace-nowrap text-black">
+                          {request.isSanctioned === true ? "Y" : "N"}
+                        </td>
+                        <td className="border border-black px-2 py-1 text-center whitespace-nowrap text-black">
+                          <div className="flex flex-col items-center">
+                            <span>{request.user?.name || "Unknown"}</span>
+                            {request.user?.role && (
+                              <span className="text-xs text-gray-600">{request.user?.role}</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="border border-black px-2 py-1 text-center whitespace-nowrap">
+                          {request.DisconnAcceptance === "ACCEPTED" ? (
                             <>
                               {/*
                           <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
@@ -1309,12 +1334,16 @@ export default function RequestTablePage() {
                           </span>
                               */}
                               {request.isSanctioned ? (
-                                <span className="bg-green-100  p-2 text-green-600">
-                                  {request.overAllStatus}
-                                </span>
+                                request.userResponse === "ACCEPTED" ? (
+                                  <div className="px-2 py-1 bg-green-100 text-green-800 mx-auto">
+                                    Sanctioned and Accepted
+                                  </div>
+                                ) : (<span className="bg-gray-100 p-2 text-gray-600 rounded">
+                                  {request.overAllStatus === "Sanctioned" ? "Sanctioned, Pending for Acceptance" : request.overAllStatus || "Pending"}
+                                </span>)
                               ) : (
                                 <span className="text-gray-500 ">
-                                  {request.overAllStatus}
+                                  {request.overAllStatus || "Pending"}
                                 </span>
                               )}
                             </>
@@ -1335,69 +1364,77 @@ export default function RequestTablePage() {
                             </span>
                           ) : (
                             <>
-                              {/* Show Accept/Reject buttons based on department and action needed conditions */}
-                              {((userDepartement === "SIG" || userDepartement === "S&T") && request.sigActionsNeeded === false) ||
-                                (userDepartement === "TRD" && request.trdActionsNeeded === false) ? (
-                                <div className="flex gap-2 justify-center">
-                                  <button
-                                    onClick={() =>
-                                      handleStatusUpdate(
-                                        request.id,
-                                        true,
-                                        userDepartement,
-                                        "mobileView",
-                                        request.date,
-                                        request.corridorType
-                                      )
-                                    }
-                                    disabled={isMutating}
-                                    className="px-3 py-1 bg-green-50 hover:bg-green-100 text-green-700 text-xs rounded-md border border-green-200 flex items-center transition-colors"
-                                  >
-                                    <svg
-                                      className="w-3 h-3 mr-1"
-                                      fill="currentColor"
-                                      viewBox="0 0 20 20"
-                                    >
-                                      <path
-                                        fillRule="evenodd"
-                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                        clipRule="evenodd"
-                                      />
-                                    </svg>
-                                    Accept
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      handleStatusUpdate(
-                                        request.id,
-                                        false,
-                                        userDepartement,
-                                        "mobileView",
-                                        request.date,
-                                        request.corridorType
-                                      )
-                                    }
-                                    disabled={isMutating}
-                                    className="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-700 text-xs rounded-md border border-red-200 flex items-center transition-colors"
-                                  >
-                                    <svg
-                                      className="w-3 h-3 mr-1"
-                                      fill="currentColor"
-                                      viewBox="0 0 20 20"
-                                    >
-                                      <path
-                                        fillRule="evenodd"
-                                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                        clipRule="evenodd"
-                                      />
-                                    </svg>
-                                    Reject
-                                  </button>
-                                </div>
-                              ) : (
-                                <span className="bg-green-100  p-2 text-green-600">
-                                  {request.overAllStatus}
+                              {/* For JE role, only show status without any buttons */}
+                              {session?.user?.role === "JE" ? (
+                                <span className="bg-gray-100 p-2 text-gray-600 rounded">
+                                  {request.overAllStatus === "Sanctioned" ? "Sanctioned, Pending for Acceptance" : request.overAllStatus || "Pending"}
                                 </span>
+                              ) : (
+                                // For USER role, check conditions for showing buttons
+                                ((userDepartement === "SIG" || userDepartement === "S&T") && request.sigActionsNeeded === false && request.sntDisconnectionRequired) ||
+                                  (userDepartement === "TRD" && request.trdActionsNeeded === false && request.powerBlockRequired) ? (
+                                  <div className="flex gap-2 justify-center">
+                                    <button
+                                      onClick={() =>
+                                        handleStatusUpdate(
+                                          request.id,
+                                          true,
+                                          userDepartement,
+                                          "mobileView",
+                                          request.date,
+                                          request.corridorType
+                                        )
+                                      }
+                                      disabled={isMutating}
+                                      className="px-3 py-1 bg-green-50 hover:bg-green-100 text-green-700 text-xs rounded-md border border-green-200 flex items-center transition-colors"
+                                    >
+                                      <svg
+                                        className="w-3 h-3 mr-1"
+                                        fill="currentColor"
+                                        viewBox="0 0 20 20"
+                                      >
+                                        <path
+                                          fillRule="evenodd"
+                                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                          clipRule="evenodd"
+                                        />
+                                      </svg>
+                                      Accept
+                                    </button>
+                                    <button
+                                      onClick={() =>
+                                        handleStatusUpdate(
+                                          request.id,
+                                          false,
+                                          userDepartement,
+                                          "mobileView",
+                                          request.date,
+                                          request.corridorType
+                                        )
+                                      }
+                                      disabled={isMutating}
+                                      className="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-700 text-xs rounded-md border border-red-200 flex items-center transition-colors"
+                                    >
+                                      <svg
+                                        className="w-3 h-3 mr-1"
+                                        fill="currentColor"
+                                        viewBox="0 0 20 20"
+                                      >
+                                        <path
+                                          fillRule="evenodd"
+                                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                          clipRule="evenodd"
+                                        />
+                                      </svg>
+                                      Reject
+                                    </button>
+                                  </div>
+
+                                ) : (
+                                  <span className="bg-green-100 p-2 text-green-600">
+                                    {request.overAllStatus === "Sanctioned" ? "Sanctioned, Pending for Acceptance" : request.overAllStatus || "Pending"}
+                                  </span>
+                                )
                               )}
                             </>
                           )}
