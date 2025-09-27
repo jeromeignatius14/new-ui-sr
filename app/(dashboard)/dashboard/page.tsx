@@ -45,8 +45,8 @@ const hasInProgressBlock = requestsData?.data?.requests?.find(
     year: "numeric",
   });
 
-  // Custom user dashboard UI
-  if (session?.user?.role === "USER") {
+  // Custom user dashboard UI - same for USER and JE roles
+  if (session?.user?.role === "USER" || session?.user?.role === "JE") {
     return (
       <div className="min-h-screen w-full flex flex-col items-center bg-[#fffbe9]">
         {/* Header */}
@@ -531,20 +531,6 @@ if (session?.user?.role === "PUNCTUALITY_CONTROLLER") {
                   BLOCK SUMMARY REPORT
                 </button>
               </a>
-            </div>
-          ) : null
-        }
-
-
-        {
-          session?.user?.role === "JE" ? (
-            <div className="flex flex-col gap-8 mt-8 w-full max-w-md items-center">
-              <a href="/admin/request-table">
-                <button className="w-72 bg-[#E6E6FA] py-6 rounded-2xl border-4 border-black text-2xl font-bold text-[#13529e] shadow-lg hover:bg-[#B57CF6] hover:text-white transition-colors">
-                  VIEW BLOCK DETAILS
-                </button>
-              </a>
-
             </div>
           ) : null
         }
