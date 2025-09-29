@@ -3169,7 +3169,7 @@ export let blockSection = {
     "NGT-VLNK", "NGT-YD", "VLNK-YD"
   ],
   'TVR-KKDI': [
-    "TVR-TNK", "TNK-TTP", "TTP-AMM", "AMM-PKT", 
+    "TVR-TNK", "TNK-TTP", "TTP-TAM","TAM-AMM", "AMM-PKT", 
     "PKT-PVI", "PVI-AYI", "AYI-ATQ", "ATQ-PYK", "PYK-KKDI", "TVR-YD", "TNK-YD", "TTP-YD", "TAM-YD",
     "AMM-YD", "PKT-YD", "PVI-YD", "AYI-YD", "ATQ-YD", "PYK-YD", "KKDI-YD"
   ],
@@ -3899,6 +3899,7 @@ export const streamData = {
     "both direction affected": ["Rd 1", "Rd 2"],
     "both direction not affected": []
   },
+
   'KKDI-YD': {
     "up direction affected": [],
     "down direction affected": [],
@@ -4868,7 +4869,8 @@ export let lineData = {
   // TVR-KKDI Section - Single line
   'TVR-TNK': ['SINGLE'],  // TVR is junction with TJ-KIK and MV-TVR lines
   'TNK-TTP': ['SINGLE'],  // TTP is junction with TTP-AGX line
-  'TTP-AMM': ['SINGLE'],
+  'TTP-TAM': ['SINGLE'],
+  'TAM-AMM': ['SINGLE'],
   'AMM-PKT': ['SINGLE'],
   'PKT-PVI': ['SINGLE'],
   'PVI-AYI': ['SINGLE'],
