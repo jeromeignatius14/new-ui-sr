@@ -3978,47 +3978,47 @@ export const depot: DepotStructure = {
   "SRR-CHTS": {
     "S&T": ["TCR", "AWY", "ERS","WKI"],
     "ENGG": ["TCR", "CKI", "AWY", "ERS","CN"],
-    "TRD": ["TCR", "CKI", "ERS"]
+    "TRD": ["TCR", "CKI", "ERS","CN"]
   },
   "TCR-GUV": {
     "S&T": ["TCR"],
     "ENGG": ["TCR","CN","BRI/QLN"],
-    "TRD": ["TCR"]
+    "TRD": ["TCR","CN"]
   },
  "ERS-KTYM-KYJ": {
     "S&T": ["ERS", "KTYM", "KYJ","PVRD","CNGR"],
     "ENGG": ["ERS", "PVRD", "KTYM", "MVLK","BRI/QLN","CN"],
-    "TRD": ["ERS", "KTYM", "KYJ"]
+    "TRD": ["ERS", "KTYM", "KYJ","CN"]
   },
   "ERS-ALLP-KYJ": {
     "S&T": ["ERS", "KYJ", "ALLP"],
     "ENGG": ["ERS", "ALLP", "MVLK","BRI/QLN","CN"],
-    "TRD": ["ERS", "ALLP", "KYJ"]
+    "TRD": ["ERS", "ALLP", "KYJ","CN"]
   },
  "KYJ-QLN": {
     "S&T": ["KYJ", "QLN","KPY"],
     "ENGG": ["MVLK", "QLN","BRI/QLN","CN"],
-    "TRD": ["KYJ", "QLN"]
+    "TRD": ["KYJ", "QLN","CN"]
   },
   "QLN-TVC": {
     "S&T": ["QLN", "TVC"],
     "ENGG": ["QLN", "VAK", "TVC","BRI/QLN","CN"],
-    "TRD": ["QLN", "KZK"]
+    "TRD": ["QLN", "KZK","CN"]
   },
   "TVC-NCJ": {
     "S&T": ["TVC", "NCJ"],
     "ENGG": ["TVC", "NCJ","BRI/QLN","CN"],
-    "TRD": ["KZK", "NCJ"]
+    "TRD": ["KZK", "NCJ","CN"]
   },
  "NCJ-TEN": {
     "S&T": ["NCJ"],
     "ENGG": ["NCJ","BRI/QLN","CN"],
-    "TRD": ["NCJ", "NNN"]
+    "TRD": ["NCJ", "NNN","CN"]
   },
   "NCJ-CAPE": {
     "S&T": ["NCJ"],
     "ENGG": ["NCJ","BRI/QLN","CN"],
-    "TRD": ["NCJ"]
+    "TRD": ["NCJ","CN"]
   }
 };
 
