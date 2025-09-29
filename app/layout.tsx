@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import AddToHomeScreenPrompt from "./components/AddToHomeScreenPrompt";
+import NotificationsInit from './components/NotificationsInit';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,6 +40,7 @@ export default function RootLayout({
       >
         <Providers>
           <AddToHomeScreenPrompt /> 
+          <NotificationsInit />
           {children}
         </Providers>
       </body>
