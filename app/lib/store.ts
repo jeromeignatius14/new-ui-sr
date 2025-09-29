@@ -3119,7 +3119,7 @@ export let blockSection = {
     "TCR-YD", "PNQ-YD", "GUV-YD"
   ],
   "ERS-KTYM-KYJ": [
-    "ERS-TRTR", "TRTR-MNTT", "TRTR-IPN", "MNTT-PVRD", "PVRD-VARD",
+    "ERS-ERSC","ERSC-TRTD","ERSD-TRTR", "TRTR-MNTT", "TRTR-IPN", "MNTT-PVRD", "PVRD-VARD",
     "VARD-KRPP", "KRPP-ETM", "ETM-KTYM", "KTYM-CGV", "CGV-CGY",
     "CGY-TRVL", "TRVL-CNGR", "CNGR-MVLK", "MVLK-KYJ",
     "ERS-YD", "TRTR-YD", "MNTT-YD", "PVRD-YD", "VARD-YD", "KRPP-YD", "ETM-YD",
@@ -3897,7 +3897,9 @@ export let lineData = {
   "TCR-PNQ": ["UP", "DN"],
   "PNQ-GUV": ["SINGLE"],
 
-  "ERS-TRTR": ["UP", "DN"],
+  //"ERS-ERSC": ["UP", "DN"],  
+  //"ERSC-ERSD": ["UP", "DN"],
+  "ERSD-TRTR": ["UP", "DN"],
   "TRTR-MNTT": ["UP", "DN"],
   "TRTR-IPN": ["SINGLE"],
   "MNTT-PVRD": ["UP", "DN"],
