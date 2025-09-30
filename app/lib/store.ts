@@ -382,7 +382,7 @@ export const streamData = {
   "VDP-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3","Rd 4"],
     "both direction not affected": []
   },
   "SDN-YD": {
