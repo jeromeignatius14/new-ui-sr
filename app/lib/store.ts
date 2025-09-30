@@ -4747,9 +4747,9 @@ export let lineData = {
 
   // TPJ-MV Section - Single line
   // 'TPJ-GOC': ['UP', 'DN'],  // Already listed in TPJ-VM, repeated here as it's a junction
-  'GOC-TRB': ['SINGLE'],
-  'TRB-SGM': ['SINGLE'],
-  'SGM-BAL': ['SINGLE'],
+  'GOC-TRB': ['UP', 'DN'],
+  'TRB-SGM': ['UP', 'DN'],
+  'SGM-BAL': ['UP', 'DN'],
   'BAL-ALK': ['SINGLE'],
   'ALK-TJ': ['SINGLE'],  // Junction with TJ-KIK line
   'TJ-TT': ['SINGLE'],
