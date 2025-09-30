@@ -13,8 +13,6 @@ import { useSession } from "next-auth/react";
 import { managerService, UserRequest } from "@/app/service/api/manager";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import formatTime from "@/app/utils/formatTime";
 import * as XLSX from "xlsx";
 
