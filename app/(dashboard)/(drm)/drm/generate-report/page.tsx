@@ -10,11 +10,6 @@ import { useRouter } from "next/navigation";
 import { useGenerateReport } from "@/app/service/query/hq";
 import { MajorSection } from "@/app/lib/store";
 import { useSession } from "next-auth/react";
-<<<<<<< HEAD
-=======
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
->>>>>>> 433e69b (📊 update: Add donwnload and column in Generate reports)
 import { managerService, UserRequest } from "@/app/service/api/manager";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
@@ -56,15 +51,12 @@ interface DetailedData {
   Duration: number;
   Type: string;
   Status: string;
-<<<<<<< HEAD
-=======
   stationId?: string;
   AvailedTimeFrom?: string;
   AvailedTimeTo?: string;
   DivisionId?: string; // Added property to match usage
   Activity?: string; // Added property to match usage
   overAllStatus?: string; // Added property to match usage
->>>>>>> 433e69b (📊 update: Add donwnload and column in Generate reports)
 }
 
 const locationOptions: OptionType[] = [
@@ -274,65 +266,6 @@ export default function GenerateReportPage() {
       toast.error("Failed to generate report");
     }
   };
-<<<<<<< HEAD
-
-=======
-  // const handleDownloadTableB = () => {
-  //   try {
-  //     const doc = new jsPDF();
-
-  //     // Title
-  //     doc.setFontSize(16);
-  //     doc.text("(B) Summary of Upcoming Blocks", 14, 20);
-
-  //     // Table header (match your <th>)
-  //     const headers = [
-  //       ["Date", "DivisionId", "Major Section", "Block Section", "Type", "Duration", "Status"],
-  //     ];
-
-  //     // Table body (match your <td>)
-  //     const body = filteredUpcomingBlocks.slice(0, 200).map((block: any) => {
-  //       let statusLabel = "";
-  //       if (block.overAllStatus === "Sanctioned") {
-  //         statusLabel = "Sanctioned";
-  //       } else if (block.overAllStatus === "with optg.") {
-  //         statusLabel = "with optg.";
-  //       } else if (block.Status === "PENDING") {
-  //         statusLabel = "Pending with dept control";
-  //       } else if (block.Status === "REJECTED") {
-  //         statusLabel = "Returned by Optg";
-  //       } else {
-  //         statusLabel = block.overAllStatus || block.Status || "-";
-  //       }
-
-  //       return [
-  //         formatDateB(block.Date),
-  //         block.DivisionId || "-",
-  //         block.Section || "-",
-  //         block.MissionBlock || "-",
-  //         block.Type || "-",
-  //         block.Duration || "-",
-  //         statusLabel,
-  //       ];
-  //     });
-
-  //     // Generate PDF table
-  //     autoTable(doc, {
-  //       head: headers,
-  //       body,
-  //       startY: 30,
-  //       styles: { fontSize: 10, halign: "center" },
-  //       headStyles: { fillColor: [228, 158, 221] }, // match your pink header
-  //       alternateRowStyles: { fillColor: [245, 208, 242] }, // match zebra stripes
-  //     });
-
-  //     // Save
-  //     doc.save("Summary_of_Upcoming_Blocks.pdf");
-  //   } catch (err) {
-  //     console.error("PDF download error:", err);
-  //   }
-  // };
->>>>>>> 433e69b (📊 update: Add donwnload and column in Generate reports)
   const formatDateInput = (value: string) => {
     // Format as DD/MM/YY
     if (!value) return "";
@@ -1105,14 +1038,10 @@ export default function GenerateReportPage() {
             <table className="w-full border-2 border-black mt-1 text-[24px]">
               <thead>
                 <tr className="bg-[#e49edd] text-black text-[24px] font-bold">
-<<<<<<< HEAD
-                  <th className="border-2 border-black px-2 py-1">Section</th>
-                  <th className="border-2 border-black px-2 py-1">Date</th>
-=======
                   <th className="border-2 border-black px-2 py-1">Date</th>
                   <th className="border-2 border-black px-2 py-1">RequestID</th>
->>>>>>> 433e69b (📊 update: Add donwnload and column in Generate reports)
                   <th className="border-2 border-black px-2 py-1">Type</th>
+                  <th className="border-2 border-black px-2 py-1">Activity</th>
                   <th className="border-2 border-black px-2 py-1">Duration</th>
                   <th className="border-2 border-black px-2 py-1">
                     Availed time
@@ -1136,35 +1065,24 @@ export default function GenerateReportPage() {
                   filteredUpcomingBlocks
                     .slice(0, 200)
                     .map((block: DetailedData, idx: number) => {
-<<<<<<< HEAD
                       // Status color logic
-=======
->>>>>>> 433e69b (📊 update: Add donwnload and column in Generate reports)
                       let statusLabel = "";
                       let statusStyle = { background: "#fff", color: "#222" };
                       if (block.Status === "APPROVED") {
                         statusLabel = "Pending with Optg";
                         statusStyle = { background: "#fff86b", color: "#222" };
-<<<<<<< HEAD
-                      } else if (block.Status === "PENDING") {
-=======
                       } else if (block.overAllStatus === "with optg.") {
                         statusLabel = "with optg.";
                         statusStyle = { background: "#d47ed4", color: "#222" };
                       }
                       else if (block.Status === "PENDING") {
->>>>>>> 433e69b (📊 update: Add donwnload and column in Generate reports)
                         statusLabel = "Pending with dept control";
                         statusStyle = { background: "#d47ed4", color: "#222" };
                       } else if (block.Status === "REJECTED") {
                         statusLabel = "Returned by Optg";
                         statusStyle = { background: "#ff4e36", color: "#fff" };
                       } else {
-<<<<<<< HEAD
-                        statusLabel = block.Status;
-=======
                         statusLabel = block.overAllStatus || block.Status;
->>>>>>> 433e69b (📊 update: Add donwnload and column in Generate reports)
                       }
 
                       // Row background alternates between pink and white
@@ -1176,21 +1094,10 @@ export default function GenerateReportPage() {
                           key={idx}
                           className={`${rowBgColor} hover:bg-[#F3F3F3]`}
                         >
-<<<<<<< HEAD
-                          <td className="border-2 border-black px-2 py-1 font-bold text-black">
-                            {block.Section}
-                          </td>
-=======
->>>>>>> 433e69b (📊 update: Add donwnload and column in Generate reports)
                           <td className="border-2 border-black px-2 py-1 text-black">
                             {dayjs(block.Date).format("DD-MM-YY")}
 
                           </td>
-<<<<<<< HEAD
-                          <td className="border-2 border-black px-2 py-1 text-black">
-                            {block.Type}
-                          </td>
-=======
                           <td className="border-2 border-black px-2 py-1 font-bold text-black">
                             {block.DivisionId}
                           </td>
@@ -1202,7 +1109,6 @@ export default function GenerateReportPage() {
                           <td className="border-2 border-black px-2 py-1 text-black">
                             {block.Activity}
                           </td>
->>>>>>> 433e69b (📊 update: Add donwnload and column in Generate reports)
                           <td className="border-2 border-black px-2 py-1 text-black">
                             {block.Duration}
                           </td>
@@ -1244,17 +1150,6 @@ export default function GenerateReportPage() {
               to see further details.
             </span>
           </div>
-<<<<<<< HEAD
-=======
-          {/* <div className="flex items-center gap-4 mt-4 md:mt-0 ml-2 mr-2">
-            <button
-              onClick={handleDownloadTableB}
-              className="bg-[#7be09b] hover:bg-[#5bc07b] text-white font-bold px-4 py-2 rounded-lg shadow border border-[#00b347] text-sm"
-            >
-              Download PDF
-            </button>
-          </div> */}
->>>>>>> 433e69b (📊 update: Add donwnload and column in Generate reports)
           <div className="flex items-center gap-4 mt-4 md:mt-0">
             <button
               className="flex items-center gap-2 bg-[#cfd4ff] border-2 border-black rounded-[50%] px-6 py-2 text-[24px] font-bold text-black"
