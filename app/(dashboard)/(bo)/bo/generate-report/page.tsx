@@ -10,8 +10,6 @@ import { useRouter } from "next/navigation";
 import { useGenerateReport } from "@/app/service/query/hq";
 import { MajorSection } from "@/app/lib/store";
 import { useSession } from "next-auth/react";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import { managerService, UserRequest } from "@/app/service/api/manager";
 import { useQuery } from "@tanstack/react-query";
 import formatTime from "@/app/utils/formatTime";
