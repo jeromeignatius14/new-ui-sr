@@ -10,8 +10,12 @@ import { useRouter } from "next/navigation";
 import { useGenerateReport } from "@/app/service/query/hq";
 import { MajorSection } from "@/app/lib/store";
 import { useSession } from "next-auth/react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import { managerService, UserRequest } from "@/app/service/api/manager";
 import { useQuery } from "@tanstack/react-query";
+import formatTime from "@/app/utils/formatTime";
+import * as XLSX from "xlsx";
 
 interface OptionType {
   value: string;
@@ -41,6 +45,7 @@ interface PastBlockSummary {
   Department?: String;
   corridorType?: String;
   MissionBlock?: String;
+  MissionBlockCount?: number;
 }
 
 interface DetailedData {
@@ -51,6 +56,9 @@ interface DetailedData {
   Status: string;
   DivisionId?: string;
   MissionBlock?: string;
+  stationId?: string;
+  AvailedTimeFrom?: string;
+  AvailedTimeTo?: string;
   id?: string;
   overAllStatus?: string;
 }
@@ -71,8 +79,6 @@ const blockTypeOptions: OptionType[] = [
   { value: "Emergency", label: "Emergency" },
   { value: "Mega", label: "Mega Block" },
 ];
-
-
 
 export default function GenerateReportPage() {
   const [pastBlockSummary, setPastBlockSummary] = useState<PastBlockSummary[]>(
@@ -110,17 +116,14 @@ export default function GenerateReportPage() {
     blockType: ["All"],
   });
 
-
-
-
-useEffect(() => {
-  if (session?.user?.department) {
-    setQueryParams(prev => ({
-      ...prev,
-      department: [session.user.department] 
-    }));
-  }
-}, [session]);
+  useEffect(() => {
+    if (session?.user?.department) {
+      setQueryParams((prev) => ({
+        ...prev,
+        department: [session.user.department],
+      }));
+    }
+  }, [session]);
 
   // Get user's location and set up major section options
   useEffect(() => {
@@ -225,8 +228,6 @@ useEffect(() => {
     }
   };
 
- 
-
   const onSubmit = async (data: FormData) => {
     // Validate dates
     if (!data.startDate || !data.endDate) {
@@ -247,7 +248,9 @@ useEffect(() => {
         startDate: formattedStartDate,
         endDate: formattedEndDate,
         majorSections: selectedMajorSections,
-        department: session?.user?.department ? [session.user.department] : [""],
+        department: session?.user?.department
+          ? [session.user.department]
+          : [""],
         blockType: selectedBlockTypes,
       });
 
@@ -287,8 +290,8 @@ useEffect(() => {
     upcomingSectionFilter === "All"
       ? reportData?.data?.detailedData || []
       : reportData?.data?.detailedData?.filter(
-          (b: DetailedData) => b.Section === upcomingSectionFilter
-        ) || [];
+        (b: DetailedData) => b.Section === upcomingSectionFilter
+      ) || [];
   function formatDateB(dateString: string) {
     if (!dateString) return "";
     // Accepts both MM/DD/YYYY and DD/MM/YYYY
@@ -309,12 +312,212 @@ useEffect(() => {
   const [sectionDropdownOpenB, setSectionDropdownOpenB] = useState(false);
   const sectionDropdownRefB = useRef<HTMLDivElement>(null);
 
+  // Function to download block summary table as XLSX
+  const handleDownloadSummary = () => {
+    try {
+      if (pastBlockSummary.length === 0) {
+        toast.error("No data available to download");
+        return;
+      }
+
+      const excelData = pastBlockSummary.map((summary: any) => ({
+        Section: summary.Department || summary.Section || "", // Using the fixed value as in the table
+        Demanded: summary.Demanded?.toFixed(2) || "0.00",
+        Approved: summary.Approved?.toFixed(2) || "0.00",
+        Granted: summary.Granted.toFixed(2) || "0",
+        "% Granted":
+          summary.PercentGranted !== undefined
+            ? summary.PercentGranted.toFixed(2) + "%"
+            : "",
+        Availed: summary.Availed.toFixed(2) || "0",
+        "% Availed":
+          summary.PercentAvailed !== undefined
+            ? summary.PercentAvailed.toFixed(2) + "%"
+            : "",
+      }));
+
+      // Add total row
+      excelData.push({
+        Section: "Total",
+        Demanded: pastBlockSummary
+          .reduce((sum, item) => sum + (item.Demanded || 0), 0)
+          .toFixed(2),
+        Approved: pastBlockSummary
+          .reduce((sum, item) => sum + (item.Approved || 0), 0)
+          .toFixed(2),
+        Granted: String(
+          pastBlockSummary
+            .reduce((sum, item) => sum + (item.Granted || 0), 0)
+            .toFixed(2)
+        ),
+        "% Granted":
+          String(
+            pastBlockSummary
+              .reduce((sum, item) => sum + (item.PercentGranted || 0), 0)
+              .toFixed(2)
+          ) + "%",
+        Availed: String(
+          pastBlockSummary.reduce((sum, item) => sum + (item.Availed || 0), 0)
+        ),
+        "% Availed":
+          String(
+            pastBlockSummary
+              .reduce((sum, item) => sum + (item.PercentAvailed || 0), 0)
+              .toFixed(2)
+          ) + "%",
+      });
+
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+      // Add title before the data
+      XLSX.utils.sheet_add_aoa(
+        worksheet,
+        [
+          [
+            `(A) Block Summary: ${formatDisplayDate(
+              watch("startDate")
+            )} to ${formatDisplayDate(watch("endDate"))}`,
+          ],
+          // [`Department: ${selectedDepartments.join(", ")} (in Hrs)`],
+          [], // Empty row for spacing
+        ],
+        { origin: "A1" }
+      );
+
+      // Adjust column widths
+      const colWidths = [
+        { wch: 15 }, // Section
+        { wch: 10 }, // Demanded
+        { wch: 10 }, // Approved
+        { wch: 10 }, // Granted
+        { wch: 10 }, // % Granted
+        { wch: 10 }, // Availed
+        { wch: 10 }, // % Availed
+      ];
+      worksheet["!cols"] = colWidths;
+
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Block Summary");
+
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+      const blob = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `block_summary_${format(new Date(), "dd-MM-yyyy")}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success("Block summary downloaded successfully");
+    } catch (error) {
+      console.error("Download error:", error);
+      toast.error("Failed to download Excel file. Please try again.");
+    }
+  };
+
+  // Function to download upcoming blocks table as XLSX
+  const handleDownloadUpcomingBlocks = () => {
+    try {
+      if (filteredUpcomingBlocks.length === 0) {
+        toast.error("No data available to download");
+        return;
+      }
+
+      const excelData = filteredUpcomingBlocks.map((block: any) => {
+        // Status logic
+        let statusLabel = "";
+        if (block.Status === "APPROVED") {
+          statusLabel = "Pending with Optg";
+        } else if (block.Status === "PENDING") {
+          statusLabel = "Pending with dept control";
+        } else if (block.Status === "REJECTED") {
+          statusLabel = "Returned by Optg";
+        } else {
+          statusLabel = block.Status;
+        }
+
+        return {
+          Date: formatDateB(block.Date),
+          DivisionId: block.DivisionId || "N/A",
+          "Station ID": block.stationId || "N/A",
+          "Block Section": block.MissionBlock || "N/A",
+          Type: block.Type || "N/A",
+          Duration: block.Duration,
+          "Availed Time":
+            block.AvailedTimeFrom && block.AvailedTimeTo
+              ? `${formatTime(block.AvailedTimeFrom)} to ${formatTime(
+                block.AvailedTimeTo
+              )}`
+              : "Not Available",
+          Status: statusLabel,
+        };
+      });
+
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+      // Add title before the data
+      XLSX.utils.sheet_add_aoa(
+        worksheet,
+        [
+          [`(B) Summary of Upcoming Blocks`],
+          [], // Empty row for spacing
+        ],
+        { origin: "A1" }
+      );
+
+      // Adjust column widths
+      const colWidths = [
+        { wch: 12 }, // Date
+        { wch: 10 }, // ID
+        { wch: 10 }, // Station ID
+        { wch: 20 }, // Block Section
+        { wch: 12 }, // Type
+        { wch: 30 }, // Activity
+        { wch: 20 }, // Demand Time
+        { wch: 20 }, // Sanctioned Time
+        { wch: 20 }, // Availed Time
+        { wch: 20 }, // Status
+      ];
+      worksheet["!cols"] = colWidths;
+
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Upcoming Blocks");
+
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+      const blob = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `upcoming_blocks_${format(
+        new Date(),
+        "dd-MM-yyyy"
+      )}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success("Upcoming blocks data downloaded successfully");
+    } catch (error) {
+      console.error("Download error:", error);
+      toast.error("Failed to download Excel file. Please try again.");
+    }
+  };
+
   return (
     <div className="min-h-screen w-full bg-[#fffbe9] flex flex-col items-center">
       {/* RBMS Header */}
       <div className="w-full bg-[#fff35c] flex flex-col items-center py-2 rounded-t-2xl">
         <span className="text-5xl font-extrabold text-[#b07be0] tracking-wide">
-        RBMS-{session?.user?.location}-DIVN
+          RBMS-{session?.user?.location}-DIVN
         </span>
       </div>
       {/* Block Summary Report Title */}
@@ -400,90 +603,94 @@ useEffect(() => {
                 menuPosition="fixed"
               />
             </div> */}
-                     <div className="flex flex-col flex-1 min-w-[90px] max-w-[110px] w-full">
-                  <span className="text-[24px] font-bold text-black mb-1 whitespace-nowrap">
-                    Choose Section
-                  </span>
-                  <Select
-                    options={majorSectionOptions}
-                    isMulti={true}
-                    value={majorSectionOptions.filter((opt) =>
-                      selectedMajorSections.includes(opt.value)
-                    )}
-                    onChange={(opts) => handleMajorSectionChange(opts)}
-                    classNamePrefix="section-select"
-                    styles={{
-                      container: (base) => ({
-                        ...base,
-                        width: "100%",
-                        maxWidth: "110px",
-                        minWidth: "90px",
-                      }),
-                      control: (base, state) => ({
-                        ...base,
-                        borderColor: "#00bfff",
-                        borderWidth: 2,
-                        borderRadius: 0,
-                        minHeight: 32,
-                        fontSize: 24,
-                        width: "100%",
-                        maxWidth: "110px",
-                        minWidth: "90px",
-                        // Show only the count in the input
-                        "&:after": selectedMajorSections.length > 0 ? {
+            <div className="flex flex-col flex-1 min-w-[90px] max-w-[110px] w-full">
+              <span className="text-[24px] font-bold text-black mb-1 whitespace-nowrap">
+                Choose Section
+              </span>
+              <Select
+                options={majorSectionOptions}
+                isMulti={true}
+                value={majorSectionOptions.filter((opt) =>
+                  selectedMajorSections.includes(opt.value)
+                )}
+                onChange={(opts) => handleMajorSectionChange(opts)}
+                classNamePrefix="section-select"
+                styles={{
+                  container: (base) => ({
+                    ...base,
+                    width: "100%",
+                    maxWidth: "110px",
+                    minWidth: "90px",
+                  }),
+                  control: (base, state) => ({
+                    ...base,
+                    borderColor: "#00bfff",
+                    borderWidth: 2,
+                    borderRadius: 0,
+                    minHeight: 32,
+                    fontSize: 24,
+                    width: "100%",
+                    maxWidth: "110px",
+                    minWidth: "90px",
+                    // Show only the count in the input
+                    "&:after":
+                      selectedMajorSections.length > 0
+                        ? {
                           content: `"${selectedMajorSections.length}"`,
-                          position: 'absolute',
+                          position: "absolute",
                           left: 8,
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          color: '#000',
-                          fontWeight: 'bold',
-                          pointerEvents: 'none',
-                        } : {},
-                      }),
-                      input: (base) => ({
-                        ...base,
-                        opacity: 0, // Hide the default input
-                        width: 0,
-                      }),
-                      placeholder: (base) => ({
-                        ...base,
-                        display: selectedMajorSections.length > 0 ? 'none' : 'block',
-                      }),
-                      option: (base, state) => ({
-                        ...base,
-                        backgroundColor: state.isSelected ? "#b7e3ee" : "#fff",
-                        color: "#000",
-                        fontWeight: "bold",
-                        fontSize: 24,
-                      }),
-                      menu: (base) => ({ ...base, zIndex: 50 }),
-                      multiValue: (base) => ({
-                        ...base,
-                        backgroundColor: "#e0e0ff",
-                        color: "#000",
-                        display: 'none', // Hide the chips in the input
-                      }),
-                      multiValueLabel: (base) => ({
-                        ...base,
-                        color: "#000",
-                        fontWeight: "bold",
-                      }),
-                      multiValueRemove: (base) => ({
-                        ...base,
-                        color: "#b07be0",
-                        ":hover": { backgroundColor: "#b07be0", color: "white" },
-                      }),
-                    }}
-                    placeholder="Section"
-                    closeMenuOnSelect={false}
-                    hideSelectedOptions={false}
-                    menuPortalTarget={
-                      typeof window !== "undefined" ? document.body : undefined
-                    }
-                    menuPosition="fixed"
-                  />
-                </div>
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          color: "#000",
+                          fontWeight: "bold",
+                          pointerEvents: "none",
+                        }
+                        : {},
+                  }),
+                  input: (base) => ({
+                    ...base,
+                    opacity: 0, // Hide the default input
+                    width: 0,
+                  }),
+                  placeholder: (base) => ({
+                    ...base,
+                    display:
+                      selectedMajorSections.length > 0 ? "none" : "block",
+                  }),
+                  option: (base, state) => ({
+                    ...base,
+                    backgroundColor: state.isSelected ? "#b7e3ee" : "#fff",
+                    color: "#000",
+                    fontWeight: "bold",
+                    fontSize: 24,
+                  }),
+                  menu: (base) => ({ ...base, zIndex: 50 }),
+                  multiValue: (base) => ({
+                    ...base,
+                    backgroundColor: "#e0e0ff",
+                    color: "#000",
+                    display: "none", // Hide the chips in the input
+                  }),
+                  multiValueLabel: (base) => ({
+                    ...base,
+                    color: "#000",
+                    fontWeight: "bold",
+                  }),
+                  multiValueRemove: (base) => ({
+                    ...base,
+                    color: "#b07be0",
+                    ":hover": { backgroundColor: "#b07be0", color: "white" },
+                  }),
+                }}
+                placeholder="Section"
+                closeMenuOnSelect={false}
+                hideSelectedOptions={false}
+                menuPortalTarget={
+                  typeof window !== "undefined" ? document.body : undefined
+                }
+                menuPosition="fixed"
+              />
+            </div>
             {/* Select Period */}
             <div className="flex flex-col flex-1 min-w-[180px] w-full">
               <div className="flex justify-center w-full mb-1">
@@ -519,11 +726,10 @@ useEffect(() => {
           {blockTypeOptions.map((opt) => (
             <button
               key={opt.value}
-              className={`rounded-full px-3 py-1 text-base font-semibold border border-[#b7e3ee] flex items-center gap-1 transition-colors duration-150 ${
-                selectedBlockTypes.includes(opt.value)
+              className={`rounded-full px-3 py-1 text-base font-semibold border border-[#b7e3ee] flex items-center gap-1 transition-colors duration-150 ${selectedBlockTypes.includes(opt.value)
                   ? "bg-[#b7e3ee] text-black"
                   : "bg-[#e0e0ff] text-black"
-              }`}
+                }`}
               onClick={() => toggleBlockType(opt.value)}
               type="button"
             >
@@ -546,6 +752,29 @@ useEffect(() => {
         </div>
         {/* (A) Block Summary Table */}
         <div className="w-full mt-4">
+          <div className="my-2">
+            <button
+              onClick={handleDownloadSummary}
+              className="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1 ml-2 shadow border border-green-800 text-base flex items-center"
+              disabled={pastBlockSummary.length === 0}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 mr-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
+              </svg>
+              Download Past Blocks Summary (XLSX)
+            </button>
+          </div>
           <div className="flex w-full justify-center">
             <div
               className="flex-1 bg-[#cfd4ff] text-xl font-bold border-2 border-black px-2 py-1 text-center"
@@ -562,13 +791,13 @@ useEffect(() => {
           <div className="overflow-x-auto w-full">
             <table className="w-full border-2 border-black">
               <thead>
-                <tr className="bg-[#e49edd] text-black text-lg font-bold">
+                <tr className="bg-[#f7c7ac] text-black text-[24px] font-bold">
                   <th className="border-2 border-black px-2 py-1">Section</th>
-                  <th className="border-2 border-black px-2 py-1">Demanded</th>
-                  <th className="border-2 border-black px-2 py-1">Approved</th>
-                  <th className="border-2 border-black px-2 py-1">Granted</th>
+                  <th className="border-2 border-black px-2 py-1">Demanded / No. of Blocks</th>
+                  <th className="border-2 border-black px-2 py-1">Approved / No. of Blocks</th>
+                  <th className="border-2 border-black px-2 py-1">Granted / No. of Blocks</th>
                   <th className="border-2 border-black px-2 py-1">% Granted</th>
-                  <th className="border-2 border-black px-2 py-1">Availed</th>
+                  <th className="border-2 border-black px-2 py-1">Availed / No. of Blocks</th>
                   <th className="border-2 border-black px-2 py-1">% Availed</th>
                 </tr>
               </thead>
@@ -586,117 +815,137 @@ useEffect(() => {
                 ) : (
                   pastBlockSummary.map((summary: any, idx: number) => (
                     <tr
-                      className={`font-bold ${
-                        idx % 2 === 0 ? "bg-white" : "bg-[#f4dcf1]"
-                      }`}
+                      className={`font-bold ${idx % 2 === 0 ? "bg-[#f4dcf1]" : "bg-white"
+                        }`}
                       key={idx}
                     >
                       <td
-                        className="border-2 border-black px-2 py-1"
+                        className="border-2 border-black px-2 py-1 text-center"
                         style={{ color: "black" }}
                       >
                         {summary.Department || summary.Section || ""}
                       </td>
                       <td
-                        className="border-2 border-black px-2 py-1"
+                        className="border-2 border-black px-2 py-1 text-center"
                         style={{ color: "black" }}
                       >
-                        {summary.Demanded}
+                        {summary.Demanded.toFixed(2)} / {summary.MissionBlockCount}
                       </td>
                       <td
-                        className="border-2 border-black px-2 py-1"
+                        className="border-2 border-black px-2 py-1 text-center"
                         style={{ color: "black" }}
                       >
-                        {summary.Approved}
+                        {summary.Approved.toFixed(2)} / {summary.MissionBlockCount}
                       </td>
                       <td
-                        className="border-2 border-black px-2 py-1"
+                        className="border-2 border-black px-2 py-1 text-center"
                         style={{ color: "black" }}
                       >
-                        {summary.Granted}
+                        {summary.Granted.toFixed(2)} / {summary.MissionBlockCount}
                       </td>
                       <td
-                        className="border-2 border-black px-2 py-1"
+                        className="border-2 border-black px-2 py-1 text-center"
                         style={{ color: "black" }}
                       >
                         {summary.PercentGranted !== undefined
-                          ? summary.PercentGranted + "%"
+                          ? summary.PercentGranted.toFixed(2) + "%"
                           : ""}
                       </td>
                       <td
-                        className="border-2 border-black px-2 py-1"
+                        className="border-2 border-black px-2 py-1 text-center"
                         style={{ color: "black" }}
                       >
-                        {summary.Availed}
+                        {summary.Availed.toFixed(2)} / {summary.MissionBlockCount}
                       </td>
                       <td
-                        className="border-2 border-black px-2 py-1"
+                        className="border-2 border-black px-2 py-1 text-center"
                         style={{ color: "black" }}
                       >
                         {summary.PercentAvailed !== undefined
-                          ? summary.PercentAvailed + "%"
+                          ? summary.PercentAvailed.toFixed(2) + "%"
                           : ""}
                       </td>
                     </tr>
                   ))
                 )}
+
                 {pastBlockSummary.length > 0 && (
                   <>
                     <tr className="bg-[#ff914d] text-white font-bold">
-                      <td className="border-2 border-black px-2 py-1">Total</td>
+                      <td className="border-2 border-black px-2 py-1 text-center">
+                        Total
+                      </td>
                       <td
-                        className="border-2 border-black px-2 py-1"
+                        className="border-2 border-black px-2 py-1 text-center"
                         style={{ color: "black" }}
                       >
+                        {pastBlockSummary
+                          .reduce((sum, item) => sum + (item.Demanded || 0), 0)
+                          .toFixed(2)}{" "}
+                        /{" "}
                         {pastBlockSummary.reduce(
-                          (sum, item) => sum + (item.Demanded || 0),
+                          (sum, item) => sum + (item.MissionBlockCount || 0),
                           0
                         )}
                       </td>
                       <td
-                        className="border-2 border-black px-2 py-1"
+                        className="border-2 border-black px-2 py-1 text-center"
                         style={{ color: "black" }}
                       >
+                        {pastBlockSummary
+                          .reduce((sum, item) => sum + (item.Approved || 0), 0)
+                          .toFixed(2)}{" "}
+                        /{" "}
                         {pastBlockSummary.reduce(
-                          (sum, item) => sum + (item.Approved || 0),
+                          (sum, item) => sum + (item.MissionBlockCount || 0),
                           0
                         )}
                       </td>
                       <td
-                        className="border-2 border-black px-2 py-1"
+                        className="border-2 border-black px-2 py-1 text-center"
                         style={{ color: "black" }}
                       >
                         {pastBlockSummary.reduce(
                           (sum, item) => sum + (item.Granted || 0),
                           0
-                        )}
-                      </td>
-                      <td
-                        className="border-2 border-black px-2 py-1"
-                        style={{ color: "black" }}
-                      >
+                        ).toFixed(2)}{" "}
+                        /{" "}
                         {pastBlockSummary.reduce(
-                          (sum, item) => sum + (item.percentGranted || 0),
+                          (sum, item) => sum + (item.MissionBlockCount || 0),
                           0
                         )}
                       </td>
                       <td
-                        className="border-2 border-black px-2 py-1"
+                        className="border-2 border-black px-2 py-1 text-center"
+                        style={{ color: "black" }}
+                      >
+                        {pastBlockSummary.reduce(
+                          (sum, item) => sum + (item.PercentGranted || 0),
+                          0
+                        ).toFixed(2)}
+                      </td>
+                      <td
+                        className="border-2 border-black px-2 py-1 text-center"
                         style={{ color: "black" }}
                       >
                         {pastBlockSummary.reduce(
                           (sum, item) => sum + (item.Availed || 0),
                           0
+                        ).toFixed(2)}{" "}
+                        /{" "}
+                        {pastBlockSummary.reduce(
+                          (sum, item) => sum + (item.MissionBlockCount || 0),
+                          0
                         )}
                       </td>
                       <td
-                        className="border-2 border-black px-2 py-1"
+                        className="border-2 border-black px-2 py-1 text-center"
                         style={{ color: "black" }}
                       >
                         {pastBlockSummary.reduce(
-                          (sum, item) => sum + (item.percentAvailed || 0),
+                          (sum, item) => sum + (item.PercentAvailed || 0),
                           0
-                        )}
+                        ).toFixed(2)}
                       </td>
                     </tr>
                   </>
@@ -707,6 +956,31 @@ useEffect(() => {
         </div>
         {/* (B) Summary of Upcoming Blocks */}
         <div className="w-full max-w-4xl mt-8">
+          <div className="my-2">
+            <button
+              onClick={handleDownloadUpcomingBlocks}
+              className="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1 mr-2 shadow border border-green-800 text-base flex items-center"
+              disabled={filteredUpcomingBlocks.length === 0}
+            >
+              {" "}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 mr-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                {" "}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
+              </svg>{" "}
+              Download Summary of Upcoming Blocks (XLSX)
+            </button>
+          </div>
           <div className="flex w-full items-center">
             <div className="flex w-full gap-x-3">
               {" "}
@@ -762,11 +1036,20 @@ useEffect(() => {
               <thead>
                 <tr className="bg-[#e49edd] text-black text-lg font-bold">
                   <th className="border-2 border-black px-2 py-1">Date</th>
-                  <th className="border-2 border-black px-2 py-1">DivisionId</th>
-                  <th className="border-2 border-black px-2 py-1">Major section</th>
-                  <th className="border-2 border-black px-2 py-1">Block Section</th>
+                  <th className="border-2 border-black px-2 py-1">
+                    DivisionId
+                  </th>
+                  <th className="border-2 border-black px-2 py-1">
+                    Block Section
+                  </th>
                   <th className="border-2 border-black px-2 py-1">Type</th>
                   <th className="border-2 border-black px-2 py-1">Duration</th>
+                  <th className="border-2 border-black px-2 py-1">
+                    Availed time
+                  </th>
+                  <th className="border-2 border-black px-2 py-1">
+                    Station ID
+                  </th>
                   <th className="border-2 border-black px-2 py-1">Status</th>
                 </tr>
               </thead>
@@ -791,18 +1074,17 @@ useEffect(() => {
                       if (block.overAllStatus === "Sanctioned") {
                         statusLabel = "Sanctioned";
                         statusStyle = { background: "#fff86b", color: "#222" };
-                      }else if (block.overAllStatus === "with optg.") {
+                      } else if (block.overAllStatus === "with optg.") {
                         statusLabel = "with optg.";
                         statusStyle = { background: "#d47ed4", color: "#222" };
-                      } 
-                       else if (block.Status === "PENDING") {
+                      } else if (block.Status === "PENDING") {
                         statusLabel = "Pending with dept control";
                         statusStyle = { background: "#d47ed4", color: "#222" };
                       } else if (block.Status === "REJECTED") {
                         statusLabel = "Returned by Optg";
                         statusStyle = { background: "#ff4e36", color: "#fff" };
                       } else {
-                        statusLabel = block.overAllStatus||block.Status;
+                        statusLabel = block.overAllStatus || block.Status;
                       }
                       // let statusLabel = "";
                       // let statusStyle = { background: "#fff", color: "#222" };
@@ -831,26 +1113,34 @@ useEffect(() => {
                           <td className="border-2 border-black px-2 py-1 text-black">
                             {formatDateB(block.Date)}
                           </td>
-                                                   <td className="border-2 border-black px-2 py-1 font-bold text-black">
-  <Link 
-    href={``}
-    className="block w-full h-full"
-  >
-    {block.DivisionId}
-  </Link>
-</td>
                           <td className="border-2 border-black px-2 py-1 font-bold text-black">
-                            {block.Section}
+                            <Link href={``} className="block w-full h-full">
+                              {block.DivisionId}
+                            </Link>
                           </td>
-                           <td className="border-2 border-black px-2 py-1 font-bold text-black">
+                          <td className="border-2 border-black px-2 py-1 font-bold text-black">
                             {block.MissionBlock}
                           </td>
-                          
+
                           <td className="border-2 border-black px-2 py-1 text-black">
                             {block.Type}
                           </td>
                           <td className="border-2 border-black px-2 py-1 text-black">
                             {block.Duration}
+                          </td>
+                          <td className="border-2 border-black px-2 py-1 text-black">
+                            {block.AvailedTimeFrom && block.AvailedTimeTo ? (
+                              <>
+                                {formatTime(block.AvailedTimeFrom)} to{" "}
+                                {formatTime(block.AvailedTimeTo)}
+                              </>
+                            ) : (
+                              "Not Availed Yet"
+                            )}
+
+                          </td>
+                          <td className="border-2 border-black px-2 py-1 font-bold text-black">
+                            {block.stationId || "N/A"}
                           </td>
                           <td
                             className="border-2 border-black px-2 py-1 font-bold text-center text-black"
@@ -880,7 +1170,7 @@ useEffect(() => {
           <div className="flex items-center gap-4 mt-4 md:mt-0">
             <button
               className="flex items-center gap-2 bg-[#cfd4ff] border-2 border-black rounded-[50%] px-8 py-2 text-lg font-bold text-black"
-              onClick={() => router.back()}
+              onClick={() => router.push("/")}
             >
               Back
             </button>
