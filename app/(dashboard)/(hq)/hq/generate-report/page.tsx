@@ -35,6 +35,7 @@ interface PastBlockSummary {
   PercentAvailed?: number;
   Department?: String;
   corridorType?: String;
+  MissionBlockCount?: number;
 }
 
 interface DetailedData {
