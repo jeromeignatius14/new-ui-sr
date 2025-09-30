@@ -21,6 +21,7 @@ import { managerService, UserRequest } from "@/app/service/api/manager";
 import { useQuery } from "@tanstack/react-query";
 import { useUserGenerateReport } from "@/app/service/query/user-generate-report";
 import formatTime from "@/app/utils/formatTime";
+import * as XLSX from "xlsx";
 
 interface OptionType {
   value: string;
@@ -49,6 +50,7 @@ interface PastBlockSummary {
   Department?: String;
   corridorType?: String;
   MissionBlock?: String;
+  MissionBlockCount?: number;
 }
 
 interface DetailedData {
@@ -84,7 +86,6 @@ const departmentOptions: OptionType[] = [
 ];
 
 export default function GenerateReportPage() {
-    
   const [pastBlockSummary, setPastBlockSummary] = useState<PastBlockSummary[]>(
     []
   );
@@ -102,7 +103,7 @@ export default function GenerateReportPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [hydrated, setHydrated] = useState(false); 
+  const [hydrated, setHydrated] = useState(false);
 
   const {
     register,
@@ -113,32 +114,32 @@ export default function GenerateReportPage() {
     formState: { errors },
   } = useForm<FormData>();
   const { data: session } = useSession();
-   useEffect(() => {
+  useEffect(() => {
     if (session?.user?.department) {
       setSelectedDepartments([session.user.department]);
     }
   }, [session]);
 
-useEffect(() => {
-  const section = searchParams.get("section") ;
-  const blockType = searchParams.get("blockType");
-  const start = searchParams.get("startDate");
-  const end = searchParams.get("endDate");
+  useEffect(() => {
+    const section = searchParams.get("section");
+    const blockType = searchParams.get("blockType");
+    const start = searchParams.get("startDate");
+    const end = searchParams.get("endDate");
 
   if (blockType)
   { 
       setSelectedBlockTypes(blockType.split(","));
-  }
+    }
 
-  if (start && end) {
-    setValue("startDate", start); // yyyy-MM-dd works with <input type="date">
-    setValue("endDate", end);
-  }
+    if (start && end) {
+      setValue("startDate", start); // yyyy-MM-dd works with <input type="date">
+      setValue("endDate", end);
+    }
 
-  if (!hydrated) {
-    handleSubmit(onSubmit)(); // ✅ only once
-  }
-}, [searchParams]);
+    if (!hydrated) {
+      handleSubmit(onSubmit)(); // ✅ only once
+    }
+  }, [searchParams]);
 
   // Parameters for the query
   const [queryParams, setQueryParams] = useState({
@@ -266,31 +267,30 @@ useEffect(() => {
     }
   };
 
-const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: FormData) => {
+    // if (!hydrated) {
+    //   console.log("wait for hydration");
+    // }
+    if (!data.startDate || !data.endDate) {
+      toast.error("Please enter both start and end dates");
+      return;
+    }
 
-  // if (!hydrated) {
-  //   console.log("wait for hydration");
-  // }
-  if (!data.startDate || !data.endDate) {
-    toast.error("Please enter both start and end dates");
-    return;
-  }
-
-  try {
-    // Keep raw yyyy-MM-dd for URL and form
-    const startDateRaw = data.startDate;
-    const endDateRaw = data.endDate;
-    const startDate = new Date(data.startDate);
-    const endDate = new Date(data.endDate);
+    try {
+      // Keep raw yyyy-MM-dd for URL and form
+      const startDateRaw = data.startDate;
+      const endDateRaw = data.endDate;
+      const startDate = new Date(data.startDate);
+      const endDate = new Date(data.endDate);
 
       const formattedStartDate = format(startDate, "dd/MM/yy");
       const formattedEndDate = format(endDate, "dd/MM/yy");
- 
+
       // Update query parameters
       setQueryParams({
         startDate: formattedStartDate,
         endDate: formattedEndDate,
-        majorSections: majorSectionOptions.map(opt => opt.value),
+        majorSections: majorSectionOptions.map((opt) => opt.value),
         department: selectedDepartments,
         blockType: selectedBlockTypes,
         userId: session?.user?.id || "",
@@ -308,14 +308,14 @@ const onSubmit = async (data: FormData) => {
       params.set("department", selectedDepartments.join(","));
     }
 
-    router.push(`?${params.toString()}`);
+      router.push(`?${params.toString()}`);
 
-    // await refetch();
-  } catch (error) {
-    console.error("Error initiating report generation:", error);
-    toast.error("Failed to generate report");
-  }
-};
+      // await refetch();
+    } catch (error) {
+      console.error("Error initiating report generation:", error);
+      toast.error("Failed to generate report");
+    }
+  };
 
   const formatDateInput = (value: string) => {
     // Format as DD/MM/YY
@@ -347,8 +347,8 @@ const onSubmit = async (data: FormData) => {
     upcomingSectionFilter === "All"
       ? reportData?.data?.detailedData || []
       : reportData?.data?.detailedData?.filter(
-          (b: DetailedData) => b.Section === upcomingSectionFilter
-        ) || [];
+        (b: DetailedData) => b.Section === upcomingSectionFilter
+      ) || [];
   function formatDateB(dateString: string) {
     if (!dateString) return "";
     // Accepts both MM/DD/YYYY and DD/MM/YYYY
@@ -371,12 +371,221 @@ const userUpcomingBlocks = filteredUpcomingBlocks.filter(
   const [sectionDropdownOpenB, setSectionDropdownOpenB] = useState(false);
   const sectionDropdownRefB = useRef<HTMLDivElement>(null);
 
+  // Function to download block summary table as XLSX
+  const handleDownloadSummary = () => {
+    try {
+      if (pastBlockSummary.length === 0) {
+        toast.error("No data available to download");
+        return;
+      }
+
+      const excelData = pastBlockSummary.map((summary: any) => ({
+        Section: summary.Department || summary.Section || "", // Using the fixed value as in the table
+        Demanded: summary.Demanded?.toFixed(2) || "0.00",
+        Approved: summary.Approved?.toFixed(2) || "0.00",
+        Granted: summary.Granted?.toFixed(2) || "0.00",
+        "% Granted":
+          summary.PercentGranted !== undefined
+            ? summary.PercentGranted.toFixed(2) + "%"
+            : "",
+        Availed: summary.Availed.toFixed(2) || "0.00",
+        "% Availed":
+          summary.PercentAvailed !== undefined
+            ? summary.PercentAvailed.toFixed(2) + "%"
+            : "",
+      }));
+
+      // Add total row
+      excelData.push({
+        Section: "Total",
+        Demanded: pastBlockSummary
+          .reduce((sum, item) => sum + (item.Demanded || 0), 0)
+          .toFixed(2),
+        Approved: pastBlockSummary
+          .reduce((sum, item) => sum + (item.Approved || 0), 0)
+          .toFixed(2),
+        Granted: String(
+          pastBlockSummary.reduce((sum, item) => sum + (item.Granted || 0), 0).toFixed(2)
+        ),
+        "% Granted":
+          String(
+            pastBlockSummary.reduce(
+              (sum, item) => sum + (item.PercentGranted || 0),
+              0
+            ).toFixed(2)
+          ) + "%",
+        Availed: String(
+          pastBlockSummary.reduce((sum, item) => sum + (item.Availed || 0), 0).toFixed(2)
+        ),
+        "% Availed":
+          String(
+            pastBlockSummary.reduce(
+              (sum, item) => sum + (item.PercentAvailed || 0),
+              0
+            ).toFixed(2)
+          ) + "%",
+      });
+
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+      // Add title before the data
+      XLSX.utils.sheet_add_aoa(
+        worksheet,
+        [
+          [
+            `(A) Block Summary: ${formatDisplayDate(
+              watch("startDate")
+            )} to ${formatDisplayDate(watch("endDate"))}`,
+          ],
+          [`Department: ${selectedDepartments.join(", ")} (in Hrs)`],
+          [], // Empty row for spacing
+        ],
+        { origin: "A1" }
+      );
+
+      // Adjust column widths
+      const colWidths = [
+        { wch: 15 }, // Section
+        { wch: 10 }, // Demanded
+        { wch: 10 }, // Approved
+        { wch: 10 }, // Granted
+        { wch: 10 }, // % Granted
+        { wch: 10 }, // Availed
+        { wch: 10 }, // % Availed
+      ];
+      worksheet["!cols"] = colWidths;
+
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Block Summary");
+
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+      const blob = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `block_summary_${format(new Date(), "dd-MM-yyyy")}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success("Block summary downloaded successfully");
+    } catch (error) {
+      console.error("Download error:", error);
+      toast.error("Failed to download Excel file. Please try again.");
+    }
+  };
+
+  // Function to download upcoming blocks table as XLSX
+  const handleDownloadUpcomingBlocks = () => {
+    try {
+      if (filteredUpcomingBlocks.length === 0) {
+        toast.error("No data available to download");
+        return;
+      }
+
+      const excelData = filteredUpcomingBlocks.map((block: any) => {
+        // Status logic
+        let statusLabel = "";
+        if (block.Status === "APPROVED") {
+          statusLabel = "Pending with Optg";
+        } else if (block.Status === "PENDING") {
+          statusLabel = "Pending with dept control";
+        } else if (block.Status === "REJECTED") {
+          statusLabel = "Returned by Optg";
+        } else {
+          statusLabel = block.Status;
+        }
+
+        return {
+          Date: formatDateB(block.Date),
+          ID: block.DivisionId || "N/A",
+          "Station ID": block.stationId || "N/A",
+          "Block Section": block.MissionBlock || "N/A",
+          Type: block.Type || "N/A",
+          Activity: block.Activity || "N/A",
+          "Demand Time": `${formatTime(block.DemandedTimeFrom)} to ${formatTime(
+            block.DemandedTimeTo
+          )}`,
+          "Sanctioned Time":
+            block.SanctionedTimeFrom && block.SanctionedTimeTo
+              ? `${formatTime(block.SanctionedTimeFrom)} to ${formatTime(
+                block.SanctionedTimeTo
+              )}`
+              : "Not Optimized Yet",
+          "Availed Time":
+            block.AvailedTimeFrom && block.AvailedTimeTo
+              ? `${formatTime(block.AvailedTimeFrom)} to ${formatTime(
+                block.AvailedTimeTo
+              )}`
+              : "Not Available",
+          Status: statusLabel,
+        };
+      });
+
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+      // Add title before the data
+      XLSX.utils.sheet_add_aoa(
+        worksheet,
+        [
+          [`(B) Summary of Upcoming Blocks`],
+          [], // Empty row for spacing
+        ],
+        { origin: "A1" }
+      );
+
+      // Adjust column widths
+      const colWidths = [
+        { wch: 12 }, // Date
+        { wch: 10 }, // ID
+        { wch: 10 }, // Station ID
+        { wch: 20 }, // Block Section
+        { wch: 12 }, // Type
+        { wch: 30 }, // Activity
+        { wch: 20 }, // Demand Time
+        { wch: 20 }, // Sanctioned Time
+        { wch: 20 }, // Availed Time
+        { wch: 20 }, // Status
+      ];
+      worksheet["!cols"] = colWidths;
+
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Upcoming Blocks");
+
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+      const blob = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `upcoming_blocks_${format(
+        new Date(),
+        "dd-MM-yyyy"
+      )}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success("Upcoming blocks data downloaded successfully");
+    } catch (error) {
+      console.error("Download error:", error);
+      toast.error("Failed to download Excel file. Please try again.");
+    }
+  };
+
   return (
     <div className="min-h-screen w-full bg-[#fffbe9] flex flex-col items-center">
       {/* RBMS Header */}
       <div className="w-full bg-[#fff35c] flex flex-col items-center py-2 rounded-t-2xl">
         <span className="text-[24px] font-extrabold text-[#b07be0] tracking-wide">
-                      RBMS-{session?.user?.location}-DIVN
+          RBMS-{session?.user?.location}-DIVN
         </span>
       </div>
       {/* Block Summary Report Title */}
@@ -384,7 +593,9 @@ const userUpcomingBlocks = filteredUpcomingBlocks.filter(
         <span className="text-[24px] font-extrabold text-black">
           Block Summary Report
         </span>
-        <span className="text-[24px] font-bold text-black">{session?.user?.name}</span>
+        <span className="text-[24px] font-bold text-black">
+          {session?.user?.name}
+        </span>
         <div className="mt-2 bg-[#7be09b] px-6 py-1 rounded-2xl">
           <span className="text-[24px] font-bold text-white">
             Blocks Granted/Availed/Pending
@@ -394,17 +605,16 @@ const userUpcomingBlocks = filteredUpcomingBlocks.filter(
       {/* Wrap the main content in a max-w-screen-lg mx-auto w-full container */}
       <div className=" mx-auto w-full px-4">
         {/* Filters Section */}
-       
+
         {/* Block Type Filters (first line) */}
         <div className="w-full flex flex-wrap justify-center gap-2 mt-2 mb-1">
           {blockTypeOptions.map((opt) => (
             <button
               key={opt.value}
-              className={`rounded-full px-3 py-1 text-base font-semibold border border-[#b7e3ee] flex items-center gap-1 transition-colors duration-150 ${
-                selectedBlockTypes.includes(opt.value)
-                  ? "bg-[#b7e3ee] text-black"
-                  : "bg-[#e0e0ff] text-black"
-              }`}
+              className={`rounded-full px-3 py-1 text-base font-semibold border border-[#b7e3ee] flex items-center gap-1 transition-colors duration-150 ${selectedBlockTypes.includes(opt.value)
+                ? "bg-[#b7e3ee] text-black"
+                : "bg-[#e0e0ff] text-black"
+                }`}
               onClick={() => toggleBlockType(opt.value)}
               type="button"
             >
@@ -417,33 +627,30 @@ const userUpcomingBlocks = filteredUpcomingBlocks.filter(
         </div>
         {/* Department Filters (second line) */}
         {/* Submit Button */}
-         <div className="flex flex-col flex-1 min-w-[180px] w-full">
-              <div className="flex justify-center w-full mb-1">
-                <span className="text-[24px] font-bold text-black">
-                  Select Period
-                </span>
-              </div>
-              <div className="flex flex-row items-center justify-center gap-1 mb-1 w-full">
-                <input
-                  type="date"
-                  className="border-2 border-[#e57373] rounded-md px-1 py-1 w-full max-w-[120px] text-base font-bold text-center"
-                  style={{ color: "black" }}
-                  {...register("startDate")}
-                />
-                <span
-                  className="text-base font-bold"
-                  style={{ color: "black" }}
-                >
-                  to
-                </span>
-                <input
-                  type="date"
-                  className="border-2 border-[#e57373] rounded-md px-1 py-1 w-full max-w-[120px] text-base font-bold text-center"
-                  style={{ color: "black" }}
-                  {...register("endDate")}
-                />
-              </div>
-            </div>
+        <div className="flex flex-col flex-1 min-w-[180px] w-full">
+          <div className="flex justify-center w-full mb-1">
+            <span className="text-[24px] font-bold text-black">
+              Select Period
+            </span>
+          </div>
+          <div className="flex flex-row items-center justify-center gap-1 mb-1 w-full">
+            <input
+              type="date"
+              className="border-2 border-[#e57373] rounded-md px-1 py-1 w-full max-w-[120px] text-base font-bold text-center"
+              style={{ color: "black" }}
+              {...register("startDate")}
+            />
+            <span className="text-base font-bold" style={{ color: "black" }}>
+              to
+            </span>
+            <input
+              type="date"
+              className="border-2 border-[#e57373] rounded-md px-1 py-1 w-full max-w-[120px] text-base font-bold text-center"
+              style={{ color: "black" }}
+              {...register("endDate")}
+            />
+          </div>
+        </div>
         <div className="w-full flex justify-center mb-2">
           <button
             className="bg-[#7be09b] hover:bg-[#5bc07b] text-white font-bold px-8 py-2 rounded-lg shadow border border-[#00b347] text-[24px]"
@@ -455,6 +662,29 @@ const userUpcomingBlocks = filteredUpcomingBlocks.filter(
         </div>
         {/* (A) Block Summary Table */}
         <div className="w-full mt-4">
+          <div className="my-2">
+            <button
+              onClick={handleDownloadSummary}
+              className="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1 ml-2 shadow border border-green-800 text-base flex items-center"
+              disabled={pastBlockSummary.length === 0}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 mr-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
+              </svg>
+              Download Past Blocks Summary (XLSX)
+            </button>
+          </div>
           <div className="flex w-full">
             <div
               className="flex-1 bg-[#ff914d] text-[24px] font-bold border-2 border-black px-2 py-1"
@@ -480,11 +710,11 @@ const userUpcomingBlocks = filteredUpcomingBlocks.filter(
               <thead>
                 <tr className="bg-[#f7c7ac] text-black text-[24px] font-bold">
                   <th className="border-2 border-black px-2 py-1">Section</th>
-                  <th className="border-2 border-black px-2 py-1">Demanded</th>
-                  <th className="border-2 border-black px-2 py-1">Approved</th>
-                  <th className="border-2 border-black px-2 py-1">Granted</th>
+                  <th className="border-2 border-black px-2 py-1">Demanded / No. of Blocks</th>
+                  <th className="border-2 border-black px-2 py-1">Approved / No. of Blocks</th>
+                  <th className="border-2 border-black px-2 py-1">Granted / No. of Blocks</th>
                   <th className="border-2 border-black px-2 py-1">% Granted</th>
-                  <th className="border-2 border-black px-2 py-1">Availed</th>
+                  <th className="border-2 border-black px-2 py-1">Availed / No. of Blocks</th>
                   <th className="border-2 border-black px-2 py-1">% Availed</th>
                 </tr>
               </thead>
@@ -502,9 +732,8 @@ const userUpcomingBlocks = filteredUpcomingBlocks.filter(
                 ) : (
                   pastBlockSummary.map((summary: any, idx: number) => (
                     <tr
-                      className={`font-bold ${
-                        idx % 2 === 0 ? "bg-[#f4dcf1]" : "bg-white"
-                      }`}
+                      className={`font-bold ${idx % 2 === 0 ? "bg-[#f4dcf1]" : "bg-white"
+                        }`}
                       key={idx}
                     >
                       <td
@@ -518,40 +747,40 @@ const userUpcomingBlocks = filteredUpcomingBlocks.filter(
                         className="border-2 border-black px-2 py-1 text-center"
                         style={{ color: "black" }}
                       >
-                        {(summary.Demanded ).toFixed(2)}
+                        {summary.Demanded.toFixed(2)} / {summary.MissionBlockCount}
                       </td>
                       <td
                         className="border-2 border-black px-2 py-1 text-center"
                         style={{ color: "black" }}
                       >
-                        {(summary.Approved ).toFixed(2)}
+                        {summary.Approved.toFixed(2)} / {summary.MissionBlockCount}
                       </td>
                       <td
                         className="border-2 border-black px-2 py-1 text-center"
                         style={{ color: "black" }}
                       >
-                        {summary.Granted}
+                        {summary.Granted.toFixed(2)} / {summary.MissionBlockCount}
                       </td>
                       <td
                         className="border-2 border-black px-2 py-1 text-center"
                         style={{ color: "black" }}
                       >
                         {summary.PercentGranted !== undefined
-                          ? summary.PercentGranted + "%"
+                          ? summary.PercentGranted.toFixed(2) + "%"
                           : ""}
                       </td>
                       <td
                         className="border-2 border-black px-2 py-1 text-center"
                         style={{ color: "black" }}
                       >
-                        {summary.Availed}
+                        {summary.Availed.toFixed(2)} / {summary.MissionBlockCount}
                       </td>
                       <td
                         className="border-2 border-black px-2 py-1 text-center"
                         style={{ color: "black" }}
                       >
                         {summary.PercentAvailed !== undefined
-                          ? summary.PercentAvailed + "%"
+                          ? summary.PercentAvailed.toFixed(2) + "%"
                           : ""}
                       </td>
                     </tr>
@@ -561,28 +790,34 @@ const userUpcomingBlocks = filteredUpcomingBlocks.filter(
                 {pastBlockSummary.length > 0 && (
                   <>
                     <tr className="bg-[#ff914d] text-white font-bold">
-                      <td className="border-2 border-black px-2 py-1 text-center">Total</td>
-                      <td
-                        className="border-2 border-black px-2 py-1 text-center"
-                        style={{ color: "black" }}
-                      >
-                        {(
-                          pastBlockSummary.reduce(
-                            (sum, item) => sum + (item.Demanded || 0),
-                            0
-                          ) 
-                        ).toFixed(2)}
+                      <td className="border-2 border-black px-2 py-1 text-center">
+                        Total
                       </td>
                       <td
                         className="border-2 border-black px-2 py-1 text-center"
                         style={{ color: "black" }}
                       >
-                        {(
-                          pastBlockSummary.reduce(
-                            (sum, item) => sum + (item.Approved || 0),
-                            0
-                          ) 
-                        ).toFixed(2)}
+                        {pastBlockSummary
+                          .reduce((sum, item) => sum + (item.Demanded || 0), 0)
+                          .toFixed(2)}{" "}
+                        /{" "}
+                        {pastBlockSummary.reduce(
+                          (sum, item) => sum + (item.MissionBlockCount || 0),
+                          0
+                        )}
+                      </td>
+                      <td
+                        className="border-2 border-black px-2 py-1 text-center"
+                        style={{ color: "black" }}
+                      >
+                        {pastBlockSummary
+                          .reduce((sum, item) => sum + (item.Approved || 0), 0)
+                          .toFixed(2)}{" "}
+                        /{" "}
+                        {pastBlockSummary.reduce(
+                          (sum, item) => sum + (item.MissionBlockCount || 0),
+                          0
+                        )}
                       </td>
                       <td
                         className="border-2 border-black px-2 py-1 text-center"
@@ -591,14 +826,10 @@ const userUpcomingBlocks = filteredUpcomingBlocks.filter(
                         {pastBlockSummary.reduce(
                           (sum, item) => sum + (item.Granted || 0),
                           0
-                        )}
-                      </td>
-                      <td
-                        className="border-2 border-black px-2 py-1 text-center"
-                        style={{ color: "black" }}
-                      >
-               {pastBlockSummary.reduce(
-                          (sum, item) => sum + (item.PercentGranted || 0),
+                        ).toFixed(2)}{" "}
+                        /{" "}
+                        {pastBlockSummary.reduce(
+                          (sum, item) => sum + (item.MissionBlockCount || 0),
                           0
                         )}
                       </td>
@@ -607,7 +838,21 @@ const userUpcomingBlocks = filteredUpcomingBlocks.filter(
                         style={{ color: "black" }}
                       >
                         {pastBlockSummary.reduce(
+                          (sum, item) => sum + (item.PercentGranted || 0),
+                          0
+                        ).toFixed(2)}
+                      </td>
+                      <td
+                        className="border-2 border-black px-2 py-1 text-center"
+                        style={{ color: "black" }}
+                      >
+                        {pastBlockSummary.reduce(
                           (sum, item) => sum + (item.Availed || 0),
+                          0
+                        ).toFixed(2)}{" "}
+                        /{" "}
+                        {pastBlockSummary.reduce(
+                          (sum, item) => sum + (item.MissionBlockCount || 0),
                           0
                         )}
                       </td>
@@ -615,10 +860,10 @@ const userUpcomingBlocks = filteredUpcomingBlocks.filter(
                         className="border-2 border-black px-2 py-1 text-center"
                         style={{ color: "black" }}
                       >
-                   {pastBlockSummary.reduce(
+                        {pastBlockSummary.reduce(
                           (sum, item) => sum + (item.PercentAvailed || 0),
                           0
-                        )}
+                        ).toFixed(2)}
                       </td>
                     </tr>
                   </>
@@ -629,6 +874,31 @@ const userUpcomingBlocks = filteredUpcomingBlocks.filter(
         </div>
         {/* (B) Summary of Upcoming Blocks */}
         <div className="w-full mt-8">
+          <div className="my-2">
+            <button
+              onClick={handleDownloadUpcomingBlocks}
+              className="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1 mr-2 shadow border border-green-800 text-base flex items-center"
+              disabled={filteredUpcomingBlocks.length === 0}
+            >
+              {" "}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 mr-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                {" "}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
+              </svg>{" "}
+              Download Summary of Upcoming Blocks (XLSX)
+            </button>
+          </div>
           <div className="flex w-full items-center">
             <div className="flex-1 bg-[#f1a983] text-[24px] font-bold border-2 border-black px-2 py-1">
               (B) Summary of Upcoming Blocks
@@ -720,12 +990,23 @@ const userUpcomingBlocks = filteredUpcomingBlocks.filter(
                 <tr className="bg-[#e49edd] text-black text-lg font-bold">
                   <th className="border-2 border-black px-2 py-1">Date</th>
                   <th className="border-2 border-black px-2 py-1">ID</th>
-                  <th className="border-2 border-black px-2 py-1">Major section</th>
-                  <th className="border-2 border-black px-2 py-1">Block Section</th>
+                  <th className="border-2 border-black px-2 py-1">
+                    Block Section
+                  </th>
                   <th className="border-2 border-black px-2 py-1">Type</th>
                   <th className="border-2 border-black px-2 py-1">Activity</th>
-                  <th className="border-2 border-black px-2 py-1">Demand time</th>
-                  <th className="border-2 border-black px-2 py-1">Sanctioned time</th>
+                  <th className="border-2 border-black px-2 py-1">
+                    Demand time
+                  </th>
+                  <th className="border-2 border-black px-2 py-1">
+                    Sanctioned time
+                  </th>
+                  <th className="border-2 border-black px-2 py-1">
+                    Availed time
+                  </th>
+                  <th className="border-2 border-black px-2 py-1">
+                    Station ID
+                  </th>
                   <th className="border-2 border-black px-2 py-1">Status</th>
                 </tr>
               </thead>
@@ -781,9 +1062,6 @@ const userUpcomingBlocks = filteredUpcomingBlocks.filter(
                             </Link>
                           </td>
                           <td className="border-2 border-black px-2 py-1 font-bold text-black">
-                            {block.Section}
-                          </td>
-                          <td className="border-2 border-black px-2 py-1 font-bold text-black">
                             {block.MissionBlock}
                           </td>
                           <td className="border-2 border-black px-2 py-1 text-black">
@@ -798,7 +1076,7 @@ const userUpcomingBlocks = filteredUpcomingBlocks.filter(
                           </td>
                           <td className="border-2 border-black px-2 py-1 text-black">
                             {block.SanctionedTimeFrom &&
-                            block.SanctionedTimeTo ? (
+                              block.SanctionedTimeTo ? (
                               <>
                                 {formatTime(block.SanctionedTimeFrom)} to{" "}
                                 {formatTime(block.SanctionedTimeTo)}
@@ -806,6 +1084,19 @@ const userUpcomingBlocks = filteredUpcomingBlocks.filter(
                             ) : (
                               "Not Optimized Yet"
                             )}
+                          </td>
+                          <td className="border-2 border-black px-2 py-1 text-black">
+                            {block.AvailedTimeFrom && block.AvailedTimeTo ? (
+                              <>
+                                {formatTime(block.AvailedTimeFrom)} to{" "}
+                                {formatTime(block.AvailedTimeTo)}
+                              </>
+                            ) : (
+                              "Not Availed Yet"
+                            )}
+                          </td>
+                          <td className="border-2 border-black px-2 py-1 font-bold text-black">
+                            {block.stationId || "N/A"}
                           </td>
                           <td
                             className="border-2 border-black px-2 py-1 font-bold text-center text-black"
@@ -835,7 +1126,7 @@ const userUpcomingBlocks = filteredUpcomingBlocks.filter(
           <div className="flex items-center gap-4 mt-4 md:mt-0">
             <button
               className="flex items-center gap-2 bg-[#cfd4ff] border-2 border-black rounded-[50%] px-6 py-2 text-[24px] font-bold text-black"
-              onClick={() => router.back()}
+              onClick={() => router.push("/")}
             >
               Back
             </button>

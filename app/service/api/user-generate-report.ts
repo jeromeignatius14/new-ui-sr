@@ -19,6 +19,7 @@ interface PastBlockSummary {
   Granted: number;
   Availed: number;
   Percentage: number;
+  MissionBlockCount?: number;
 }
 
 interface UpcomingBlock {
@@ -27,8 +28,8 @@ interface UpcomingBlock {
   Duration: number;
   Type: string;
   Status: string;
-  Department? : String;
-  corridorType? : String
+  Department?: String;
+  corridorType?: String;
 }
 
 export interface GenerateReportResponse {
@@ -36,9 +37,9 @@ export interface GenerateReportResponse {
     sanctionedCounts?: any;
     pastBlockSummary?: PastBlockSummary[];
     detailedData: UpcomingBlock[];
-  }
-  message: string
-  status: boolean
+  };
+  message: string;
+  status: boolean;
 }
 
 const BASE_URL = "api/user-gr";
@@ -49,30 +50,30 @@ const BASE_URL = "api/user-gr";
 //     const majorSections = params.majorSections.join(',');
 //     const departments = params.department.join(',');
 //     const blockTypes = params.blockType.join(',');
-    
+
 //     const response = await axiosInstance.get<GenerateReportResponse>(
-//       `${BASE_URL}/generate-report?startDate=${params.startDate}&endDate=${params.endDate}&majorSections=${majorSections}&department=${departments}&blockType=${blockTypes}`, 
+//       `${BASE_URL}/generate-report?startDate=${params.startDate}&endDate=${params.endDate}&majorSections=${majorSections}&department=${departments}&blockType=${blockTypes}`,
 //     );
 //     console.log('response.data',response.data)
 //     return response.data;
 //   },
 // };
 
-
 export const userGenerateService = {
-  generateReport: async (params: UserGenerateReportParams): Promise<GenerateReportResponse> => {
+  generateReport: async (
+    params: UserGenerateReportParams
+  ): Promise<GenerateReportResponse> => {
     // Special handling for S&T department only
-    const departments = params.department.map(dept => 
-      dept === 'S&T' ? 'S%26T' : dept
-    ).join(',');
+    const departments = params.department
+      .map((dept) => (dept === "S&T" ? "S%26T" : dept))
+      .join(",");
 
     const response = await axiosInstance.get<GenerateReportResponse>(
       `${BASE_URL}/generate-report?startDate=${params.startDate}` +
-      `&endDate=${params.endDate}` +
-      `&majorSections=${params.majorSections.join(',')}` +
-      `&blockType=${params.blockType.join(',')}`+
-      `&userId=${params.userId}`
-
+        `&endDate=${params.endDate}` +
+        `&majorSections=${params.majorSections.join(",")}` +
+        `&blockType=${params.blockType.join(",")}` +
+        `&userId=${params.userId}`
     );
     return response.data;
   },
