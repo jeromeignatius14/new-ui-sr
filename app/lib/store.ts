@@ -5331,7 +5331,7 @@ export const depot: DepotStructure = {
   },
 
   "TPJ-MV": {
-    'TRD': ["TJ", "MV", "RRI"],
+    'TRD': ["TPJ","TJ", "MV","VM","CUP J"],
     'S&T': ["TPJ", "TJ", "MV","RRI"],
     'ENGG': ["TPJ", "TJ", "KMU", "MV"]
   },
