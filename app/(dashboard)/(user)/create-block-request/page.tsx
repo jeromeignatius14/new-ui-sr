@@ -185,15 +185,7 @@ function ReviewBlockRequestModal({
   if (!isOpen) return null;
 
   // Debug log to see what's being passed
-  console.log("ReviewModal Safety Info:", {
-    freshCaution: formData.freshCautionRequired,
-    powerBlock: formData.powerBlockRequired,
-    sntDisconnection: formData.sntDisconnectionRequired,
-    department: formData.selectedDepartment,
-    typeOfFreshCaution: typeof formData.freshCautionRequired,
-    typeOfPowerBlock: typeof formData.powerBlockRequired,
-    typeOfSntDisconnection: typeof formData.sntDisconnectionRequired
-  });
+  console.log("ReviewModal Safety Info:", formData);
 
   // Helper function to render safety information based on department
   const renderSafetyInfo = () => {
@@ -362,10 +354,10 @@ function ReviewBlockRequestModal({
           </div>
 
           <div>
-            <h3 className="font-bold mb-2">Selected Lines/Roads</h3>
+            <h3 className="font-bold mb-2">Block Section - Lines/Roads</h3>
             <div className="mb-4 space-y-2 text-[14px] text-gray-600">
-              {processedLineSections && processedLineSections.length > 0 ? (
-                processedLineSections.map((section: any, index: number) => (
+              {formData.processedLineSections && formData.processedLineSections.length > 0 ? (
+                formData.processedLineSections.map((section: any, index: number) => (
                   <div key={index}>
                     <div className="font-medium text-gray-800">{section.block} {section.type === "yard" ? "(Yard)" : "(Block Section)"}</div>
 
@@ -374,18 +366,16 @@ function ReviewBlockRequestModal({
                       <div className="ml-2 mb-1">
                         {section.lineName.toLowerCase().includes('up') ? (
                           <div className="flex items-center">
-                            <span className="font-medium bg-green-100 text-green-800 px-2 rounded mr-2">UP</span>
-                            <span>{section.lineName.replace(/up\s*/i, '').trim()}</span>
+                            <span className="font-medium bg-green-100 text-green-800 px-2 rounded mr-2">Up {section.lineName.replace(/up\s*/i, '').trim()}</span>
                             {section.type === "block" && section.lineName.toLowerCase().includes('slow') &&
-                              <span className="ml-2 text-amber-600 font-medium">slow in block</span>
+                              <span className="ml-2 bg-amber-100 text-amber-600 font-medium">Slow in block</span>
                             }
                           </div>
                         ) : section.lineName.toLowerCase().includes('down') ? (
                           <div className="flex items-center">
-                            <span className="font-medium bg-red-100 text-red-800 px-2 rounded mr-2">DOWN</span>
-                            <span>{section.lineName.replace(/down\s*/i, '').trim()}</span>
+                            <span className="font-medium bg-red-100 text-red-800 px-2 rounded mr-2">Down {section.lineName.replace(/down\s*/i, '').trim()}</span>
                             {section.type === "block" && section.lineName.toLowerCase().includes('slow') &&
-                              <span className="ml-2 text-amber-600 font-medium">slow in block</span>
+                              <span className="ml-2 bg-amber-100 text-amber-600 font-medium">Slow in block</span>
                             }
                           </div>
                         ) : (
@@ -393,7 +383,7 @@ function ReviewBlockRequestModal({
                             <span className="font-medium">Line:</span>
                             <span className="ml-1">{section.lineName}</span>
                             {section.type === "block" && section.lineName.toLowerCase().includes('slow') &&
-                              <span className="ml-2 text-amber-600 font-medium">slow in block</span>
+                              <span className="ml-2 bg-amber-100 text-amber-600 font-medium">Slow in block</span>
                             }
                           </div>
                         )}
@@ -406,9 +396,8 @@ function ReviewBlockRequestModal({
                         {section.road.match(/rd\s*\d+/i) ? (
                           <div className="flex items-center">
                             <span className="font-medium bg-blue-100 text-blue-800 px-2 rounded mr-2">
-                              {section.road.match(/rd\s*\d+/i)[0].toUpperCase()}
+                              {section.road.match(/rd\s*\d+/i)[0].toUpperCase()}{section.road.replace(/rd\s*\d+/i, '').trim()}
                             </span>
-                            <span>{section.road.replace(/rd\s*\d+/i, '').trim()}</span>
                           </div>
                         ) : (
                           <div className="flex items-center">
@@ -432,9 +421,9 @@ function ReviewBlockRequestModal({
             {/* Always show Other Affected Lines/Roads section */}
             <div className="mt-4">
               <h3 className="font-bold mb-2">Other Affected Lines/Roads:</h3>
-              {processedLineSections && processedLineSections.some((s: any) => s.otherLines?.trim() || s.otherRoads?.trim()) ? (
+              {formData.processedLineSections && formData.processedLineSections.some((s: any) => s.otherLines?.trim() || s.otherRoads?.trim()) ? (
                 <div className="">
-                  {processedLineSections.map((s: any, index) => (
+                  {formData.processedLineSections.map((s: any, index:any) => (
                     <React.Fragment key={`other-${index}`}>
                       {s.otherLines?.trim() && (
                         <div className="mb-2">
@@ -445,15 +434,13 @@ function ReviewBlockRequestModal({
                               if (trimmedLine.toLowerCase().includes('up')) {
                                 return (
                                   <div key={`line-${idx}`} className="flex items-center mb-1">
-                                    <span className="font-medium bg-green-100 text-green-800 px-2 rounded mr-2">UP</span>
-                                    <span>{trimmedLine.replace(/up\s*/i, '').trim()}</span>
+                                    <span className="font-medium bg-green-100 text-green-800 px-2 rounded mr-2">Up {trimmedLine.replace(/up\s*/i, '').trim()}</span>
                                   </div>
                                 );
                               } else if (trimmedLine.toLowerCase().includes('down')) {
                                 return (
                                   <div key={`line-${idx}`} className="flex items-center mb-1">
-                                    <span className="font-medium bg-red-100 text-red-800 px-2 rounded mr-2">DOWN</span>
-                                    <span>{trimmedLine.replace(/down\s*/i, '').trim()}</span>
+                                    <span className="font-medium bg-red-100 text-red-800 px-2 rounded mr-2">Down {trimmedLine.replace(/down\s*/i, '').trim()}</span>
                                   </div>
                                 );
                               } else {
