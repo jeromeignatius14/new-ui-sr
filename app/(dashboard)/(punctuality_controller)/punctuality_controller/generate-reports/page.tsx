@@ -7,11 +7,13 @@ import { format, parseISO } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useGenerateReport } from "@/app/service/query/hq";
-import { MajorSection } from "@/app/lib/store";
+import { Activity, MajorSection } from "@/app/lib/store";
 import { useSession } from "next-auth/react";
 import { managerService, UserRequest } from "@/app/service/api/manager";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
+import formatTime from "@/app/utils/formatTime";
+import * as XLSX from "xlsx";
 
 interface OptionType {
   value: string;
@@ -39,6 +41,7 @@ interface PastBlockSummary {
   Department?: string;
   corridorType?: string;
   MissionBlock?: string;
+  MissionBlockCount?: number;
 }
 
 interface DetailedData {
@@ -49,16 +52,19 @@ interface DetailedData {
   Status: string;
   DivisionId?: string;
   Activity?: string;
+  AvailedTimeFrom?: string;
+  AvailedTimeTo?: string;
+  stationId?: string;
   overAllStatus?: string;
 }
 
- const blockTypeOptions = [
-    { label: "All", value: "ALL" },
-    { label: "Corridor (C)", value: "Corridor" },
-    { label: "Non-corridor(NC)", value: "Outside Corridor" },
-    { label: "Emergency (E)", value: "Urgent Block" },
-    { label: "Mega Block (M)", value: "MEGA_BLOCK" },
-  ];
+const blockTypeOptions = [
+  { label: "All", value: "ALL" },
+  { label: "Corridor (C)", value: "Corridor" },
+  { label: "Non-corridor(NC)", value: "Outside Corridor" },
+  { label: "Emergency (E)", value: "Urgent Block" },
+  { label: "Mega Block (M)", value: "MEGA_BLOCK" },
+];
 
 const departmentOptions: OptionType[] = [
   { value: "Engineering", label: "Engineering" },
@@ -97,7 +103,7 @@ export default function GenerateReportPage() {
     end: "",
     blockType: [],
     section: [],
-    activity:[],
+    activity: [],
     dept: "",
     line: "",
   });
@@ -107,7 +113,7 @@ export default function GenerateReportPage() {
     end: "",
     blockType: [],
     section: [],
-    activity:[],
+    activity: [],
     dept: "",
     line: "",
   });
@@ -120,7 +126,7 @@ export default function GenerateReportPage() {
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>(["Engineering"]);
   const [selectedMajorSections, setSelectedMajorSections] = useState<string[]>([]);
   const [majorSectionOptions, setMajorSectionOptions] = useState<OptionType[]>([]);
-  
+
   const router = useRouter();
   const { register, handleSubmit, control, watch, formState: { errors } } = useForm<FormData>();
   const { data: session } = useSession();
@@ -217,7 +223,7 @@ export default function GenerateReportPage() {
         .filter(Boolean) || []
     )
   );
-const activityOptions = Array.from(
+  const activityOptions = Array.from(
     new Set(
       data?.data?.requests
         ?.map((r: UserRequest) => r.activity)
@@ -241,10 +247,10 @@ const activityOptions = Array.from(
         "Status",
         "Demanded From Time (HH:MM)",
         "Demanded To Time (HH:MM)",
-        "Sanctioned From Time (HH:MM)", 
-        "Sanctioned To Time (HH:MM)",   
+        "Sanctioned From Time (HH:MM)",
+        "Sanctioned To Time (HH:MM)",
         "Corridor Type",
-        "Department", 
+        "Department",
         "SSE Name",
         "Work Location",
         "Remarks",
@@ -295,7 +301,7 @@ const activityOptions = Array.from(
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
       XLSX.utils.book_append_sheet(wb, ws, "Block Requests");
-      
+
       const formatDateForFilename = (dateString: string) => {
         if (!dateString) return "";
         try {
@@ -325,7 +331,7 @@ const activityOptions = Array.from(
         const year = today.getFullYear();
         filename = `block_requests_${day}-${month}-${year}.xlsx`;
       }
-      
+
       XLSX.writeFile(wb, filename);
     } catch (error) {
       console.error("Download failed:", error);
@@ -377,7 +383,7 @@ const activityOptions = Array.from(
   const handlePendingBlockTypeChange = (value: string) => {
     setPendingSummaryFilters((prev) => {
       const allBlockTypeValues = blockTypeOptions.slice(1).map(opt => opt.value);
-      
+
       if (value === "ALL") {
         const shouldSelectAll = prev.blockType.length < allBlockTypeValues.length;
         return {
@@ -391,7 +397,7 @@ const activityOptions = Array.from(
         } else {
           newBlockTypes = [...prev.blockType, value];
         }
-        
+
         return {
           ...prev,
           blockType: newBlockTypes
@@ -419,7 +425,7 @@ const activityOptions = Array.from(
       case 'Night': return hour >= 20 || hour < 4;
       default: return true;
     }
-};
+  };
 
   const handlePendingDeptChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setPendingSummaryFilters((prev) => ({ ...prev, dept: e.target.value }));
@@ -435,7 +441,7 @@ const activityOptions = Array.from(
   };
 
   let summaryFilteredRequests = data?.data?.requests || [];
-  
+
   if (activeSummaryFilters.start) {
     const startDate = new Date(activeSummaryFilters.start);
     summaryFilteredRequests = summaryFilteredRequests.filter((r) => {
@@ -457,7 +463,7 @@ const activityOptions = Array.from(
   if (activeSummaryFilters.blockType.length > 0) {
     const allTypesSelected = activeSummaryFilters.blockType.length === blockTypeOptions.length - 1;
     if (!allTypesSelected) {
-      summaryFilteredRequests = summaryFilteredRequests.filter((r) => 
+      summaryFilteredRequests = summaryFilteredRequests.filter((r) =>
         activeSummaryFilters.blockType.includes(r.corridorType)
       );
     }
@@ -466,17 +472,17 @@ const activityOptions = Array.from(
   if (activeSummaryFilters.section.length > 0) {
     const allSectionsSelected = activeSummaryFilters.section.length === sectionOptions.length;
     if (!allSectionsSelected) {
-      summaryFilteredRequests = summaryFilteredRequests.filter((r) => 
+      summaryFilteredRequests = summaryFilteredRequests.filter((r) =>
         activeSummaryFilters.section.includes(r.selectedSection)
       );
     }
   }
 
 
-if (activeSummaryFilters.activity.length > 0) {
+  if (activeSummaryFilters.activity.length > 0) {
     const allSectionsSelected = activeSummaryFilters.activity.length === activityOptions.length;
     if (!allSectionsSelected) {
-      summaryFilteredRequests = summaryFilteredRequests.filter((r) => 
+      summaryFilteredRequests = summaryFilteredRequests.filter((r) =>
         activeSummaryFilters.activity.includes(r.activity)
       );
     }
@@ -489,8 +495,8 @@ if (activeSummaryFilters.activity.length > 0) {
   if (activeSummaryFilters.line) {
     summaryFilteredRequests = summaryFilteredRequests.filter((r) => r.selectedLine === activeSummaryFilters.line);
   }
-  if(activeSummaryFilters.activity) {
-summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
+  if (activeSummaryFilters.activity) {
+    summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
 
   }
   let sanctionedRequests = summaryFilteredRequests.filter((r) => r.isSanctioned);
@@ -581,11 +587,103 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
     upcomingSectionFilter === "All"
       ? reportData?.data?.detailedData || []
       : reportData?.data?.detailedData?.filter(
-          (b: DetailedData) => b.Section === upcomingSectionFilter
-        ) || [];
+        (b: DetailedData) => b.Section === upcomingSectionFilter
+      ) || [];
 
   const [sectionDropdownOpenB, setSectionDropdownOpenB] = useState(false);
   const sectionDropdownRefB = useRef<HTMLDivElement>(null);
+
+  // Function to download upcoming blocks table as XLSX
+  const handleDownloadUpcomingBlocks = () => {
+    try {
+      if (filteredUpcomingBlocks.length === 0) {
+        toast.error("No data available to download");
+        return;
+      }
+
+      const excelData = filteredUpcomingBlocks.map((block: any) => {
+        // Status logic
+        let statusLabel = "";
+        if (block.Status === "APPROVED") {
+          statusLabel = "Pending with Optg";
+        } else if (block.Status === "PENDING") {
+          statusLabel = "Pending with dept control";
+        } else if (block.Status === "REJECTED") {
+          statusLabel = "Returned by Optg";
+        } else {
+          statusLabel = block.Status;
+        }
+
+        return {
+          Date: formatDate(block.Date),
+          "Request ID": block.DivisionId || "N/A",
+          "Station ID": block.stationId || "N/A",
+          Type: block.Type || "N/A",
+          Activity: block.Activity || "N/A",
+          Duration: block.Duration,
+          "Availed Time":
+            block.AvailedTimeFrom && block.AvailedTimeTo
+              ? `${formatTime(block.AvailedTimeFrom)} to ${formatTime(
+                block.AvailedTimeTo
+              )}`
+              : "Not Available",
+          Status: statusLabel,
+        };
+      });
+
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+      // Add title before the data
+      XLSX.utils.sheet_add_aoa(
+        worksheet,
+        [
+          [`(B) Summary of Upcoming Blocks`],
+          [], // Empty row for spacing
+        ],
+        { origin: "A1" }
+      );
+
+      // Adjust column widths
+      const colWidths = [
+        { wch: 12 }, // Date
+        { wch: 10 }, // ID
+        { wch: 10 }, // Station ID
+        { wch: 20 }, // Block Section
+        { wch: 12 }, // Type
+        { wch: 30 }, // Activity
+        { wch: 20 }, // Demand Time
+        { wch: 20 }, // Sanctioned Time
+        { wch: 20 }, // Availed Time
+        { wch: 20 }, // Status
+      ];
+      worksheet["!cols"] = colWidths;
+
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Upcoming Blocks");
+
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+      const blob = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `upcoming_blocks_${format(
+        new Date(),
+        "dd-MM-yyyy"
+      )}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success("Upcoming blocks data downloaded successfully");
+    } catch (error) {
+      console.error("Download error:", error);
+      toast.error("Failed to download Excel file. Please try again.");
+    }
+  };
 
   // if (isLoading) {
   //   return (
@@ -603,7 +701,7 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
           RBMS-{session?.user?.location}-DIVN
         </span>
       </div>
-      
+
       {/* Block Summary Report Title */}
       <div className="w-full bg-[#b7e3ee] flex flex-col items-center pt-2 pb-1">
         <span className="text-[24px] font-extrabold text-black">
@@ -616,7 +714,7 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
           </span>
         </div>
       </div>
-      
+
       {/* Main Content */}
       <div className="max-w-screen-lg mx-auto w-full px-3">
         {/* Filters Section */}
@@ -706,7 +804,7 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
                 menuPosition="fixed"
               />
             </div>
-            
+
             {/* Select Period */}
             <div className="flex flex-col flex-1 min-w-[180px] w-full">
               <div className="flex justify-center w-full mb-1">
@@ -734,17 +832,16 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
             </div>
           </div>
         </div>
-        
+
         {/* Block Type Filters */}
         <div className="w-full flex flex-wrap justify-center gap-2 mt-2 mb-1">
           {blockTypeOptions.map((opt) => (
             <button
               key={opt.value}
-              className={`rounded-full px-3 py-1 text-[24px] font-semibold border border-[#b7e3ee] flex items-center gap-1 transition-colors duration-150 ${
-                selectedBlockTypes.includes(opt.value)
-                  ? "bg-[#b7e3ee] text-black"
-                  : "bg-[#e0e0ff] text-black"
-              }`}
+              className={`rounded-full px-3 py-1 text-[24px] font-semibold border border-[#b7e3ee] flex items-center gap-1 transition-colors duration-150 ${selectedBlockTypes.includes(opt.value)
+                ? "bg-[#b7e3ee] text-black"
+                : "bg-[#e0e0ff] text-black"
+                }`}
               onClick={() => toggleBlockType(opt.value)}
               type="button"
             >
@@ -755,25 +852,24 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
             </button>
           ))}
         </div>
-        
+
         {/* Department Filters */}
         <div className="w-full flex flex-wrap justify-center gap-2 mb-2">
           {departmentOptions.map((opt) => (
             <button
               key={opt.value}
               className={`rounded-full px-3 py-1 text-[24px] font-semibold border flex items-center gap-1 transition-colors duration-150
-                ${
-                  opt.value === "Engineering"
-                    ? selectedDepartments.includes(opt.value)
-                      ? "bg-[#e49edd] border-[#b07be0] text-black"
-                      : "bg-[#f3e6f7] border-[#b07be0] text-black"
-                    : opt.value === "ST"
+                ${opt.value === "Engineering"
+                  ? selectedDepartments.includes(opt.value)
+                    ? "bg-[#e49edd] border-[#b07be0] text-black"
+                    : "bg-[#f3e6f7] border-[#b07be0] text-black"
+                  : opt.value === "ST"
                     ? selectedDepartments.includes(opt.value)
                       ? "bg-[#fff35c] border-[#e0e0e0] text-black"
                       : "bg-[#fffbe9] border-[#e0e0e0] text-black"
                     : selectedDepartments.includes(opt.value)
-                    ? "bg-[#c7f7c7] border-[#7be09b] text-black"
-                    : "bg-[#e0fff0] border-[#7be09b] text-black"
+                      ? "bg-[#c7f7c7] border-[#7be09b] text-black"
+                      : "bg-[#e0fff0] border-[#7be09b] text-black"
                 }`}
               onClick={() => toggleDepartment(opt.value)}
               type="button"
@@ -785,7 +881,7 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
             </button>
           ))}
         </div>
-        
+
         {/* Submit Button */}
         <div className="w-full flex justify-center mb-2">
           <button
@@ -793,10 +889,10 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
             onClick={handleSubmit(onSubmit)}
             disabled={loading}
           >
-             Submit
+            {loading ? "Generating..." : "Generate Report"}
           </button>
         </div>
-        
+
         {/* (A) Block Summary Table */}
         {/* <div className="w-full mt-4">
           <div className="flex w-full">
@@ -882,9 +978,34 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
             </table>
           </div>
         </div> */}
-        
+
         {/* (B) Summary of Upcoming Blocks */}
         <div className="w-full max-w-4xl mt-8">
+          <div className="my-2">
+            <button
+              onClick={handleDownloadUpcomingBlocks}
+              className="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1 mr-2 shadow border border-green-800 text-base flex items-center"
+              disabled={filteredUpcomingBlocks.length === 0}
+            >
+              {" "}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 mr-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                {" "}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
+              </svg>{" "}
+              Download Summary of Upcoming Blocks (XLSX)
+            </button>
+          </div>
           <div className="flex w-full items-center">
             <div className="flex-1 bg-[#f1a983] text-[24px] font-bold border-2 border-black px-2 py-1">
               (B) Summary of Upcoming Blocks
@@ -932,10 +1053,13 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
                 <tr className="bg-[#e49edd] text-black text-[24px] font-bold">
                   <th className="border-2 border-black px-2 py-1">Date</th>
                   <th className="border-2 border-black px-2 py-1">RequestID</th>
-                  <th className="border-2 border-black px-2 py-1">Section</th>
                   <th className="border-2 border-black px-2 py-1">Type</th>
                   <th className="border-2 border-black px-2 py-1">Activity</th>
                   <th className="border-2 border-black px-2 py-1">Duration</th>
+                  <th className="border-2 border-black px-2 py-1">
+                    Availed time
+                  </th>
+                  <th className="border-2 border-black px-2 py-1">Station ID</th>
                   <th className="border-2 border-black px-2 py-1">Status</th>
                 </tr>
               </thead>
@@ -963,9 +1087,9 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
                       statusLabel = "Returned by Optg";
                       statusStyle = { background: "#ff4e36", color: "#fff" };
                     } else {
-                      statusLabel = block.overAllStatus||block.Status;
+                      statusLabel = block.overAllStatus || block.Status;
                     }
-                    
+
                     const rowBgColor = idx % 2 === 0 ? "bg-white" : "bg-[#f5d0f2]";
 
                     return (
@@ -976,9 +1100,6 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
                         <td className="border-2 border-black px-2 py-1 font-bold text-black">
                           {block.DivisionId}
                         </td>
-                        <td className="border-2 border-black px-2 py-1 font-bold text-black">
-                          {block.Section}
-                        </td>
                         <td className="border-2 border-black px-2 py-1 text-black">
                           {block.Type}
                         </td>
@@ -987,6 +1108,19 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
                         </td>
                         <td className="border-2 border-black px-2 py-1 text-black">
                           {block.Duration}
+                        </td>
+                        <td className="border-2 border-black px-2 py-1 text-black">
+                          {block.AvailedTimeFrom && block.AvailedTimeTo ? (
+                            <>
+                              {formatTime(block.AvailedTimeFrom)} to{" "}
+                              {formatTime(block.AvailedTimeTo)}
+                            </>
+                          ) : (
+                            "Not Availed Yet"
+                          )}
+                        </td>
+                        <td className="border-2 border-black px-2 py-1 font-bold text-black">
+                          {block.stationId || "N/A"}
                         </td>
                         <td
                           className="border-2 border-black px-2 py-1 font-bold text-center text-black"
@@ -1034,39 +1168,38 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
 
 
 
-                  <div className="relative">
-    <button
-      onClick={() => setShowTimeSlotDropdown(!showTimeSlotDropdown)}
-      className="bg-[#E6E6FA] px-3 py-1 rounded-full border-2 border-[#00B4D8] font-semibold text-black flex items-center gap-2 text-[24px]"
-    >
-      Time Slot
-      <span className="ml-1 text-sm">▼</span>
-    </button>
-    {showTimeSlotDropdown && (
-      <div className="absolute z-10 mt-2 w-60 bg-white border-2 border-[#00B4D8] rounded shadow-lg">
-        {[
-          { key: 'ALL', label: 'ALL' },
-          { key: 'Morning', label: 'Morning (4:00-12:00)' },
-          { key: 'Afternoon', label: 'Afternoon (12:00-20:00)' },
-          { key: 'Night', label: 'Night (20:00-4:00)' }
-        ].map((slot) => (
-          <button
-            key={slot.key}
-            onClick={() => {
-              setTimeSlotFilter(slot.key);
-              setShowTimeSlotDropdown(false);
-            }}
-            className={`block w-full text-left px-3 py-2 hover:bg-gray-100 text-black text-[20px] ${
-              timeSlotFilter === slot.key ? 'bg-blue-100' : ''
-            }`}
-          >
-            {slot.label}
-          </button>
-        ))}
-      </div>
-    )}
-  </div>
-                
+                <div className="relative">
+                  <button
+                    onClick={() => setShowTimeSlotDropdown(!showTimeSlotDropdown)}
+                    className="bg-[#E6E6FA] px-3 py-1 rounded-full border-2 border-[#00B4D8] font-semibold text-black flex items-center gap-2 text-[24px]"
+                  >
+                    Time Slot
+                    <span className="ml-1 text-sm">▼</span>
+                  </button>
+                  {showTimeSlotDropdown && (
+                    <div className="absolute z-10 mt-2 w-60 bg-white border-2 border-[#00B4D8] rounded shadow-lg">
+                      {[
+                        { key: 'ALL', label: 'ALL' },
+                        { key: 'Morning', label: 'Morning (4:00-12:00)' },
+                        { key: 'Afternoon', label: 'Afternoon (12:00-20:00)' },
+                        { key: 'Night', label: 'Night (20:00-4:00)' }
+                      ].map((slot) => (
+                        <button
+                          key={slot.key}
+                          onClick={() => {
+                            setTimeSlotFilter(slot.key);
+                            setShowTimeSlotDropdown(false);
+                          }}
+                          className={`block w-full text-left px-3 py-2 hover:bg-gray-100 text-black text-[20px] ${timeSlotFilter === slot.key ? 'bg-blue-100' : ''
+                            }`}
+                        >
+                          {slot.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 {/* Block Type Dropdown */}
                 <div className="relative inline-block">
                   <button
@@ -1080,10 +1213,10 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
                     <div className="absolute z-10 mt-2 w-40 bg-white border-2 border-[#00B4D8] rounded shadow-lg">
                       {blockTypeOptions.map((opt) => {
                         const allBlockTypeValues = blockTypeOptions.slice(1).map(o => o.value);
-                        const allSelected = allBlockTypeValues.every(val => 
+                        const allSelected = allBlockTypeValues.every(val =>
                           pendingSummaryFilters.blockType.includes(val)
                         );
-                        
+
                         return (
                           <label
                             key={opt.value}
@@ -1092,13 +1225,13 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
                             <input
                               type="checkbox"
                               checked={
-                                opt.value === "ALL" 
+                                opt.value === "ALL"
                                   ? allSelected
                                   : pendingSummaryFilters.blockType.includes(opt.value)
                               }
                               onChange={() => {
                                 handlePendingBlockTypeChange(opt.value);
-                                setBlockTypeDropdownOpen(false); 
+                                setBlockTypeDropdownOpen(false);
                               }}
                               className="mr-2 accent-[#B57CF6]"
                             />
@@ -1109,7 +1242,7 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
                     </div>
                   )}
                 </div>
-                
+
                 {/* Section Dropdown */}
                 <div className="relative inline-block">
                   <button
@@ -1146,7 +1279,7 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
                         />
                         ALL
                       </label>
-                      
+
                       {sectionOptions.map((section) => (
                         <label
                           key={section}
@@ -1160,7 +1293,7 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
                                 const newSections = prev.section.includes(section)
                                   ? prev.section.filter(s => s !== section)
                                   : [...prev.section, section];
-                                
+
                                 return {
                                   ...prev,
                                   section: newSections
@@ -1176,12 +1309,12 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
                     </div>
                   )}
                 </div>
-                
 
 
 
 
- <div className="relative inline-block">
+
+                <div className="relative inline-block">
                   <button
                     onClick={() => setActivityDropdownOpen((v) => !v)}
                     className="bg-[#B2F3F5] px-3 py-1 rounded-full border-2 border-[#00B4D8] font-semibold text-black flex items-center gap-2 text-[24px]"
@@ -1216,7 +1349,7 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
                         />
                         ALL
                       </label>
-                      
+
                       {activityOptions.map((activity) => (
                         <label
                           key={activity}
@@ -1230,7 +1363,7 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
                                 const newActivity = prev.activity.includes(activity)
                                   ? prev.activity.filter(s => s !== activity)
                                   : [...prev.activity, activity];
-                                
+
                                 return {
                                   ...prev,
                                   activity: newActivity
@@ -1265,7 +1398,7 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
                     ▼
                   </div>
                 </div>
-                
+
                 {/* Click to View Button */}
                 <div className="flex-grow flex justify-center">
                   <button
@@ -1276,7 +1409,7 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
                   </button>
                 </div>
               </div>
-              
+
               {/* Table */}
               {showTable && (
                 <div className="mx-2 overflow-x-auto">
@@ -1327,10 +1460,10 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
                                 <td className="border border-black p-1">
                                   {`${formatTime(
                                     request.sanctionedTimeFrom ||
-                                      request.optimizeTimeFrom
+                                    request.optimizeTimeFrom
                                   )} - ${formatTime(
                                     request.sanctionedTimeTo ||
-                                      request.optimizeTimeTo
+                                    request.optimizeTimeTo
                                   )}`}
                                 </td>
                                 <td className="border border-black p-1">
@@ -1361,7 +1494,7 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
                   </div>
                 </div>
               )}
-              
+
               {/* Info Texts */}
               <div className="text-center mt-1 mb-3">
                 <h3 className="inline-flex py-1 px-6 rounded-full text-black text-base font-medium text-[14px]">
@@ -1384,7 +1517,7 @@ summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
           </div>
         </div>
       </div>
-       <div className=" w-full bg-white border-t-2 border-[#A084E8] py-4 flex flex-col justify-center items-center gap-8 z-50 ">
+      <div className=" w-full bg-white border-t-2 border-[#A084E8] py-4 flex flex-col justify-center items-center gap-8 z-50 ">
         <button
           onClick={async () => {
             const { signOut } = await import("next-auth/react");
