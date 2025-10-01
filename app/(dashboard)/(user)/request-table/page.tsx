@@ -766,6 +766,10 @@ export default function RequestTablePage() {
         const requestDate = new Date(request.date);
         const startDate = new Date(customDateRange.startDate);
         const endDate = new Date(customDateRange.endDate);
+
+        // Extend range: include one extra day before start
+        startDate.setDate(startDate.getDate() - 1);
+        
         startDate.setHours(0, 0, 0, 0);
         endDate.setHours(23, 59, 59, 999);
         return requestDate >= startDate && requestDate <= endDate;
