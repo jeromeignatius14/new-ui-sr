@@ -574,7 +574,7 @@ export default function RequestTablePage() {
         );
       } else {
         // For users, fetch only their own requests (no date filtering for download, but table always next 10 days)
-        return await userRequestService.getUserRequests(currentPage, pageSize);
+        return await userRequestService.getUserRequests(currentPage, pageSize, formattedStartDate, formattedEndDate);
       }
     },
   });
