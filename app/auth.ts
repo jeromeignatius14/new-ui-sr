@@ -102,7 +102,8 @@ export const authOptions: AuthOptions = {
     },
     session: {
         strategy: 'jwt' as const,
-        maxAge: 30 * 24 * 60 * 60, // 30 days
+        // Setting to the maximum allowed value (100 years) to effectively make it non-expiring
+        maxAge: 100 * 365 * 24 * 60 * 60, // 100 years
     },
     secret: process.env.NEXTAUTH_SECRET || 'your-secret-key-here-for-development',
 }; 
