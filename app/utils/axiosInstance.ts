@@ -54,6 +54,30 @@ axiosInstance.interceptors.response.use(
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // Check if backend explicitly indicates token expiration
+      const isTokenExpired = 
+        error.response?.data?.message?.toLowerCase().includes('expired') || 
+        error.response?.data?.message?.toLowerCase().includes('invalid token') ||
+        error.response?.data?.message?.toLowerCase().includes('unauthorized');
+      
+      // If backend explicitly reports expired tokens, clear session immediately
+      if (isTokenExpired) {
+        console.log('Backend reported expired/invalid token. Clearing session immediately...');
+        try {
+          const { signOut } = require('next-auth/react');
+          await signOut({ redirect: false });
+          
+          // Redirect to login page
+          if (typeof window !== 'undefined') {
+            window.location.href = '/auth/login';
+          }
+          return Promise.reject(error);
+        } catch (signOutError) {
+          console.error('Error clearing session:', signOutError);
+        }
+      }
+      
+      // Token refresh flow - only if not already refreshing
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -71,23 +95,51 @@ axiosInstance.interceptors.response.use(
       try {
         const session = await getSession();
         const refreshToken = session?.user?.refreshToken;
+        
+        if (!refreshToken) {
+          throw new Error('No refresh token available');
+        }
 
-        if (!refreshToken) throw new Error('No refresh token available');
-
+        // Use the authService to refresh token
         const response = await authService.refreshToken(refreshToken);
 
+        // Unwrap the response based on your API structure
+        const accessToken = response.data.access_token;
+        const newRefreshToken = response.data.refresh_token;
+
+        if (!accessToken || !newRefreshToken) {
+          throw new Error('Invalid refresh token response');
+        }
+
+        // Update NextAuth session with the new tokens
         await signIn('credentials', {
           redirect: false,
-          accessToken: response.data.access_token,
-          refreshToken: response.data.refresh_token,
+          accessToken: accessToken,
+          refreshToken: newRefreshToken,
           user: JSON.stringify(session?.user),
         });
 
-        processQueue(null, response.data.access_token);
-        originalRequest.headers.Authorization = `Bearer ${response.data.access_token}`;
+        processQueue(null, accessToken);
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return axiosInstance(originalRequest);
-      } catch (refreshError) {
+      } catch (refreshError: any) {
         processQueue(refreshError, null);
+        
+        // Handle refresh token expiration or other authentication errors
+        // Clear all session cookies by using the signOut function
+        try {
+          // Import directly from next-auth/react to avoid dynamic import issues
+          const { signOut } = require('next-auth/react');
+          await signOut({ redirect: false });
+          console.log('Session cleared due to refresh token failure');
+        } catch (signOutError) {
+          console.error('Error clearing session:', signOutError);
+        }
+        
+        // Redirect to login page after token refresh failure
+        if (typeof window !== 'undefined') {
+          window.location.href = '/auth/login';
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
