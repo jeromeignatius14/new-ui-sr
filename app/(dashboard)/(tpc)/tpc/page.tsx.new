@@ -1,0 +1,214 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useSession, signOut } from "next-auth/react";
+import { Loader } from "@/app/components/ui/Loader";
+import { WeeklySwitcher } from "@/app/components/ui/WeeklySwitcher";
+import Link from "next/link";
+import { FaHome, FaFileDownload, FaFilter, FaSearch, FaEye } from "react-icons/fa";
+import { format, parseISO, addDays, subDays } from "date-fns";
+import { useBoardControllerRequests } from "@/app/service/query/boardController";
+import { toast, Toaster } from "react-hot-toast";
+import * as XLSX from 'xlsx';
+
+export default function TpcDashboard() {
+    const { data: session, status } = useSession({
+        required: true,
+        onUnauthenticated() {
+            window.location.href = "/auth/login";
+        },
+    });
+
+    const [currentTab, setCurrentTab] = useState<"24hrs" | "16hrs">("24hrs");
+    const [dateRange, setDateRange] = useState({
+        startDate: format(new Date(), "yyyy-MM-dd"),
+        endDate: format(addDays(new Date(), 1), "yyyy-MM-dd"),
+    });
+    const [filterOpen, setFilterOpen] = useState(false);
+    const [sectionFilter, setSectionFilter] = useState("");
+    const [lineFilter, setLineFilter] = useState("");
+    const [workTypeFilter, setWorkTypeFilter] = useState("");
+
+    // Fetch requests using the query hook
+    const {
+        data: requestsData,
+        isLoading,
+        isError,
+        error
+    } = useBoardControllerRequests(currentTab);
+
+    // Initialize filtered data objects
+    const requestsMAS = requestsData?.data?.MAS_AJJ?.upLine || [];
+    const requestsMASDown = requestsData?.data?.MAS_AJJ?.downLine || [];
+    const requestsMSBUpSlow = requestsData?.data?.MSB_VM?.upSlow || [];
+    const requestsMSBDownSlow = requestsData?.data?.MSB_VM?.downSlow || [];
+    const requestsMSBUpFast = requestsData?.data?.MSB_VM?.upFast || [];
+    const requestsMSBDownFast = requestsData?.data?.MSB_VM?.downFast || [];
+
+    const handleLogout = async () => {
+        await signOut({ redirect: true, callbackUrl: "/auth/login" });
+    };
+
+    const handleDateChange = (startDate: string, endDate: string) => {
+        setDateRange({ startDate, endDate });
+        // Here you would fetch data for the new date range
+    };
+
+    const handleTabChange = (tab: "24hrs" | "16hrs") => {
+        setCurrentTab(tab);
+        // Here you would fetch data for the selected time window
+    };
+
+    if (status === "loading" || isLoading) {
+        return <Loader name="page" />;
+    }
+
+    if (isError) {
+        return (
+            <div className="container mx-auto px-4 py-8 text-center">
+                <p className="text-lg text-red-600">Error loading data. Please try again later.</p>
+                <p className="text-sm text-gray-600">{(error as any)?.message}</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="container mx-auto px-4 py-6 max-w-full bg-[#fffbe9] min-h-screen">
+            <Toaster position="top-right" />
+            {/* Header with Logout */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                <div className="flex w-full justify-center items-center flex-col">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-zinc-800">Board Controller</h1>
+                    <div className="flex justify-center mt-3">
+                        <span className="bg-[#FFB74D] border-2 border-black px-5 py-2 font-bold text-xl text-black">
+                            DESGN: {session?.user?.name}
+                        </span>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={handleLogout}
+                        className="bg-red-500 hover:bg-red-700 text-black font-bold py-1 px-3 sm:py-2 sm:px-4 border-2 border-black"
+                    >
+                        Logout
+                    </button>
+                </div>
+            </div>
+
+            {/* Tab Selector for 24hrs and 16hrs */}
+            <div className="flex border-b-2 border-gray-600 mb-6">
+                <button
+                    className={`py-2 px-4 font-bold ${currentTab === "24hrs"
+                        ? "border-2 border-black text-black bg-blue-500"
+                        : "text-gray-500 hover:text-gray-700 bg-blue-200"
+                        }`}
+                    onClick={() => handleTabChange("24hrs")}
+                >
+                    Next - 8 hrs
+                </button>
+                <button
+                    className={`py-2 px-4 font-bold ${currentTab === "16hrs"
+                        ? "border-2 border-black text-black bg-blue-500"
+                        : "text-gray-500 hover:text-gray-700 bg-blue-200"
+                        }`}
+                    onClick={() => handleTabChange("16hrs")}
+                >
+                    Next -  16 hrs
+                </button>
+            </div>
+            {/* Major Section - MAS-AJJ */}
+            <div className="mb-8 border-2 border-black">
+                <h2 className="bg-yellow-100 p-2 text-lg text-black font-semibold border-b-2 border-black">Major Section - MAS - AJJ</h2>
+
+                {/* Up Line */}
+                <h3 className="bg-yellow-100 p-2 text-base font-semibold text-black border-b-2 border-black">Line - Up Line</h3>
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-300 border-2 border-black">
+                        <thead>
+                            <tr className="bg-gray-100">
+                                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-black border-r">Date</th>
+                                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-black border-r">Block Section</th>
+                                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-black border-r">Sanctioned Time</th>
+                                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-black border-r">Work Type</th>
+                                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-black border-r">Activity</th>
+                                <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700 border-black">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-300">
+                            {requestsMAS.map(req => (
+                                <tr key={req.id} className="hover:bg-gray-50 border-b border-black">
+                                    <td className="px-4 py-2 text-sm text-black border-black border-r">{req.date}</td>
+                                    <td className="px-4 py-2 text-sm text-black border-black border-r">{req.section}</td>
+                                    <td className="px-4 py-2 text-sm text-black border-black border-r">{req.time}</td>
+                                    <td className="px-4 py-2 text-sm text-black border-black border-r">{req.workType}</td>
+                                    <td className="px-4 py-2 text-sm text-black border-black border-r">{req.activity}</td>
+                                    <td className="px-4 py-2 text-sm text-center">
+                                        <Link href={`/tpc/view-request/${req.id}`} className="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 inline-flex items-center text-xs">
+                                            <FaEye className="mr-1" size={12} /> View
+                                        </Link>
+                                    </td>
+                                </tr>
+                            ))}
+                            {/* Empty rows for layout matching */}
+                            {[...Array(2)].map((_, idx) => (
+                                <tr key={`empty-mas-${idx}`} className="h-10 border-b border-black">
+                                    <td className="px-4 py-2 border-black border-r"></td>
+                                    <td className="px-4 py-2 border-black border-r"></td>
+                                    <td className="px-4 py-2 border-black border-r"></td>
+                                    <td className="px-4 py-2 border-black border-r"></td>
+                                    <td className="px-4 py-2 border-black border-r"></td>
+                                    <td className="px-4 py-2"></td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Down Line */}
+                <h3 className="bg-yellow-100 p-2 text-base font-semibold text-black border-y-2 border-black">Line - Down Line</h3>
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-300 border-2 border-black">
+                        <thead>
+                            <tr className="bg-gray-100">
+                                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-black border-r">Date</th>
+                                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-black border-r">Block Section</th>
+                                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-black border-r">Sanctioned Time</th>
+                                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-black border-r">Work Type</th>
+                                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-black border-r">Activity</th>
+                                <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700 border-black">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-300">
+                            {requestsMAS.map(req => (
+                                <tr key={req.id} className="hover:bg-gray-50 border-b border-black">
+                                    <td className="px-4 py-2 text-sm text-black border-black border-r">{req.date}</td>
+                                    <td className="px-4 py-2 text-sm text-black border-black border-r">{req.section}</td>
+                                    <td className="px-4 py-2 text-sm text-black border-black border-r">{req.time}</td>
+                                    <td className="px-4 py-2 text-sm text-black border-black border-r">{req.workType}</td>
+                                    <td className="px-4 py-2 text-sm text-black border-black border-r">{req.activity}</td>
+                                    <td className="px-4 py-2 text-sm text-center">
+                                        <Link href={`/tpc/view-request/${req.id}`} className="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 inline-flex items-center text-xs">
+                                            <FaEye className="mr-1" size={12} /> View
+                                        </Link>
+                                    </td>
+                                </tr>
+                            ))}
+                            {/* Empty rows for layout matching */}
+                            {[...Array(2)].map((_, idx) => (
+                                <tr key={`empty-mas-${idx}`} className="h-10 border-b border-black">
+                                    <td className="px-4 py-2 border-black border-r"></td>
+                                    <td className="px-4 py-2 border-black border-r"></td>
+                                    <td className="px-4 py-2 border-black border-r"></td>
+                                    <td className="px-4 py-2 border-black border-r"></td>
+                                    <td className="px-4 py-2 border-black border-r"></td>
+                                    <td className="px-4 py-2"></td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    );
+}
