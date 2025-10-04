@@ -50,6 +50,8 @@ export interface RequestItem {
     demandTimeFrom: string;
     demandTimeTo: string;
     duration: string | null;
+    sanctionedTimeFrom: string;
+    sanctionedTimeTo: string;
     sigDisconnection: boolean;
     elementarySection: string | null;
     elementarySectionTo: string | null;
