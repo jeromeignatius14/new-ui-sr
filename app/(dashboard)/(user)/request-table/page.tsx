@@ -7,6 +7,7 @@ import {
   DateRangeFilter,
   RequestItem,
   useGetOtherRequests,
+  useGetSummaryRequests,
 } from "@/app/service/query/user-request";
 import Link from "next/link";
 import * as XLSX from 'xlsx';
@@ -406,6 +407,103 @@ export default function RequestTablePage() {
     formattedStartDate,
     formattedEndDate,
     userDepartement,
+  );
+
+  // Helper function to map user's depot to a major section
+  const mapDepotToMajorSection = (depot: string, department: string) => {
+    console.log(`Mapping depot: "${depot}", department: "${department}"`);
+
+    // Use the depot structure from store.ts
+    const depotStructure = {
+      "JTJ-ED": {
+        'TRD': ["SA", "ED", "BQI", "SLY", "MV"],
+        'S&T': ["MAP", "BQI", "ED", "SA", "TPT", "MV"],
+        'ENGG': ["TPT", "BQI", "N-SA", "S-SA", "ED", "GS", "BR-ED", "MV"]
+      },
+      "ED-PTJ": {
+        'TRD': ["ED", "TUP", "PTJ"],
+        'S&T': ["TUP", "PTJ", "CBE", "ED"],
+        'ENGG': ["ED", "TUP", "E-PTJ", "CBE", "GS", "BR-ED", "CBF"]
+      },
+      "ED-TP": {
+        'TRD': ["KMD", "PLI"],
+        'S&T': ["KRR-W", "KRR-E", "ED"],
+        'ENGG': ["TP", "W-KRR", "GS", "BR-ED"]
+      },
+      "KRR-DG": {
+        'TRD': ["KRR"],
+        'S&T': ["KRR-E"],
+        'ENGG': ["E-KRR", "GS", "BR-ED"]
+      },
+      "SA-VRI": {
+        'TRD': ["SA", "CHSM"],
+        'S&T': ["SA", "VRI", "SXT"],
+        'ENGG': ["S-SA", "ATU", "CHSM", "GS", "BR-ED"]
+      },
+      "SA-MTDM": {
+        'TRD': ["SA", "MTDM"],
+        'S&T': ["SA"],
+        'ENGG': ["N-SA", "GS", "BR-ED"]
+      },
+      "SA-KRR": {
+        'TRD': ["SA", "NMKL", "KRR"],
+        'S&T': ["SA", "KRR-W", "SXT"],
+        'ENGG': ["NMKL", "GS", "BR-ED"]
+      },
+      "CBE-MTP": {
+        'TRD': ["PTJ"],
+        'S&T': ["CBE"],
+        'ENGG': ["CBF", "GS", "BR-ED"]
+      },
+      "MTP-UAM": {
+        'TRD': [],
+        'S&T': ["CBE"],
+        'ENGG': ["ONR", "GS", "BR-ED"]
+      },
+      "PTJ-CNV": {
+        'TRD': ["PTJ"],
+        'S&T': ["PTJ"],
+        'ENGG': ["E-PTJ", "GS", "BR-ED"]
+      }
+    };
+
+    // Normalize inputs to handle case sensitivity and trim whitespace
+    const normalizedDepot = depot.trim().toUpperCase();
+    const normalizedDepartment = department.trim().toUpperCase();
+
+    // Find which section this depot belongs to for the user's department
+    for (const [section, depts] of Object.entries(depotStructure)) {
+      // Convert department keys to uppercase for case-insensitive comparison
+      const deptsUpper: Record<string, string[]> = {};
+      Object.entries(depts).forEach(([deptKey, depotList]) => {
+        deptsUpper[deptKey.toUpperCase()] = depotList.map(d => d.toUpperCase());
+      });
+
+      if (normalizedDepartment in deptsUpper) {
+        const depots = deptsUpper[normalizedDepartment];
+        if (depots.includes(normalizedDepot)) {
+          console.log(`Found mapping: "${depot}" → "${section}"`);
+          return section;
+        }
+      }
+    }
+
+    // If no mapping found, use a default section instead of returning the depot
+    console.log(`No mapping found for depot: "${depot}", department: "${department}". Using default section: "JTJ-ED"`);
+    return "JTJ-ED"; // Default to a valid section instead of returning the depot
+  };
+
+  // Get the major section for the current user's depot using the user's department
+  const userMajorSection = mapDepotToMajorSection(selectedDepo, userDepartement);
+  console.log(`Session depot: "${session?.user?.depot}", department: "${session?.user?.department}", Mapped section: "${userMajorSection}"`);
+
+  // Fetch sanctioned blocks data
+  const { data: sanctionedBlocksData } = useGetSummaryRequests(
+    userMajorSection,
+    currentPage,
+    pageSize,
+    formattedStartDate,
+    formattedEndDate
   );
   // Map frontend roles to backend roles
   const getBackendRole = (role: string) => {
@@ -1479,6 +1577,138 @@ filteredRequests = data?.data?.requests?.filter((request: any) => {
       </div>
       )
       }
+
+      {/* Sanctioned Blocks Section */}
+      <div className="flex justify-center mt-3 mb-6">
+        <div className="w-full rounded-2xl border-2 border-[#B5B5B5] bg-[#F5E7B2] shadow p-0">
+          <div className="text-[24px] font-bold text-black text-center py-2">
+            SUMMARY OF THE SANCTIONED BLOCKS
+          </div>
+          <div className="italic text-center text-[24px] text-black pb-2">
+            (Click ID to see full details)
+          </div>
+
+          {/* Table */}
+          <div className="overflow-x-auto rounded-xl mx-2 mb-2">
+            <table className="w-full border border-black rounded-xl overflow-hidden text-[24px]">
+              <thead>
+                <tr className="bg-[#D6F3FF] text-black">
+                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[12%]">
+                    Date
+                  </th>
+                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[8%]">
+                    ID
+                  </th>
+                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[15%]">
+                    Department
+                  </th>
+                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[25%]">
+                    Block Section
+                  </th>
+                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[15%]">
+                    UP/DN/SL/Rpad
+                  </th>
+                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[20%]">
+                    Activity
+                  </th>
+                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[20%]">
+                    Demanded
+                  </th>
+                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[20%]">
+                    Sanctioned
+                  </th>
+                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[10%]">
+                    Duration
+                  </th>
+                  <th className="border border-black px-2 py-1 whitespace-nowrap w-[15%]">
+                    Requested By
+                  </th>
+
+                </tr>
+              </thead>
+              <tbody>
+                {sanctionedBlocksData?.data.requests?.map(
+                  (request: any, idx: number) => (
+                    <tr
+                      key={request.id}
+                      className={
+                        idx % 2 === 0 ? "bg-[#FFF86B]" : "bg-[#E6E6FA]"
+                      }
+                    >
+                      <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                        {formatDate(request.date)}
+                      </td>
+                      <td className="border border-black px-2 py-1 whitespace-nowrap text-center">
+                        <Link
+                          href={`/view-request/${request.id}?from=request-table`}
+                          className="text-black hover:underline"
+                        >
+                          {request.divisionId || request.id.slice(-4)}
+                        </Link>
+                      </td>
+                      <td className="border border-black px-2 py-1 text-center whitespace-nowrap text-black">
+                        {request.selectedDepartment || "N/A"}
+                      </td>
+                      <td className="border border-black px-2 py-1 text-black">
+                        {request.missionBlock}
+                      </td>
+                      <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                        {request.processedLineSections
+                          .map((section: any) =>
+                            section.type === "line"
+                              ? [section.lineName, section.otherLines]
+                              : [section.road, section.otherRoads]
+                          )
+                          .flat()
+                          .filter(Boolean)
+                          .join(", ") || "N/A"}
+                      </td>
+                      <td className="border border-black px-2 py-1 text-black">
+                        {request.activity}
+                      </td>
+                      <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                        {formatTime(request.demandTimeFrom)} -{" "}
+                        {formatTime(request.demandTimeTo)}
+                      </td>
+                      <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                        {request.sanctionedTimeFrom && request.sanctionedTimeTo ? (
+                          <>
+                            {formatTime(request.sanctionedTimeFrom)} -{" "}
+                            {formatTime(request.sanctionedTimeTo)}
+                          </>
+                        ) : (
+                          <span className="text-gray-500">Not yet scheduled</span>
+                        )}
+                      </td>
+                      <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                        {request.sanctionedTimeFrom && request.sanctionedTimeTo ?
+                          formatDuration(request.sanctionedTimeFrom, request.sanctionedTimeTo) :
+                          formatDuration(request.demandTimeFrom, request.demandTimeTo)
+                        }
+                      </td>
+                      <td className="border border-black px-2 py-1 text-center whitespace-nowrap text-black">
+                        <div className="flex flex-col items-center">
+                          <span>{request.user?.name || "Unknown"}</span>
+                          {request.user?.role && (
+                            <span className="text-xs text-gray-600">{request.user?.role}</span>
+                          )}
+                        </div>
+                      </td>
+
+                    </tr>
+                  )
+                ) || (
+                    <tr>
+                      <td colSpan={10} className="border border-black px-2 py-3 text-center text-gray-500">
+                        No sanctioned blocks found for your section
+                      </td>
+                    </tr>
+                  )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
 
       {/* Fixed Bottom Navigation */}
       <div className="bg-[#FFFDF5] pb-2">
