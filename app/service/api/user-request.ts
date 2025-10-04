@@ -232,4 +232,23 @@ updateOtherRequest: async (
     const response = await axiosInstance.put(`/api/user-request/reject/${id}`, { remarks });
     return response.data;
   },
+
+  getSummaryRequests: async (
+    selectedSection: string,
+    page: number = 1,
+    limit: number = 100,
+    startDate?: string,
+    endDate?: string
+  ): Promise<RequestResponse> => {
+    const queryParams = new URLSearchParams();
+    queryParams.append('page', page.toString());
+    queryParams.append('limit', limit.toString());
+    if (startDate) queryParams.append('startDate', startDate);
+    if (endDate) queryParams.append('endDate', endDate);
+
+    const response = await axiosInstance.get<RequestResponse>(
+      `/api/user-request/summary-requests/${selectedSection}?${queryParams.toString()}`
+    );
+    return response.data;
+  },
 };
