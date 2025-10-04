@@ -1,35 +1,43 @@
 "use client";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { userRequestService } from "@/app/service/api/user-request";
-import { format, parseISO } from "date-fns";
+
+import React from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { Loader } from "@/app/components/ui/Loader";
 import Link from "next/link";
-import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { userRequestService } from "@/app/service/api/user-request";
+import { toast, Toaster } from "react-hot-toast";
+import { format, parseISO } from "date-fns";
 
-export default function ViewRequest() {
-  const params = useParams();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const queryClient = useQueryClient();
-  const id = params.id as string;
-  const [isDeleting, setIsDeleting] = useState(false);
+export default function ViewRequestPage({ params }: { params: { id: string } | Promise<{ id: string }> }) {
+  // Properly unwrap params using React.use() as required by Next.js 14+
+  // This ensures we're future-proof for upcoming Next.js versions
+  const resolvedParams = params instanceof Promise ? React.use(params) : params;
+  const requestId = resolvedParams.id;
 
-  const sourcePage = searchParams.get("from") || "request-table";
-
-  const getBackUrl = (request: any) => {
-    const date = format(new Date(request.date), "yyyy-MM-dd");
-    switch (sourcePage) {
-      case "other-requests":
-        return `/other-requests?date=${date}`;
-      default:
-        return `/request-table?date=${date}`;
-    }
-  };
-
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["request", id],
-    queryFn: () => userRequestService.getById(id),
+  const { data: session, status } = useSession({
+    required: true,
+    onUnauthenticated() {
+      window.location.href = "/auth/login";
+    },
   });
+
+  const router = useRouter();
+
+  // Use query hooks to fetch request details using the userRequestService.getById method
+  const {
+    data: requestData,
+    isLoading,
+    isError,
+    error
+  } = useQuery({
+    queryKey: ["request", requestId],
+    queryFn: () => userRequestService.getById(requestId),
+  });
+
+  // Extract the data from the response
+  const request = requestData?.data;
 
   const formatDate = (dateString: string) => {
     try {
@@ -40,7 +48,7 @@ export default function ViewRequest() {
   };
 
   const formatTime = (dateString: string): string => {
-    if (!dateString) return "Invalid time";
+    if (!dateString) return "N/A";
     try {
       const timePart = dateString.includes("T")
         ? dateString.split("T")[1]
@@ -54,24 +62,35 @@ export default function ViewRequest() {
     }
   };
 
-  const handleDelete = async () => {
-    if (confirm("Are you sure you want to delete this request?")) {
-      setIsDeleting(true);
-      try {
-        await userRequestService.delete(id);
-        alert("Request deleted successfully");
-        router.push("/request-table");
-      } catch (error) {
-        console.error("Failed to delete request:", error);
-        alert("Failed to delete request. Please try again.");
-      } finally {
-        setIsDeleting(false);
+  const formatSanctionedTime = (timeString: string): string => {
+    if (!timeString) return "";
+
+    try {
+      // If it's already in a simple format like "12:00 - 13:00", return it
+      if (timeString.includes(" - ") && !timeString.includes("T")) {
+        return timeString;
       }
+
+      // Handle ISO date range format "2025-10-03T22:35:00.000Z - 2025-10-03T01:35:00.000Z"
+      const parts = timeString.split(" - ");
+      if (parts.length !== 2) return timeString;
+
+      const fromTime = parts[0].includes("T") ? parts[0].split("T")[1].substring(0, 5) : parts[0];
+      const toTime = parts[1].includes("T") ? parts[1].split("T")[1].substring(0, 5) : parts[1];
+
+      // Clean up the times by removing any trailing parts like seconds
+      const cleanFromTime = fromTime.split(":").slice(0, 2).join(":");
+      const cleanToTime = toTime.split(":").slice(0, 2).join(":");
+
+      return `${cleanFromTime} - ${cleanToTime}`;
+    } catch (error) {
+      console.error("Error formatting sanctioned time:", error);
+      return timeString; // Return the original if parsing fails
     }
   };
 
   const getStatusBadgeClass = (status: string) => {
-    switch (status) {
+    switch (status?.toUpperCase()) {
       case "APPROVED":
         return "bg-green-100 text-green-800 border border-black";
       case "REJECTED":
@@ -82,45 +101,31 @@ export default function ViewRequest() {
     }
   };
 
-  if (isLoading) {
+  if (status === "loading" || isLoading) {
+    return <Loader name="page" />;
+  }
+
+  if (!request || isError) {
+    console.error("Error loading request:", error);
     return (
-      <div className="min-h-screen text-black bg-white p-3 border border-black flex items-center justify-center">
-        <div className="text-center py-5">Loading approved requests...</div>
+      <div className="container mx-auto px-4 py-8 text-center">
+        <p className="text-lg text-red-600">Request not found or error loading request.</p>
+        {error && <p className="text-sm text-gray-600 mt-2">Error: {(error as any)?.message || "Unknown error"}</p>}
+        <Link href="/tpc" className="mt-4 inline-block text-blue-600 hover:underline">
+          Return to Dashboard
+        </Link>
       </div>
     );
   }
-
-  if (error) {
-    router.push("/auth/login");
-  }
-
-  const request = data?.data;
-
-  if (!request) {
-    return (
-      <div className="bg-white p-3 border border-black mb-3">
-        <div className="text-center py-5">Request not found</div>
-      </div>
-    );
-  }
-
-  const blockSections = request.missionBlock
-    ? request.missionBlock.split(",")
-    : [];
 
   return (
-    <div className="bg-white p-3 border border-black mb-3 text-black">
+    <div className="bg-white p-3 border border-black mb-3 text-black min-h-screen">
+      <Toaster position="top-right" />
       <div className="border-b-2 border-[#13529e] pb-3 mb-4 flex justify-between items-center">
         <h1 className="text-lg font-bold text-[#13529e]">Block Details</h1>
         <div className="flex gap-2">
-          {/* <Link
-            href={data?.data ? getBackUrl(data.data) : '/request-table'}
-            className="px-3 py-1 text-sm bg-white text-[#13529e] border border-black"
-          >
-            Back
-          </Link> */}
           <button
-            onClick={() => window.history.back()}
+            onClick={() => router.back()}
             className="px-3 py-1 text-sm bg-white text-[#13529e] border border-black flex items-center gap-1"
           >
             <svg
@@ -136,24 +141,6 @@ export default function ViewRequest() {
             </svg>
             Back
           </button>
-
-          {request.status === "PENDING" && (
-            <>
-              <Link
-                href={`/edit-request/${id}`}
-                className="px-3 py-1 text-sm bg-[#13529e] text-white border border-black"
-              >
-                Edit Request
-              </Link>
-              <button
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="px-3 py-1 text-sm bg-[#f94449] text-white border border-black disabled:opacity-50"
-              >
-                {isDeleting ? "Deleting..." : "Reject/Cancel"}
-              </button>
-            </>
-          )}
         </div>
       </div>
 
@@ -176,16 +163,17 @@ export default function ViewRequest() {
             <tbody>
               <tr>
                 <td className="py-1 font-medium">Request ID:</td>
-                <td className="py-1">{request.divisionId || request.id}</td>
+                <td className="py-1">{request.divisionId}</td>
               </tr>
               <tr>
-                <td className="py-1 font-medium">Date:</td>
+                <td className="py-1 font-medium">Request Date:</td>
                 <td className="py-1">{formatDate(request.date)}</td>
               </tr>
               <tr>
                 <td className="py-1 font-medium">Created Date:</td>
-                <td className="py-1"> {request.createdAt.split(/[T ]/)[0].split("-").reverse().join("-")}</td>
-                
+                <td className="py-1">
+                  {request.createdAt ? request.createdAt.split(/[T ]/)[0].split("-").reverse().join("-") : 'N/A'}
+                </td>
               </tr>
               <tr>
                 <td className="py-1 font-medium">Created Time:</td>
@@ -193,15 +181,15 @@ export default function ViewRequest() {
               </tr>
               <tr>
                 <td className="py-1 font-medium">Requested By:</td>
-                <td className="py-1">{request.user.name}</td>
+                <td className="py-1">{request.user?.name || 'N/A'}</td>
               </tr>
               <tr>
                 <td className="py-1 font-medium">Department:</td>
-                <td className="py-1">{request.selectedDepartment}</td>
+                <td className="py-1">{request.selectedDepartment || 'N/A'}</td>
               </tr>
               <tr>
                 <td className="py-1 font-medium">Section:</td>
-                <td className="py-1">{request.selectedSection}</td>
+                <td className="py-1">{request.selectedSection || 'N/A'}</td>
               </tr>
               <tr>
                 <td className="py-1 font-medium ">Request Type:</td>
@@ -215,16 +203,12 @@ export default function ViewRequest() {
                     : "N/A"}
                 </td>
               </tr>
-                   <tr>
+              <tr>
                 <td className="py-1 font-medium ">Manager Acceptance Time:</td>
                 <td className="py-1">
                   {formatTime(request.managerResponseTiming ?? "")}
                 </td>
               </tr>
-              {/* <tr>
-                <td className="py-1 font-medium">Depot:</td>
-                <td className="py-1">{request.selectedDepo}</td>
-              </tr> */}
             </tbody>
           </table>
         </div>
@@ -237,32 +221,34 @@ export default function ViewRequest() {
             <tbody>
               <tr>
                 <td className="py-1 font-medium">Work Type:</td>
-                <td className="py-1">{request.workType}</td>
+                <td className="py-1">{request.workType || 'N/A'}</td>
               </tr>
               <tr>
                 <td className="py-1 font-medium">Activity:</td>
-                <td className="py-1">{request.activity}</td>
+                <td className="py-1">{request.activity || 'N/A'}</td>
               </tr>
               <tr>
-                <td className="py-1 font-medium">Requested Time:</td>
+                <td className="py-1 font-medium">Demand Time:</td>
                 <td className="py-1">
-                  {formatTime(request.demandTimeFrom)} to{" "}
+                  {formatTime(request.demandTimeFrom)} {" - "}
                   {formatTime(request.demandTimeTo)}
                 </td>
               </tr>
               <tr>
                 <td className="py-1 font-medium">Sanctioned Time:</td>
                 <td className="py-1">
-                  {request.sanctionedTimeFrom && request.sanctionedTimeTo ? (
-                    `${formatTime(request.sanctionedTimeFrom)} to ${formatTime(request.sanctionedTimeTo)}`
-                  ) : (
-                    "Not yet sanctioned"
-                  )}
+                  {request.sanctionedTimeFrom && request.sanctionedTimeTo
+                    ? `${formatTime(request.sanctionedTimeFrom)} - ${formatTime(request.sanctionedTimeTo)}`
+                    : 'N/A'}
                 </td>
               </tr>
               <tr>
                 <td className="py-1 font-medium">Block Section:</td>
-                <td className="py-1">{request.missionBlock}</td>
+                <td className="py-1">{request.missionBlock || 'N/A'}</td>
+              </tr>
+              <tr>
+                <td className="py-1 font-medium">Corridor Type:</td>
+                <td className="py-1">{request.corridorType || 'Regular Block'}</td>
               </tr>
               {request.workLocationFrom ? (
                 <tr>
@@ -288,9 +274,6 @@ export default function ViewRequest() {
           </table>
         </div>
       </div>
-
-      {/*Emergency Block Remarks code below */}
-
       {request.processedLineSections &&
         request.processedLineSections.length > 0 && (
           <div className="border border-black p-3 mb-4">
@@ -477,7 +460,7 @@ export default function ViewRequest() {
                       <td className="py-1 font-medium">S&T Lines:</td>
                       <td className="py-1">
                         {request.sntDisconnectionLineFrom &&
-                        request.sntDisconnectionLineTo
+                          request.sntDisconnectionLineTo
                           ? `${request.sntDisconnectionLineFrom} to ${request.sntDisconnectionLineTo}`
                           : "-"}
                       </td>
