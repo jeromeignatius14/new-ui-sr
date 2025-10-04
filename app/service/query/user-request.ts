@@ -193,3 +193,32 @@ export function useUpdateUserRequestQuery(id: string) {
         },
     });
 }
+
+/**
+ * Hook to get summary of sanctioned blocks for a specific section
+ * @param selectedSection - The selected section
+ * @param page - Page number for pagination
+ * @param limit - Number of items per page
+ * @param startDate - Start date for filtering (optional)
+ * @param endDate - End date for filtering (optional)
+ * @returns Query result with the sanctioned blocks data
+ */
+export function useGetSummaryRequests(
+  selectedSection: string, 
+  page = 1, 
+  limit = 100,
+  startDate?: string,
+  endDate?: string
+) {
+  const queryParams = new URLSearchParams();
+  queryParams.append('page', page.toString());
+  queryParams.append('limit', limit.toString());
+  if (startDate) queryParams.append('startDate', startDate);
+  if (endDate) queryParams.append('endDate', endDate);
+
+  return useQuery({
+    queryKey: ['summary-requests', selectedSection, page, limit, startDate, endDate],
+    queryFn: () => userRequestService.getSummaryRequests(selectedSection, page, limit, startDate, endDate),
+    enabled: !!selectedSection,
+  });
+}
