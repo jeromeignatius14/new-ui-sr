@@ -17,7 +17,9 @@ interface PastBlockSummary {
   Granted: number;
   Availed: number;
   Percentage: number;
-  MissionBlockCount: number;
+  DemandsCount?: number;
+  ApprovedCount?: number;
+  AvailedCount?: number;
 }
 
 interface UpcomingBlock {
