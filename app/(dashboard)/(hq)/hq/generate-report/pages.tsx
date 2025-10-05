@@ -35,10 +35,12 @@ interface PastBlockSummary {
   Percentage?: number;
   PercentGranted?: number;
   PercentAvailed?: number;
-  Department? : String;
-  corridorType? : String;
-  MissionBlock? : String;
-  MissionBlockCount?: number;
+  Department?: String;
+  corridorType?: String;
+  MissionBlock?: String;
+  DemandsCount?: number;
+  ApprovedCount?: number;
+  AvailedCount?: number;
 }
 
 interface DetailedData {
@@ -100,7 +102,7 @@ export default function GenerateReportPage() {
     if (session?.user?.location) {
       const userLocation = session.user.location;
       setSelectedLocations([userLocation]);
-      
+
       // Set up major section options based on user's location
       if (MajorSection[userLocation as keyof typeof MajorSection]) {
         const sections = MajorSection[userLocation as keyof typeof MajorSection];
@@ -120,22 +122,22 @@ export default function GenerateReportPage() {
   useEffect(() => {
     setLoading(isLoading);
     console.log("Full reportData:", reportData);
-    
+
     if (reportData && reportData.data) {
       // Safe access of nested properties with detailed logging
       console.log("pastBlockSummary raw data:", reportData.data.pastBlockSummary);
       console.log("detailedData raw data:", reportData.data.detailedData);
-      
+
       // Handle data even if the property names don't exactly match
       const pastData = reportData.data.pastBlockSummary || [];
       setPastBlockSummary(pastData);
       console.log("Set pastBlockSummary to:", pastData);
-      
+
       // Set the detailed data directly
       const detailedData = reportData.data.detailedData || [];
       setUpcomingBlocks(detailedData);
       console.log("Set upcomingBlocks to:", detailedData);
-      
+
       setReportGenerated(true);
       toast.success(reportData.message || 'Report generated successfully');
     }
@@ -149,7 +151,7 @@ export default function GenerateReportPage() {
       setLoading(false);
     }
   }, [error]);
-  
+
   // Function to handle row click for section details
   const handleSectionClick = (section: string) => {
     toast.success(`Viewing details for section: ${section}`);
@@ -195,15 +197,15 @@ export default function GenerateReportPage() {
       toast.error('Please enter both start and end dates');
       return;
     }
-    
+
     try {
       // Format dates to DD/MM/YY format for API
       const startDate = new Date(data.startDate);
       const endDate = new Date(data.endDate);
-      
+
       const formattedStartDate = format(startDate, 'dd/MM/yy');
       const formattedEndDate = format(endDate, 'dd/MM/yy');
-      
+
       // Update query parameters
       setQueryParams({
         startDate: formattedStartDate,
@@ -212,7 +214,7 @@ export default function GenerateReportPage() {
         department: selectedDepartments,
         blockType: selectedBlockTypes
       });
-      
+
       // Trigger the query - react-query will handle the loading state
       await refetch();
     } catch (error) {
@@ -234,9 +236,9 @@ export default function GenerateReportPage() {
       <div className="bg-yellow-100 text-center pt-3 rounded-t-md">
         <h1 className="text-3xl font-bold text-purple-600">RBMS</h1>
         <div className="flex flex-col bg-green-200">
-        <h2 className="text-xl font-semibold text-black">Block Summary(Past/Upcoming)</h2>
-        <div className="text-md text-black font-bold">Headquarter</div>
-        <div className="text-sm text-black mt-1 text-left pl-6">Screen 15D</div>
+          <h2 className="text-xl font-semibold text-black">Block Summary(Past/Upcoming)</h2>
+          <div className="text-md text-black font-bold">Headquarter</div>
+          <div className="text-sm text-black mt-1 text-left pl-6">Screen 15D</div>
         </div>
       </div>
 
@@ -278,7 +280,7 @@ export default function GenerateReportPage() {
               <div className="w-full mb-2">
                 <label className="block text-black font-medium text-center mb-1">Your Location: {session?.user?.location || 'Loading...'}</label>
               </div>
-              
+
               <div className="w-full max-w-md">
                 <label className="block text-black font-medium text-center mb-1">Select Major Sections</label>
                 <Controller
@@ -330,9 +332,9 @@ export default function GenerateReportPage() {
                         }),
                         option: (baseStyles, { isFocused, isSelected }) => ({
                           ...baseStyles,
-                          backgroundColor: isSelected 
+                          backgroundColor: isSelected
                             ? '#3b82f6' // Selected blue
-                            : isFocused 
+                            : isFocused
                               ? '#dbeafe' // Light blue on focus
                               : undefined,
                           color: isSelected ? 'white' : '#111827',
@@ -436,7 +438,7 @@ export default function GenerateReportPage() {
             </div>
 
             <div className="flex justify-center">
-              <button 
+              <button
                 type="submit"
                 className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 shadow-md transition-all font-semibold"
                 disabled={loading}
@@ -479,7 +481,7 @@ export default function GenerateReportPage() {
                 pastBlockSummary.map((item, index) => (
                   <tr key={index} className={`${index % 2 === 0 ? "bg-purple-50" : "bg-white"} hover:bg-gray-50 transition-colors text-black`}>
                     <td className="border px-4 py-2 cursor-pointer hover:bg-purple-100" onClick={() => handleSectionClick(item.Section)}>
-                     <span className="text-blue-600 font-medium underline">{item.Department && item.Department}</span>
+                      <span className="text-blue-600 font-medium underline">{item.Department && item.Department}</span>
                     </td>
                     <td className="border px-4 py-2 text-center text-black">{item.Demanded}</td>
                     <td className="border px-4 py-2 text-center text-black">{item.Approved}</td>
@@ -489,9 +491,9 @@ export default function GenerateReportPage() {
                     <td className="border px-4 py-2 text-center text-black">{item.PercentAvailed}%</td>
                   </tr>
                 ))
-              ) }
-              
-               {pastBlockSummary.length > 0 && <tr className="bg-orange-200 font-semibold text-black">
+              )}
+
+              {pastBlockSummary.length > 0 && <tr className="bg-orange-200 font-semibold text-black">
                 <td className="border px-4 py-2 text-center text-black">Total</td>
                 <td className="border px-4 py-2 text-center text-black">
                   {pastBlockSummary.length > 0 ? pastBlockSummary.reduce((sum, item) => sum + item.Demanded, 0) : "0"}
@@ -509,10 +511,10 @@ export default function GenerateReportPage() {
                 <td className="border px-4 py-2 text-center text-black"></td>
               </tr>}
             </tbody>
-            
+
           </table>
           {pastBlockSummary.length === 0 && <div className="bg-white hover:bg-gray-50 text-black border border-black w-full py-2 text-center">
-                  No data available
+            No data available
           </div>}
         </div>
       </div>
@@ -534,7 +536,7 @@ export default function GenerateReportPage() {
               </tr>
             </thead>
             <tbody className="overflow-y-auto">
-              
+
               {upcomingBlocks.length > 0 && (
                 upcomingBlocks.map((block, index) => (
                   <tr key={index} className={`${index % 2 === 0 ? "bg-purple-50" : "bg-white"} hover:bg-gray-50 transition-colors text-black `}>
@@ -544,10 +546,10 @@ export default function GenerateReportPage() {
                     </td>
                     <td className="border px-4 py-2 text-center text-black">{block.Duration}</td>
                     <td className="border px-4 py-2 text-center text-black">{block.Type}</td>
-                    <td className={`border px-4 py-2 text-center ${block.Status === 'Pending' ? 'bg-yellow-100 text-black' : 
-                                  block.Status === 'Sanctioned' ? 'bg-green-100 text-black' : 
-                                  block.Status === 'Rejected' ? 'bg-red-100 text-black' : ''}`}>
-                      <span 
+                    <td className={`border px-4 py-2 text-center ${block.Status === 'Pending' ? 'bg-yellow-100 text-black' :
+                      block.Status === 'Sanctioned' ? 'bg-green-100 text-black' :
+                        block.Status === 'Rejected' ? 'bg-red-100 text-black' : ''}`}>
+                      <span
                         className={`px-3 py-1 rounded-full text-sm font-medium `}
                       >
                         {block.Status}
@@ -559,8 +561,8 @@ export default function GenerateReportPage() {
             </tbody>
           </table>
           {upcomingBlocks.length === 0 && <div className="bg-white hover:bg-gray-50 text-black border border-black w-full py-2 text-center">
-                  No data available
-          </div> }
+            No data available
+          </div>}
         </div>
       </div>
 
@@ -574,7 +576,7 @@ export default function GenerateReportPage() {
       </div>
 
       <div className="mt-4 bg-white p-4 rounded flex justify-center items-center gap-6 border-2 border-gray-300">
-        <button 
+        <button
           onClick={() => router.back()}
           className="bg-blue-300 text-black px-8 py-2 rounded-md hover:bg-gray-300 shadow-md transition-all border border-gray-400"
         >
