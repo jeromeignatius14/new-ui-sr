@@ -41,7 +41,9 @@ interface PastBlockSummary {
   Department?: string;
   corridorType?: string;
   MissionBlock?: string;
-  MissionBlockCount?: number;
+  DemandsCount?: number;
+  ApprovedCount?: number;
+  AvailedCount?: number;
 }
 
 interface DetailedData {
