@@ -26,7 +26,19 @@ export default function PendingRequestsPage() {
         demandTimeFrom: "",
         demandTimeTo: ""
     });
-    const [isEditing, setIsEditing] = useState(false);
+        const [isEditing, setIsEditing] = useState(false);
+
+        // CSS for flashing animation
+    const flashingRowStyle = `
+  @keyframes flashRed {
+    0% { background-color: white; }
+    50% { background-color: #f76363; } /* lighter, softer red */
+    100% { background-color: white; }
+  }
+  .urgent-block-row {
+    animation: flashRed 5s infinite ease-in-out; /* slower and smoother */
+  }
+`
 let someId=""
 if(session?.user?.id!=="852e95b1-a568-4571-99e4-96bf7e02ba01"&&session?.user.department==="ENGG"&&session?.user.role==="DEPT_CONTROLLER")
   {
@@ -622,6 +634,7 @@ const handleBulkAccept = async () => {
 
     return (
         <div className="min-h-screen bg-[#FFFDF5]">
+            <style jsx global>{flashingRowStyle}</style>
             {/* Top Yellow Bar */}
             <div className="w-full bg-[#FFF86B] py-2 flex flex-col items-center">
                 <span className="text-[9vw] min-[430px]:text-4xl  font-bold text-[#B57CF6] tracking-widest">
@@ -700,7 +713,7 @@ const handleBulkAccept = async () => {
                         </thead>
                         <tbody>
                             {pendingRequests.map((request: UserRequest) => (
-                                <tr key={request.id} className="bg-white hover:bg-[#FFF86B] text-black">
+                                <tr key={request.id} className={`hover:bg-[#FFF86B] text-black ${request.corridorType === "Urgent Block" ? "urgent-block-row" : "bg-white"}`}>
                                     <td className="border border-black px-2 py-1 text-center align-middle">
                                         <input
                                             type="checkbox"

@@ -1117,10 +1117,22 @@ const nonCorridorRequestsFiltered = pendingRequests
 
         
 
+  // CSS for flashing animation
+    const flashingRowStyle = `
+  @keyframes flashRed {
+    0% { background-color: white; }
+    50% { background-color: #f76363; } /* lighter, softer red */
+    100% { background-color: white; }
+  }
+  .urgent-block-row {
+    animation: flashRed 5s infinite ease-in-out; /* slower and smoother */
+  }
+`
   return (
 
     
     <div className="min-h-screen w-screen flex flex-col justify-between bg-white p-3 border border-black">
+      <style jsx global>{flashingRowStyle}</style>
       <div>
         {/* Overall Title */}
         <h1 className="text-2xl font-bold text-center mb-6 text-[#13529e]">Requests With Me</h1>
@@ -1417,8 +1429,11 @@ const nonCorridorRequestsFiltered = pendingRequests
                   </tr>
                 )}
                 {urgentRequestDate.map((request: UserRequest) => (
-                  <tr key={`request-${request.id}-${request.date}`} className={`hover:bg-blue-50 transition-colors ${request.optimizeTimeFrom && request.optimizeTimeTo ? "bg-green-50" : ""}`}>
-                     <td className="border border-black p-2 text-[24px]">
+                  <tr
+                    key={`request-${request.id}-${request.date}`}
+                    className={`hover:bg-blue-50 transition-colors ${request.optimizeTimeFrom && request.optimizeTimeTo ? "bg-green-50" : ""} ${request.corridorType === "Urgent Block" ? "urgent-block-row" : ""}`}
+                  >
+                    <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (
                         <input
                           type="date"
