@@ -1129,10 +1129,21 @@ export default function OptimiseTablePage() {
 
 
 
+  // CSS for flashing animation
+  const flashingRowStyle = `
+    @keyframes flashRed {
+      0% { background-color: white; }
+      50% { background-color: #ff8080; }
+      100% { background-color: white; }
+    }
+    .urgent-block-row {
+      animation: flashRed 1.5s infinite;
+    }
+  `;
   return (
 
-
     <div className="min-h-screen w-screen flex flex-col justify-between bg-white p-3 border border-black">
+      <style jsx global>{flashingRowStyle}</style>
       <div>
         {/* Overall Title */}
         <h1 className="text-2xl font-bold text-center mb-6 text-[#13529e]">Requests With Me</h1>
@@ -1427,8 +1438,11 @@ export default function OptimiseTablePage() {
                     <td colSpan={12} className="border border-black p-2 text-[24px] text-left">No requests found.</td>
                   </tr>
                 )}
-                {urgentRequestDate.map((request: UserRequest) => (
-                  <tr key={`request-${request.id}-${request.date}`} className={`hover:bg-blue-50 transition-colors ${request.optimizeTimeFrom && request.optimizeTimeTo ? "bg-green-50" : ""}`}>
+                {urgentRequestsForSelectedDate.map((request: UserRequest) => (
+                  <tr
+                    key={`request-${request.id}-${request.date}`}
+                    className={`hover:bg-blue-50 transition-colors ${request.optimizeTimeFrom && request.optimizeTimeTo ? "bg-green-50" : ""} ${request.corridorType === "Urgent Block" ? "urgent-block-row" : ""}`}
+                  >
                     <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (
                         <input
