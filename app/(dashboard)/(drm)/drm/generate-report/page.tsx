@@ -42,7 +42,9 @@ interface PastBlockSummary {
   PercentAvailed?: number;
   Department?: String;
   corridorType?: String;
-  MissionBlockCount?: number;
+  DemandsCount?: number;
+  ApprovedCount?: number;
+  AvailedCount?: number;
 }
 
 interface DetailedData {
@@ -765,7 +767,7 @@ export default function GenerateReportPage() {
                   <th className="border-2 border-black px-2 py-1">Section</th>
                   <th className="border-2 border-black px-2 py-1">Demanded / No. of Blocks</th>
                   <th className="border-2 border-black px-2 py-1">Approved / No. of Blocks</th>
-                  <th className="border-2 border-black px-2 py-1">Granted / No. of Blocks</th>
+                  <th className="border-2 border-black px-2 py-1">Granted</th>
                   <th className="border-2 border-black px-2 py-1">% Granted</th>
                   <th className="border-2 border-black px-2 py-1">Availed / No. of Blocks</th>
                   <th className="border-2 border-black px-2 py-1">% Availed</th>
@@ -799,19 +801,19 @@ export default function GenerateReportPage() {
                         className="border-2 border-black px-2 py-1 text-center"
                         style={{ color: "black" }}
                       >
-                        {summary.Demanded.toFixed(2)} / {summary.MissionBlockCount}
+                        {summary.Demanded.toFixed(2)} / {summary.DemandsCount}
                       </td>
                       <td
                         className="border-2 border-black px-2 py-1 text-center"
                         style={{ color: "black" }}
                       >
-                        {summary.Approved.toFixed(2)} / {summary.MissionBlockCount}
+                        {summary.Approved.toFixed(2)} / {summary.ApprovedCount}
                       </td>
                       <td
                         className="border-2 border-black px-2 py-1 text-center"
                         style={{ color: "black" }}
                       >
-                        {summary.Granted.toFixed(2)} / {summary.MissionBlockCount}
+                        {summary.Granted.toFixed(2)}
                       </td>
                       <td
                         className="border-2 border-black px-2 py-1 text-center"
@@ -825,7 +827,7 @@ export default function GenerateReportPage() {
                         className="border-2 border-black px-2 py-1 text-center"
                         style={{ color: "black" }}
                       >
-                        {summary.Availed.toFixed(2)} / {summary.MissionBlockCount}
+                        {summary.Availed.toFixed(2)} / {summary.AvailedCount}
                       </td>
                       <td
                         className="border-2 border-black px-2 py-1 text-center"
@@ -852,7 +854,7 @@ export default function GenerateReportPage() {
                           .toFixed(2)}{" "}
                         /{" "}
                         {pastBlockSummary.reduce(
-                          (sum, item) => sum + (item.MissionBlockCount || 0),
+                          (sum, item) => sum + (item.DemandsCount || 0),
                           0
                         )}
                       </td>
@@ -865,7 +867,7 @@ export default function GenerateReportPage() {
                           .toFixed(2)}{" "}
                         /{" "}
                         {pastBlockSummary.reduce(
-                          (sum, item) => sum + (item.MissionBlockCount || 0),
+                          (sum, item) => sum + (item.ApprovedCount || 0),
                           0
                         )}
                       </td>
@@ -876,12 +878,7 @@ export default function GenerateReportPage() {
                         {pastBlockSummary.reduce(
                           (sum, item) => sum + (item.Granted || 0),
                           0
-                        ).toFixed(2)}{" "}
-                        /{" "}
-                        {pastBlockSummary.reduce(
-                          (sum, item) => sum + (item.MissionBlockCount || 0),
-                          0
-                        )}
+                        ).toFixed(2)}
                       </td>
                       <td
                         className="border-2 border-black px-2 py-1 text-center"
@@ -902,7 +899,7 @@ export default function GenerateReportPage() {
                         ).toFixed(2)}{" "}
                         /{" "}
                         {pastBlockSummary.reduce(
-                          (sum, item) => sum + (item.MissionBlockCount || 0),
+                          (sum, item) => sum + (item.AvailedCount || 0),
                           0
                         )}
                       </td>
