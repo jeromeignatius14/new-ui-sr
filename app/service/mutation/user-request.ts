@@ -35,13 +35,17 @@ export function useDeleteUserRequest() {
  */
 export function useUpdateOtherRequest() {
     return useMutation({
-        mutationFn: ({ id, accept, disconnectionRequestRejectRemarks,userDepartement,mobileView }: { 
+        mutationFn: ({ id, accept, disconnectionRequestRejectRemarks, acceptRemarks, userDepartement, mobileView }: { 
             id: string; 
             accept: boolean; 
             disconnectionRequestRejectRemarks?: string;
+            acceptRemarks?: string;
             userDepartement?:string;
-              mobileView?: string;
-        }) =>
-            userRequestService.updateOtherRequest(id, accept, disconnectionRequestRejectRemarks,userDepartement,mobileView),
+            mobileView?: string;
+        }) => {
+            // Use either acceptRemarks or disconnectionRequestRejectRemarks based on the action
+            const remarks = accept ? acceptRemarks : disconnectionRequestRejectRemarks;
+            return userRequestService.updateOtherRequest(id, accept, remarks, userDepartement, mobileView);
+        },
     });
 }
