@@ -147,7 +147,7 @@ export const userRequestService = {
 updateOtherRequest: async (
   id: string,
   accept: boolean,
-  disconnectionRequestRejectRemarks?: string,
+  remarks?: string,
   userDepartement?: string,
   mobileView?: string
 ): Promise<UserRequestResponse> => {
@@ -156,8 +156,13 @@ updateOtherRequest: async (
   // Prepare request body based on parameters
   const body: any = {};
   
-  if (disconnectionRequestRejectRemarks) {
-    body.disconnectionRequestRejectRemarks = disconnectionRequestRejectRemarks;
+  if (remarks) {
+    // Use different field names based on accept/reject action
+    if (accept) {
+      body.acceptRemarks = remarks;
+    } else {
+      body.disconnectionRequestRejectRemarks = remarks;
+    }
   }
   
   if (userDepartement) {

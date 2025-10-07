@@ -507,7 +507,7 @@ export default function RequestTablePage() {
         accept: false,
         userDepartement: requestToReject.userDepartement,
         mobileView: requestToReject.mobileView,
-        disconnectionRequestRejectRemarks: rejectReason // Make sure your API accepts this field
+        disconnectionRequestRejectRemarks: rejectReason // Keep using disconnectionRequestRejectRemarks for rejections
       },
       {
         onSuccess: () => {
@@ -532,7 +532,7 @@ export default function RequestTablePage() {
         accept: true,
         userDepartement: requestToAccept.userDepartement,
         mobileView: requestToAccept.mobileView,
-        disconnectionRequestRejectRemarks: acceptReason // Make sure your API accepts this field
+        acceptRemarks: acceptReason // Using acceptRemarks for accept actions
       },
       {
         onSuccess: () => {
@@ -1363,7 +1363,7 @@ export default function RequestTablePage() {
                                   clipRule="evenodd"
                                 />
                               </svg>
-                              Rejected
+                              {request.overAllStatus}
                             </span>
                           ) : (
                             <>
