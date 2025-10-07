@@ -18,13 +18,11 @@ export interface RequestResponse {
 
 export interface RequestItem {
     overAllStatus: String;
-    managerResponseTiming: any;
     emergencyBlockRemarks: any;
     powerBlockDisconnectionAssignTo: string;
     sntDisconnectionAssignTo: any;
     divisionId:any,
     isSanctioned: boolean;
-    remarkByManager: string;
     adjacentLinesAffected: string;
     id: string;
     date: string;
@@ -94,6 +92,12 @@ export interface RequestItem {
     managerAcceptance: boolean;
     DisconnAcceptance: string | null;
     managerId: string | null;
+    managerResponseTiming: string | null;
+    sntAcceptRemarks: string | null;
+    trdAcceptRemarks: string | null;
+    sanctionedRemarks: string | null;
+    disconnectionRequestRejectRemarks: string | null;
+    remarkByManager: string | null;
     user: {
         id: string;
         name: string;
