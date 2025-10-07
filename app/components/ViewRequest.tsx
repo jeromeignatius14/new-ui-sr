@@ -601,6 +601,42 @@ export default function ViewRequest() {
           <p className="text-sm">{request.ManagerResponse}</p>
         </div>
       )}
+      
+      {request.trdAcceptRemarks && (
+        <div className="border border-black p-3 mb-4">
+          <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
+            TRD Disconnection Remarks
+          </h2>
+          <p className="text-sm">{request.trdAcceptRemarks}</p>
+        </div>
+      )}
+      
+      {request.sntAcceptRemarks && (
+        <div className="border border-black p-3 mb-4">
+          <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
+            S&T Disconnection Remarks
+          </h2>
+          <p className="text-sm">{request.sntAcceptRemarks}</p>
+        </div>
+      )}
+      
+      {(request.remarkByManager || request.disconnectionRequestRejectRemarks) && (
+        <div className="border border-black p-3 mb-4">
+          <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
+            Rejection Remarks {!request.sntAcceptRemarks ? "By S&T" : !request.trdAcceptRemarks ? "By TRD" : ""}
+          </h2>
+          <p className="text-sm">{request.remarkByManager || request.disconnectionRequestRejectRemarks}</p>
+        </div>
+      )}
+      
+      {request.isSanctioned && request.sanctionedRemarks && (
+        <div className="border border-black p-3 mb-4">
+          <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
+            Sanction Remarks
+          </h2>
+          <p className="text-sm">{request.sanctionedRemarks}</p>
+        </div>
+      )}
 
       <div className="text-[10px] text-gray-600 mt-2 border-t border-black pt-1">
         © {new Date().getFullYear()} Indian Railways. All Rights Reserved.
