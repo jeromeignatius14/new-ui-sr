@@ -13,13 +13,21 @@ interface BoardControllerRequestItem {
 
 export const boardControllerService = {
   // Get all requests for board controller
-  getRequests: async (timeFrame: "24hrs" | "16hrs" | "8hrs") => {
+  getRequests: async (timeFrame: "24hrs" | "16hrs" | "8hrs", sections?: string[]) => {
     try {
       // Convert timeFrame to hours for the API call
       const hours = timeFrame === "8hrs" ? 8 : timeFrame === "16hrs" ? 16 : 24;
       
+      // Prepare query params
+      let queryParams = `hours=${hours}`;
+      
+      if (sections && sections.length > 0) {
+        const sectionsParam = sections.join(',');
+        queryParams += `&sections=${encodeURIComponent(sectionsParam)}`;
+      }
+      
       // Make the API call to get sanctioned requests
-      const response = await axiosInstance.get(`/api/board-controller/sanctioned-requests?hours=${hours}`);
+      const response = await axiosInstance.get(`/api/board-controller/sanctioned-requests?${queryParams}`);
 
       
       // Handle both array and object responses
