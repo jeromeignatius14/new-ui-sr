@@ -61,6 +61,24 @@ export interface VerifyOtpResponse {
   };
 }
 
+export interface SMLoginWithDepotResponse {
+  status: boolean;
+  message: string;
+  data: {
+    access_token: string;
+    refresh_token: string;
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      role: string;
+      department: string;
+      phone: string;
+      depot: string;
+    };
+  };
+}
+
 export const authService = {
   login: async (data: LoginInput): Promise<LoginResponse> => {
     try {

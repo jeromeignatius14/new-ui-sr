@@ -8,6 +8,7 @@ export const loginSchema = z.object({
 export const phoneLoginSchema = z.object({
     phone: z.string().min(10, 'Phone number must be at least 10 digits'),
     otp: z.string().optional(),
+    depot: z.string().optional(), // Added for SM users to select their depot
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
