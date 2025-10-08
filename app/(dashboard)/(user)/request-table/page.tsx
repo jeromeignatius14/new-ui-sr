@@ -34,6 +34,7 @@ import { WeeklySwitcher } from "@/app/components/ui/WeeklySwitcher";
 import { managerService } from "@/app/service/api/manager";
 import dayjs from "dayjs";
 import formatTime from "@/app/utils/formatTime";
+import { depot } from "@/app/lib/store";
 
 // Components
 const Pagination = ({
@@ -407,69 +408,15 @@ export default function RequestTablePage() {
   );
 
   // Helper function to map user's depot to a major section
-  const mapDepotToMajorSection = (depot: string, department: string) => {
-    console.log(`Mapping depot: "${depot}", department: "${department}"`);
-
-    // Use the depot structure from store.ts
-    const depotStructure = {
-      "JTJ-ED": {
-        'TRD': ["SA", "ED", "BQI", "SLY", "MV"],
-        'S&T': ["MAP", "BQI", "ED", "SA", "TPT", "MV"],
-        'ENGG': ["TPT", "BQI", "N-SA", "S-SA", "ED", "GS", "BR-ED", "MV"]
-      },
-      "ED-PTJ": {
-        'TRD': ["ED", "TUP", "PTJ"],
-        'S&T': ["TUP", "PTJ", "CBE", "ED"],
-        'ENGG': ["ED", "TUP", "E-PTJ", "CBE", "GS", "BR-ED", "CBF"]
-      },
-      "ED-TP": {
-        'TRD': ["KMD", "PLI"],
-        'S&T': ["KRR-W", "KRR-E", "ED"],
-        'ENGG': ["TP", "W-KRR", "GS", "BR-ED"]
-      },
-      "KRR-DG": {
-        'TRD': ["KRR"],
-        'S&T': ["KRR-E"],
-        'ENGG': ["E-KRR", "GS", "BR-ED"]
-      },
-      "SA-VRI": {
-        'TRD': ["SA", "CHSM"],
-        'S&T': ["SA", "VRI", "SXT"],
-        'ENGG': ["S-SA", "ATU", "CHSM", "GS", "BR-ED"]
-      },
-      "SA-MTDM": {
-        'TRD': ["SA", "MTDM"],
-        'S&T': ["SA"],
-        'ENGG': ["N-SA", "GS", "BR-ED"]
-      },
-      "SA-KRR": {
-        'TRD': ["SA", "NMKL", "KRR"],
-        'S&T': ["SA", "KRR-W", "SXT"],
-        'ENGG': ["NMKL", "GS", "BR-ED"]
-      },
-      "CBE-MTP": {
-        'TRD': ["PTJ"],
-        'S&T': ["CBE"],
-        'ENGG': ["CBF", "GS", "BR-ED"]
-      },
-      "MTP-UAM": {
-        'TRD': [],
-        'S&T': ["CBE"],
-        'ENGG': ["ONR", "GS", "BR-ED"]
-      },
-      "PTJ-CNV": {
-        'TRD': ["PTJ"],
-        'S&T': ["PTJ"],
-        'ENGG': ["E-PTJ", "GS", "BR-ED"]
-      }
-    };
+  const mapDepotToMajorSection = (userDepot: string, department: string) => {
+    console.log(`Mapping depot: "${userDepot}", department: "${department}"`);
 
     // Normalize inputs to handle case sensitivity and trim whitespace
-    const normalizedDepot = depot.trim().toUpperCase();
+    const normalizedDepot = userDepot.trim().toUpperCase();
     const normalizedDepartment = department.trim().toUpperCase();
 
     // Find which section this depot belongs to for the user's department
-    for (const [section, depts] of Object.entries(depotStructure)) {
+    for (const [section, depts] of Object.entries(depot)) {
       // Convert department keys to uppercase for case-insensitive comparison
       const deptsUpper: Record<string, string[]> = {};
       Object.entries(depts).forEach(([deptKey, depotList]) => {
@@ -477,16 +424,16 @@ export default function RequestTablePage() {
       });
 
       if (normalizedDepartment in deptsUpper) {
-        const depots = deptsUpper[normalizedDepartment];
-        if (depots.includes(normalizedDepot)) {
-          console.log(`Found mapping: "${depot}" → "${section}"`);
+        const depotList = deptsUpper[normalizedDepartment];
+        if (depotList.includes(normalizedDepot)) {
+          console.log(`Found mapping: "${userDepot}" → "${section}"`);
           return section;
         }
       }
     }
 
     // If no mapping found, use a default section instead of returning the depot
-    console.log(`No mapping found for depot: "${depot}", department: "${department}". Using default section: "JTJ-ED"`);
+    console.log(`No mapping found for depot: "${userDepot}", department: "${department}". Using default section: "JTJ-ED"`);
     return "JTJ-ED"; // Default to a valid section instead of returning the depot
   };
 
