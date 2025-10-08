@@ -67,8 +67,23 @@ export const useAuth = () => {
   };
 };
 
-export const usePhoneAuth = () => {
+export const  usePhoneAuth = () => {
   const router = useRouter();
+
+  // We'll store SM user data in sessionStorage to pass between steps
+  const storeSmUserData = (data: any) => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('smUserData', JSON.stringify(data));
+    }
+  };
+  
+  const getSmUserData = () => {
+    if (typeof window !== 'undefined') {
+      const data = sessionStorage.getItem('smUserData');
+      return data ? JSON.parse(data) : null;
+    }
+    return null;
+  };
 
   const requestOtpMutation = useMutation({
     mutationFn: (phone: string) => authService.requestOtp(phone),
@@ -84,16 +99,53 @@ export const usePhoneAuth = () => {
       otp: string;
       otpId: string;
     }) => authService.verifyOtp(phone, otp, otpId),
+    onSuccess: async (data) => {
+      // Check if the user is SM role
+      const user = data.data.user;
+      if (user?.role === 'SM') {
+        // Store the response but don't sign in yet
+        storeSmUserData(data.data);
+        return data.data;
+      }
+      
+      // For non-SM roles, proceed with normal sign in
+      return handleAuthSuccess(data);
+    },
+  });
+  
+  // New mutation for handling login with depot for SM users
+  const loginWithDepotMutation = useMutation({
+    mutationFn: async ({ phone, depot }: { phone: string; depot: string }) => {
+      // Get the stored SM user data
+      const userData = getSmUserData();
+      
+      if (!userData) {
+        throw new Error("User information not available");
+      }
+      
+      // Add depot to user data
+      const updatedUser = { 
+        ...userData, 
+        user: { ...userData.user, depot } 
+      };
+      
+      // Return the updated user data
+      return { data: updatedUser };
+    },
     onSuccess: async (data) => handleAuthSuccess(data),
   });
 
   return {
     requestOtp: requestOtpMutation.mutate,
     verifyOtp: verifyOtpMutation.mutate,
+    loginWithDepot: loginWithDepotMutation.mutate,
     isRequestingOtp: requestOtpMutation.isPending,
     isVerifyingOtp: verifyOtpMutation.isPending,
+    isLoginWithDepot: loginWithDepotMutation.isPending,
     requestOtpError: requestOtpMutation.error,
     verifyOtpError: verifyOtpMutation.error,
+    loginWithDepotError: loginWithDepotMutation.error,
     otpRequestData: requestOtpMutation.data,
+    verifyOtpData: verifyOtpMutation.data
   };
 };
