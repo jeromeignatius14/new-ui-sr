@@ -23,7 +23,6 @@ export interface RequestItem {
     sntDisconnectionAssignTo: any;
     divisionId:any,
     isSanctioned: boolean;
-    remarkByManager: string;
     adjacentLinesAffected: string;
     id: string;
     date: string;
@@ -94,6 +93,11 @@ export interface RequestItem {
     DisconnAcceptance: string | null;
     managerId: string | null;
     managerResponseTiming: string | null;
+    sntAcceptRemarks: string | null;
+    trdAcceptRemarks: string | null;
+    sanctionedRemarks: string | null;
+    disconnectionRequestRejectRemarks: string | null;
+    remarkByManager: string | null;
     user: {
         id: string;
         name: string;
@@ -188,4 +192,33 @@ export function useUpdateUserRequestQuery(id: string) {
             queryClient.invalidateQueries({ queryKey: ['user-requests'] });
         },
     });
+}
+
+/**
+ * Hook to get summary of sanctioned blocks for a specific section
+ * @param selectedSection - The selected section
+ * @param page - Page number for pagination
+ * @param limit - Number of items per page
+ * @param startDate - Start date for filtering (optional)
+ * @param endDate - End date for filtering (optional)
+ * @returns Query result with the sanctioned blocks data
+ */
+export function useGetSummaryRequests(
+  selectedSection: string, 
+  page = 1, 
+  limit = 100,
+  startDate?: string,
+  endDate?: string
+) {
+  const queryParams = new URLSearchParams();
+  queryParams.append('page', page.toString());
+  queryParams.append('limit', limit.toString());
+  if (startDate) queryParams.append('startDate', startDate);
+  if (endDate) queryParams.append('endDate', endDate);
+
+  return useQuery({
+    queryKey: ['summary-requests', selectedSection, page, limit, startDate, endDate],
+    queryFn: () => userRequestService.getSummaryRequests(selectedSection, page, limit, startDate, endDate),
+    enabled: !!selectedSection,
+  });
 }

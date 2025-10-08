@@ -147,7 +147,7 @@ export const userRequestService = {
 updateOtherRequest: async (
   id: string,
   accept: boolean,
-  disconnectionRequestRejectRemarks?: string,
+  remarks?: string,
   userDepartement?: string,
   mobileView?: string
 ): Promise<UserRequestResponse> => {
@@ -156,8 +156,13 @@ updateOtherRequest: async (
   // Prepare request body based on parameters
   const body: any = {};
   
-  if (disconnectionRequestRejectRemarks) {
-    body.disconnectionRequestRejectRemarks = disconnectionRequestRejectRemarks;
+  if (remarks) {
+    // Use different field names based on accept/reject action
+    if (accept) {
+      body.acceptRemarks = remarks;
+    } else {
+      body.disconnectionRequestRejectRemarks = remarks;
+    }
   }
   
   if (userDepartement) {
@@ -225,6 +230,25 @@ updateOtherRequest: async (
 
   rejectUserRequestRemark: async (id: string, remarks: string) => {
     const response = await axiosInstance.put(`/api/user-request/reject/${id}`, { remarks });
+    return response.data;
+  },
+
+  getSummaryRequests: async (
+    selectedSection: string,
+    page: number = 1,
+    limit: number = 100,
+    startDate?: string,
+    endDate?: string
+  ): Promise<RequestResponse> => {
+    const queryParams = new URLSearchParams();
+    queryParams.append('page', page.toString());
+    queryParams.append('limit', limit.toString());
+    if (startDate) queryParams.append('startDate', startDate);
+    if (endDate) queryParams.append('endDate', endDate);
+
+    const response = await axiosInstance.get<RequestResponse>(
+      `/api/user-request/summary-requests/${selectedSection}?${queryParams.toString()}`
+    );
     return response.data;
   },
 };

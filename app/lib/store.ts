@@ -6,6 +6,13 @@ type DepotStructure = {
   };
 };
 
+// Map depots to their corresponding sections for Board Controller
+export const BoardControllerDepotMap: { [key: string]: string[] } = {
+  "A": ["MAS-GDR", "MAS-AJJ", "MSB-VM"],
+  "B": ["TPJ-VM", "VM-MV", "TPJ-MV"],
+  "C": ["JTJ-ED", "ED-PTJ", "ED-TPJ"],
+  "D": ["KYJ-QLN", "QLN-TVC", "TVC-NCJ"]
+};
 
 export let MajorSection = {
   "MAS": ["MAS-GDR", "MAS-AJJ", "AJJ-KPD", "KPD-JTJ", "AJJ-RU", "AJJ-CGL", "MSB-VM", "MSB-VLCY"],
