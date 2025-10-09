@@ -186,14 +186,14 @@ export default function AddUserModal({ isOpen, onClose, onSubmit, users }: AddUs
                     </div>
                     {role === "JE" && (
                         <div>
-                            <label className="block font-semibold mb-1">Manager</label>
+                            <label className="block font-semibold mb-1">Managed by SSE</label>
                             <select
                                 className="w-full border border-black rounded px-2 py-1"
                                 value={managerId}
                                 onChange={e => setManagerId(e.target.value)}
                                 required
                             >
-                                <option value="">Select Manager</option>
+                                <option value="">Select SSE</option>
                                 {users.map(u => (
                                     <option key={u.id} value={u.id}>{u.name}</option>
                                 ))}

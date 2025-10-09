@@ -14,6 +14,7 @@ import {
 import AddUserModal from "@/app/components/ui/AddUserModal";
 import EditUserModal from "@/app/components/ui/EditUserModal";
 import { FaChevronDown, FaChevronUp, FaUserPlus } from "react-icons/fa";
+import { useRouter } from 'next/navigation';
 import { set } from "date-fns";
 
 interface User {
@@ -59,6 +60,8 @@ export default function ManageUsersTable() {
     queryKey: ["deptControllerUsers"],
     queryFn: deptControllerService.getUsers,
   });
+
+  const router = useRouter();
 
   // Mutations
   const addUserMutation = useAddUser();
@@ -130,12 +133,18 @@ export default function ManageUsersTable() {
         <h2 className="text-2xl md:text-3xl font-bold text-black">
           Manage Users
         </h2>
-        <button
-          className="flex items-center gap-2 bg-[#FFD180] border-2 border-black px-6 py-2 rounded-full font-bold text-black hover:scale-105 transition"
-          onClick={() => setAddModalOpen(true)}
-        >
-          <FaUserPlus /> Add User
-        </button>
+        <div className="flex gap-4">
+          <button
+            className="flex items-center gap-2 bg-[#FFD180] border-2 border-black px-6 py-2 rounded-full font-bold text-black hover:scale-105 transition"
+            onClick={() => setAddModalOpen(true)}
+          >
+            <FaUserPlus /> Add User
+          </button>
+          <button
+            className="flex items-center gap-2 bg-[#FFD180] border-2 border-black px-6 py-2 rounded-full font-bold text-black hover:scale-105 transition"
+            onClick={() => router.push('/')}
+          >Back</button>
+        </div>
       </div>
       {/* Table */}
       <div className="min-h-2 max-h-2">
