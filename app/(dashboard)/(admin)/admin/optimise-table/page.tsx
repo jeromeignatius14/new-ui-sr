@@ -235,11 +235,11 @@ export default function OptimiseTablePage() {
   const searchParams = useSearchParams();
   const { isUrgentMode } = useUrgentMode();
   const queryClient = useQueryClient();
-const [isModalOpen, setIsModalOpen] = useState(false);
-const [isNonUrgentModalOpen, setIsNonUrgentModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isNonUrgentModalOpen, setIsNonUrgentModalOpen] = useState(false);
 
-const [remark, setRemark] = useState("");
-const [selectedRequests, setSelectedRequests] = useState<UserRequest[]>([]);
+  const [remark, setRemark] = useState("");
+  const [selectedRequests, setSelectedRequests] = useState<UserRequest[]>([]);
   // Initialize currentWeekStart from URL parameter or default to current date
   const [currentWeekStart, setCurrentWeekStart] = useState(() => {
     const dateParam = searchParams.get("date");
@@ -747,7 +747,7 @@ const [selectedRequests, setSelectedRequests] = useState<UserRequest[]>([]);
     }
   };
 
-  const handleSendUrgentRequests = async (requests : UserRequest[],remark:string) => {
+  const handleSendUrgentRequests = async (requests: UserRequest[], remark: string) => {
     try {
       const UrgentRequestsData =
         requests?.filter(
@@ -783,7 +783,7 @@ const [selectedRequests, setSelectedRequests] = useState<UserRequest[]>([]);
     }
   };
 
-  const handleSendNonUrgentRequests = async (requests : UserRequest[],remark:string) => {
+  const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: string) => {
     try {
       // Only send the required fields for each non-urgent request
       const nonUrgentRequestsData =
@@ -1098,15 +1098,16 @@ const [selectedRequests, setSelectedRequests] = useState<UserRequest[]>([]);
 
   // CSS for flashing animation
   const flashingRowStyle = `
-    @keyframes flashRed {
-      0% { background-color: white; }
-      50% { background-color: #ff8080; }
-      100% { background-color: white; }
-    }
-    .urgent-block-row {
-      animation: flashRed 1.5s infinite;
-    }
-  `;
+  @keyframes flashRed {
+    0% { background-color: white; }
+    50% { background-color: #f76363; } /* lighter, softer red */
+    100% { background-color: white; }
+  }
+  .urgent-block-row {
+    animation: flashRed 5s infinite ease-in-out; /* slower and smoother */
+  }
+`;
+
   return (
 
     <div className="min-h-screen w-screen flex flex-col justify-between bg-white p-3 border border-black">
@@ -1531,10 +1532,10 @@ const [selectedRequests, setSelectedRequests] = useState<UserRequest[]>([]);
                               //       handleSendUrgentRequests([request]);
                               //   }
                               // }
-                           onClick={() => {
-                                  setSelectedRequests([request]); // save clicked request
-                                   setIsModalOpen(true);           // open popup
-                              }}                                                 
+                              onClick={() => {
+                                setSelectedRequests([request]); // save clicked request
+                                setIsModalOpen(true);           // open popup
+                              }}
                             >
                               Sanction
                             </button>
@@ -1796,9 +1797,9 @@ const [selectedRequests, setSelectedRequests] = useState<UserRequest[]>([]);
                               //   }
                               // }
                               onClick={() => {
-                                 setSelectedRequests([request]); // save clicked request
-                                   setIsNonUrgentModalOpen(true);           // open popup
-                                       }}
+                                setSelectedRequests([request]); // save clicked request
+                                setIsNonUrgentModalOpen(true);           // open popup
+                              }}
                             >
                               Sanction
                             </button>
@@ -2010,9 +2011,9 @@ const [selectedRequests, setSelectedRequests] = useState<UserRequest[]>([]);
                               //   }
                               // }
                               onClick={() => {
-                               setSelectedRequests([request]); // save clicked request
+                                setSelectedRequests([request]); // save clicked request
                                 setIsNonUrgentModalOpen(true);           // open popup
-                               }}
+                              }}
                             >
                               Sanction
                             </button>
@@ -2043,70 +2044,70 @@ const [selectedRequests, setSelectedRequests] = useState<UserRequest[]>([]);
             </table>
           </div>
         </div>
-{isModalOpen && (
-  <div className="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm z-50">
-    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-      <h2 className="text-xl font-bold mb-4" style={{color:"black"}}>Repurcussion</h2>
-      <textarea
-        className="w-full border p-2 rounded mb-4 text-black"
-        rows={4}
-        placeholder="Enter reason..."
-        value={remark}
-        onChange={(e) => setRemark(e.target.value)}
-      />
-      <div className="flex justify-end gap-2">
-        <button
-          className="px-4 py-2 bg-gray-400 text-white rounded"
-          onClick={() => setIsModalOpen(false)}
-        >
-          Cancel
-        </button>
-        <button
-          className="px-4 py-2 bg-green-600 text-white rounded"
-          onClick={() => {
-            handleSendUrgentRequests(selectedRequests, remark);
-            setIsModalOpen(false);
-            setRemark("");
-          }}
-        >
-          Submit
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-{isNonUrgentModalOpen && (
-  <div className="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm z-50">
-    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-      <h2 className="text-xl font-bold mb-4" style={{color:"black"}}>Repurcussion</h2>
-      <textarea
-        className="w-full border p-2 rounded mb-4 text-black"
-        rows={4}
-        placeholder="Enter reason..."
-        value={remark}
-        onChange={(e) => setRemark(e.target.value)}
-      />
-      <div className="flex justify-end gap-2">
-        <button
-          className="px-4 py-2 bg-gray-400 text-white rounded"
-          onClick={() => setIsNonUrgentModalOpen(false)}
-        >
-          Cancel
-        </button>
-        <button
-          className="px-4 py-2 bg-green-600 text-white rounded"
-          onClick={() => {
-            handleSendNonUrgentRequests(selectedRequests, remark);
-            setIsNonUrgentModalOpen(false);
-            setRemark("");
-          }}
-        >
-          Submit
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+        {isModalOpen && (
+          <div className="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+              <h2 className="text-xl font-bold mb-4" style={{ color: "black" }}>Repurcussion</h2>
+              <textarea
+                className="w-full border p-2 rounded mb-4 text-black"
+                rows={4}
+                placeholder="Enter reason..."
+                value={remark}
+                onChange={(e) => setRemark(e.target.value)}
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  className="px-4 py-2 bg-gray-400 text-white rounded"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-4 py-2 bg-green-600 text-white rounded"
+                  onClick={() => {
+                    handleSendUrgentRequests(selectedRequests, remark);
+                    setIsModalOpen(false);
+                    setRemark("");
+                  }}
+                >
+                  Submit
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {isNonUrgentModalOpen && (
+          <div className="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+              <h2 className="text-xl font-bold mb-4" style={{ color: "black" }}>Repurcussion</h2>
+              <textarea
+                className="w-full border p-2 rounded mb-4 text-black"
+                rows={4}
+                placeholder="Enter reason..."
+                value={remark}
+                onChange={(e) => setRemark(e.target.value)}
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  className="px-4 py-2 bg-gray-400 text-white rounded"
+                  onClick={() => setIsNonUrgentModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-4 py-2 bg-green-600 text-white rounded"
+                  onClick={() => {
+                    handleSendNonUrgentRequests(selectedRequests, remark);
+                    setIsNonUrgentModalOpen(false);
+                    setRemark("");
+                  }}
+                >
+                  Submit
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         {/* Optimization Dialog */}
         {showRejectionModal && (
           <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-20">
