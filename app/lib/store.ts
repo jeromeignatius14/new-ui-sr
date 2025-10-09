@@ -6,7 +6,6 @@ type DepotStructure = {
   };
 };
 
-// Map depots to their corresponding sections for Board Controller
 export const BoardControllerDepotMap: { [key: string]: string[] } = {
   "A": ["MAS-GDR", "MAS-AJJ", "MSB-VM"],
   "B": ["TPJ-VM", "VM-MV", "TPJ-MV"],
@@ -2706,3 +2705,74 @@ export let sectionData = {
   },
 };
 
+export const departmentDepot = {
+    "TRD": [
+        "BBQ",
+        "TVT",
+        "PON",
+        "SPE",
+        "GDR",
+        "AVD",
+        "TRL",
+        "AJJ",
+        "WJR",
+        "KPD",
+        "AB",
+        "JTJ",
+        "PUT",
+        "CGL",
+        "MS",
+        "TBM",
+        "ACK",
+        "VM",
+        "MSB"
+    ],
+    "S&T": [
+        "MAS",
+        "BBQ",
+        "TVT",
+        "GPD",
+        "SPE",
+        "NYP",
+        "TRL",
+        "AJJE",
+        "MSB",
+        "AJJW",
+        "KPDE",
+        "KPDW",
+        "AB",
+        "JTJ",
+        "TRT",
+        "PUT",
+        "CGL",
+        "MS",
+        "TBM",
+        "TMV"
+    ],
+    "ENGG": [
+        "TVT",
+        "PON",
+        "SPE",
+        "GDR",
+        "BRIDGE",
+        "WSTA",
+        "WSTB",
+        "AVD",
+        "TRLA",
+        "TRLB",
+        "AJJ",
+        "WJR",
+        "KPD",
+        "AB",
+        "JTJ",
+        "TRT",
+        "PUT",
+        "CJ",
+        "MS",
+        "TBM",
+        "CGL",
+        "ACK",
+        "TMV",
+        "MSB"
+    ]
+}
