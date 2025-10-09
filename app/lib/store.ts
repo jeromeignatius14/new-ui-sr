@@ -1631,7 +1631,7 @@ export const depot: DepotStructure = {
   
   "SA-KRR": {
     'TRD': ["SA", "NMKL", "KRR"],
-    'S&T': ["SA","KRR-W","SXT"],
+    'S&T': ["SA","KRR-W","SXT","VRI"],
     'ENGG': ["NMKL","GS","BR-ED"]
   },
 
@@ -2650,3 +2650,4 @@ export let sectionData = {
     station: [],
   },
 };
+
