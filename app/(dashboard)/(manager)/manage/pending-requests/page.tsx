@@ -779,7 +779,7 @@ const handleBulkAccept = async () => {
                                 <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Date</th>
                                 <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">ID</th>
                                 <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Block Section</th>
-                                <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Line</th>
+                                <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Line/Road</th>
                                 <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Demanded</th>
                                 <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Activity</th>
                                 <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Status</th>
@@ -796,7 +796,7 @@ const handleBulkAccept = async () => {
                                         </Link>
                                     </td>
                                     <td className="border border-black px-2 py-1 align-middle">{request.missionBlock}</td>
-                                    <td className="border border-black px-2 py-1 text-center align-middle">{request.processedLineSections?.[0]?.lineName || 'N/A'}</td>
+                                    <td className="border border-black px-2 py-1 text-center align-middle">{request.processedLineSections?.[0]?.lineName || request.processedLineSections?.[0]?.road||'N/A'}</td>
                                     <td className="border border-black px-2 py-1 text-center align-middle">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
                                     <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
                                     <td className="border border-black px-2 py-1 align-middle">{request.overAllStatus}</td>       
