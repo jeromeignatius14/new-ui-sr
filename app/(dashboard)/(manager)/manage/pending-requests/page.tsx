@@ -671,7 +671,7 @@ const handleBulkAccept = async () => {
                                 <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Date</th>
                                 <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">ID</th>
                                 <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Block Section</th>
-                                <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Line</th>
+                                <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Line / Road</th>
                                 <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Demanded</th>
                                 <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Activity</th>
                                 <th className="border-2 border-black px-2 py-2 sticky right-0 z-10 bg-[#D6F3FF] w-32">Actions</th>
