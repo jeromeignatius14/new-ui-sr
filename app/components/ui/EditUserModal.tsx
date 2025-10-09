@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { depotOnLocation } from "@/app/lib/store";
+import { depotOnLocation, departmentDepot } from "@/app/lib/store";
 import { FaEdit } from "react-icons/fa";
+
+type Department = "TRD" | "S&T" | "ENGG";
 
 interface EditUserModalProps {
     isOpen: boolean;
@@ -9,9 +11,10 @@ interface EditUserModalProps {
     initialData: any;
     users: Array<{ id: string; name: string }>;
     isJE?: boolean;
+    department?: Department; // User's department
 }
 
-const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onSubmit, initialData, users, isJE }) => {
+const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onSubmit, initialData, users, isJE, department = "ENGG" as Department }) => {
     const [name, setName] = useState(initialData?.name || "");
     const [email, setEmail] = useState(initialData?.email || "");
     const [phone, setPhone] = useState(initialData?.phone || "");
@@ -28,8 +31,10 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onSubmit
     const [nameChanged, setNameChanged] = useState(false);
     const [depotChanged, setDepotChanged] = useState(false);
     const [managerChanged, setManagerChanged] = useState(false);
+    const [selectedManager, setSelectedManager] = useState<{ id: string; name: string; depot?: string } | null>(null);
 
     useEffect(() => {
+        if(editing) return;
         setName(initialData?.name || "");
         setEmail(initialData?.email || "");
         setPhone(initialData?.phone || "");
@@ -40,7 +45,15 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onSubmit
         setNameChanged(false);
         setDepotChanged(false);
         setManagerChanged(false);
-    }, [initialData]);
+        
+        // If it's a JE, find the selected manager
+        if (isJE && initialData?.managerId) {
+            const manager = users.find(u => u.id === initialData.managerId);
+            setSelectedManager(manager || null);
+        } else {
+            setSelectedManager(null);
+        }
+    }, [initialData, isJE, users]);
 
     useEffect(() => {
         let cancel: (() => void) | undefined;
@@ -97,6 +110,8 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onSubmit
         };
     }, [email, emailChanged]);
 
+
+
     if (!isOpen) return null;
 
     return (
@@ -112,7 +127,16 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onSubmit
                         setError(null);
                         try {
                             setEditing(true);
-                            await onSubmit({ name, email, phone, depot, managerId: isJE ? managerId : undefined });
+                            // If it's a JE, use the selectedManager's depot
+                            const submissionDepot = isJE && selectedManager ? selectedManager.depot : depot;
+                            
+                            await onSubmit({ 
+                                name, 
+                                email, 
+                                phone, 
+                                depot: submissionDepot, 
+                                managerId: isJE ? managerId : undefined 
+                            });
                             setEditing(false);
                         } catch (err: any) {
                             setError(err?.message || "Error submitting form. Please try again.");
@@ -161,6 +185,11 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onSubmit
                             }}
                             required
                             pattern="[0-9]{10}"
+                            inputMode="numeric"
+                            onInput={e => {
+                                const input = e.target as HTMLInputElement;
+                                input.value = input.value.replace(/[^0-9]/g, "");
+                            }}
                             maxLength={10}
                             title="Phone number must be 10 digits"
                         />
@@ -168,25 +197,33 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onSubmit
                         {phoneExists === true && <span className="text-base font-bold text-red-600 ml-2">CUG already exists</span>}
                         {phoneExists === false && <span className="text-base font-bold text-green-600 ml-2">CUG available</span>}
                     </div>
-                    <div>
-                        <label className="block font-semibold mb-1">Depot</label>
-                        <select
-                            className="w-full border border-black rounded px-2 py-1"
-                            value={depot}
-                            onChange={e => {
-                                setDepot(e.target.value);
-                                setDepotChanged(e.target.value !== initialData?.depot);
-                            }}
-                            required
-                        >
-                            <option value="">Select Depot</option>
-                            {Object.entries(depotOnLocation).map(([loc, depots]) =>
-                                (depots as string[]).map(dep => (
-                                    <option key={dep} value={dep}>{dep}</option>
-                                ))
-                            )}
-                        </select>
-                    </div>
+                    {!isJE && (
+                        <div>
+                            <label className="block font-semibold mb-1">Depot</label>
+                            <select
+                                className="w-full border border-black rounded px-2 py-1"
+                                value={depot}
+                                onChange={e => {
+                                    setDepot(e.target.value);
+                                    setDepotChanged(e.target.value !== initialData?.depot);
+                                }}
+                                required
+                            >
+                                <option value="">Select Depot</option>
+                                {departmentDepot[department] ? 
+                                    departmentDepot[department].map((dep: string) => (
+                                        <option key={dep} value={dep}>{dep}</option>
+                                    ))
+                                    :
+                                    Object.entries(depotOnLocation).map(([loc, depots]) =>
+                                        (depots as string[]).map(dep => (
+                                            <option key={dep} value={dep}>{dep}</option>
+                                        ))
+                                    )
+                                }
+                            </select>
+                        </div>
+                    )}
                     {isJE && (
                         <div>
                             <label className="block font-semibold mb-1">Managed by SSE</label>
@@ -194,8 +231,13 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onSubmit
                                 className="w-full border border-black rounded px-2 py-1"
                                 value={managerId}
                                 onChange={e => {
-                                    setManagerId(e.target.value);
-                                    setManagerChanged(e.target.value !== initialData?.managerId);
+                                    const newManagerId = e.target.value;
+                                    setManagerId(newManagerId);
+                                    setManagerChanged(newManagerId !== initialData?.managerId);
+                                    
+                                    // Set the selected manager
+                                    const selectedUser = users.find(u => u.id === newManagerId);
+                                    setSelectedManager(selectedUser || null);
                                 }}
                                 required
                             >
@@ -204,6 +246,11 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onSubmit
                                     <option key={u.id} value={u.id}>{u.name}</option>
                                 ))}
                             </select>
+                            {selectedManager && (
+                                <div className="mt-2 text-sm font-medium text-blue-600">
+                                    Selected manager depot: {selectedManager.depot || "Not available"}
+                                </div>
+                            )}
                         </div>
                     )}
                     <div className="flex justify-center gap-4 mt-6">
@@ -216,8 +263,33 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onSubmit
                         </button>
                         <button
                             type="submit"
-                            className={`bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded transition duration-300 ${editing || (!phoneChanged && !emailChanged && !nameChanged && !depotChanged && !(isJE && managerChanged)) || checkingPhone || phoneExists === true || checkingEmail || emailExists === true || !name || !phone || !depot || !email || (isJE && !managerId) ? "opacity-50 cursor-not-allowed" : ""}`}
-                            disabled={editing || (!phoneChanged && !emailChanged && !nameChanged && !depotChanged && !(isJE && managerChanged)) || checkingPhone || phoneExists === true || checkingEmail || emailExists === true || !name || !phone || !depot || !email || (isJE && !managerId)}
+                            className={`bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded transition duration-300 ${
+                                editing || 
+                                (!phoneChanged && !emailChanged && !nameChanged && (!isJE && !depotChanged) && !(isJE && managerChanged)) || 
+                                checkingPhone || 
+                                phoneExists === true || 
+                                checkingEmail || 
+                                emailExists === true || 
+                                !name || 
+                                !phone || 
+                                !email || 
+                                (!isJE && !depot) || 
+                                (isJE && !managerId) ? 
+                                "opacity-50 cursor-not-allowed" : ""
+                            }`}
+                            disabled={
+                                editing || 
+                                (!phoneChanged && !emailChanged && !nameChanged && (!isJE && !depotChanged) && !(isJE && managerChanged)) || 
+                                checkingPhone || 
+                                phoneExists === true || 
+                                checkingEmail || 
+                                emailExists === true || 
+                                !name || 
+                                !phone || 
+                                !email || 
+                                (!isJE && !depot) || 
+                                (isJE && !managerId)
+                            }
                         >
                             {editing ? "Editing User..." : "Edit User"}
                         </button>
