@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { depotOnLocation } from "@/app/lib/store";
+import { depotOnLocation, departmentDepot } from "@/app/lib/store";
 import { FaUserPlus } from "react-icons/fa";
 import axiosInstance from "@/app/service/api/axios";
-import axios from "axios";
-import { set } from "date-fns";
+import axios from "axios"
+
+type Department = "TRD" | "S&T" | "ENGG";
 
 interface AddUserModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSubmit: (data: any) => void;
     users: Array<{ id: string; name: string }>;
+    department?: Department; // User's department
 }
 
-export default function AddUserModal({ isOpen, onClose, onSubmit, users }: AddUserModalProps) {
+export default function AddUserModal({ isOpen, onClose, onSubmit, users, department = "ENGG" as Department }: AddUserModalProps) {
 
     const [role, setRole] = useState<"SSE" | "JE">("SSE");
     const [name, setName] = useState("");
@@ -26,6 +28,7 @@ export default function AddUserModal({ isOpen, onClose, onSubmit, users }: AddUs
     const [checkingEmail, setCheckingEmail] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [selectedManager, setSelectedManager] = useState<{ id: string; name: string; depot?: string } | null>(null);
 
 
     const resetForm = () => {
@@ -35,6 +38,7 @@ export default function AddUserModal({ isOpen, onClose, onSubmit, users }: AddUs
         setPhone("");
         setDepot("");
         setManagerId("");
+        setSelectedManager(null);
         setPhoneExists(null);
         setCheckingPhone(false);
         setSubmitting(false);
@@ -65,34 +69,34 @@ export default function AddUserModal({ isOpen, onClose, onSubmit, users }: AddUs
         };
     }, [phone]);
 
-        useEffect(() => {
-            let cancel: (() => void) | undefined;
-            let debounceTimer: NodeJS.Timeout;
-            if (email) {
-                setEmailExists(null);
-                setCheckingEmail(true);
-                debounceTimer = setTimeout(() => {
-                    (async () => {
-                        try {
-                            const source = axios.CancelToken.source();
-                            cancel = source.cancel;
-                            const res = await axiosInstance.get(`/api/dept-controller/check-email?email=${encodeURIComponent(email)}`, { cancelToken: source.token });
-                            setEmailExists(res.data.data.exists);
-                        } catch (err) {
-                            setEmailExists(null);
-                        } finally {
-                            setCheckingEmail(false);
-                        }
-                    })();
-                }, 500); // 500ms debounce
-            } else {
-                setEmailExists(null);
-            }
-            return () => {
-                if (cancel) cancel();
-                if (debounceTimer) clearTimeout(debounceTimer);
-            };
-        }, [email]);
+    useEffect(() => {
+        let cancel: (() => void) | undefined;
+        let debounceTimer: NodeJS.Timeout;
+        if (email) {
+            setEmailExists(null);
+            setCheckingEmail(true);
+            debounceTimer = setTimeout(() => {
+                (async () => {
+                    try {
+                        const source = axios.CancelToken.source();
+                        cancel = source.cancel;
+                        const res = await axiosInstance.get(`/api/dept-controller/check-email?email=${encodeURIComponent(email)}`, { cancelToken: source.token });
+                        setEmailExists(res.data.data.exists);
+                    } catch (err) {
+                        setEmailExists(null);
+                    } finally {
+                        setCheckingEmail(false);
+                    }
+                })();
+            }, 500); // 500ms debounce
+        } else {
+            setEmailExists(null);
+        }
+        return () => {
+            if (cancel) cancel();
+            if (debounceTimer) clearTimeout(debounceTimer);
+        };
+    }, [email]);
 
     if (!isOpen) return null;
 
@@ -112,7 +116,17 @@ export default function AddUserModal({ isOpen, onClose, onSubmit, users }: AddUs
                         e.preventDefault();
                         setSubmitting(true);
                         try {
-                            await onSubmit({ name, email, phone, depot, role, managerId: role === "JE" ? managerId : undefined });
+                            // If role is JE, use the selectedManager's depot
+                            const submissionDepot = role === "JE" && selectedManager ? selectedManager.depot : depot;
+
+                            await onSubmit({
+                                name,
+                                email,
+                                phone,
+                                depot: submissionDepot,
+                                role,
+                                managerId: role === "JE" ? managerId : undefined
+                            });
                             resetForm();
                         } catch (error: any) {
                             console.error(error);
@@ -161,6 +175,11 @@ export default function AddUserModal({ isOpen, onClose, onSubmit, users }: AddUs
                             onChange={e => setPhone(e.target.value)}
                             required
                             pattern="[0-9]{10}"
+                            inputMode="numeric"
+                            onInput={e => {
+                                const input = e.target as HTMLInputElement;
+                                input.value = input.value.replace(/[^0-9]/g, "");
+                            }}
                             maxLength={10}
                             title="Phone number must be 10 digits"
                         />
@@ -168,29 +187,41 @@ export default function AddUserModal({ isOpen, onClose, onSubmit, users }: AddUs
                         {phoneExists === true && <span className="text-base font-bold text-red-600 ml-2">CUG already exists</span>}
                         {phoneExists === false && <span className="text-base font-bold text-green-600 ml-2">CUG available</span>}
                     </div>
-                    <div>
-                        <label className="block font-semibold mb-1">Depot</label>
-                        <select
-                            className="w-full border border-black rounded px-2 py-1"
-                            value={depot}
-                            onChange={e => setDepot(e.target.value)}
-                            required
-                        >
-                            <option value="">Select Depot</option>
-                            {Object.entries(depotOnLocation).map(([loc, depots]) =>
-                                depots.map(dep => (
-                                    <option key={dep} value={dep}>{dep}</option>
-                                ))
-                            )}
-                        </select>
-                    </div>
+                    {role === "SSE" && (
+                        <div>
+                            <label className="block font-semibold mb-1">Depot</label>
+                            <select
+                                className="w-full border border-black rounded px-2 py-1"
+                                value={depot}
+                                onChange={e => setDepot(e.target.value)}
+                                required
+                            >
+                                <option value="">Select Depot</option>
+                                {departmentDepot[department] ?
+                                    departmentDepot[department].map(dep => (
+                                        <option key={dep} value={dep}>{dep}</option>
+                                    ))
+                                    :
+                                    Object.entries(depotOnLocation).map(([loc, depots]) =>
+                                        depots.map(dep => (
+                                            <option key={dep} value={dep}>{dep}</option>
+                                        ))
+                                    )
+                                }
+                            </select>
+                        </div>
+                    )}
                     {role === "JE" && (
                         <div>
                             <label className="block font-semibold mb-1">Managed by SSE</label>
                             <select
                                 className="w-full border border-black rounded px-2 py-1"
                                 value={managerId}
-                                onChange={e => setManagerId(e.target.value)}
+                                onChange={e => {
+                                    setManagerId(e.target.value);
+                                    const selectedUser = users.find(u => u.id === e.target.value);
+                                    setSelectedManager(selectedUser || null);
+                                }}
                                 required
                             >
                                 <option value="">Select SSE</option>
@@ -198,6 +229,11 @@ export default function AddUserModal({ isOpen, onClose, onSubmit, users }: AddUs
                                     <option key={u.id} value={u.id}>{u.name}</option>
                                 ))}
                             </select>
+                            {selectedManager && (
+                                <div className="mt-2 text-sm font-medium text-blue-600">
+                                    Selected manager depot: {selectedManager.depot || "Not available"}
+                                </div>
+                            )}
                         </div>
                     )}
                     <div className="flex justify-center gap-4 mt-6">
@@ -211,8 +247,30 @@ export default function AddUserModal({ isOpen, onClose, onSubmit, users }: AddUs
                         </button>
                         <button
                             type="submit"
-                            className={`bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded transition duration-300 ${submitting || checkingPhone || phoneExists === true || checkingEmail || emailExists === true || !name || !phone || !depot || !email || (role === "JE" && !managerId) ? "opacity-50 cursor-not-allowed" : ""}`}
-                            disabled={submitting || checkingPhone || phoneExists === true || checkingEmail || emailExists === true || !name || !phone || !depot || !email || (role === "JE" && !managerId)}
+                            className={`bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded transition duration-300 ${submitting ||
+                                    checkingPhone ||
+                                    phoneExists === true ||
+                                    checkingEmail ||
+                                    emailExists === true ||
+                                    !name ||
+                                    !phone ||
+                                    !email ||
+                                    (role === "SSE" && !depot) ||
+                                    (role === "JE" && !managerId) ?
+                                    "opacity-50 cursor-not-allowed" : ""
+                                }`}
+                            disabled={
+                                submitting ||
+                                checkingPhone ||
+                                phoneExists === true ||
+                                checkingEmail ||
+                                emailExists === true ||
+                                !name ||
+                                !phone ||
+                                !email ||
+                                (role === "SSE" && !depot) ||
+                                (role === "JE" && !managerId)
+                            }
                         >
                             {submitting ? "Adding User..." : "Add User"}
                         </button>
