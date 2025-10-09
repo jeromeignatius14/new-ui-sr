@@ -6,7 +6,6 @@ type DepotStructure = {
   };
 };
 
-// Map depots to their corresponding sections for Board Controller
 export const BoardControllerDepotMap: { [key: string]: string[] } = {
   "A": ["MAS-GDR", "MAS-AJJ", "MSB-VM"],
   "B": ["TPJ-VM", "VM-MV", "TPJ-MV"],
@@ -22,6 +21,12 @@ export let MajorSection = {
   "MDU": ["TPJ-DG","DG-MDU","DG-PLNI-POY","MDU-VPT","VPT-MEJ","MEJ-TN","MEJ-TEN","MDU-MNM","TPJ-KKDI-MNM","MNM-RMM","MNM-VPT","VPT-SCT","TEN-SCT","SCT-PUU","PUU-QLN","TEN-TCN","MDU-BDNK"]
   //"MDU" :["TPJ-DG","DG-MDU","DG-PLNI-POY","MDU-VPT","VPT-MEJ","MEJ-TN","MEJ-TEN","MDU-MNM","TPJ-KKDI-MNM","MNM-RMM","MNM-VPT","VPT-SCT","TEN-SCT","SCT-PUU","PUU-QLN","TEN-TCN","MDU-BDNK"]
 };
+// export let MajorSection = {
+//   "MAS": ["MAS-GDR","MAS-AJJ","AJJ-KPD", "KPD-JTJ", "AJJ-RU","AJJ-CGL","MSB-VM","MSB-VLCY"],
+//   "TPJ": ["TPJ-VM", "VM-MV", "TPJ-MV","TJ-KIK","MV-TVR","NMJ- MQ","VM-PDY","KPD-VM","CUPJ-VRI","TPJ-TP","NGT-VLNK","TVR- KKDI","TTP-AGX"],
+//   "SA":["JTJ-ED","ED-PTJ","ED-TPJ","KRR-DG","SA-VRI","SA-MTDM","SA-KRR","CBE-MTP","MTP-UAM","PTJ-CNV"]
+// }
+
 
 export let blockSection = {
   'TPJ-DG': [
@@ -2311,3 +2316,75 @@ export let sectionData = {
     station: [],
   },
 };
+
+export const departmentDepot = {
+    "TRD": [
+        "BBQ",
+        "TVT",
+        "PON",
+        "SPE",
+        "GDR",
+        "AVD",
+        "TRL",
+        "AJJ",
+        "WJR",
+        "KPD",
+        "AB",
+        "JTJ",
+        "PUT",
+        "CGL",
+        "MS",
+        "TBM",
+        "ACK",
+        "VM",
+        "MSB"
+    ],
+    "S&T": [
+        "MAS",
+        "BBQ",
+        "TVT",
+        "GPD",
+        "SPE",
+        "NYP",
+        "TRL",
+        "AJJE",
+        "MSB",
+        "AJJW",
+        "KPDE",
+        "KPDW",
+        "AB",
+        "JTJ",
+        "TRT",
+        "PUT",
+        "CGL",
+        "MS",
+        "TBM",
+        "TMV"
+    ],
+    "ENGG": [
+        "TVT",
+        "PON",
+        "SPE",
+        "GDR",
+        "BRIDGE",
+        "WSTA",
+        "WSTB",
+        "AVD",
+        "TRLA",
+        "TRLB",
+        "AJJ",
+        "WJR",
+        "KPD",
+        "AB",
+        "JTJ",
+        "TRT",
+        "PUT",
+        "CJ",
+        "MS",
+        "TBM",
+        "CGL",
+        "ACK",
+        "TMV",
+        "MSB"
+    ]
+}
