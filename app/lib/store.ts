@@ -6,7 +6,6 @@ type DepotStructure = {
   };
 };
 
-// Map depots to their corresponding sections for Board Controller
 export const BoardControllerDepotMap: { [key: string]: string[] } = {
   "A": ["MAS-GDR", "MAS-AJJ", "MSB-VM"],
   "B": ["TPJ-VM", "VM-MV", "TPJ-MV"],
@@ -21,98 +20,98 @@ export let MajorSection = {
   "TVC": ["SRR-CHTS", "TCR-GUV", "ERS-KTYM-KYJ", "ERS-ALLP-KYJ", "KYJ-QLN", "QLN-TVC", "TVC-NCJ", "NCJ-TEN", "NCJ-CAPE"]
 };
 // export let MajorSection = {
-//   MAS: ["MAS-GDR", "MAS-AJJ", "AJJ-KPD", "KPD-JTJ", "AJJ-RU", "AJJ-CGL", "MSB-VM", "MSB-VLCY"],
-//   TPJ: ["TPJ-VM", "VM-MV", "TPJ-MV", "TJ-KIK", "MV-TVR", "NMJ-MQ", "VM-PDY", "KPD-VM", "CUPJ-VRI", "TPJ-TP", "NGT-VLNK", "TVR-KKDI", "TTP-AGX"],
-//   SA: ["JTJ-ED", "ED-PTJ", "ED-TP", "KRR-DG", "SA-VRI", "SA-MTDM", "SA-KRR", "CBE-MTP", "MTP-UAM", "PTJ-CNV"],
-//   PGT: ["PTJ-SRR", "SRR-CLT", "CLT-CAN", "CAN-MAQ-MAJN", "MAQ-MAJN-PADIL-TOK", "SRR-NIL", "PGT-PGTN-POY", "POY-CNV"]
+//   "MAS": ["MAS-GDR","MAS-AJJ","AJJ-KPD", "KPD-JTJ", "AJJ-RU","AJJ-CGL","MSB-VM","MSB-VLCY"],
+//   "TPJ": ["TPJ-VM", "VM-MV", "TPJ-MV","TJ-KIK","MV-TVR","NMJ- MQ","VM-PDY","KPD-VM","CUPJ-VRI","TPJ-TP","NGT-VLNK","TVR- KKDI","TTP-AGX"],
+//   "SA":["JTJ-ED","ED-PTJ","ED-TPJ","KRR-DG","SA-VRI","SA-MTDM","SA-KRR","CBE-MTP","MTP-UAM","PTJ-CNV"]
 // };
 
-// // export let blockSection = {
-// //   'TPJ-VM': [
-// //     "TPJ-GOC", "GOC-TPTN", "TPTN-SRGM", "SRGM-UKV", "UKV-BXS",
-// //     "BXS-VLDE", "VLDE-LLI", "LLI-KTTRIBS", "KTTRIBS-KTTR",
-// //     "KTTR-PMB", "PMB-KKPM", "KKPM-KLGM", "KLGM-SLT", "SLT-ALU",
-// //     "ALU-OTK", "OTK-VER", "VER-SNDI", "SNDI-MTUR", "MTUR-ICG",
-// //     "ICG-PNDM", "PNDM-TLNR", "TLNR-VRT", "VRT-VRI", "VRI-PVN",
-// //     "PVN-ULU", "ULU-PRKL", "PRKL-TVNL", "TVNL-KDMD", "KDMD-VM",
-// //     "TPJ-YD", "GOC-YD", "TPTN-YD", "VLDE-YD", "LLI-YD", "KTTR-YD",
-// //     "PMB-YD", "KKPM-YD", "KLGM-YD", "SLT-YD", "ALU-YD", "OTK-YD",
-// //     "SNDI-YD", "MTUR-YD", "ICG-YD", "PNDM-YD", "TLNR-YD", "VRI-YD",
-// //     "PVN-YD", "ULU-YD", "PRKL-YD", "TVNL-YD", "KDMD-YD", "VM-YD"
-// //   ],
-// //   'VM-MV': [
-// //     "VM-SXR", "SXR-TUY", "TUY-PRT", "PRT-MBU", "MBU-NPM", "NPM-VKP",
-// //     "VKP-TDPR", "TDPR-CUPJ", "CUPJ-CQS", "CQS-ALP", "ALP-PUC",
-// //     "PUC-PO", "PO-KII", "KII-CDM", "CDM-VMP", "VMP-CLN", "CLN-SY",
-// //     "SY-VDL", "VDL-ANP", "ANP-NID", "NID-MV",
-// //     "VM-YD", "SXR-YD", "TUY-YD", "PRT-YD", "MBU-YD", "NPM-YD",
-// //     "VKP-YD", "TDPR-YD", "CUPJ-YD", "CQS-YD", "ALP-YD", "PUC-YD",
-// //     "PO-YD", "KII-YD", "CDM-YD", "VMP-YD", "CLN-YD", "SY-YD",
-// //     "VDL-YD", "ANP-YD", "NID-YD", "MV-YD"
-// //   ],
-// //   'TPJ-MV': [
-// //     "TPJ-GOC", "GOC-MCJ", "MCJ-TRB", "TRB-TOM", "TOM-SGM", "SGM-AYN",
-// //     "AYN-BAL", "BAL-ALK", "ALK-TJ", "TJ-TT", "TT-PVL", "PVL-AZP",
-// //     "AZP-PDV", "PDV-PML", "PML-SPL", "SPL-SWI", "SWI-DSM", "DSM-KMU",
-// //     "KMU-TRM", "TRM-TDR", "TDR-ADT", "ADT-NPT", "NPT-KTM", "KTM-MV",
-// //     "TPJ-YD", "GOC-YD", "MCJ-YD", "TRB-YD", "TOM-YD", "SGM-YD",
-// //     "AYN-YD", "BAL-YD", "ALK-YD", "TJ-YD", "TT-YD", "PVL-YD",
-// //     "AZP-YD", "PDV-YD", "PML-YD", "SPL-YD", "SWI-YD", "DSM-YD",
-// //     "KMU-YD", "TRM-YD", "TDR-YD", "ADT-YD", "NPT-YD", "KTM-YD",
-// //     "MV-YD"
-// //   ],
-// //   'TJ-KIK': [
-// //     "TJ-KXO", "KXO-SMM", "SMM-AMT", "AMT-KYV", "KYV-NMJ",
-// //     "NMJ-KDE", "KDE-TMU", "TMU-KU", "KU-TVR", "TVR-AYM",
-// //     "AYM-KOQ", "KOQ-KVL", "KVL-SKK", "SKK-APE", "APE-NGT",
-// //     "NGT-VXM", "VXM-NCR", "NCR-TMPT", "TMPT-KIK",
-// //     "NMJ-YD", "KDE-YD", "KU-YD", "TVR-YD", "KVL-YD",
-// //     "NGT-YD", "NCR-YD", "TMPT-YD", "KIK-YD"
-// //   ],
-// //   'MV-TVR': [
-// //     "MV-PEM", "PEM-POM", "POM-NNM", "NNM-TVR",
-// //     "MV-YD", "PEM-YD", "POM-YD", "NNM-YD", "TVR-YD"
-// //   ],
-// //   'NMJ-MQ': [
-// //     "NMJ-MQ", "NMJ-YD", "MQ-YD"
-// //   ],
-// //   'VM-PDY': [
-// //     "VM-VRA", "VRA-CBU", "CBU-VI", "VI-PDY",
-// //     "CBU-YD", "VI-YD", "PDY-YD"
-// //   ],
-// //   'KPD-VM': [
-// //     "KPD-VT", "VT-VLR", "VLR-PNTR", "PNTR-KNB", "KNB-KMM", "KMM-OPM",
-// //     "OPM-SDPT", "SDPT-ARV", "ARV-MCL", "MCL-PRL", "PRL-AGM", "AGM-TJM",
-// //     "TJM-TNM", "TNM-TNI", "TNI-AND", "AND-ACN", "ACN-TRK", "TRK-AYD",
-// //     "AYD-MMP", "MMP-VKM", "VKM-VM",
-// //     "KPD-YD", "VT-YD", "VLR-YD", "PNTR-YD", "KNB-YD", "KMM-YD", "OPM-YD", "SDPT-YD",
-// //     "ARV-YD", "MCL-YD", "PRL-YD", "AGM-YD", "TJM-YD", "TNM-YD", "TNI-YD", "AND-YD",
-// //     "ACN-YD", "TRK-YD", "AYD-YD", "MMP-YD", "VKM-YD", "VM-YD"
-// //   ],
-// //   'CUPJ-VRI': [
-// //     "CUPJ-KJKPD", "KJKPD-VLU", "VLU-NVL", "NVL-UMG", "UMG-VRI",
-// //     "CUPJ-YD", "KJKPD-YD", "VLU-YD", "NVL-YD", "UMG-YD", "VRI-YD"
-// //   ],
-// //   'TPJ-TP': [
-// //     "TPJ-TPE", "TPE-TP",
-// //     "TPJ-YD", "TPE-YD", "TP-YD"
-// //   ],
-// //   'NGT-VLNK': [
-// //     "NGT-VLNK", "NGT-YD", "VLNK-YD"
-// //   ],
-// //   'TVR-KKDI': [
-// //     "TVR-MAX", "MAX-MARD", "MARD-TNK", "TNK-AMNR", "AMNR-ATB",
-// //     "ATB-MNLI", "MNLI-TTP", "TTP-TAM", "TAM-MTT", "MTT-AMM", "AMM-PKT",
-// //     "PKT-TCT", "TCT-PVI", "PVI-AYI", "AYI-ATQ", "ATQ-VMM",
-// //     "VMM-PYK", "PYK-KNPL", "KNPL-KKDI",
-// //     "MARD-YD", "TNK-YD", "AMNR-YD", "ATB-YD", "MNLI-YD", "TTP-YD", "TAM-YD",
-// //     "MTT-YD", "AMM-YD", "PKT-YD", "PVI-YD", "AYI-YD", "ATQ-YD", "PYK-YD", "KKDI-YD"
-// //   ],
-// //   'TTP-AGX': [
-// //     "TTP-KXY", "KXY-KVV", "KVV-NVK", "NVK-TOY", "TOY-VDY", "VDY-AGX",
-// //     "TTP-YD", "KXY-YD", "KVV-YD", "NVK-YD", "TOY-YD", "VDY-YD", "AGX-YD"
-// //   ]
-// // };
+
+// export let blockSection = {
+//   'TPJ-VM': [
+//     "TPJ-GOC", "GOC-TPTN", "TPTN-SRGM", "SRGM-UKV", "UKV-BXS",
+//     "BXS-VLDE", "VLDE-LLI", "LLI-KTTRIBS", "KTTRIBS-KTTR",
+//     "KTTR-PMB", "PMB-KKPM", "KKPM-KLGM", "KLGM-SLT", "SLT-ALU",
+//     "ALU-OTK", "OTK-VER", "VER-SNDI", "SNDI-MTUR", "MTUR-ICG",
+//     "ICG-PNDM", "PNDM-TLNR", "TLNR-VRT", "VRT-VRI", "VRI-PVN",
+//     "PVN-ULU", "ULU-PRKL", "PRKL-TVNL", "TVNL-KDMD", "KDMD-VM",
+//     "TPJ-YD", "GOC-YD", "TPTN-YD", "VLDE-YD", "LLI-YD", "KTTR-YD",
+//     "PMB-YD", "KKPM-YD", "KLGM-YD", "SLT-YD", "ALU-YD", "OTK-YD",
+//     "SNDI-YD", "MTUR-YD", "ICG-YD", "PNDM-YD", "TLNR-YD", "VRI-YD",
+//     "PVN-YD", "ULU-YD", "PRKL-YD", "TVNL-YD", "KDMD-YD", "VM-YD"
+//   ],
+//   'VM-MV': [
+//     "VM-SXR", "SXR-TUY", "TUY-PRT", "PRT-MBU", "MBU-NPM", "NPM-VKP",
+//     "VKP-TDPR", "TDPR-CUPJ", "CUPJ-CQS", "CQS-ALP", "ALP-PUC",
+//     "PUC-PO", "PO-KII", "KII-CDM", "CDM-VMP", "VMP-CLN", "CLN-SY",
+//     "SY-VDL", "VDL-ANP", "ANP-NID", "NID-MV",
+//     "VM-YD", "SXR-YD", "TUY-YD", "PRT-YD", "MBU-YD", "NPM-YD",
+//     "VKP-YD", "TDPR-YD", "CUPJ-YD", "CQS-YD", "ALP-YD", "PUC-YD",
+//     "PO-YD", "KII-YD", "CDM-YD", "VMP-YD", "CLN-YD", "SY-YD",
+//     "VDL-YD", "ANP-YD", "NID-YD", "MV-YD"
+//   ],
+//   'TPJ-MV': [
+//     "TPJ-GOC", "GOC-MCJ", "MCJ-TRB", "TRB-TOM", "TOM-SGM", "SGM-AYN",
+//     "AYN-BAL", "BAL-ALK", "ALK-TJ", "TJ-TT", "TT-PVL", "PVL-AZP",
+//     "AZP-PDV", "PDV-PML", "PML-SPL", "SPL-SWI", "SWI-DSM", "DSM-KMU",
+//     "KMU-TRM", "TRM-TDR", "TDR-ADT", "ADT-NPT", "NPT-KTM", "KTM-MV",
+//     "TPJ-YD", "GOC-YD", "MCJ-YD", "TRB-YD", "TOM-YD", "SGM-YD",
+//     "AYN-YD", "BAL-YD", "ALK-YD", "TJ-YD", "TT-YD", "PVL-YD",
+//     "AZP-YD", "PDV-YD", "PML-YD", "SPL-YD", "SWI-YD", "DSM-YD",
+//     "KMU-YD", "TRM-YD", "TDR-YD", "ADT-YD", "NPT-YD", "KTM-YD",
+//     "MV-YD"
+//   ],
+//   'TJ-KIK': [
+//     "TJ-KXO", "KXO-SMM", "SMM-AMT", "AMT-KYV", "KYV-NMJ",
+//     "NMJ-KDE", "KDE-TMU", "TMU-KU", "KU-TVR", "TVR-AYM",
+//     "AYM-KOQ", "KOQ-KVL", "KVL-SKK", "SKK-APE", "APE-NGT",
+//     "NGT-VXM", "VXM-NCR", "NCR-TMPT", "TMPT-KIK",
+//     "NMJ-YD", "KDE-YD", "KU-YD", "TVR-YD", "KVL-YD",
+//     "NGT-YD", "NCR-YD", "TMPT-YD", "KIK-YD"
+//   ],
+//   'MV-TVR': [
+//     "MV-PEM", "PEM-POM", "POM-NNM", "NNM-TVR",
+//     "MV-YD", "PEM-YD", "POM-YD", "NNM-YD", "TVR-YD"
+//   ],
+//   'NMJ-MQ': [
+//     "NMJ-MQ", "NMJ-YD", "MQ-YD"
+//   ],
+//   'VM-PDY': [
+//     "VM-VRA", "VRA-CBU", "CBU-VI", "VI-PDY",
+//     "CBU-YD", "VI-YD", "PDY-YD"
+//   ],
+//   'KPD-VM': [
+//     "KPD-VT", "VT-VLR", "VLR-PNTR", "PNTR-KNB", "KNB-KMM", "KMM-OPM",
+//     "OPM-SDPT", "SDPT-ARV", "ARV-MCL", "MCL-PRL", "PRL-AGM", "AGM-TJM",
+//     "TJM-TNM", "TNM-TNI", "TNI-AND", "AND-ACN", "ACN-TRK", "TRK-AYD",
+//     "AYD-MMP", "MMP-VKM", "VKM-VM",
+//     "KPD-YD", "VT-YD", "VLR-YD", "PNTR-YD", "KNB-YD", "KMM-YD", "OPM-YD", "SDPT-YD",
+//     "ARV-YD", "MCL-YD", "PRL-YD", "AGM-YD", "TJM-YD", "TNM-YD", "TNI-YD", "AND-YD",
+//     "ACN-YD", "TRK-YD", "AYD-YD", "MMP-YD", "VKM-YD", "VM-YD"
+//   ],
+//   'CUPJ-VRI': [
+//     "CUPJ-KJKPD", "KJKPD-VLU", "VLU-NVL", "NVL-UMG", "UMG-VRI",
+//     "CUPJ-YD", "KJKPD-YD", "VLU-YD", "NVL-YD", "UMG-YD", "VRI-YD"
+//   ],
+//   'TPJ-TP': [
+//     "TPJ-TPE", "TPE-TP",
+//     "TPJ-YD", "TPE-YD", "TP-YD"
+//   ],
+//   'NGT-VLNK': [
+//     "NGT-VLNK", "NGT-YD", "VLNK-YD"
+//   ],
+//   'TVR-KKDI': [
+//     "TVR-MAX", "MAX-MARD", "MARD-TNK", "TNK-AMNR", "AMNR-ATB",
+//     "ATB-MNLI", "MNLI-TTP", "TTP-TAM", "TAM-MTT", "MTT-AMM", "AMM-PKT",
+//     "PKT-TCT", "TCT-PVI", "PVI-AYI", "AYI-ATQ", "ATQ-VMM",
+//     "VMM-PYK", "PYK-KNPL", "KNPL-KKDI",
+//     "MARD-YD", "TNK-YD", "AMNR-YD", "ATB-YD", "MNLI-YD", "TTP-YD", "TAM-YD",
+//     "MTT-YD", "AMM-YD", "PKT-YD", "PVI-YD", "AYI-YD", "ATQ-YD", "PYK-YD", "KKDI-YD"
+//   ],
+//   'TTP-AGX': [
+//     "TTP-KXY", "KXY-KVV", "KVV-NVK", "NVK-TOY", "TOY-VDY", "VDY-AGX",
+//     "TTP-YD", "KXY-YD", "KVV-YD", "NVK-YD", "TOY-YD", "VDY-YD", "AGX-YD"
+//   ]
+// };
 
 
 
@@ -173,1093 +172,127 @@ export let MajorSection = {
 //   ],
 //   'TTP-AGX': [
 //     "TTP-AGX", "TTP-YD", "AGX-YD"
-//   ],
-//   "PTJ-SRR": [
-//     "PTJ-MDKI", "MDKI-ETMD", "ETMD-WRA", "WRA-CLMD",
-//     "CLMD-KJKD", "KJKD-KTKU", "KTKU-PGT", "PGT-PLL",
-//     "PLL-LDY", "LDY-OTP", "OTP-MNUR", "MNUR-SRR A", "SRR A-SRR",
-//     "PTJ-YD", "MDKI-YD", "ETMD-YD", "WRA-YD", "CLMD-YD",
-//     "KJKD-YD", "KTKU-YD", "PGT-YD", "PLL-YD", "LDY-YD",
-//     "OTP-YD", "MNUR-YD", "SRR A-YD", "SRR-YD"
-//   ],
-//   "SRR-CLT": [
-//     "SRR-KRKD", "KRKD-PTB", "PTB-PUM", "PUM-KTU",
-//     "KTU-TUA", "TUA-TIR", "TIR-TA", "TA-PGI",
-//     "PGI-KN", "KN-FK", "FK-KUL", "KUL-CLT",
-//     "SRR-YD", "KRKD-YD", "PTB-YD", "PUM-YD", "KTU-YD",
-//     "TUA-YD", "TIR-YD", "TA-YD", "PGI-YD", "KN-YD",
-//     "FK-YD", "KUL-YD", "CLT-YD"
-//   ],
-//   "CLT-CAN": [
-//     "CLT-WH", "WH-ETR", "ETR-QLD", "QLD-TKT",
-//     "TKT-BDJ", "BDJ-MHE", "MHE-TLY", "TLY-ETK",
-//     "ETK-CS", "CS-CAN",
-//     "CLT-YD", "WH-YD", "ETR-YD", "QLD-YD", "TKT-YD",
-//     "BDJ-YD", "MHE-YD", "TLY-YD", "ETK-YD", "CS-YD", "CAN-YD"
-//   ],
-//   "CAN-MAJN": [
-//     "VAPM-KPQ", "KPQ-PAZ", "PAZ-PAY", "PAY-CHV",
-//     "CHV-NLE", "NLE-KZE", "KZE-KQK", "KQK-KGQ",
-//     "KGQ-KMQ", "KMQ-MJS", "MJS-ULL", "ULL-NTVT",
-//     "NTVT-MAQ", "MAQ-NTVT", "NTVT-MAJN",
-//     "VAPM-YD", "KPQ-YD", "PAZ-YD", "PAY-YD", "CHV-YD",
-//     "NLE-YD", "KZE-YD", "KQK-YD", "KGQ-YD", "KMQ-YD",
-//     "MJS-YD", "ULL-YD", "NTVT-YD", "MAQ-YD", "MAJN-YD"
-//   ],
-//   "MAQ-TOK": [
-//     "MAQ-NTVT", "NTVT-MAJN", "MAJN-PADIL", "PADIL-JOKATTE", "JOKATTE-TOK",
-//     "MAQ-YD", "NTVT-YD", "MAJN-YD", "PADIL-YD", "JOKATTE-YD", "TOK-YD"
-//   ],
-//   "SRR-NIL": [
-//     "SRR-AAM", "AAM-VNB", "VNB-NIL",
-//     "SRR-YD", "AAM-YD", "VNB-YD", "NIL-YD"
-//   ],
-//   "PGT-PGTN-POY": [
-//     "PGT-PGTN", "PGTN-PDGM", "PDGM-KLGD", "KLGD-MMDA", "MMDA-MXM", "MXM-POY",
-//     "PGT-YD", "PGTN-YD", "PDGM-YD", "KLGD-YD", "MMDA-YD", "MXM-YD", "POY-YD"
-//   ],
-//   "POY-CNV": [
-//     "POY-CNV",
-//     "POY-YD", "CNV-YD"
-//   ],
-//   'JTJ-ED': [
-//     "JTJ-TPT", "TPT-KEY", "KEY-SLY", "SLY-DST",
-//     "DST-DPI", "DPI-MAP", "MAP-BDY", "BDY-BQI",
-//     "BQI-LCR", "LCR-DSPT", "DSPT-TNT", "TNT-KPPR",
-//     "KPPR-MGSJ", "MGSJ-SA", "SA-VRPD", "VRPD-DC", "DC-MVPM",
-//     "MVPM-SGE", "SGE-ANU", "ANU-CV", "CV-ED",
-//     "TPT-YD", "KEY-YD", "SLY-YD", "DST-YD", "DPI-YD",
-//     "MAP-YD", "BDY-YD", "BQI-YD", "LCR-YD", "DSPT-YD", "TNT-YD",
-//     "KPPR-YD", "MGS-YD", "VRPD-YD", "DC-YD", "MVPM-YD", "SGE-YD",
-//     "ANU-YD", "CV-YD", "ED-YD"
-//   ],
-//   'ED-PTJ': [
-//     "ED-TPM", "TPM-PY", "PY-IGR", "IGR-VZ",
-//     "VZ-UKL", "UKL-TUP", "TUP-VNJ", "VNJ-SNO",
-//     "SNO-SUU", "SUU-IGU", "IGU-PLMD", "IGU-PTJ", "PLMD-CBF",
-//     "CBF-CBE", "CBE-PTJ",
-//     "JTJ-YD", "TPT-YD", "DST-YD", "DPI-YD", "TNT-YD", "MAP-YD",
-//     "BQI-YD", "DSPT-YD", "MGSJ-YD", "ULK-YD", "TUP-YD", "SGE-YD", "ANU-YD", "CV-YD",
-//     "ED-YD", "TPM-YD", "PY-YD", "IGR-YD", "VZ-YD", "VNJ-YD",
-//     "SUU-YD", "SNO-YD", "IGU-YD", "PLMD-YD", "CBF-YD", "CBE-YD", "PTJ-YD"
-//   ],
-//   'ED-TP': [
-//     "ED-CVD", "CVD-PAS", "PAS-URL", "URL-KMD",
-//     "KMD-PGR", "PGR-MPLM", "MPLM-KRR", "KRR-VRQ",
-//     "VRQ-MYU", "MYU-MMH", "MMH-LP", "LP-KLT",
-//     "KLT-PLI", "PLI-PGN", "PGN-EL", "EL-MTNL",
-//     "MTNL-TP",
-//     "ED-YD", "CVD-YD", "PAS-YD", "URL-YD", "KMD-YD", "PGR-YD",
-//     "MPLM-YD", "KRR-YD", "VRQ-YD", "MYU-YD", "MMH-YD", "LP-YD", "KLT-YD",
-//     "PLI-YD", "PGN-YD", "EL-YD", "MTNL-YD", "TP-YD"
-//   ],
-//   'KRR-DG': [
-//     "KRR-VEI", "VEI-PALM", "PALM-EDU", "EDU-DG",
-//     "KRR-YD", "VEI-YD", "PALM-YD", "EDU-YD"
-//   ],
-//   'SA-VRI': [
-//     "SA-SAMT", "SAMT-SXT", "SXT-MPLI", "MPLI-ETP",
-//     "ETP-ATU", "ATU-CHSM", "CHSM-PRV", "PRV-MKSP",
-//     "MKSP-VRI",
-//     "SA-YD", "SAMT-YD", "SXT-YD", "MPLI-YD", "ETP-YD", "ATU-YD",
-//     "CHSM-YD", "PRV-YD", "MKSP-YD"
-//   ],
-//   'SA-MTDM': [
-//     "SA-MGSJ", "SA-MGSJ NEW", "MGSJ-OML", "OML-MCRD", "MCRD-MTDM",
-//     "MTDM-MTPP",
-//     "SA-YD", "MGSJ-YD", "OML-YD", "MCRD-YD", "MTDM-YD", "MTPP-YD"
-//   ],
-//   'SA-KRR': [
-//     "SA-MALR", "MALR-RASP", "RASP-KLGN", "KLGN-NMKL",
-//     "NMKL-MONR", "MONR-KRR",
-//     "SA-YD", "MALR-YD", "RASP-YD", "KLGN-YD", "NMKL-YD", "MONR-YD", "KRR-YD"
-//   ],
-//   'MTP-UAM': [
-//     "MTP-QLR", "QLR-HLG", "HLG-ONR", "ONR-WEL",
-//     "WEL-AVK", "AVK-KXT", "KXT-LOV", "LOV-UAM",
-//     "MTP-YD", "QLR-YD", "HLG-YD", "ONR-YD", "WEL-YD", "AVK-YD",
-//     "KXT-YD", "LOV-YD", "UAM-YD"
-//   ],
-//   'PTJ-CNV': [
-//     "CNV-PTJ",
-//     "CNV-YD", "PTJ-YD"
-//   ],
-//   'CBE-MTP': [
-//     "CBE-CBF", "CBF-KAY",
-//     "KAY-MTP", "CBE-YD", "CBF-YD", "KAY-YD", "MTP-YD"
 //   ]
+// }
+
+// export let lineData = {
+
+//   // example
+//   "NPM-VKP": ['UP', 'DN'],
+//   // TPJ-VM Section- All are UP and DN lines
+//   'TPJ-GOC': ['UP', 'DN'],
+//   'GOC-TPTN': ['UP', 'DN'],
+//   'TPTN-SRGM': ['UP', 'DN'],
+//   'SRGM-UKV': ['UP', 'DN'],
+//   'UKV-BXS': ['UP', 'DN'],
+//   'BXS-VLDE': ['UP', 'DN'],
+//   'VLDE-LLI': ['UP', 'DN'],
+//   'LLI-KTTR IBS': ['UP', 'DN'],
+//   'KTTR IBS-KTTR': ['UP', 'DN'],
+//   'KTTR-PMB': ['UP', 'DN'],
+//   'PMB-KKPM': ['UP', 'DN'],
+//   'KKPM-KLGM': ['UP', 'DN'],
+//   'KLGM-SLT': ['UP', 'DN'],
+//   'SLT-ALU': ['UP', 'DN'],
+//   'ALU-OTK': ['UP', 'DN'],
+//   'OTK-VER': ['UP', 'DN'],
+//   'VER-SNDI': ['UP', 'DN'],
+//   'SNDI-MTUR': ['UP', 'DN'],
+//   'MTUR-ICG': ['UP', 'DN'],
+//   'ICG-PNDM': ['UP', 'DN'],
+//   'PNDM-TLNR': ['UP', 'DN'],
+//   'TLNR-VRT': ['UP', 'DN'],
+//   'VRT-VRI': ['UP', 'DN'],
+//   'VRI-PVN': ['UP', 'DN'],
+//   'PVN-ULU': ['UP', 'DN'],
+//   'ULU-PRKL': ['UP', 'DN'],
+//   'PRKL-TVNL': ['UP', 'DN'],
+//   'TVNL-KDMD': ['UP', 'DN'],
+//   'KDMD-VM': ['UP', 'DN'],
+
+//   // Yard connections for TPJ-VM
+//   'TPJ-YD': ['UP', 'DN'],
+//   'GOC-YD': ['UP', 'DN'],
+//   'TPTN-YD': ['UP', 'DN'],
+//   'VLDE-YD': ['UP', 'DN'],
+//   'LLI-YD': ['UP', 'DN'],
+//   'KTTR-YD': ['UP', 'DN'],
+//   'PMB-YD': ['UP', 'DN'],
+//   'KKPM-YD': ['UP', 'DN'],
+//   'KLGM-YD': ['UP', 'DN'],
+//   'SLT-YD': ['UP', 'DN'],
+//   'ALU-YD': ['UP', 'DN'],
+//   'OTK-YD': ['UP', 'DN'],
+//   'SNDI-YD': ['UP', 'DN'],
+//   'MTUR-YD': ['UP', 'DN'],
+//   'ICG-YD': ['UP', 'DN'],
+//   'PNDM-YD': ['UP', 'DN'],
+//   'TLNR-YD': ['UP', 'DN'],
+//   'VRI-YD': ['UP', 'DN'],
+//   'PVN-YD': ['UP', 'DN'],
+//   'ULU-YD': ['UP', 'DN'],
+//   'PRKL-YD': ['UP', 'DN'],
+//   'TVNL-YD': ['UP', 'DN'],
+//   'KDMD-YD': ['UP', 'DN'],
+//   'VM-YD': ['UP', 'DN'],
+
+//   // TPJ-MV Section- Single line (represented as same string in array)
+//   // Already defined above, this is a junction
+//   'GOC-MCJ': ['SINGLE'],
+//   'MCJ-TRB': ['SINGLE'],
+//   'TRB-TOM': ['SINGLE'],
+//   'TOM-SGM': ['SINGLE'],
+//   'SGM-AYN': ['SINGLE'],
+//   'AYN-BAL': ['SINGLE'],
+//   'BAL-ALK': ['SINGLE'],
+//   'ALK-TJ': ['SINGLE'],
+//   'TJ-TT': ['SINGLE'],
+//   'TT-PVL': ['SINGLE'],
+//   'PVL-AZP': ['SINGLE'],
+//   'AZP-PDV': ['SINGLE'],
+//   'PDV-PML': ['SINGLE'],
+//   'PML-SPL': ['SINGLE'],
+//   'SPL-SWI': ['SINGLE'],
+//   'SWI-DSM': ['SINGLE'],
+//   'DSM-KMU': ['SINGLE'],
+//   'KMU-TRM': ['SINGLE'],
+//   'TRM-TDR': ['SINGLE'],
+//   'TDR-ADT': ['SINGLE'],
+//   'ADT-NPT': ['SINGLE'],
+//   'NPT-KTM': ['SINGLE'],
+//   'KTM-MV': ['SINGLE'],
+
+//   // Yard connections for TPJ-MV (Single line)
+//   'MCJ-YD': ['SINGLE'],
+//   'TRB-YD': ['SINGLE'],
+//   'TOM-YD': ['SINGLE'],
+//   'SGM-YD': ['SINGLE'],
+//   'AYN-YD': ['SINGLE'],
+//   'BAL-YD': ['SINGLE'],
+//   'ALK-YD': ['SINGLE'],
+//   'TJ-YD': ['SINGLE'],
+//   'TT-YD': ['SINGLE'],
+//   'PVL-YD': ['SINGLE'],
+//   'AZP-YD': ['SINGLE'],
+//   'PDV-YD': ['SINGLE'],
+//   'PML-YD': ['SINGLE'],
+//   'SPL-YD': ['SINGLE'],
+//   'SWI-YD': ['SINGLE'],
+//   'DSM-YD': ['SINGLE'],
+//   'KMU-YD': ['SINGLE'],
+//   'TRM-YD': ['SINGLE'],
+//   'TDR-YD': ['SINGLE'],
+//   'ADT-YD': ['SINGLE'],
+//   'NPT-YD': ['SINGLE'],
+//   'KTM-YD': ['SINGLE'],
+//   'MV-YD': ['SINGLE'],
+
+//   // TPJ-TP Section (Single line)
+//   'TPJ-TPE': ['SINGLE'],
+//   'TPE-TP': ['SINGLE'],
+//   'TPE-YD': ['SINGLE'],
+//   'TP-YD': ['SINGLE']
 // };
-
-
-
-// export let workType = {
-//   'S&T': ['Gear', 'Tw', 'Lt'],
-//   'ENGG': ['Machine', 'Non-Machine'],
-//   'TRD': ['Tw', 'Lt'],
-// };
-
-
-
-
-
-
-
-
-
-// export let Activity = {
-//   'Gear': ['Point', 'EI', 'Signal', 'DC Track', 'AFTC', 'SSDAC', 'MSDAC', 'Panel', 'LC Gate Mechanical', 'LC Gate ELB', 'Emergency Sliding Boom', 'IPS', 'Conventional power supply equipment', 'System Integrity Test of each PI/EI/RRI stations', 'Cable Insulation testing (cable meggering) for one station.', 'DLBI- SGE', 'TLBI-FM Inst', 'UFSBI', 'Fuse', 'EKT'],
-
-//   'Tw': ['AOH', 'POH', 'IOH', 'RE POH', 'RD WORK', 'TURN OUT CHECKING', 'CROSS OVER CHECKING', 'CROSS TRACK FEEDERS CHECKING', 'GANTRY MAINTENANCE', 'CONTACT WIRE RENEWAL WORK', 'CATENARY WIRE RENEWAL WORK', 'CANTILEVER ERECTION/REPLACEMENT(2x25KV WORK)', 'MAST ERECTION(2x25KV WORK)', 'FEEDERS ERECTION(2x25KV WORK)', 'OHE PROFILING', 'OHE/CN WORK', 'OTHER SPECIAL WORKS'],
-
-//   'Lt': ['AOH', 'POH', 'IOH', 'RE POH', 'RD WORK', 'TURN OUT CHECKING', 'CROSS OVER CHECKING', 'CROSS TRACK FEEDERS CHECKING', 'GANTRY MAINTENANCE', 'CONTACT WIRE RENEWAL WORK', 'CATENARY WIRE RENEWAL WORK', 'CANTILEVER ERECTION/REPLACEMENT(2x25KV WORK)', 'MAST ERECTION(2x25KV WORK)', 'FEEDERS ERECTION(2x25KV WORK)', 'OHE PROFILING', 'OHE/CN WORK', 'OTHER SPECIAL WORKS'],
-
-//   'Machine': ['BCM ', 'DTE ', 'CSM ', 'DUOMAT', 'UNIMAT', 'MFI', 'MPT',
-//     'MDU', 'BRM',
-//     'FRM ', 'TRT ',
-//     'UTV', 'DTS',
-//     'T28', 'SQRS',
-//     'RGM working'],
-//   'Non-Machine': ['Rail renewal',
-//     'Welding work',
-//     'Destressing work',
-//     'Switch renewal',
-//     'CMS Crossing renewal',
-//     'SEJ Renewal',
-//     'Glued Joint renewal',
-//     'Dummy Glued Joint removal',
-//     'TRR P 60 Kg',
-//     'TRR S 60 Kg',
-//     'TRR S 60 kg',
-//     'TRR S 52 kg',
-//     'Interchanging',
-//     'Trucking out/Shifting materials',
-//     'TWR with MFBW',
-//     'TBTR (Br sleeper renewal)',
-//     'TSR P 60 Kg',
-//     'TSR S 60 Kg',
-//     'TSR S 52 Kg',
-//     'TTSR work',
-//     'Jt Insp Notes Attn',
-//     'Stretcherbar renewal',
-//     'TFR Work',
-//     'Ballast Unloading',
-//     'Rail unloading',
-//     'Lifting and packing',
-//     'Gauge tie plate renewal',
-//     'Sleeper renewal',
-//     'Fish Plates O&E',
-//     'Preliminary/Post works',
-//     'Trucking out materials',
-//     'Cutting Widening work',
-//     'JCB working',
-//     'Earth work/Muck removal',
-//     'Crane Moving/Working',
-//     'Attention to Track',
-//     'Attention to Fittings',
-//     'Attention to Bridge',
-//     'Attention to Guard rail',
-//     'Attention to Points & Xing',
-//     'Attention to LC',
-//     'Attention to Curve check rail',
-//     'Sheet Piling work',
-//     'Platform work',
-//     'Platform Shelter work',
-//     'ABSS work',
-//     'Erection of Platform shelter purlins work',
-//     'Erection of FOB Girders',
-//     'Other FOB works',
-//     'Other Track works',
-//     'Other Bridge work',
-//   ],
-// };
-
-
-
-
-
-
-
-
-// export const streamData = {
-//   'TPJ-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6", "Rd 7", "Rd 8", "Rd 9", "Rd 10"],
-//     "both direction not affected": [],
-//   },
-//   'GOC-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6", "Rd 7"],
-//     "both direction not affected": [],
-//   },
-//   'SRGM-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   'VLDE-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   'LLI-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   'PMB-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   'KKPM-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5"],
-//     "both direction not affected": [],
-//   },
-//   'KLGM-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   'SLTH-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5"],
-//     "both direction not affected": [],
-//   },
-//   'ALU-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6", "Rd 7"],
-//     "both direction not affected": [],
-//   },
-//   'OTK-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   'SNDI-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   'MTUR-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   'ICG-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5"],
-//     "both direction not affected": [],
-//   },
-//   'TLNR-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   'VRI-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6", "Rd 7", "Rd 8"],
-//     "both direction not affected": [],
-//   },
-//   'PVN-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   'ULU-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   'PRKL-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   'TVNL-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   'KDMD-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   'VM-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6", "Rd 7", "Rd 8"],
-//     "both direction not affected": [],
-//   },
-//   'SXR-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2"],
-//     "both direction not affected": [],
-//   },
-//   'TUY-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": [],
-//   },
-//   'PRT-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": [],
-//   },
-//   'MBU-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2"],
-//     "both direction not affected": [],
-//   },
-//   'NPM-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": [],
-//   },
-//   'TDPR-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2"],
-//     "both direction not affected": [],
-//   },
-//   'CUPJ-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5"],
-//     "both direction not affected": [],
-//   },
-//   'ALP-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": [],
-//   },
-//   'PUC-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5"],
-//     "both direction not affected": [],
-//   },
-//   'KII-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": [],
-//   },
-//   'CDM-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": [],
-//   },
-//   'CLN-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2"],
-//     "both direction not affected": [],
-//   },
-//   'SY-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   'VDL-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2"],
-//     "both direction not affected": [],
-//   },
-//   'ANP-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": [],
-//   },
-//   'MV-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6", "Rd 7", "Rd 8"],
-//     "both direction not affected": [],
-//   },
-//   'TRB-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   'SGM-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   'BAL-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   'ALK-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   'TJ-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6", "Rd 7"],
-//     "both direction not affected": [],
-//   },
-//   'TT-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2"],
-//     "both direction not affected": [],
-//   },
-//   'PDV-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2"],
-//     "both direction not affected": [],
-//   },
-//   'SPL-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2"],
-//     "both direction not affected": [],
-//   },
-//   'KMU-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   'ADT-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": [],
-//   },
-//   'KTM-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": [],
-//   },
-//   'SMM-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": []
-//   },
-//   'KDE-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": []
-//   },
-//   'KU-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": []
-//   },
-//   'TVR-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6", "Rd 7"],
-//     "both direction not affected": []
-//   },
-//   'KVL-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": []
-//   },
-//   'NGT-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": []
-//   },
-//   'NCR-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": []
-//   },
-//   'KIK-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": []
-//   },
-//   'PEM-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": []
-//   },
-//   'POM-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": []
-//   },
-//   'NNM-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": []
-//   },
-//   'KPD-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": []
-//   },
-//   'VLR-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": []
-//   },
-//   'KNB-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": []
-//   },
-//   'KMM-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": []
-//   },
-//   'ARV-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": []
-//   },
-//   'PRL-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": []
-//   },
-//   'AGM-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": []
-//   },
-//   'TJM-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": []
-//   },
-//   'TNM-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": []
-//   },
-//   'TNI-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": []
-//   },
-//   'TRK-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": []
-//   },
-//   'MMP-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": []
-//   },
-//   'VKM-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": []
-//   }
-//   ,
-//   'CUP J-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": []
-//   },
-//   'KJKPD-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2"],
-//     "both direction not affected": []
-//   },
-//   'VLU-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2"],
-//     "both direction not affected": []
-//   },
-//   'NVL-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2"],
-//     "both direction not affected": []
-//   },
-//   'UMG-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": []
-//   },
-//   'TNK-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2"],
-//     "both direction not affected": []
-//   },
-//   'TTP-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": []
-//   },
-//   'TAM-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2"],
-//     "both direction not affected": []
-//   },
-//   'AMM-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2"],
-//     "both direction not affected": []
-//   },
-//   'PKT-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": []
-//   },
-//   'PVI-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2"],
-//     "both direction not affected": []
-//   },
-//   'AYI-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2"],
-//     "both direction not affected": []
-//   },
-//   'ATQ-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": []
-//   },
-//   'PYK-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2"],
-//     "both direction not affected": []
-//   },
-//   'KKDI-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": []
-//   },
-//   'AGX-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": []
-//   },
-//   'VLNK-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": []
-//   },
-//   'CBU-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": []
-//   },
-//   'PDY-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": []
-//   },
-//   'NMJ-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": []
-//   },
-//   'MQ-YD': {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": []
-//   },
-
-// "MDKI-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6", "Rd 7", "Rd 8", "Rd 9"],
-//     "both direction not affected": []
-//   },
-//   "WRA-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6", "Rd 7", "Rd 8"],
-//     "both direction not affected": []
-//   },
-//   "CLMD-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1"],
-//     "both direction not affected": []
-//   },
-//   "KJKD-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5"],
-//     "both direction not affected": []
-//   },
-//   "PGT-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6", "Rd 7", "Rd 8", "Rd 9", "Rd 10", "Rd 11"],
-//     "both direction not affected": []
-//   },
-//   "PLL-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": []
-//   },
-//   "LDY-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": []
-//   },
-//   "OTP-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": []
-//   },
-//   "MNUR-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": []
-//   },
-//   "SRR A-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2"],
-//     "both direction not affected": []
-//   }, // Fixed: Added missing comma
-//   "SRR-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6", "Rd 7", "Rd 8", "Rd 9", "Rd 10", "Rd 11", "Rd 12", "Rd 13"],
-//     "both direction not affected": []
-//   },
-//   "CLT-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5"],
-//     "both direction not affected": []
-//   }, // Fixed: Added missing comma
-//   "WH-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": []
-//   },
-//   "POY-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5"],
-//     "both direction not affected": []
-//   }, // Fixed: Added missing comma
-//   "CNV-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": []
-//   },
-//   "TPT-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5"],
-//     "both direction not affected": [],
-//   },
-//   "KEY-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   "SLY-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   "DST-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   "DPI-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   "TNT-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   "BDY-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   "LCR-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   "MAP-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   "KPPR-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6"],
-//     "both direction not affected": [],
-//   },
-//   "BQI-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   "DSPT-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   },
-//   "MGSJ-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6"],
-//     "both direction not affected": [],
-//   },
-//   "SA-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6", "Rd 7", "Rd 1A", "Rd 9"],
-//     "both direction not affected": [],
-//   },
-//   "VRPD-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
-//     "both direction not affected": [],
-//   },
-//   "DC-YD": {
-//     "up direction affected": [],
-//     "down direction affected": [],
-//     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-//     "both direction not affected": [],
-//   }
-// };
-
-
-
-
-
-
-
-
-// // export let lineData = {
-
-// //   // example
-// //   "NPM-VKP": ['UP', 'DN'],
-// //   // TPJ-VM Section- All are UP and DN lines
-// //   'TPJ-GOC': ['UP', 'DN'],
-// //   'GOC-TPTN': ['UP', 'DN'],
-// //   'TPTN-SRGM': ['UP', 'DN'],
-// //   'SRGM-UKV': ['UP', 'DN'],
-// //   'UKV-BXS': ['UP', 'DN'],
-// //   'BXS-VLDE': ['UP', 'DN'],
-// //   'VLDE-LLI': ['UP', 'DN'],
-// //   'LLI-KTTR IBS': ['UP', 'DN'],
-// //   'KTTR IBS-KTTR': ['UP', 'DN'],
-// //   'KTTR-PMB': ['UP', 'DN'],
-// //   'PMB-KKPM': ['UP', 'DN'],
-// //   'KKPM-KLGM': ['UP', 'DN'],
-// //   'KLGM-SLT': ['UP', 'DN'],
-// //   'SLT-ALU': ['UP', 'DN'],
-// //   'ALU-OTK': ['UP', 'DN'],
-// //   'OTK-VER': ['UP', 'DN'],
-// //   'VER-SNDI': ['UP', 'DN'],
-// //   'SNDI-MTUR': ['UP', 'DN'],
-// //   'MTUR-ICG': ['UP', 'DN'],
-// //   'ICG-PNDM': ['UP', 'DN'],
-// //   'PNDM-TLNR': ['UP', 'DN'],
-// //   'TLNR-VRT': ['UP', 'DN'],
-// //   'VRT-VRI': ['UP', 'DN'],
-// //   'VRI-PVN': ['UP', 'DN'],
-// //   'PVN-ULU': ['UP', 'DN'],
-// //   'ULU-PRKL': ['UP', 'DN'],
-// //   'PRKL-TVNL': ['UP', 'DN'],
-// //   'TVNL-KDMD': ['UP', 'DN'],
-// //   'KDMD-VM': ['UP', 'DN'],
-
-// //   // Yard connections for TPJ-VM
-// //   'TPJ-YD': ['UP', 'DN'],
-// //   'GOC-YD': ['UP', 'DN'],
-// //   'TPTN-YD': ['UP', 'DN'],
-// //   'VLDE-YD': ['UP', 'DN'],
-// //   'LLI-YD': ['UP', 'DN'],
-// //   'KTTR-YD': ['UP', 'DN'],
-// //   'PMB-YD': ['UP', 'DN'],
-// //   'KKPM-YD': ['UP', 'DN'],
-// //   'KLGM-YD': ['UP', 'DN'],
-// //   'SLT-YD': ['UP', 'DN'],
-// //   'ALU-YD': ['UP', 'DN'],
-// //   'OTK-YD': ['UP', 'DN'],
-// //   'SNDI-YD': ['UP', 'DN'],
-// //   'MTUR-YD': ['UP', 'DN'],
-// //   'ICG-YD': ['UP', 'DN'],
-// //   'PNDM-YD': ['UP', 'DN'],
-// //   'TLNR-YD': ['UP', 'DN'],
-// //   'VRI-YD': ['UP', 'DN'],
-// //   'PVN-YD': ['UP', 'DN'],
-// //   'ULU-YD': ['UP', 'DN'],
-// //   'PRKL-YD': ['UP', 'DN'],
-// //   'TVNL-YD': ['UP', 'DN'],
-// //   'KDMD-YD': ['UP', 'DN'],
-// //   'VM-YD': ['UP', 'DN'],
-
-// //   // TPJ-MV Section- Single line (represented as same string in array)
-// //   // Already defined above, this is a junction
-// //   'GOC-MCJ': ['SINGLE'],
-// //   'MCJ-TRB': ['SINGLE'],
-// //   'TRB-TOM': ['SINGLE'],
-// //   'TOM-SGM': ['SINGLE'],
-// //   'SGM-AYN': ['SINGLE'],
-// //   'AYN-BAL': ['SINGLE'],
-// //   'BAL-ALK': ['SINGLE'],
-// //   'ALK-TJ': ['SINGLE'],
-// //   'TJ-TT': ['SINGLE'],
-// //   'TT-PVL': ['SINGLE'],
-// //   'PVL-AZP': ['SINGLE'],
-// //   'AZP-PDV': ['SINGLE'],
-// //   'PDV-PML': ['SINGLE'],
-// //   'PML-SPL': ['SINGLE'],
-// //   'SPL-SWI': ['SINGLE'],
-// //   'SWI-DSM': ['SINGLE'],
-// //   'DSM-KMU': ['SINGLE'],
-// //   'KMU-TRM': ['SINGLE'],
-// //   'TRM-TDR': ['SINGLE'],
-// //   'TDR-ADT': ['SINGLE'],
-// //   'ADT-NPT': ['SINGLE'],
-// //   'NPT-KTM': ['SINGLE'],
-// //   'KTM-MV': ['SINGLE'],
-
-// //   // Yard connections for TPJ-MV (Single line)
-// //   'MCJ-YD': ['SINGLE'],
-// //   'TRB-YD': ['SINGLE'],
-// //   'TOM-YD': ['SINGLE'],
-// //   'SGM-YD': ['SINGLE'],
-// //   'AYN-YD': ['SINGLE'],
-// //   'BAL-YD': ['SINGLE'],
-// //   'ALK-YD': ['SINGLE'],
-// //   'TJ-YD': ['SINGLE'],
-// //   'TT-YD': ['SINGLE'],
-// //   'PVL-YD': ['SINGLE'],
-// //   'AZP-YD': ['SINGLE'],
-// //   'PDV-YD': ['SINGLE'],
-// //   'PML-YD': ['SINGLE'],
-// //   'SPL-YD': ['SINGLE'],
-// //   'SWI-YD': ['SINGLE'],
-// //   'DSM-YD': ['SINGLE'],
-// //   'KMU-YD': ['SINGLE'],
-// //   'TRM-YD': ['SINGLE'],
-// //   'TDR-YD': ['SINGLE'],
-// //   'ADT-YD': ['SINGLE'],
-// //   'NPT-YD': ['SINGLE'],
-// //   'KTM-YD': ['SINGLE'],
-// //   'MV-YD': ['SINGLE'],
-
-// //   // TPJ-TP Section (Single line)
-// //   'TPJ-TPE': ['SINGLE'],
-// //   'TPE-TP': ['SINGLE'],
-// //   'TPE-YD': ['SINGLE'],
-// //   'TP-YD': ['SINGLE']
-// // };
 
 
 
@@ -1491,300 +524,90 @@ export let MajorSection = {
 //   // TTP-AGX Section - Single line
 //   'TTP-AGX': ['SINGLE'],  // TTP is junction with TVR-KKDI line
 //   // 'TTP-YD': ['SINGLE'],  // Already listed in TVR-KKDI
-//   'AGX-YD': ['SINGLE'],
-
-
-
-//   // PTJ-SRR Section
-//   "PTJ-MDKI": ["A", "B"],
-//   "MDKI-ETMD": ["A", "B"],
-//   "ETMD-WRA": ["A", "B"],
-//   "WRA-CLMD": ["A", "B"],
-//   "CLMD-KJKD": ["A", "B"],
-//   "KJKD-KTKU": ["A", "B"],
-//   "KTKU-PGT": ["A", "B"],
-//   "PGT-PLL": ["UP", "DN"],
-//   "PLL-LDY": ["UP", "DN"],
-//   "LDY-OTP": ["UP", "DN"],
-//   "OTP-MNUR": ["UP", "DN"],
-//   "MNUR-SRR A": ["UP", "DN"],
-//   "SRR A-SRR": ["Single"],
-
-//   // SRR-CLT Section
-//   "SRR-KRKD": ["UP", "DN"],
-//   "KRKD-PTB": ["UP", "DN"],
-//   "PTB-PUM": ["UP", "DN"],
-//   "PUM-KTU": ["UP", "DN"],
-//   "KTU-TUA": ["UP", "DN"],
-//   "TUA-TIR": ["UP", "DN"],
-//   "TIR-TA": ["UP", "DN"],
-//   "TA-PGI": ["UP", "DN"],
-//   "PGI-KN": ["UP", "DN"],
-//   "KN-FK": ["UP", "DN"],
-//   "FK-KUL": ["UP", "DN"],
-//   "KUL-CLT": ["UP", "DN"],
-
-//   // CLT-CAN Section
-//   "CLT-WH": ["UP", "DN"],
-//   "WH-ETR": ["UP", "DN"],
-//   "ETR-QLD": ["UP", "DN"],
-//   "QLD-TKT": ["UP", "DN"],
-//   "TKT-BDJ": ["UP", "DN"],
-//   "BDJ-MHE": ["UP", "DN"],
-//   "MHE-TLY": ["UP", "DN"],
-//   "TLY-ETK": ["UP", "DN"],
-//   "ETK-CS": ["UP", "DN"],
-//   "CS-CAN": ["UP", "DN"],
-
-//   // CAN-MAQ Section
-//   "CAN-VAPM": ["UP", "DN"],
-//   "VAPM-KPQ": ["UP", "DN"],
-//   "KPQ-PAZ": ["UP", "DN"],
-//   "PAZ-PAY": ["UP", "DN"],
-//   "PAY-CHV": ["UP", "DN"],
-//   "CHV-NLE": ["UP", "DN"],
-//   "NLE-KZE": ["UP", "DN"],
-//   "KZE-KQK": ["UP", "DN"],
-//   "KQK-KGQ": ["UP", "DN"],
-//   "KGQ-KMQ": ["UP", "DN"],
-//   "KMQ-MJS": ["UP", "DN"],
-//   "MJS-ULL": ["UP", "DN"],
-//   "ULL-NTVT": ["UP", "DN"],
-//   "NTVT-MAQ": ["UP", "DN"],
-
-//   // MAQ-TOK Section
-//   "MAQ-NTVT": ["Single"],
-//   "NTVT-MAJN": ["UP", "DN"],
-//   "MAJN-PADIL": ["UP", "DN"],
-//   "PADIL-JOKATTE": ["UP", "DN"],
-//   "JOKATTE-TOK": ["Single"],
-
-//   // SRR-NIL Section
-//   "SRR-AAM": ["Single"],
-//   "AAM-VNB": ["Single"],
-//   "VNB-NIL": ["Single"],
-
-//   // PGT-POY Section
-//   "PGT-PGTN": ["Single"],
-//   "PGTN-PDGM": ["Single"],
-//   "PDGM-KLGD": ["Single"],
-//   "KLGD-MMDA": ["Single"],
-//   "MMDA-MXM": ["Single"],
-//   "MXM-POY": ["Single"],
-
-//   // POY-CNV Section
-//   "POY-CNV": ["Single"],
-//     // JTJ-ED Section
-//   "JTJ-TPT": ["UP", "DN"],
-//   "TPT-KEY": ["UP", "DN"],
-//   "KEY-SLY": ["UP", "DN"],
-//   "SLY-DST": ["UP", "DN"],
-//   "DST-DPI": ["UP", "DN"],
-//   "DPI-MAP": ["UP", "DN"],
-//   "MAP-BDY": ["UP", "DN"],
-//   "BDY-BQI": ["UP", "DN"],
-//   "BQI-LCR": ["UP", "DN"],
-//   "LCR-DSPT": ["UP", "DN"],
-//   "DSPT-TNT": ["UP", "DN"],
-//   "TNT-KPPR": ["UP", "DN"],
-//   "KPPR-MGSJ": ["UP", "DN"],
-//   "MGSJ-SA": ["UP", "DN"],
-//   "SA-VRPD": ["UP", "DN"],
-//   "VRPD-DC": ["UP", "DN"],
-//   "DC-MVPM": ["UP", "DN"],
-//   "MVPM-SGE": ["UP", "DN"],
-//   "SGE-ANU": ["UP", "DN"],
-//   "ANU-CV": ["UP", "DN"],
-//   "CV-ED": ["UP", "DN"],
-//   "TPT-YD": ["UP", "DN"],
-//   "KEY-YD": ["UP", "DN"],
-//   "SLY-YD": ["UP", "DN"],
-//   "DST-YD": ["UP", "DN"],
-//   "DPI-YD": ["UP", "DN"],
-//   "MAP-YD": ["UP", "DN"],
-//   "BDY-YD": ["UP", "DN"],
-//   "BQI-YD": ["UP", "DN"],
-//   "LCR-YD": ["UP", "DN"],
-//   "DSPT-YD": ["UP", "DN"],
-//   "TNT-YD": ["UP", "DN"],
-//   "KPPR-YD": ["UP", "DN"],
-//   "MGS-YD": ["UP", "DN"],
-//   "VRPD-YD": ["UP", "DN"],
-//   "DC-YD": ["UP", "DN"],
-//   "MVPM-YD": ["UP", "DN"],
-//   "SGE-YD": ["UP", "DN"],
-//   "ANU-YD": ["UP", "DN"],
-//   "CV-YD": ["UP", "DN"],
-//   "ED-YD": ["UP", "DN"],
-
-//   // ED-PTJ Section
-//   "ED-TPM": ["UP", "DN"],
-//   "TPM-PY": ["UP", "DN"],
-//   "PY-IGR": ["UP", "DN"],
-//   "IGR-VZ": ["UP", "DN"],
-//   "VZ-UKL": ["UP", "DN"],
-//   "UKL-TUP": ["UP", "DN"],
-//   "TUP-VNJ": ["UP", "DN"],
-//   "VNJ-SNO": ["UP", "DN"],
-//   "SNO-SUU": ["UP", "DN"],
-//   "SUU-IGU": ["UP", "DN"],
-//   "IGU-PLMD": ["UP", "DN"],
-//   "IGU-PTJ": ["UP", "DN"],
-//   "PLMD-CBF": ["UP", "DN"],
-//   "CBF-CBE": ["UP", "DN"],
-//   "CBE-PTJ": ["UP", "DN"],
-//   "TPM-YD": ["UP", "DN"],
-//   "PY-YD": ["UP", "DN"],
-//   "IGR-YD": ["UP", "DN"],
-//   "VZ-YD": ["UP", "DN"],
-//   "VNJ-YD": ["UP", "DN"],
-//   "SUU-YD": ["UP", "DN"],
-//   "SNO-YD": ["UP", "DN"],
-//   "IGU-YD": ["UP", "DN"],
-//   "PLMD-YD": ["UP", "DN"],
-//   "CBF-YD": ["UP", "DN"],
-//   "CBE-YD": ["UP", "DN"],
-//   "PTJ-YD": ["UP", "DN"],
-
-//   // ED-TP Section
-//   "ED-CVD": ["Single"],
-//   "CVD-PAS": ["Single"],
-//   "PAS-URL": ["Single"],
-//   "URL-KMD": ["Single"],
-//   "KMD-PGR": ["Single"],
-//   "PGR-MPLM": ["Single"],
-//   "MPLM-KRR": ["Single"],
-//   "KRR-VRQ": ["Single"],
-//   "VRQ-MYU": ["Single"],
-
-//   // KRR-DG Section
-//   "KRR-VEI": ["Single"],
-//   "VEI-PALM": ["Single"],
-//   "PALM-EDU": ["Single"],
-//   "EDU-DG": ["Single"],
-//   "KRR-YD": ["Single"],
-//   "VEI-YD": ["Single"],
-//   "PALM-YD": ["Single"],
-//   "EDU-YD": ["Single"],
-
-//   // SA-VRI Section
-//   "SA-SAMT": ["Single"],
-//   "SAMT-SXT": ["Single"],
-//   "SXT-MPLI": ["Single"],
-//   "MPLI-ETP": ["Single"],
-//   "ETP-ATU": ["Single"],
-
-//   // SA-MTDM Section
-//   "SA-MGSJ": ["UP", "DN"],
-//   "SA-MGSJ NEW": ["UP", "DN"],
-//   "MGSJ-OML": ["UP", "DN"],
-//   "OML-MCRD": ["UP", "DN"],
-//   "MCRD-MTDM": ["UP", "DN"],
-
-//   // SA-KRR Section
-//   "SA-MALR": ["Single"],
-//   "MALR-RASP": ["Single"],
-//   "RASP-KLGN": ["Single"],
-//   "KLGN-NMKL": ["Single"],
-
-//   // MTP-UAM Section
-//   "MTP-QLR": ["Single"],
-//   "QLR-HLG": ["Single"],
-//   "HLG-ONR": ["Single"],
-//   "ONR-WEL": ["Single"],
-
-//   // PTJ-CNV Section
-//   "CNV-PTJ": ["Single"],
-//   "CNV-YD": ["Single"],
-
-//   // CBE-MTP Section
-//   "CBE-CBF": ["Single"],
-//   "CBF-KAY": ["Single"],
-//   "KAY-MTP": ["Single"],
-//   // "CBE-YD": ["Single"]
+//   'AGX-YD': ['SINGLE']
 // };
 
 
+// export const depot: DepotStructure = {
+//   "TPJ-VM": {
+//     'TRD': ["TPJ", "VM"],
+//     'S&T': ["TPJ", "VM"],
+//     'ENGG': ["TPJ", "VM"]
+//   },
 
-// // export const depot: DepotStructure = {
-// //   "TPJ-VM": {
-// //     'TRD': ["TPJ", "VM"],
-// //     'S&T': ["TPJ", "VM"],
-// //     'ENGG': ["TPJ", "VM"]
-// //   },
+//   "VM-MV": {
+//     'TRD': ["VM", "MV"],
+//     'S&T': ["VM", "MV"],
+//     'ENGG': ["VM", "MV"]
+//   },
 
-// //   "VM-MV": {
-// //     'TRD': ["VM", "MV"],
-// //     'S&T': ["VM", "MV"],
-// //     'ENGG': ["VM", "MV"]
-// //   },
+//   "TPJ-MV": {
+//     'TRD': ["TPJ", "MV"],
+//     'S&T': ["TPJ", "MV"],
+//     'ENGG': ["TPJ", "KTM", "MV"]
+//   },
 
-// //   "TPJ-MV": {
-// //     'TRD': ["TPJ", "MV"],
-// //     'S&T': ["TPJ", "MV"],
-// //     'ENGG': ["TPJ", "KTM", "MV"]
-// //   },
+//   "TJ-KIK": {
+//     'TRD': ["TJ", "KIK"],
+//     'S&T': ["TJ", "KIK"],
+//     'ENGG': ["TJ", "KIK"]
+//   },
 
-// //   "TJ-KIK": {
-// //     'TRD': ["TJ", "KIK"],
-// //     'S&T': ["TJ", "KIK"],
-// //     'ENGG': ["TJ", "KIK"]
-// //   },
+//   "MV-TVR": {
+//     'TRD': ["MV", "PEM", "POM", "NNM", "TVR"],
+//     'S&T': ["MV", "PEM", "POM", "NNM", "TVR"],
+//     'ENGG': ["MV", "PEM", "POM", "NNM", "TVR"]
+//   },
 
-// //   "MV-TVR": {
-// //     'TRD': ["MV", "PEM", "POM", "NNM", "TVR"],
-// //     'S&T': ["MV", "PEM", "POM", "NNM", "TVR"],
-// //     'ENGG': ["MV", "PEM", "POM", "NNM", "TVR"]
-// //   },
+//   "NMJ-MQ": {
+//     'TRD': ["NMJ", "MQ"],
+//     'S&T': ["NMJ", "MQ"],
+//     'ENGG': ["NMJ", "MQ"]
+//   },
 
-// //   "NMJ-MQ": {
-// //     'TRD': ["NMJ", "MQ"],
-// //     'S&T': ["NMJ", "MQ"],
-// //     'ENGG': ["NMJ", "MQ"]
-// //   },
+//   "VM-PDY": {
+//     'TRD': ["VM", "VRA", "CBU", "VI", "PDY"],
+//     'S&T': ["VM", "VRA", "CBU", "VI", "PDY"],
+//     'ENGG': ["VM", "VRA", "CBU", "VI", "PDY"]
+//   },
 
-// //   "VM-PDY": {
-// //     'TRD': ["VM", "VRA", "CBU", "VI", "PDY"],
-// //     'S&T': ["VM", "VRA", "CBU", "VI", "PDY"],
-// //     'ENGG': ["VM", "VRA", "CBU", "VI", "PDY"]
-// //   },
+//   "KPD-VM": {
+//     'TRD': ["KPD"],
+//     'S&T': ["KPD", "VT"],
+//     'ENGG': ["KPD", "VT"]
+//   },
 
-// //   "KPD-VM": {
-// //     'TRD': ["KPD"],
-// //     'S&T': ["KPD", "VT"],
-// //     'ENGG': ["KPD", "VT"]
-// //   },
+//   "CUPJ-VRI": {
+//     'TRD': ["CUP J", "KJKPD"],
+//     'S&T': ["CUP J", "KJKPD"],
+//     'ENGG': ["CUP J", "KJKPD"]
+//   },
 
-// //   "CUPJ-VRI": {
-// //     'TRD': ["CUP J", "KJKPD"],
-// //     'S&T': ["CUP J", "KJKPD"],
-// //     'ENGG': ["CUP J", "KJKPD"]
-// //   },
+//   "TPJ-TP": {
+//     'TRD': ["TPJ"],
+//     'S&T': ["TPJ"],
+//     'ENGG': ["TPJ"]
+//   },
 
-// //   "TPJ-TP": {
-// //     'TRD': ["TPJ"],
-// //     'S&T': ["TPJ"],
-// //     'ENGG': ["TPJ"]
-// //   },
+//   "NGT-VLNK": {
+//     'TRD': ["NGT"],
+//     'S&T': ["NGT"],
+//     'ENGG': ["NGT"]
+//   },
 
-// //   "NGT-VLNK": {
-// //     'TRD': ["NGT"],
-// //     'S&T': ["NGT"],
-// //     'ENGG': ["NGT"]
-// //   },
+//   "TVR-KKDI": {
+//     'TRD': ["TVR", "KKDI"],
+//     'S&T': ["TVR", "KKDI"],
+//     'ENGG': ["TVR", "KKDI"]
+//   },
 
-// //   "TVR-KKDI": {
-// //     'TRD': ["TVR", "KKDI"],
-// //     'S&T': ["TVR", "KKDI"],
-// //     'ENGG': ["TVR", "KKDI"]
-// //   },
+//   "TTP-AGX": {
+//     'TRD': ["TTP", "AGX"],
+//     'S&T': ["TTP", "AGX"],
+//     'ENGG': ["TTP", "AGX"]
+//   }
+// };
 
-// //   "TTP-AGX": {
-// //     'TRD': ["TTP", "AGX"],
-// //     'S&T': ["TTP", "AGX"],
-// //     'ENGG': ["TTP", "AGX"]
-// //   }
-// // };
 // export const depot: DepotStructure = {
 //   "TPJ-VM": {
 //     'ENGG': ["TPJ","LLI","ALU","A/VRI"],
@@ -1862,133 +685,19 @@ export let MajorSection = {
 //     'TRD': ["PKT"],
 //     'S&T': ["TVR"],
 //     'ENGG': ["TTP"]
-//   },
-// "PTJ-SRR": {
-//     'ENGG': ["PTJ/W", "PGT/E", "PGT/W", "SRR"],
-//     'S&T': ["PGT", "SRR"],
-//     'TRD': ["PGT", "SRR"]
-//   },
-
-//   "SRR-CLT": {
-//     'TRD': ["SRR", "TIR", "QLD"],
-//     'S&T': ["SRR", "TIR", "CLT"],
-//     'ENGG': ["SRR", "TIR", "CLT"]
-//   },
-
-//   "CLT-CAN": {
-//     'TRD': ["QLD", "CS"],
-//     'S&T': ["CLT", "CAN"],
-//     'ENGG': ["CLT", "QLD", "CAN"]
-//   },
-
-//   "CAN-MAQ-MAJN": {
-//     'TRD': ["CS", "CS", "CHV", "ULL"],
-//     'S&T': ["CAN", "MAQ"],
-//     'ENGG': ["CAN", "PAY", "KGQ", "MAQ"]
-//   },
-
-//   "MAQ-MAJN-PADIL-TOK": {
-//     'TRD': ["ULL"],
-//     'S&T': ["MAQ"],
-//     'ENGG': ["MAQ"]
-//   },
-
-//   "SRR-NIL": {
-//     'TRD': ["NIL"],
-//     'S&T': ["SRR"],
-//     'ENGG': ["AAM"]
-//   },
-
-//   "PGT-PGTN-POY": {
-//     'TRD': ["POY"],
-//     'S&T': ["PGTN"],
-//     'ENGG': ["KLGD", "PGT/E"]
-//   },
-
-//   "POY-CNV": {
-//     'TRD': ["POY"],
-//     'S&T': ["PGTN"],
-//     'ENGG': ["KLGD"]
-//   },
-//   "JTJ-ED": {
-//     'TRD': ["SA", "ED", "BQI", "SLY"],
-//     'S&T': ["MAP", "BQI", "ED", "SA"],
-//     'ENGG': ["TPT", "BQI", "N/SA", "S/SA", "ED"]
-//   },
-
-//   "ED-PTJ": {
-//     'TRD': ["ED", "TUP", "PTJ"],
-//     'S&T': ["TUP", "PTJ", "CBE", "ED"],
-//     'ENGG': ["ED", "TUP", "E/PTJ", "CBE"]
-//   },
-
-//   "ED-TP": {
-//     'TRD': ["KMD", "PLI"],
-//     'S&T': ["KRR/W", "KRR/E", "ED"],
-//     'ENGG': ["TP", "W/KRR"]
-//   },
-
-//   "KRR-DG": {
-//     'TRD': ["KRR"],
-//     'S&T': ["KRR/E"],
-//     'ENGG': ["E/KRR"]
-//   },
-
-//   "SA-VRI": {
-//     'TRD': ["SA", "CHSM"],
-//     'S&T': ["SA", "VRI"],
-//     'ENGG': ["S/SA", "ATU", "CHSM"]
-//   },
-
-//   "SA-MTDM": {
-//     'TRD': ["SA", "MTDM"],
-//     'S&T': ["SA"],
-//     'ENGG': ["N/SA"]
-//   },
-
-//   "SA-KRR": {
-//     'TRD': ["SA", "NMKL", "KRR"],
-//     'S&T': ["SA", "KRR/W"],
-//     'ENGG': ["NMKL"]
-//   },
-
-//   "CBE-MTP": {
-//     'TRD': ["PTJ"],
-//     'S&T': ["CBE"],
-//     'ENGG': ["CBF"]
-//   },
-
-//   "MTP-UAM": {
-//     'TRD': [],
-//     'S&T': ["CBE"],
-//     'ENGG': ["ONR"]
-//   },
-
-//   "PTJ-CNV": {
-//     'TRD': ["PTJ"],
-//     'S&T': ["PTJ"],
-//     'ENGG': ["E/PTJ"]
 //   }
 // };
 
-
-// export const location = {
-//   "MAS": "MADRAS",
-//   "AJJ": "AINSDFD",
-//   "AJJN": "DFSDFAJJN",
-//   "AJP": "DSFSD",
-// }
-
-// // export const depotOnLocation = {
-// //   "TPJ": [
-// //     "TPJ", "VM", "MV", "KTM", "TJ", "KIK", "PEM", "POM", "NNM", "TVR",
-// //     "NMJ", "MQ", "VRA", "CBU", "VI", "PDY", "KPD", "VT", "CUP J", "KJKPD",
-// //     "NGT", "KKDI", "TTP", "AGX", "TVT", "PON", "SPE", "GDR", "WSTA",
-// //     "WSTB", "AVD", "TRLA", "TRLB", "AJJ", "WJR", "AB", "JTJ", "TRT",
-// //     "PUT", "CJ", "MS", "TBM", "CGL", "ACK", "TMV", "MSB", "BBQ", "GPD",
-// //     "NYP", "TRL", "AJJE", "KPDW"
-// //   ]
-// // };
+// export const depotOnLocation = {
+//   "TPJ": [
+//     "TPJ", "VM", "MV", "KTM", "TJ", "KIK", "PEM", "POM", "NNM", "TVR",
+//     "NMJ", "MQ", "VRA", "CBU", "VI", "PDY", "KPD", "VT", "CUP J", "KJKPD",
+//     "NGT", "KKDI", "TTP", "AGX", "TVT", "PON", "SPE", "GDR", "WSTA",
+//     "WSTB", "AVD", "TRLA", "TRLB", "AJJ", "WJR", "AB", "JTJ", "TRT",
+//     "PUT", "CJ", "MS", "TBM", "CGL", "ACK", "TMV", "MSB", "BBQ", "GPD",
+//     "NYP", "TRL", "AJJE", "KPDW"
+//   ]
+// };
 // export const depotOnLocation = {
 //   "TPJ": [
 //     "TPJ",     // Tiruchchirappalli Junction
@@ -2003,16 +712,6 @@ export let MajorSection = {
 //     "VRI/B",
 //     "CUP J",   // Cuddalore Port Junction
 //     "MV",      // Mayiladuthurai Junction
-//   ],
-//   "PTJ": [
-//     "PTJ", "SRR", "PGT", "TIR", "QLD", "CLT", "CAN",
-//     "CS", "CHV", "ULL", "MAQ", "PAY", "KGQ", "NIL", "AAM", "POY",
-//     "PGTN", "KLGD"
-//   ],
-//    "SA": [
-//     "SA", "ED", "BQI", "SLY", "MAP", "TPT", "N/SA", "S/SA", "TUP", "CBE", "E/PTJ", 
-//     "KMD", "PLI", "TP", "W/KRR", "KRR", "KRR/E", "CHSM", "VRI", "ATU", "MTDM", 
-//     "NMKL", "KRR", "PTJ", "CBF", "ONR"
 //   ]
 // }
 
@@ -5081,3 +3780,75 @@ export let sectionData = {
     station: [],
   },
 };
+
+export const departmentDepot = {
+    "TRD": [
+        "BBQ",
+        "TVT",
+        "PON",
+        "SPE",
+        "GDR",
+        "AVD",
+        "TRL",
+        "AJJ",
+        "WJR",
+        "KPD",
+        "AB",
+        "JTJ",
+        "PUT",
+        "CGL",
+        "MS",
+        "TBM",
+        "ACK",
+        "VM",
+        "MSB"
+    ],
+    "S&T": [
+        "MAS",
+        "BBQ",
+        "TVT",
+        "GPD",
+        "SPE",
+        "NYP",
+        "TRL",
+        "AJJE",
+        "MSB",
+        "AJJW",
+        "KPDE",
+        "KPDW",
+        "AB",
+        "JTJ",
+        "TRT",
+        "PUT",
+        "CGL",
+        "MS",
+        "TBM",
+        "TMV"
+    ],
+    "ENGG": [
+        "TVT",
+        "PON",
+        "SPE",
+        "GDR",
+        "BRIDGE",
+        "WSTA",
+        "WSTB",
+        "AVD",
+        "TRLA",
+        "TRLB",
+        "AJJ",
+        "WJR",
+        "KPD",
+        "AB",
+        "JTJ",
+        "TRT",
+        "PUT",
+        "CJ",
+        "MS",
+        "TBM",
+        "CGL",
+        "ACK",
+        "TMV",
+        "MSB"
+    ]
+}
