@@ -1130,16 +1130,16 @@ export default function OptimiseTablePage() {
 
 
   // CSS for flashing animation
-  const flashingRowStyle = `
-    @keyframes flashRed {
-      0% { background-color: white; }
-      50% { background-color: #ff8080; }
-      100% { background-color: white; }
-    }
-    .urgent-block-row {
-      animation: flashRed 1.5s infinite;
-    }
-  `;
+ const flashingRowStyle = `
+  @keyframes flashRed {
+    0% { background-color: white; }
+    50% { background-color: #f76363; } /* lighter, softer red */
+    100% { background-color: white; }
+  }
+  .urgent-block-row {
+    animation: flashRed 5s infinite ease-in-out; /* slower and smoother */
+  }
+`;
   return (
 
     <div className="min-h-screen w-screen flex flex-col justify-between bg-white p-3 border border-black">
