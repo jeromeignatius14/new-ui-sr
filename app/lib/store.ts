@@ -543,7 +543,7 @@ export const streamData = {
   "TN-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2"],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6", "Rd 7"],
     "both direction not affected": []
   },
   "TNHP-YD": {
