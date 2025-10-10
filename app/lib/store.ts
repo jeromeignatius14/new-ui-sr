@@ -1166,7 +1166,7 @@ export const depot: DepotStructure = {
     "TPJ-DG": {
       "TRD": ["MPA", "DG"],      // combined from Depot/TRD column (include only non-empty)
       "S&T": ["DG"],             // Depot/S&T column - DG only
-      "ENGG": ["MPA"]            // Depot/Engg column - MPA only
+      "ENGG": ["MPA","DG"]            // Depot/Engg column - MPA only
     },
    "DG-MDU": {
       "TRD": ["DG", "MDU"],
