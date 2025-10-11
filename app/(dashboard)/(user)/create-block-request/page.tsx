@@ -423,7 +423,7 @@ function ReviewBlockRequestModal({
               <h3 className="font-bold mb-2">Other Affected Lines/Roads:</h3>
               {formData.processedLineSections && formData.processedLineSections.some((s: any) => s.otherLines?.trim() || s.otherRoads?.trim()) ? (
                 <div className="">
-                  {formData.processedLineSections.map((s: any, index:any) => (
+                  {formData.processedLineSections.map((s: any, index: any) => (
                     <React.Fragment key={`other-${index}`}>
                       {s.otherLines?.trim() && (
                         <div className="mb-2">
@@ -627,7 +627,7 @@ interface FormData {
   date: string;
   demandTimeFrom: string;
   demandTimeTo: string;
-  duration?: string; // <-- Added this line
+  // duration?: string; // <-- Added this line
   processedLineSections: {
     type: string;
     block: string;
@@ -769,7 +769,7 @@ export default function CreateBlockRequestPage() {
         freshCautionSpeed: "",
       },
     ],
-    duration: "",
+    // duration: "",
   };
 
   const [formData, setFormData] = useState<FormData>(initialFormData);
@@ -805,7 +805,7 @@ export default function CreateBlockRequestPage() {
   const [showPopup, setShowPopup] = useState(false);
   const [popupLink, setPopupLink] = useState("");
   const [proceedAnyway, setProceedAnyway] = useState(false);
-  
+
   // Initialize the depot from session when the session loads
   useEffect(() => {
     if (session?.user?.depot) {
@@ -1240,12 +1240,6 @@ export default function CreateBlockRequestPage() {
   // Add reviewMode state
   const [reviewMode, setReviewMode] = useState(false);
 
-  const parseDuration = (duration: string | null): number => {
-    if (!duration) return 0;
-    const [hours, minutes] = duration.split(":").map(Number);
-    return hours * 60 + minutes;
-  }
-
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log("level entry");
@@ -1358,6 +1352,7 @@ export default function CreateBlockRequestPage() {
       let start = fromH * 60 + fromM;
       let end = toH * 60 + toM;
       if (end < start) end += 24 * 60;
+      const durationMins = end - start;
 
       // ─── 6. Build payload ────────────────────────────────────────────────
       const submitData: UserRequestInput = {
@@ -1405,16 +1400,16 @@ export default function CreateBlockRequestPage() {
           formData.date || "",
           formData.demandTimeTo || ""
         ),
-        duration: formatTimeToDatetime(formData.date || "", formData.duration || ""),
-
         processedLineSections: processedSections,
         adminAcceptance: false,
         selectedDepo: userDepot || "",
-        ...(formData.duration && parseDuration(formData.duration) <= 45 && !formData.sigActionsNeeded && !formData.trdActionsNeeded && {
+        ...(durationMins <= 45 && !formData.sigActionsNeeded && !formData.trdActionsNeeded && {
           managerAcceptance: true,
           isSanctioned: true,
         }),
       };
+
+       console.log(submitData)
       // ─── 7. Submit to backend ────────────────────────────────────────────
       const response = await mutation.mutateAsync(submitData);
       if (response) {
@@ -1427,12 +1422,12 @@ export default function CreateBlockRequestPage() {
             submitData.processedLineSections
               ?.map((s) => s.lineName || s.road)
               .join(", ") || "-",
-          // duration:
-          //   getDurationFromTimes(
-          //     formData.demandTimeFrom || "",
-          //     formData.demandTimeTo || ""
-          //   ) || "-",
-          duration: formData.duration || "-",
+          duration:
+            getDurationFromTimes(
+              formData.demandTimeFrom || "",
+              formData.demandTimeTo || ""
+            ) || "-",
+          // duration: formData.duration || "-",
 
         });
 
@@ -3074,10 +3069,10 @@ export default function CreateBlockRequestPage() {
                   Duration
                 </span>
 
-                <div className="flex flex-row flex-wrap items-center justify-center gap-2 px-3 py-2 text-2xl">
+                {/* <div className="flex flex-row flex-wrap items-center justify-center gap-2 px-3 py-2 text-2xl">
                   <div className="bg-white border-2 border-[#2c3e50] text-[#2c3e50] font-bold text-2xl px-2 py-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3498db] shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200">
                     {/* Duration Hours */}
-                    <select
+                {/* <select
                       name="durationHour"
                       value={formData.duration ? formData.duration.split(":")[0] : ""}
                       onChange={(e) => {
@@ -3106,7 +3101,7 @@ export default function CreateBlockRequestPage() {
                     <span className="text-[#2c3e50] font-bold text-[24px]">:</span>
 
                     {/* Duration Minutes */}
-                    <select
+                {/* <select
                       name="durationMin"
                       value={formData.duration ? formData.duration.split(":")[1] : ""}
                       onChange={(e) => {
@@ -3136,13 +3131,14 @@ export default function CreateBlockRequestPage() {
                     </select>
                   </div>
                 </div>
+              */}
 
-                {/* <span className="bg-white border-2 border-[#2c3e50] rounded-lg px-6 py-2 text-2xl font-bold text-[#2c3e50] min-w-[120px] text-center shadow-md hover:shadow-lg transition-shadow duration-200">
-    {getDurationFromTimes(
-      formData.demandTimeFrom || "",
-      formData.demandTimeTo || ""
-    ) || "--"}
-  </span> */}
+                <span className="bg-white border-2 border-[#2c3e50] rounded-lg px-6 py-2 text-2xl font-bold text-[#2c3e50] min-w-[120px] text-center shadow-md hover:shadow-lg transition-shadow duration-200">
+                  {getDurationFromTimes(
+                    formData.demandTimeFrom || "",
+                    formData.demandTimeTo || ""
+                  ) || "--"}
+                </span>
 
               </div>
               {/* Site Location row */}

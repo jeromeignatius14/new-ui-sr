@@ -279,7 +279,7 @@ export default function ViewRequest() {
               ) : null}
 
               {/* Parsing Duration */}
-              <tr>
+              {/* <tr>
                 <td className="py-1 font-medium">Duration:</td>
                 <td className="py-1">
                   {request.duration ?
@@ -299,7 +299,7 @@ export default function ViewRequest() {
                     })()
                     : "N/A"}
                 </td>
-              </tr>
+              </tr> */}
 
               {request.elementarySection && request.selectedDepartment === "TRD" && (
                 <tr>
