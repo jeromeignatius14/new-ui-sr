@@ -2786,18 +2786,28 @@ export default function CreateBlockRequestPage() {
                     : [];
 
                   // Update this line to check user department with max 6 for TRD
-                  const maxSelections = userDepartment === "TRD" ? 6 : 2;
-
-                  if (values.length <= maxSelections) {
-                    setBlockSectionValue(values);
-                    setFormData((prev) => ({
-                      ...prev,
-                      missionBlock: values.join(","),
-                      processedLineSections: (
-                        prev.processedLineSections || []
-                      ).filter((s: any) => values.includes(s.block)),
-                    }));
-                  }
+                  // const maxSelections = userDepartment === "TRD" ? 6 : 2;
+                  // if (values.length <= maxSelections) {
+                  //   setBlockSectionValue(values);
+                  //   setFormData((prev) => ({
+                  //     ...prev,
+                  //     missionBlock: values.join(","),
+                  //     processedLineSections: (
+                  //       prev.processedLineSections || []
+                  //     ).filter((s: any) => values.includes(s.block)),
+                  //   }));
+                  // }
+                   if (userDepartment !== "TRD" && values.length > 2) {
+        return; 
+      }
+                  setBlockSectionValue(values);
+      setFormData((prev) => ({
+        ...prev,
+        missionBlock: values.join(","),
+        processedLineSections: (
+          prev.processedLineSections || []
+        ).filter((s: any) => values.includes(s.block)),
+      }));
                 }}
                 classNamePrefix="react-select"
                 styles={{
@@ -2865,16 +2875,26 @@ export default function CreateBlockRequestPage() {
                   }),
                 }}
                 // placeholder="Select up to 2 Block Sections/Yards"
+                // placeholder={
+                //   userDepartment === "TRD"
+                //     ? "Select up to 6 Block Sections/Yards"
+                //     : "Select up to 2 Block Sections/Yards"
+                // }
+
+
                 placeholder={
-                  userDepartment === "TRD"
-                    ? "Select up to 6 Block Sections/Yards"
-                    : "Select up to 2 Block Sections/Yards"
-                }
+      userDepartment === "TRD"
+        ? "Select Block Sections/Yards"
+        : "Select up to 2 Block Sections/Yards"
+    }
                 closeMenuOnSelect={false}
                 // isOptionDisabled={() => blockSectionValue.length >= 2}
-                isOptionDisabled={() =>
-                  blockSectionValue.length >= (userDepartment === "TRD" ? 6 : 2)
-                }
+                // isOptionDisabled={() =>
+                //   blockSectionValue.length >= (userDepartment === "TRD" ? 6 : 2)
+                // }
+                 isOptionDisabled={() => 
+      userDepartment !== "TRD" && blockSectionValue.length >= 2
+    }
                 required
               />
               {errors.missionBlock && (
@@ -3116,14 +3136,22 @@ export default function CreateBlockRequestPage() {
                       {[...Array(24).keys()].map((h) => {
                         const hourStr = h.toString().padStart(2, "0");
                         // If selected date is today, disable past hours
+                        // if (isToday(formData.date)) {
+                        //   const now = new Date();
+                        //   const currentHour = now.getHours();
+                        //   // Only allow hours that are at least current hour + 1
+                        //   if (h < currentHour + 1) {
+                        //     return null; // Skip rendering this option
+                        //   }
+                        // }
                         if (isToday(formData.date)) {
-                          const now = new Date();
-                          const currentHour = now.getHours();
-                          // Only allow hours that are at least current hour + 1
-                          if (h < currentHour + 1) {
-                            return null; // Skip rendering this option
-                          }
-                        }
+  const now = new Date();
+  const currentHour = now.getHours();
+  if (h < currentHour + 1 && h !== 0) {
+    return null;
+  }
+}
+
                         return (
                           <option key={h} value={hourStr}>
                             {hourStr}

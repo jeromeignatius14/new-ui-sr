@@ -51,6 +51,9 @@ export default function ManagerRequestTablePage() {
   const [section, setSection] = useState<string[]>([]);
   const [sse, setSse] = useState<string[]>([]);
 
+  const [divisionIdSearch, setDivisionIdSearch] = useState<string>("");
+
+
   // Sync derived states
   useEffect(() => {
     setType(blockType);
@@ -174,11 +177,15 @@ useEffect(() => {
   const blockType = searchParams.get("blockType");
   const start = searchParams.get("startDate");
   const end = searchParams.get("endDate");
+  const search = searchParams.get("search");
+
 
   if (section) setSelectedSections(section.split(","));
   if (sse) setSelectedSSEs(sse.split(","));
   if (blockType) setBlockType(blockType.split(","));
   if (start || end) setCustomDateRange({ start: start || "", end: end || "" });
+  if (search) setDivisionIdSearch(search);
+
 }, [searchParams]);
 
 const updateQueryParams = (updates: Record<string, string | string[] | null>) => {
@@ -194,7 +201,16 @@ const updateQueryParams = (updates: Record<string, string | string[] | null>) =>
 
   router.replace(`?${params.toString()}`);
 };
+ const handleSearchChange = (value: string) => {
+    setDivisionIdSearch(value);
+    updateQueryParams({ search: value || null });
+  };
 
+  // Clear search
+  const clearSearch = () => {
+    setDivisionIdSearch("");
+    updateQueryParams({ search: null });
+  };
   // Status mapping function for table display
   function getDisplayStatus(request: UserRequest) {
     // Sanctioned (light green)
@@ -276,6 +292,13 @@ const updateQueryParams = (updates: Record<string, string | string[] | null>) =>
     filteredRequests = filteredRequests.filter((r) =>
       blockType.includes(r.corridorType)
     );
+  }
+
+ if (divisionIdSearch.trim() !== "") {
+    filteredRequests = filteredRequests.filter((r) => {
+      const divisionId = r.divisionId || r.id || "";
+      return divisionId.toLowerCase().includes(divisionIdSearch.toLowerCase());
+    });
   }
   // Calculate pending with me count
   const pendingWithMeCountNoChange = filteredRequestsNoChange.filter(
@@ -475,152 +498,198 @@ const updateQueryParams = (updates: Record<string, string | string[] | null>) =>
     </div>
     
     {/* Filters Section */}
-    <div className="px-6 py-4 ">
-      <div className="flex flex-wrap gap-3 items-center justify-between bg-[#F8F0FF] p-3 rounded-lg border-2 border-[#B57CF6]">
-        {/* Date Range */}
-        <div className="flex flex-col items-center gap-2">
-          <input
-            type="date"
-            value={customDateRange.start}
-            onChange={(e) => handleDateChange("start", e.target.value)}
-
-            className="p-2 border-2 border-[#B57CF6] text-black bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B57CF6] text-2xl"
-          />
-          <span className="px-1 text-black font-medium">to</span>
-          <input
-            type="date"
-            value={customDateRange.end}
-            onChange={(e) => handleDateChange("end", e.target.value)}
-
-
-            className="p-2 border-2 border-[#B57CF6] text-black bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B57CF6] text-2xl"
-          />
-        </div>
-
-        {/* Section Dropdown */}
-
-        
-        <div className="relative text-2xl">
+   <div className="px-4 sm:px-6 py-4">
+  {/* Search Field - Outside on mobile, inside on desktop */}
+  <div className="block sm:hidden mb-3">
+    <div className="flex items-center gap-2 bg-[#F8F0FF] p-2 rounded-lg border-2 border-[#B57CF6] w-full">
+      <label className="text-lg font-semibold text-black whitespace-nowrap">
+        Search ID:
+      </label>
+      <div className="relative flex-1">
+        <input
+          type="text"
+          value={divisionIdSearch}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          placeholder="Enter ID..."
+          className="w-full p-2 border-2 border-[#B57CF6] text-black bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B57CF6] text-lg pr-8"
+        />
+        {divisionIdSearch && (
           <button
-            onClick={() => setSectionDropdownOpen((v) => !v)}
-            className="bg-[#D6C2FF] px-4 py-2 rounded-lg border-2 border-[#B57CF6] font-semibold text-black flex items-center gap-2 hover:bg-[#C9B2FF] transition"
+            onClick={clearSearch}
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 text-lg"
           >
-            Section: {selectedSections.length === 0 ? "All" : `${selectedSections.length} selected`}
-            <span className="ml-1">▼</span>
+            ✕
           </button>
-          {sectionDropdownOpen && (
-            <div className="absolute z-50 mt-1 w-48 bg-white border-2 border-[#B57CF6] rounded-lg shadow-lg max-h-60 overflow-y-auto">
-              {sectionOptions.map((section) => (
-                <label
-                  key={section}
-                  className="flex items-center px-4 py-2 cursor-pointer hover:bg-[#F0E6FF] text-black"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedSections.includes(section)}
-                    onChange={() =>
-                      setSelectedSections((prev) => {
-                        const updated = prev.includes(section)
-                          ? prev.filter((s) => s !== section)
-                          : [...prev, section];
-
-                        updateQueryParams({ section: updated });
-                        return updated;
-                      })
-                    }
-                    className="mr-2 accent-[#B57CF6]"
-                  />
-                  {section}
-                </label>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* SSE Dropdown */}
-        <div className="relative text-2xl">
-          <button
-            onClick={() => setSseDropdownOpen((v) => !v)}
-            className="bg-[#D6C2FF] px-4 py-2 rounded-lg border-2 border-[#B57CF6] font-semibold text-black flex items-center gap-2 hover:bg-[#C9B2FF] transition"
-          >
-            SSE: {selectedSSEs.length === 0 ? "All" : `${selectedSSEs.length} selected`}
-            <span className="ml-1">▼</span>
-          </button>
-          {sseDropdownOpen && (
-            <div className="absolute z-40 mt-1 w-48 bg-white border-2 border-[#B57CF6] rounded-lg shadow-lg max-h-60 overflow-y-auto">
-              {sseOptions.map((sse) => (
-                <label
-                  key={sse}
-                  className="flex items-center px-4 py-2 cursor-pointer hover:bg-[#F0E6FF] text-black"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedSSEs.includes(sse)}
-                    onChange={() =>
-                      setSelectedSSEs((prev) => {
-                        const updated = prev.includes(sse)
-                          ? prev.filter((s) => s !== sse)
-                          : [...prev, sse];
-
-                        updateQueryParams({ sse: updated });
-                        return updated;
-                      })
-                    }
-                    className="mr-2 accent-[#B57CF6]"
-                  />
-                  {sse}
-                </label>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Block Type Dropdown */}
-        <div className="relative text-2xl">
-          <button
-            onClick={() => setBlockTypeDropdownOpen((v) => !v)}
-            className="bg-[#E6D6FF] px-4 py-2 rounded-lg border-2 border-[#B57CF6] font-semibold text-black flex items-center gap-2 hover:bg-[#D9C4FF] transition"
-          >
-            Block Type: {blockType.length === 0 ? "All" : `${blockType.length} selected`}
-            <span className="ml-1">▼</span>
-          </button>
-          {blockTypeDropdownOpen && (
-            <div className="absolute z-50 mt-1 w-48 bg-white border-2 border-[#B57CF6] rounded-lg shadow-lg">
-              {blockTypeOptions.map((opt) => (
-                <label
-                  key={opt.value}
-                  className="flex items-center px-4 py-2 cursor-pointer hover:bg-[#F0E6FF] text-black"
-                >
-                  <input
-                    type="checkbox"
-                    checked={blockType.includes(opt.value)}
-                    onChange={() =>
-                      setBlockType((prev) => {
-                        const updated = prev.includes(opt.value)
-                          ? prev.filter((s) => s !== opt.value)
-                          : [...prev, opt.value];
-
-                        updateQueryParams({ blockType: updated });
-                        return updated;
-                      })
-                    }
-                    className="mr-2 accent-[#B57CF6]"
-                  />
-                  {opt.label}
-                </label>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <button
-          onClick={() => setFiltersApplied(true)}
-          className="text-2xl mx-auto bg-[#B57CF6] px-6 py-2 rounded-[50%] border-2 border-[#8E44AD] font-bold text-white hover:bg-[#A56CE6] transition shadow-md"
-        >
-          click to view
-        </button>
+        )}
       </div>
     </div>
+  </div>
+
+  <div className="flex flex-wrap gap-3 items-center justify-between bg-[#F8F0FF] p-3 rounded-lg border-2 border-[#B57CF6]">
+    {/* Date Range */}
+    <div className="flex flex-col items-center gap-2 w-full sm:w-auto">
+      <input
+        type="date"
+        value={customDateRange.start}
+        onChange={(e) => handleDateChange("start", e.target.value)}
+        className="w-full sm:w-auto p-2 border-2 border-[#B57CF6] text-black bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B57CF6] text-lg sm:text-2xl"
+      />
+      <span className="px-1 text-black font-medium">to</span>
+      <input
+        type="date"
+        value={customDateRange.end}
+        onChange={(e) => handleDateChange("end", e.target.value)}
+        className="w-full sm:w-auto p-2 border-2 border-[#B57CF6] text-black bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B57CF6] text-lg sm:text-2xl"
+      />
+    </div>
+
+    {/* Section Dropdown */}
+    <div className="relative text-lg sm:text-2xl w-full sm:w-auto">
+      <button
+        onClick={() => setSectionDropdownOpen((v) => !v)}
+        className="w-full sm:w-auto bg-[#D6C2FF] px-4 py-2 rounded-lg border-2 border-[#B57CF6] font-semibold text-black flex items-center justify-between sm:justify-center gap-2 hover:bg-[#C9B2FF] transition"
+      >
+        <span>Section: {selectedSections.length === 0 ? "All" : `${selectedSections.length} selected`}</span>
+        <span className="ml-1">▼</span>
+      </button>
+      {sectionDropdownOpen && (
+        <div className="absolute z-50 mt-1 w-full sm:w-48 bg-white border-2 border-[#B57CF6] rounded-lg shadow-lg max-h-60 overflow-y-auto">
+          {sectionOptions.map((section) => (
+            <label
+              key={section}
+              className="flex items-center px-4 py-2 cursor-pointer hover:bg-[#F0E6FF] text-black"
+            >
+              <input
+                type="checkbox"
+                checked={selectedSections.includes(section)}
+                onChange={() =>
+                  setSelectedSections((prev) => {
+                    const updated = prev.includes(section)
+                      ? prev.filter((s) => s !== section)
+                      : [...prev, section];
+
+                    updateQueryParams({ section: updated });
+                    return updated;
+                  })
+                }
+                className="mr-2 accent-[#B57CF6]"
+              />
+              {section}
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+
+    {/* SSE Dropdown */}
+    <div className="relative text-lg sm:text-2xl w-full sm:w-auto">
+      <button
+        onClick={() => setSseDropdownOpen((v) => !v)}
+        className="w-full sm:w-auto bg-[#D6C2FF] px-4 py-2 rounded-lg border-2 border-[#B57CF6] font-semibold text-black flex items-center justify-between sm:justify-center gap-2 hover:bg-[#C9B2FF] transition"
+      >
+        <span>SSE: {selectedSSEs.length === 0 ? "All" : `${selectedSSEs.length} selected`}</span>
+        <span className="ml-1">▼</span>
+      </button>
+      {sseDropdownOpen && (
+        <div className="absolute z-40 mt-1 w-full sm:w-48 bg-white border-2 border-[#B57CF6] rounded-lg shadow-lg max-h-60 overflow-y-auto">
+          {sseOptions.map((sse) => (
+            <label
+              key={sse}
+              className="flex items-center px-4 py-2 cursor-pointer hover:bg-[#F0E6FF] text-black"
+            >
+              <input
+                type="checkbox"
+                checked={selectedSSEs.includes(sse)}
+                onChange={() =>
+                  setSelectedSSEs((prev) => {
+                    const updated = prev.includes(sse)
+                      ? prev.filter((s) => s !== sse)
+                      : [...prev, sse];
+
+                    updateQueryParams({ sse: updated });
+                    return updated;
+                  })
+                }
+                className="mr-2 accent-[#B57CF6]"
+              />
+              {sse}
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+
+    {/* Block Type Dropdown */}
+    <div className="relative text-lg sm:text-2xl w-full sm:w-auto">
+      <button
+        onClick={() => setBlockTypeDropdownOpen((v) => !v)}
+        className="w-full sm:w-auto bg-[#E6D6FF] px-4 py-2 rounded-lg border-2 border-[#B57CF6] font-semibold text-black flex items-center justify-between sm:justify-center gap-2 hover:bg-[#D9C4FF] transition"
+      >
+        <span>Block Type: {blockType.length === 0 ? "All" : `${blockType.length} selected`}</span>
+        <span className="ml-1">▼</span>
+      </button>
+      {blockTypeDropdownOpen && (
+        <div className="absolute z-50 mt-1 w-full sm:w-48 bg-white border-2 border-[#B57CF6] rounded-lg shadow-lg">
+          {blockTypeOptions.map((opt) => (
+            <label
+              key={opt.value}
+              className="flex items-center px-4 py-2 cursor-pointer hover:bg-[#F0E6FF] text-black"
+            >
+              <input
+                type="checkbox"
+                checked={blockType.includes(opt.value)}
+                onChange={() =>
+                  setBlockType((prev) => {
+                    const updated = prev.includes(opt.value)
+                      ? prev.filter((s) => s !== opt.value)
+                      : [...prev, opt.value];
+
+                    updateQueryParams({ blockType: updated });
+                    return updated;
+                  })
+                }
+                className="mr-2 accent-[#B57CF6]"
+              />
+              {opt.label}
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+
+    {/* Search Field - Hidden on mobile, shown on desktop */}
+    <div className="hidden sm:flex items-center gap-2 bg-[#F8F0FF] p-2 rounded-lg border-2 border-[#B57CF6]">
+      <label className="text-xl font-semibold text-black whitespace-nowrap">
+        Search ID:
+      </label>
+      <div className="relative">
+        <input
+          type="text"
+          value={divisionIdSearch}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          placeholder="Enter ID..."
+          className="w-48 p-1 border-2 border-[#B57CF6] text-black bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B57CF6] text-xl pr-8"
+        />
+        {divisionIdSearch && (
+          <button
+            onClick={clearSearch}
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 text-xl"
+          >
+            ✕
+          </button>
+        )}
+      </div>
+    </div>
+
+    {/* Apply Filters Button */}
+    <button
+      onClick={() => setFiltersApplied(true)}
+      className="text-lg sm:text-2xl w-full sm:w-auto mx-auto bg-[#B57CF6] px-6 py-2 rounded-[50%] border-2 border-[#8E44AD] font-bold text-white hover:bg-[#A56CE6] transition shadow-md"
+    >
+      click to view
+    </button>
+  </div>
+</div>
 
     {/* Requests Table */}
     {filtersApplied&&(
