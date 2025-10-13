@@ -21,7 +21,7 @@ export default function PhoneLoginForm() {
   const router = useRouter();
   
   // List of depots for SM to select from
-  const availableDepots = depotOnLocation["MAS"] || [];
+  const availableDepots = depotOnLocation["SA"] || [];
   
   const { 
     requestOtp,  
