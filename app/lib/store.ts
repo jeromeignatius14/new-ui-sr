@@ -6,6 +6,7 @@ type DepotStructure = {
   };
 };
 
+// Map depots to their corresponding sections for Board Controller
 export const BoardControllerDepotMap: { [key: string]: string[] } = {
   "A": ["MAS-GDR", "MAS-AJJ", "MSB-VM"],
   "B": ["TPJ-VM", "VM-MV", "TPJ-MV"],
@@ -1592,6 +1593,59 @@ export const location = {
 //   ]
 // }
 
+
+export const depotOnLocation = {
+  MDU: [
+    "KLQ", "KUV", "KKZ", "AVS", "PUU", "EDN", "TML", "AYVN", "BJM", "MNM", "TNHP", "PDKT",
+    "MEKM", "KKDI", "MDU", "MVN", "KON", "SER", "SDN", "VDP", "MEJ", "KQN", "ABI", "TPC",
+    "SVPR", "PMK", "RMM", "TDN", "TMQ", "PCM", "KGD", "USLP", "ADPT", "TE", "BDNK", "MMM",
+    "PBMB", "ILA", "UCP", "KKY", "PBKS", "NLL", "SNKL", "SRT", "TY", "TYM", "KDU", "RMD",
+    "TSI", "TEN", "TIP", "KDNL", "RJPM", "TVN", "NZT", "ASD", "GDN", "CTND", "SVV", "SUX",
+    "TCN", "SQD", "KAL", "SMD", "TAY", "ANY", "SDNR", "KRUR", "PNGI", "SCT", "SVGA", "VEL",
+    "SVKS", "KRMG", "API", "DG", "ODC", "CHPT", "PLNI", "PPTR", "MVRD", "UDT", "GMGM", "TN",
+    "VPT", "NKK", "TCH"
+  ],
+  MAS: [
+    "MS", "MPK", "MSB", "VLCY", "WST", "RPM", "TNPM", "MTMY", "MCPK", "MLMR", "TZD", "OLA",
+    "TMV", "MTL", "PEI", "VVN", "MYP", "CGL", "CJ", "KGZ", "MMK", "OV", "PALR", "TMLP", "WJ",
+    "JTJ", "KDY", "VN", "VGM", "AB", "PCKM", "MPI", "VLT", "GYM", "TBM", "SKL", "CTM", "VDR",
+    "GI", "PV", "STM", "MKK", "CTRE", "MDVE", "SHU", "TUG", "WJR", "MCN", "THL", "SVUR", "KPD",
+    "LTI", "KVN", "KOK", "KVP", "PON", "TADA", "TVT", "ENR", "MJR", "AIP", "GPD", "ELR", "AKM",
+    "SPE", "PEL", "DVR", "NYP", "PYA", "ODUR", "AJJ", "BBQ", "KBT", "NG", "POI", "PUDI", "PUT",
+    "SVF", "TDK", "TO", "TRT", "VGA", "ABU", "AVD", "MAS", "PER", "PTMS", "TI", "TRL", "VLK"
+  ],
+  SA: [
+    "ANU", "ATU", "AVK", "BDY", "BQI", "CBE", "CBF", "CHSM", "CV", "CVD", "DC", "DPI", "DSPT",
+    "DST", "ED", "EDU", "EL", "ETP", "IGR", "IGU", "KAY", "KEY", "KLGN", "KLT", "KMD", "KPPR",
+    "KRR", "KXT", "LCR", "LOV", "LP", "MALR", "MAP", "MCRD", "MGSJ", "MKSP", "MMH", "MONR",
+    "MPLI", "MPLM", "MTDM", "MTNL", "MTP", "MVPM", "MYU", "NMKL", "OML", "ONR", "PALM", "PAS",
+    "PGN", "PGR", "PLI", "PLMD", "PRV", "PTJ", "PY", "RASP", "SA", "SAMT", "SGE", "SLY", "SNO",
+    "SUU", "SXT", "TNT", "TPM", "TPT", "TUP", "UKL", "URL", "VEI", "VNJ", "VRPD", "VRQ", "VZ",
+    "WEL"
+  ],
+  PGT: [
+    "AAM", "SRR", "VNB", "OTP", "MAJN", "LDY", "MNUR", "FK", "KRKD", "MAQ", "KUL", "NIL",
+    "NTVT", "PLL", "MJS", "NLE", "WH", "CLT", "ULL", "QLD", "ETR", "PGT", "ETMD", "KJKD",
+    "CLMD", "MDKI", "MMDA", "CNV", "KLGD", "PDGM", "MXM", "KTKU", "PNMB", "PGTN", "POY",
+    "padil", "WRA"
+  ],
+  TVC: [
+    "AAY", "NCJ", "AFK", "ALLP", "AMPA", "AWY", "CAPE", "CGV", "CHPD", "CKI", "CNGR", "ERL",
+    "ERSC", "ERM", "GUV", "ERN", "HAD", "IJK", "KLMR", "KPY", "KRPP", "KTYM", "KUC", "IPN",
+    "KUMM", "KYJ", "KZK", "KZT", "MAKM", "MGK", "MP", "MQU", "MVLK", "NNN", "NYY", "OCR",
+    "OLR", "PASA", "PNQ", "PRND", "QLN", "PUK", "PVRD", "PVU", "SRTL", "STKT", "TCR", "TRTR",
+    "TUVR", "TVCS", "VARD", "VLY", "VTK", "WKI", "IPL", "CGY", "KVU", "ERS/D", "MNTT", "ERS",
+    "TVC", "NPK", "ETM", "TVCN", "VAK", "QIN", "NJT", "TRVL"
+  ],
+  TPJ: [
+    "AGM", "AGX", "ALU", "ALK", "AMM", "ANP", "ARV", "ATQ", "AYI", "BAL", "CDM", "CLN", "GOC",
+    "ICG", "KDM", "KDMD", "KII", "KKPM", "KLGM", "KMM", "KNB", "MV", "NCR", "NMJ", "NVL",
+    "OTK", "PDY", "PKT", "PMB", "PRKL", "PRL", "PUC", "PVN", "PVI", "PYK", "SGM", "SLTH", "SMM",
+    "SNDI", "SRGM", "SY", "TAM", "TJM", "TLI", "TLNR", "TNI", "TNM", "TPGY", "TPJ", "TRK",
+    "TUY", "TVNL", "ULU", "UMG", "VDL", "VLDE", "VKM", "VM", "VLR", "VRI", "vri", "kii", "pvn", "Sy"
+  ]
+};
+
 export const depot: DepotStructure = {
   "JTJ-ED": {
     'TRD': ["SA","ED","BQI","SLY"],
@@ -1651,60 +1705,6 @@ export const depot: DepotStructure = {
     'S&T': ["PTJ"],
     'ENGG': ["E-PTJ","GS","BR-ED"]
   }
-};
-
-
-
-export const depotOnLocation = {
-  MDU: [
-    "KLQ", "KUV", "KKZ", "AVS", "PUU", "EDN", "TML", "AYVN", "BJM", "MNM", "TNHP", "PDKT",
-    "MEKM", "KKDI", "MDU", "MVN", "KON", "SER", "SDN", "VDP", "MEJ", "KQN", "ABI", "TPC",
-    "SVPR", "PMK", "RMM", "TDN", "TMQ", "PCM", "KGD", "USLP", "ADPT", "TE", "BDNK", "MMM",
-    "PBMB", "ILA", "UCP", "KKY", "PBKS", "NLL", "SNKL", "SRT", "TY", "TYM", "KDU", "RMD",
-    "TSI", "TEN", "TIP", "KDNL", "RJPM", "TVN", "NZT", "ASD", "GDN", "CTND", "SVV", "SUX",
-    "TCN", "SQD", "KAL", "SMD", "TAY", "ANY", "SDNR", "KRUR", "PNGI", "SCT", "SVGA", "VEL",
-    "SVKS", "KRMG", "API", "DG", "ODC", "CHPT", "PLNI", "PPTR", "MVRD", "UDT", "GMGM", "TN",
-    "VPT", "NKK", "TCH"
-  ],
-  MAS: [
-    "MS", "MPK", "MSB", "VLCY", "WST", "RPM", "TNPM", "MTMY", "MCPK", "MLMR", "TZD", "OLA",
-    "TMV", "MTL", "PEI", "VVN", "MYP", "CGL", "CJ", "KGZ", "MMK", "OV", "PALR", "TMLP", "WJ",
-    "JTJ", "KDY", "VN", "VGM", "AB", "PCKM", "MPI", "VLT", "GYM", "TBM", "SKL", "CTM", "VDR",
-    "GI", "PV", "STM", "MKK", "CTRE", "MDVE", "SHU", "TUG", "WJR", "MCN", "THL", "SVUR", "KPD",
-    "LTI", "KVN", "KOK", "KVP", "PON", "TADA", "TVT", "ENR", "MJR", "AIP", "GPD", "ELR", "AKM",
-    "SPE", "PEL", "DVR", "NYP", "PYA", "ODUR", "AJJ", "BBQ", "KBT", "NG", "POI", "PUDI", "PUT",
-    "SVF", "TDK", "TO", "TRT", "VGA", "ABU", "AVD", "MAS", "PER", "PTMS", "TI", "TRL", "VLK"
-  ],
-  SA: [
-    "ANU", "ATU", "AVK", "BDY", "BQI", "CBE", "CBF", "CHSM", "CV", "CVD", "DC", "DPI", "DSPT",
-    "DST", "ED", "EDU", "EL", "ETP", "IGR", "IGU", "KAY", "KEY", "KLGN", "KLT", "KMD", "KPPR",
-    "KRR", "KXT", "LCR", "LOV", "LP", "MALR", "MAP", "MCRD", "MGSJ", "MKSP", "MMH", "MONR",
-    "MPLI", "MPLM", "MTDM", "MTNL", "MTP", "MVPM", "MYU", "NMKL", "OML", "ONR", "PALM", "PAS",
-    "PGN", "PGR", "PLI", "PLMD", "PRV", "PTJ", "PY", "RASP", "SA", "SAMT", "SGE", "SLY", "SNO",
-    "SUU", "SXT", "TNT", "TPM", "TPT", "TUP", "UKL", "URL", "VEI", "VNJ", "VRPD", "VRQ", "VZ",
-    "WEL"
-  ],
-  PGT: [
-    "AAM", "SRR", "VNB", "OTP", "MAJN", "LDY", "MNUR", "FK", "KRKD", "MAQ", "KUL", "NIL",
-    "NTVT", "PLL", "MJS", "NLE", "WH", "CLT", "ULL", "QLD", "ETR", "PGT", "ETMD", "KJKD",
-    "CLMD", "MDKI", "MMDA", "CNV", "KLGD", "PDGM", "MXM", "KTKU", "PNMB", "PGTN", "POY",
-    "padil", "WRA"
-  ],
-  TVC: [
-    "AAY", "NCJ", "AFK", "ALLP", "AMPA", "AWY", "CAPE", "CGV", "CHPD", "CKI", "CNGR", "ERL",
-    "ERSC", "ERM", "GUV", "ERN", "HAD", "IJK", "KLMR", "KPY", "KRPP", "KTYM", "KUC", "IPN",
-    "KUMM", "KYJ", "KZK", "KZT", "MAKM", "MGK", "MP", "MQU", "MVLK", "NNN", "NYY", "OCR",
-    "OLR", "PASA", "PNQ", "PRND", "QLN", "PUK", "PVRD", "PVU", "SRTL", "STKT", "TCR", "TRTR",
-    "TUVR", "TVCS", "VARD", "VLY", "VTK", "WKI", "IPL", "CGY", "KVU", "ERS/D", "MNTT", "ERS",
-    "TVC", "NPK", "ETM", "TVCN", "VAK", "QIN", "NJT", "TRVL"
-  ],
-  TPJ: [
-    "AGM", "AGX", "ALU", "ALK", "AMM", "ANP", "ARV", "ATQ", "AYI", "BAL", "CDM", "CLN", "GOC",
-    "ICG", "KDM", "KDMD", "KII", "KKPM", "KLGM", "KMM", "KNB", "MV", "NCR", "NMJ", "NVL",
-    "OTK", "PDY", "PKT", "PMB", "PRKL", "PRL", "PUC", "PVN", "PVI", "PYK", "SGM", "SLTH", "SMM",
-    "SNDI", "SRGM", "SY", "TAM", "TJM", "TLI", "TLNR", "TNI", "TNM", "TPGY", "TPJ", "TRK",
-    "TUY", "TVNL", "ULU", "UMG", "VDL", "VLDE", "VKM", "VM", "VLR", "VRI", "vri", "kii", "pvn", "Sy"
-  ]
 };
 
 
