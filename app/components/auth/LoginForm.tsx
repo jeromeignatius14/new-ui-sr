@@ -412,7 +412,7 @@ export default function PhoneLoginForm() {
               type="text"
               value={selectedDepot}
               onChange={(e) => setSelectedDepot(e.target.value)}
-              placeholder="Type to search depot"
+              placeholder="Type to search station code"
              className="w-full flex-1 bg-[#eeb8f7] text-white font-semibold rounded-xl px-4 py-3 text-2xl focus:outline-none focus:ring-2 focus:ring-purple-400 placeholder-white placeholder:font-bold border-none"
               style={{
                 boxShadow: "0 2px 8px 0 rgba(0,0,0,0.04)",
@@ -475,7 +475,7 @@ export default function PhoneLoginForm() {
               ? "GET OTP" 
               : step === "otp" 
                 ? "Click to Login" 
-                : selectedDepot ? "Login with Depot" : "Select Depot")}
+                : selectedDepot ? "Login with Station Code" : "Select Station Code")}
       </button>
     </form>
   );
