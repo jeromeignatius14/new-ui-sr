@@ -2707,72 +2707,18 @@ export let sectionData = {
 
 export const departmentDepot = {
     "TRD": [
-        "BBQ",
-        "TVT",
-        "PON",
-        "SPE",
-        "GDR",
-        "AVD",
-        "TRL",
-        "AJJ",
-        "WJR",
-        "KPD",
-        "AB",
-        "JTJ",
-        "PUT",
-        "CGL",
-        "MS",
-        "TBM",
-        "ACK",
-        "VM",
-        "MSB"
-    ],
-    "S&T": [
-        "MAS",
-        "BBQ",
-        "TVT",
-        "GPD",
-        "SPE",
-        "NYP",
-        "TRL",
-        "AJJE",
-        "MSB",
-        "AJJW",
-        "KPDE",
-        "KPDW",
-        "AB",
-        "JTJ",
-        "TRT",
-        "PUT",
-        "CGL",
-        "MS",
-        "TBM",
-        "TMV"
-    ],
-    "ENGG": [
-        "TVT",
-        "PON",
-        "SPE",
-        "GDR",
-        "BRIDGE",
-        "WSTA",
-        "WSTB",
-        "AVD",
-        "TRLA",
-        "TRLB",
-        "AJJ",
-        "WJR",
-        "KPD",
-        "AB",
-        "JTJ",
-        "TRT",
-        "PUT",
-        "CJ",
-        "MS",
-        "TBM",
-        "CGL",
-        "ACK",
-        "TMV",
-        "MSB"
-    ]
+    "SA", "ED", "BQI", "SLY", "TUP", "PTJ", "KMD", "PLI", "KRR",
+    "CHSM", "MTDM", "NMKL"
+  ],
+
+  "S&T": [
+    "MAP", "BQI", "ED", "SA", "TPT", "TUP", "PTJ", "CBE", "KRR-W",
+    "KRR-E", "VRI", "SXT", "KRR"
+  ],
+
+  "ENGG": [
+    "TPT", "BQI", "N-SA", "S-SA", "ED", "GS", "BR-ED", "TUP", "E-PTJ",
+    "CBE", "CBF", "TP", "W-KRR", "E-KRR", "ATU", "CHSM", "NMKL", "ONR"
+  ]
+
 }
