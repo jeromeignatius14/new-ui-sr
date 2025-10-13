@@ -6332,73 +6332,26 @@ export let sectionData = {
 };
 
 export const departmentDepot = {
-    "TRD": [
-        "BBQ",
-        "TVT",
-        "PON",
-        "SPE",
-        "GDR",
-        "AVD",
-        "TRL",
-        "AJJ",
-        "WJR",
-        "KPD",
-        "AB",
-        "JTJ",
-        "PUT",
-        "CGL",
-        "MS",
-        "TBM",
-        "ACK",
-        "VM",
-        "MSB"
-    ],
-    "S&T": [
-        "MAS",
-        "BBQ",
-        "TVT",
-        "GPD",
-        "SPE",
-        "NYP",
-        "TRL",
-        "AJJE",
-        "MSB",
-        "AJJW",
-        "KPDE",
-        "KPDW",
-        "AB",
-        "JTJ",
-        "TRT",
-        "PUT",
-        "CGL",
-        "MS",
-        "TBM",
-        "TMV"
-    ],
-    "ENGG": [
-        "TVT",
-        "PON",
-        "SPE",
-        "GDR",
-        "BRIDGE",
-        "WSTA",
-        "WSTB",
-        "AVD",
-        "TRLA",
-        "TRLB",
-        "AJJ",
-        "WJR",
-        "KPD",
-        "AB",
-        "JTJ",
-        "TRT",
-        "PUT",
-        "CJ",
-        "MS",
-        "TBM",
-        "CGL",
-        "ACK",
-        "TMV",
-        "MSB"
-    ]
+     "TRD": [
+    "TPJ", "ALU", "VRI", "VM", "CUP J", "MV", "TJ", "KIK", "TVR", "PKT", "TTP",
+    "PGT", "SRR", "TIR", "QLD", "CS", "CHV", "ULL", "NIL", "POY", "SA", "ED",
+    "BQI", "SLY", "TUP", "PTJ", "KMD", "PLI", "KRR", "CHSM", "MTDM", "NMKL",
+    "ARV", "TNM"
+  ],
+
+  "S&T": [
+    "RRI", "Lines", "VRI-A", "VRI-B", "VM", "CUP J", "MV", "TPJ", "TJ", "KIK",
+    "TVR", "PKT", "TTP", "PGT", "SRR", "TIR", "CLT", "CAN", "MAQ", "PGTN",
+    "SA", "ED", "MAP", "BQI", "TUP", "PTJ", "CBE", "KRR/W", "KRR/E", "VRI",
+    "KRR/E", "KRR/W"
+  ],
+
+  "ENGG": [
+    "TPJ", "LLI", "ALU", "A-VRI", "VM", "CUP J", "MV", "TJ", "KMU", "KIK", "A-TVR",
+    "B-TVR", "PKT", "TTP", "PTJ/W", "PGT/E", "PGT/W", "SRR", "TIR", "CLT", "QLD",
+    "CAN", "PAY", "KGQ", "MAQ", "AAM", "KLGD", "TPT", "BQI", "N/SA", "S/SA", "ED",
+    "TUP", "E/PTJ", "CBE", "TP", "W/KRR", "E/KRR", "ATU", "CHSM", "NMKL", "CBF",
+    "ONR", "BVR", "VLR", "TNM"
+  ]
+
 }
