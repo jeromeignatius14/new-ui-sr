@@ -2319,72 +2319,18 @@ export let sectionData = {
 
 export const departmentDepot = {
     "TRD": [
-        "BBQ",
-        "TVT",
-        "PON",
-        "SPE",
-        "GDR",
-        "AVD",
-        "TRL",
-        "AJJ",
-        "WJR",
-        "KPD",
-        "AB",
-        "JTJ",
-        "PUT",
-        "CGL",
-        "MS",
-        "TBM",
-        "ACK",
-        "VM",
-        "MSB"
-    ],
-    "S&T": [
-        "MAS",
-        "BBQ",
-        "TVT",
-        "GPD",
-        "SPE",
-        "NYP",
-        "TRL",
-        "AJJE",
-        "MSB",
-        "AJJW",
-        "KPDE",
-        "KPDW",
-        "AB",
-        "JTJ",
-        "TRT",
-        "PUT",
-        "CGL",
-        "MS",
-        "TBM",
-        "TMV"
-    ],
-    "ENGG": [
-        "TVT",
-        "PON",
-        "SPE",
-        "GDR",
-        "BRIDGE",
-        "WSTA",
-        "WSTB",
-        "AVD",
-        "TRLA",
-        "TRLB",
-        "AJJ",
-        "WJR",
-        "KPD",
-        "AB",
-        "JTJ",
-        "TRT",
-        "PUT",
-        "CJ",
-        "MS",
-        "TBM",
-        "CGL",
-        "ACK",
-        "TMV",
-        "MSB"
-    ]
+    "MPA", "DG", "MDU", "PLNI", "UDT", "VPT", "CVP", "TN", "TEN", "MNM",
+    "KKDI", "PDKT", "RMD", "RJPM", "TSI", "SCT", "ASD", "PUU", "NZT", "TE"
+  ],
+
+  "S&T": [
+    "DG", "North-MDU", "PLNI", "South-MDU", "VPT", "TEN", "TN", "KKDI",
+    "MNM", "RMD", "TSI", "SCT", "PUU"
+  ],
+
+  "ENGG": [
+    "MPA", "DG", "MG-MDU", "BG-MDU", "PLNI", "VPT", "TN", "TEN", "MNM",
+    "PDKT", "SVGA", "MMM", "SVKS", "SCT", "PUU", "SVV", "ADPT"
+  ]
+
 }
