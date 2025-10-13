@@ -3210,72 +3210,16 @@ export let sectionData = {
 
 export const departmentDepot = {
     "TRD": [
-        "BBQ",
-        "TVT",
-        "PON",
-        "SPE",
-        "GDR",
-        "AVD",
-        "TRL",
-        "AJJ",
-        "WJR",
-        "KPD",
-        "AB",
-        "JTJ",
-        "PUT",
-        "CGL",
-        "MS",
-        "TBM",
-        "ACK",
-        "VM",
-        "MSB"
-    ],
-    "S&T": [
-        "MAS",
-        "BBQ",
-        "TVT",
-        "GPD",
-        "SPE",
-        "NYP",
-        "TRL",
-        "AJJE",
-        "MSB",
-        "AJJW",
-        "KPDE",
-        "KPDW",
-        "AB",
-        "JTJ",
-        "TRT",
-        "PUT",
-        "CGL",
-        "MS",
-        "TBM",
-        "TMV"
-    ],
-    "ENGG": [
-        "TVT",
-        "PON",
-        "SPE",
-        "GDR",
-        "BRIDGE",
-        "WSTA",
-        "WSTB",
-        "AVD",
-        "TRLA",
-        "TRLB",
-        "AJJ",
-        "WJR",
-        "KPD",
-        "AB",
-        "JTJ",
-        "TRT",
-        "PUT",
-        "CJ",
-        "MS",
-        "TBM",
-        "CGL",
-        "ACK",
-        "TMV",
-        "MSB"
-    ]
+    "CHV", "CS", "NIL", "PGT", "POY", "QLD", "SRR", "TIR", "ULL"
+  ],
+
+  "S&T": [
+    "CAN", "CLT", "MDKI", "MAQ", "PGT", "PGTN", "SRR", "TIR"
+  ],
+
+  "ENGG": [
+    "AAM", "CAN", "CLT", "KJKD", "KLGD", "KGQ", "MAQ", "PAY",
+    "PGT", "PGT-E", "PGT-W", "POY", "PTJ-W", "QLD", "SRR", "TIR"
+  ]
+
 }
