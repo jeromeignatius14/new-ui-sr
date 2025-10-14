@@ -246,10 +246,12 @@ export default function OptimiseTablePage() {
     if (dateParam) {
       const parsedDate = new Date(dateParam);
       if (!isNaN(parsedDate.getTime())) {
-        return parsedDate;
+        // return parsedDate;
+        return startOfWeek(parsedDate, { weekStartsOn: 1 })
       }
     }
-    return new Date();
+    // return new Date();
+    return startOfWeek(new Date(), { weekStartsOn: 1 })
   });
 
   // Update URL when currentWeekStart changes
@@ -1349,8 +1351,10 @@ export default function OptimiseTablePage() {
               setSelectedDate(newDate);
               // No need to manually save here - the DaySwitcher handles it
             }}
-            minDate={startOfWeek(currentWeekStart, { weekStartsOn: 1 })}
-            maxDate={addDays(startOfWeek(currentWeekStart, { weekStartsOn: 1 }), 6)}
+              minDate={currentWeekStart} 
+              maxDate={addDays(currentWeekStart, 6)}
+            // minDate={startOfWeek(currentWeekStart, { weekStartsOn: 1 })}
+            // maxDate={addDays(startOfWeek(currentWeekStart, { weekStartsOn: 1 }), 6)}
             storageKey="urgentSelectedDate" // Unique key for urgent block
           />
           <h2 className="border-b-2 pb-2 border-[#13529e] text-[24px] font-semibold text-[#13529e]">Urgent Blocks</h2>
