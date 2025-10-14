@@ -38,6 +38,7 @@ export default function AdminRequestTablePage() {
     section: string[];
     dept: string;
     line: string;
+    searchId?: string;
   };
   const [pendingSummaryFilters, setPendingSummaryFilters] = useState<SummaryFilters>({
     start: "",
@@ -46,6 +47,7 @@ export default function AdminRequestTablePage() {
     section: [],
     dept: "",
     line: "",
+    searchId: "",
   });
   const [activeSummaryFilters, setActiveSummaryFilters] = useState<SummaryFilters>({
     start: "",
@@ -54,6 +56,7 @@ export default function AdminRequestTablePage() {
     section: [],
     dept: "",
     line: "",
+    searchId: "",
   });
 
   useEffect(() => {
@@ -356,6 +359,13 @@ export default function AdminRequestTablePage() {
   //   }
   // };
 
+ // Search ID
+const handlePendingSearchIdChange = (searchId: string) => {
+  setPendingSummaryFilters(prev => ({
+    ...prev,
+    searchId: searchId.trim()
+  }));
+};
 
   const handleDownloadExcel = async (rowsToDownload: UserRequest[]) => {
     try {
@@ -517,6 +527,13 @@ export default function AdminRequestTablePage() {
   if (activeSummaryFilters.end) {
     summaryFilteredRequests = summaryFilteredRequests.filter((r) => r.date <= activeSummaryFilters.end);
   }
+
+if (activeSummaryFilters.searchId) {
+  summaryFilteredRequests = summaryFilteredRequests.filter((r) => {
+    const requestId = r.divisionId || r.id || '';
+    return requestId.toLowerCase().includes((activeSummaryFilters.searchId ?? "").toLowerCase());
+  });
+}
   // Block type
   if (activeSummaryFilters.blockType.length > 0) {
     // Only filter if not all types are selected
@@ -629,6 +646,21 @@ export default function AdminRequestTablePage() {
             {/* Filters Row: All filters in a single row */}
             <div className="flex flex-wrap gap-2 items-center justify-between bg-[#D6F3FF] p-2 rounded-md border border-[#00B4D8] mb-2">
               {/* Date Range */}
+
+  <div className="flex items-center flex-wrap gap-1">
+    <span className="bg-[#E6E6FA] px-2 py-1 border border-[#00B4D8] font-bold text-black rounded-l-md text-[24px]">
+      Search ID
+    </span>
+    <input
+      type="text"
+      placeholder="Enter request ID"
+      value={pendingSummaryFilters.searchId || ''}
+      onChange={(e) => handlePendingSearchIdChange(e.target.value)}
+      className="p-1 border border-[#00B4D8] text-black bg-white w-40 focus:outline-none focus:ring-2 focus:ring-[#B57CF6] text-[24px]"
+    />
+  </div>
+
+
               <div className="flex items-center flex-wrap gap-1">
                 <span className="bg-[#E6E6FA] px-2 py-1 border border-[#00B4D8] font-bold text-black rounded-l-md text-[24px]">
                   date
@@ -828,7 +860,7 @@ export default function AdminRequestTablePage() {
                               </td>
                               <td className="border border-black p-1 text-center">
                                 <Link
-                                  href={`/admin/optimise-table?id=${request.id}`}
+                                  href={`/admin/view-request/${request.id}?from=request-table`}
                                   className="text-[#13529e] hover:underline font-semibold"
                                 >
                                   {request.divisionId || request.id}
