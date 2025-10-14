@@ -254,12 +254,12 @@ export default function OptimiseTablePage() {
   //   return startOfWeek(new Date(), { weekStartsOn: 1 })
   // });
 
-  // // Update URL when currentWeekStart changes
+  // Update URL when currentWeekStart changes
   // useEffect(() => {
-  //   const params = new URLSearchParams(searchParams.toString());
+  //   const params = new URLSearchParams();
   //   params.set("date", format(currentWeekStart, "yyyy-MM-dd"));
   //   router.push(`?${params.toString()}`, { scroll: false });
-  // }, [currentWeekStart, router, searchParams]);
+  // }, [currentWeekStart, router]);
 
 // Initialize currentWeekStart from URL parameter or default to current date
 const [currentWeekStart, setCurrentWeekStart] = useState(() => {
@@ -274,28 +274,14 @@ const [currentWeekStart, setCurrentWeekStart] = useState(() => {
   return startOfWeek(new Date(), { weekStartsOn: 1 });
 });
 
-// Add this effect to synchronize week start properly
+// Add this effect to reset to current week when no date parameter
 useEffect(() => {
   const dateParam = searchParams.get("date");
   if (!dateParam) {
-    // If no date parameter, ensure we're using current week
     const currentWeekMonday = startOfWeek(new Date(), { weekStartsOn: 1 });
     setCurrentWeekStart(currentWeekMonday);
-  } else {
-    // If date parameter exists, ensure it's properly set as week start
-    const parsedDate = new Date(dateParam);
-    if (!isNaN(parsedDate.getTime())) {
-      setCurrentWeekStart(startOfWeek(parsedDate, { weekStartsOn: 1 }));
-    }
   }
 }, [searchParams]);
-
-// Update URL when currentWeekStart changes
-useEffect(() => {
-  const params = new URLSearchParams();
-  params.set("date", format(currentWeekStart, "yyyy-MM-dd"));
-  router.push(`?${params.toString()}`, { scroll: false });
-}, [currentWeekStart, router]);
 
   // Edit state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -372,12 +358,18 @@ const getWeekBoundaries = (date: Date) => {
   return { weekStart, weekEnd };
 };
 
+  // For urgent mode, use the same day for start and end
+  // For non-urgent mode, use Monday to Sunday
+  // const weekStart = isUrgentMode
+  //   ? currentWeekStart
+  //   : startOfWeek(currentWeekStart, { weekStartsOn: 1 });
+  // const weekEnd = isUrgentMode ? currentWeekStart : addDays(weekStart, 6);
 // For urgent mode, use the same day for start and end
 // For non-urgent mode, use Monday to Sunday
-const { weekStart, weekEnd } = getWeekBoundaries(currentWeekStart);
-const finalWeekStart = isUrgentMode ? currentWeekStart : weekStart;
-const finalWeekEnd = isUrgentMode ? currentWeekStart : weekEnd;
-
+const weekStart = isUrgentMode
+  ? currentWeekStart
+  : startOfWeek(currentWeekStart, { weekStartsOn: 1 });
+const weekEnd = isUrgentMode ? currentWeekStart : endOfWeek(currentWeekStart, { weekStartsOn: 1 });
   // Fetch approved requests data
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["approved-requests", currentWeekStart, isUrgentMode],
@@ -523,26 +515,38 @@ const finalWeekEnd = isUrgentMode ? currentWeekStart : weekEnd;
 
 
 
-  const [selectedDate, setSelectedDate] = useState<Date>(() => {
-    // Try to get saved date from localStorage
-    const savedDate = localStorage.getItem("urgentSelectedDate");
-    if (savedDate) {
-      const parsedDate = new Date(savedDate);
-      if (!isNaN(parsedDate.getTime())) {
-        return parsedDate;
-      }
-    }
+//   const [selectedDate, setSelectedDate] = useState<Date>(() => {
+//   // Try to get saved date from localStorage
+//   const savedDate = localStorage.getItem("urgentSelectedDate");
+//   if (savedDate) {
+//     const parsedDate = new Date(savedDate);
+//     if (!isNaN(parsedDate.getTime())) {
+//       return parsedDate;
+//     }
+//   }
+//   // Fallback to the start of week if no saved date
+//   return startOfWeek(currentWeekStart, { weekStartsOn: 1 });
+// });
 
-    // Fallback to the today if no saved date
-    return new Date();
-  });
-  // Set selectedDate only when minDate is ready
-  // amazonq-ignore-next-line
-  useEffect(() => {
-    if (minDate && !selectedDate) {
-      setSelectedDate(startOfWeek(currentWeekStart, { weekStartsOn: 1 }));
+const [selectedDate, setSelectedDate] = useState<Date>(() => {
+  // Try to get saved date from localStorage
+  const savedDate = localStorage.getItem("urgentSelectedDate");
+  if (savedDate) {
+    const parsedDate = new Date(savedDate);
+    if (!isNaN(parsedDate.getTime())) {
+      return parsedDate;
     }
-  }, []);
+  }
+  // Fallback to current date (today)
+  return new Date();
+});
+
+  // Set selectedDate only when minDate is ready
+  // useEffect(() => {
+  //   if (minDate && !selectedDate) {
+  //     setSelectedDate(startOfWeek(currentWeekStart, { weekStartsOn: 1 }));
+  //   }
+  // }, []);
 
 
   // --- Custom: Only show requests that are pending with me, not sanctioned, and after today ---
@@ -612,20 +616,17 @@ const finalWeekEnd = isUrgentMode ? currentWeekStart : weekEnd;
 
   const corridorRequestsFiltered = pendingRequests
     .filter((r: UserRequest) => {
-      // First check if it's a corridor request
-      const isCorridor = r.corridorType === "Corridor" || r.corridorType === "Corridor Block";
-      if (!isCorridor) return false;
-
-      // Global filters
-      if (deptFilter !== 'ALL' && r.selectedDepartment !== deptFilter) return false;
-      if (!matchesWorkType(r)) return false;
-      if (!matchesActivity(r)) return false;
-      if (!matchesTimeSlot(r)) return false;
-
-      // Handle cases where both flags are true
-      if (r.powerBlockRequired && r.sntDisconnectionRequired) {
-        return r.trdActionsNeeded && r.sigActionsNeeded;
-      }
+        // First check if it's an urgent request
+        const isCorridor = r.corridorType === "Corridor" ||r.corridorType === "Corridor Block";
+        if (!isCorridor) return false;
+  if (deptFilter !== 'ALL' && r.selectedDepartment !== deptFilter) return false;
+        if (!matchesWorkType(r)) return false;
+        if (!matchesActivity(r)) return false;
+        if (!matchesTimeSlot(r)) return false;
+        // Handle cases where both flags are true
+        if (r.powerBlockRequired && r.sntDisconnectionRequired) {
+            return r.trdActionsNeeded && r.sigActionsNeeded;
+        }
 
       // Handle powerBlockRequired case
       if (r.powerBlockRequired) {
@@ -657,10 +658,14 @@ const finalWeekEnd = isUrgentMode ? currentWeekStart : weekEnd;
       if (!matchesActivity(r)) return false;
       if (!matchesTimeSlot(r)) return false;
 
-      // Handle cases where both flags are true
-      if (r.powerBlockRequired && r.sntDisconnectionRequired) {
-        return r.trdActionsNeeded && r.sigActionsNeeded;
-      }
+        if (deptFilter !== 'ALL' && r.selectedDepartment !== deptFilter) return false;
+        if (!matchesWorkType(r)) return false;
+        if (!matchesActivity(r)) return false;
+        if (!matchesTimeSlot(r)) return false;
+        // Handle cases where both flags are true
+        if (r.powerBlockRequired && r.sntDisconnectionRequired) {
+            return r.trdActionsNeeded && r.sigActionsNeeded;
+        }
 
       // Handle powerBlockRequired case
       if (r.powerBlockRequired) {
@@ -1393,28 +1398,7 @@ const finalWeekEnd = isUrgentMode ? currentWeekStart : weekEnd;
         })()}
         {/* Urgent Blocks Section - now at the top */}
         <div className="mt-4 mb-8">
-<DaySwitcher
-  currentDate={selectedDate}
-  onDateChange={(newDate) => {
-    setSelectedDate(newDate);
-    // No need to manually save here - the DaySwitcher handles it
-  }}
-  minDate={currentWeekStart} 
-  maxDate={addDays(currentWeekStart, 6)}
-  storageKey="urgentSelectedDate" // Unique key for urgent block
-/>
-          {/* <DaySwitcher
-            currentDate={selectedDate}
-            onDateChange={(newDate) => {
-              setSelectedDate(newDate);
-              // No need to manually save here - the DaySwitcher handles it
-            }}
-              minDate={currentWeekStart} 
-              maxDate={addDays(currentWeekStart, 6)}
-            // minDate={startOfWeek(currentWeekStart, { weekStartsOn: 1 })}
-            // maxDate={addDays(startOfWeek(currentWeekStart, { weekStartsOn: 1 }), 6)}
-            storageKey="urgentSelectedDate" // Unique key for urgent block
-          /> */}
+         
           <h2 className="border-b-2 pb-2 border-[#13529e] text-[24px] font-semibold text-[#13529e]">Urgent Blocks</h2>
           <div className="flex justify-end py-2 gap-2">
             {/* <button
@@ -1450,6 +1434,18 @@ const finalWeekEnd = isUrgentMode ? currentWeekStart : weekEnd;
               Optimise
             </button>
           </div>
+   <DaySwitcher
+            currentDate={selectedDate}
+            onDateChange={(newDate) => {
+              setSelectedDate(newDate);
+              // No need to manually save here - the DaySwitcher handles it
+            }}
+              minDate={currentWeekStart} 
+              maxDate={addDays(currentWeekStart, 6)}
+            // minDate={startOfWeek(currentWeekStart, { weekStartsOn: 1 })}
+            // maxDate={addDays(startOfWeek(currentWeekStart, { weekStartsOn: 1 }), 6)}
+            storageKey="urgentSelectedDate" // Unique key for urgent block
+          />
           {/* <DaySwitcher
             currentDate={selectedDate}
             onDateChange={(newDate) => setSelectedDate(newDate)}
