@@ -4491,7 +4491,10 @@ export const depotOnLocation = {
     "TRL",
     "AJJE",
     "KPDW",
-    "VM"]
+    "VM",
+  "KDY",
+"PEI",
+"MTL"]
 };
 
 
