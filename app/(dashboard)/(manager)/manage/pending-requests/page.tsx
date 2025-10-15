@@ -769,7 +769,7 @@ export default function PendingRequestsPage() {
                     <div className="w-full  py-2 flex flex-col items-center">
                         <span className="text-xl font-bold text-black">Rejected Request</span>
                     </div>
-                    <div className={`rounded-xl overflow-hidden border-2 border-black bg-[#F5E7B2] min-w-[700px] ${showRejectModal || showSuccessModal ? 'invisible' : ''}`}>
+                    <div className={`rounded-xl overflow-hidden border-2 border-black bg-[#F5E7B2] min-w-[900px] ${showRejectModal || showSuccessModal ? 'invisible' : ''}`}>
 
                         <table className="w-full text-black text-base border-collapse">
                             <thead>
@@ -782,6 +782,8 @@ export default function PendingRequestsPage() {
                                     <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Demanded</th>
                                     <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Activity</th>
                                     <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Status</th>
+                                    <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Rejected remarks</th>
+
 
                                 </tr>
                             </thead>
@@ -799,6 +801,23 @@ export default function PendingRequestsPage() {
                                         <td className="border border-black px-2 py-1 text-center align-middle">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
                                         <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
                                         <td className="border border-black px-2 py-1 align-middle">{request.overAllStatus}</td>
+                                       <td className="border border-black px-2 py-1 align-middle">
+    {(() => {
+        if (request.adminAcceptance === false && request.remarkByManager !== "") {
+            return request.remarkByManager;
+        } else if (request.managerAcceptance === false && request.remarkByManager !== "") {
+            return request.remarkByManager;
+        } else if ((request.disconnectionRequestRejectRemarks !== ""&&request.powerBlockRequired===true&&request.sntDisconnectionRequired===true)||(request.disconnectionRequestRejectRemarks !== ""&&request.sntDisconnectionRequired===true)||(request.disconnectionRequestRejectRemarks !== ""&&request.powerBlockRequired===true)||(request.oheResponse!=""&&request.powerBlockRequired===true)||(request.sigResponse!=""&&request.sntDisconnectionRequired===true)) {
+            return request.disconnectionRequestRejectRemarks||request.sigResponse ||request.oheResponse;
+        }else if(request.userResponse!==""&&request.userResponse!=="ACCEPTED"&&request.userAcceptanceForSanction===false){
+            return request.userResponse;
+        }
+         else {
+            return "N/A";
+        }
+    })()}
+</td>
+
                                     </tr>
                                 ))}
                             </tbody>
