@@ -38,6 +38,7 @@ export default function AdminRequestTablePage() {
     section: string[];
     dept: string;
     line: string;
+    searchId?: string;
   };
   const [pendingSummaryFilters, setPendingSummaryFilters] = useState<SummaryFilters>({
     start: "",
@@ -46,6 +47,7 @@ export default function AdminRequestTablePage() {
     section: [],
     dept: "",
     line: "",
+    searchId: "",
   });
   const [activeSummaryFilters, setActiveSummaryFilters] = useState<SummaryFilters>({
     start: "",
@@ -54,6 +56,7 @@ export default function AdminRequestTablePage() {
     section: [],
     dept: "",
     line: "",
+    searchId: "",
   });
 
   useEffect(() => {
@@ -273,6 +276,116 @@ export default function AdminRequestTablePage() {
   );
 }).length;
 
+  // const SandTRequest = allRequests.filter((r: UserRequest) => {
+  //   if (r.isSanctioned) return false;
+  //   if (!r.date) return false;
+  //   if ( r.selectedDepartment !== "S&T") return false;
+  //   const reqDate = new Date(r.date);
+  //   reqDate.setHours(0, 0, 0, 0);
+  //   return reqDate > today;
+  // }).length;
+
+  // const TRDRequest = allRequests.filter((r: UserRequest) => {
+  //   if (r.isSanctioned) return false;
+  //   if (!r.date) return false;
+  //   if ( r.selectedDepartment !== "TRD") return false;
+  //   const reqDate = new Date(r.date);
+  //   reqDate.setHours(0, 0, 0, 0);
+  //   return reqDate > today;
+  // }).length;
+
+  // const handleDownloadCSV = () => {
+  //   try {
+  //     if (!filteredRequests || filteredRequests.length === 0) {
+  //       alert("No data available to download!");
+  //       return;
+  //     }
+
+  //     // Define CSV headers (add more if needed)
+  //     const headers = [
+  //       "Date",
+  //       "Request ID",
+  //       "Block Section",
+  //       "Line/Road",
+  //       "Activity",
+  //       "Status",
+  //       "Start Time (HH:MM)",
+  //       "End Time (HH:MM)",
+  //       "Corridor Type",
+  //       "SSE Name",
+  //       "Work Location",
+  //       "Remarks",
+  //     ];
+
+  //     // Map data to CSV rows with exact time formatting
+  //     const rows = filteredRequests.map((request) => {
+  //       const startTime = request.demandTimeFrom
+  //         ? new Date(request.demandTimeFrom).toISOString().slice(11, 5)
+  //         : "N/A";
+
+  //       const endTime = request.demandTimeTo
+  //         ? new Date(request.demandTimeTo).toISOString().slice(11, 5)
+  //         : "N/A";
+
+  //       return [
+  //         formatDate(request.date), // DD-MM-YYYY
+  //         request.id,
+  //         request.missionBlock,
+  //         request.processedLineSections?.[0]?.road || "N/A",
+  //         request.activity,
+  //         getStatusDisplay(request).label,
+  //         startTime, // Exact time in HH:MM format
+  //         endTime, // Exact time in HH:MM format
+  //         request.corridorType,
+  //         request.user?.name || "N/A",
+  //         request.workLocationFrom,
+  //         request.requestremarks,
+  //       ];
+  //     });
+
+  //     // Create CSV content
+  //     let csvContent = "data:text/csv;charset=utf-8,";
+  //     csvContent += headers.join(",") + "\n";
+
+  //     rows.forEach((row) => {
+  //       csvContent +=
+  //         row
+  //           .map((field) => {
+  //             // Handle null/undefined and escape quotes
+  //             const str =
+  //               field !== null && field !== undefined
+  //                 ? field.toString().replace(/"/g, '""')
+  //                 : "";
+  //             return `"${str}"`;
+  //           })
+  //           .join(",") + "\n";
+  //     });
+
+  //     // Trigger download
+  //     const encodedUri = encodeURI(csvContent);
+  //     const link = document.createElement("a");
+  //     link.setAttribute("href", encodedUri);
+  //     link.setAttribute(
+  //       "download",
+  //       `block_requests_${new Date().toISOString().slice(0, 10)}.csv`
+  //     );
+  //     document.body.appendChild(link);
+  //     link.click();
+  //     document.body.removeChild(link);
+  //   } catch (error) {
+  //     console.error("Download failed:", error);
+  //     alert("Failed to generate CSV. Please check console for details.");
+  //   }
+  // };
+
+ // Search ID
+const handlePendingSearchIdChange = (searchId: string) => {
+  setPendingSummaryFilters(prev => ({
+    ...prev,
+    searchId: searchId.trim()
+  }));
+};
+
   const handleDownloadExcel = async (rowsToDownload: UserRequest[]) => {
     try {
       if (!rowsToDownload || rowsToDownload.length === 0) {
@@ -433,6 +546,13 @@ export default function AdminRequestTablePage() {
   if (activeSummaryFilters.end) {
     summaryFilteredRequests = summaryFilteredRequests.filter((r) => r.date <= activeSummaryFilters.end);
   }
+
+if (activeSummaryFilters.searchId) {
+  summaryFilteredRequests = summaryFilteredRequests.filter((r) => {
+    const requestId = r.divisionId || r.id || '';
+    return requestId.toLowerCase().includes((activeSummaryFilters.searchId ?? "").toLowerCase());
+  });
+}
   // Block type
   if (activeSummaryFilters.blockType.length > 0) {
     // Only filter if not all types are selected
@@ -545,6 +665,21 @@ export default function AdminRequestTablePage() {
             {/* Filters Row: All filters in a single row */}
             <div className="flex flex-wrap gap-2 items-center justify-between bg-[#D6F3FF] p-2 rounded-md border border-[#00B4D8] mb-2">
               {/* Date Range */}
+
+  <div className="flex items-center flex-wrap gap-1">
+    <span className="bg-[#E6E6FA] px-2 py-1 border border-[#00B4D8] font-bold text-black rounded-l-md text-[24px]">
+      Search ID
+    </span>
+    <input
+      type="text"
+      placeholder="Enter request ID"
+      value={pendingSummaryFilters.searchId || ''}
+      onChange={(e) => handlePendingSearchIdChange(e.target.value)}
+      className="p-1 border border-[#00B4D8] text-black bg-white w-40 focus:outline-none focus:ring-2 focus:ring-[#B57CF6] text-[24px]"
+    />
+  </div>
+
+
               <div className="flex items-center flex-wrap gap-1">
                 <span className="bg-[#E6E6FA] px-2 py-1 border border-[#00B4D8] font-bold text-black rounded-l-md text-[24px]">
                   date
@@ -744,7 +879,7 @@ export default function AdminRequestTablePage() {
                               </td>
                               <td className="border border-black p-1 text-center">
                                 <Link
-                                  href={`/admin/optimise-table?id=${request.id}`}
+                                  href={`/admin/view-request/${request.id}?from=request-table`}
                                   className="text-[#13529e] hover:underline font-semibold"
                                 >
                                   {request.divisionId || request.id}
