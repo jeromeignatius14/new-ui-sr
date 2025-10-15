@@ -29,6 +29,8 @@ import Papa from "papaparse";
 import { useQuery } from "@tanstack/react-query";
 import { userRequestService } from "@/app/service/api/user-request";
 import roadData from "../../../../public/roadData.json";
+import { createSiteLocationChangeHandler, getSiteLocationRange, validateSiteLocationPair, getAllAvailableDepots, getAutoAssignedDepots } from './features/siteLocation';
+
 
 type Department = "TRD" | "S&T" | "ENGG";
 
@@ -351,70 +353,36 @@ function ReviewBlockRequestModal({
                 <div>{formData.requestremarks}</div>
               </div>
             )}
-          </div>
-
-          <div>
-            <h3 className="font-bold mb-2">Block Section - Lines/Roads</h3>
-            <div className="mb-4 space-y-2 text-[14px] text-gray-600">
-              {formData.processedLineSections && formData.processedLineSections.length > 0 ? (
-                formData.processedLineSections.map((section: any, index: number) => (
-                  <div key={index}>
-                    <div className="font-medium text-gray-800">{section.block} {section.type === "yard" ? "(Yard)" : "(Block Section)"}</div>
-
-                    {/* Display Lines with UP/DOWN direction */}
-                    {section.lineName && (
-                      <div className="ml-2 mb-1">
-                        {section.lineName.toLowerCase().includes('up') ? (
-                          <div className="flex items-center">
-                            <span className="font-medium bg-green-100 text-green-800 px-2 rounded mr-2">Up {section.lineName.replace(/up\s*/i, '').trim()}</span>
-                            {section.type === "block" && section.lineName.toLowerCase().includes('slow') &&
-                              <span className="ml-2 bg-amber-100 text-amber-600 font-medium">Slow in block</span>
-                            }
-                          </div>
-                        ) : section.lineName.toLowerCase().includes('down') ? (
-                          <div className="flex items-center">
-                            <span className="font-medium bg-red-100 text-red-800 px-2 rounded mr-2">Down {section.lineName.replace(/down\s*/i, '').trim()}</span>
-                            {section.type === "block" && section.lineName.toLowerCase().includes('slow') &&
-                              <span className="ml-2 bg-amber-100 text-amber-600 font-medium">Slow in block</span>
-                            }
-                          </div>
-                        ) : (
-                          <div className="flex items-center">
-                            <span className="font-medium">Line:</span>
-                            <span className="ml-1">{section.lineName}</span>
-                            {section.type === "block" && section.lineName.toLowerCase().includes('slow') &&
-                              <span className="ml-2 bg-amber-100 text-amber-600 font-medium">Slow in block</span>
-                            }
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Display Roads with numbered formatting */}
-                    {section.road && (
-                      <div className="ml-2">
-                        {section.road.match(/rd\s*\d+/i) ? (
-                          <div className="flex items-center">
-                            <span className="font-medium bg-blue-100 text-blue-800 px-2 rounded mr-2">
-                              {section.road.match(/rd\s*\d+/i)[0].toUpperCase()}{section.road.replace(/rd\s*\d+/i, '').trim()}
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center">
-                            <span className="font-medium">Road:</span>
-                            <span className="ml-1">{section.road}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
+            {formData.remarks && (
+              <div className="mb-2">
+                <b>Remarks:</b> {formData.remarks}
+              </div>
+            )}
+            <div className="mt-4 mb-2 p-3 rounded-xl border-2 border-[#f7d6f7] bg-[#f7d6f7]">
+              <div className="text-lg font-extrabold text-[#13529e] mb-2">
+                Caution Requirements
+              </div>
+              <div>
+                <b>Fresh Caution Imposed:</b>{" "}
+                {formData.freshCautionRequired === "Y" ? "Yes" : "No"}
+              </div>
+              {formData.freshCautionRequired === "Y" && (
+                <div className="space-y-1 mt-2">
+                  <div>
+                    <b>Location From:</b>{" "}
+                    {formData.freshCautionLocationFrom || "-"}
                   </div>
-                ))
-              ) : (
-                blockSectionValue.map((block, index) => (
-                  <div key={index} className="">
-                    <div className="font-medium text-gray-800">{block}</div>
+                  <div>
+                    <b>Location To:</b> {formData.freshCautionLocationTo || "-"}
                   </div>
-                ))
+                  <div>
+                    <b>Speed (km/hr):</b> {formData.freshCautionSpeed || "-"}
+                  </div>
+                  <div>
+                    <b>Adjacent Lines Affected:</b>{" "}
+                    {formData.adjacentLinesAffected || "-"}
+                  </div>
+                </div>
               )}
             </div>
 
@@ -423,7 +391,7 @@ function ReviewBlockRequestModal({
               <h3 className="font-bold mb-2">Other Affected Lines/Roads:</h3>
               {formData.processedLineSections && formData.processedLineSections.some((s: any) => s.otherLines?.trim() || s.otherRoads?.trim()) ? (
                 <div className="">
-                  {formData.processedLineSections.map((s: any, index:any) => (
+                  {formData.processedLineSections.map((s: any, index: any) => (
                     <React.Fragment key={`other-${index}`}>
                       {s.otherLines?.trim() && (
                         <div className="mb-2">
@@ -801,45 +769,6 @@ const [selectionHistory, setSelectionHistory] = useState<Record<string, ('line' 
   const [showPopup, setShowPopup] = useState(false);
   const [popupLink, setPopupLink] = useState("");
   const [proceedAnyway, setProceedAnyway] = useState(false);
-  // Add this useEffect to auto-set corridor type based on line selections
-
-  // Add this useEffect to auto-set corridor type based on line selections
-useEffect(() => {
-  // Only run if we have a date and corridor type is not Urgent Block
-  if (formData.date && formData.corridorTypeSelection !== "Urgent Block") {
-    // Check if any block has multiple lines
-    const hasMultipleLines = blockSectionValue.some(block => {
-      const section = (formData.processedLineSections || []).find(
-        (s: any) => s.block === block
-      );
-      if (!section) return false;
-      const lineCount = [section.lineName, section.otherLines]
-        .filter(Boolean).length + (section.otherLines ? section.otherLines.split(',').length : 0);
-      return lineCount > 1;
-    });
-
-    // Auto-set to Outside Corridor if multiple lines detected
-    if (hasMultipleLines && formData.corridorTypeSelection !== "Outside Corridor") {
-      setFormData(prev => ({
-        ...prev,
-        corridorTypeSelection: "Outside Corridor"
-      }));
-    }
-  }
-}, [formData.processedLineSections, blockSectionValue, formData.date, formData.corridorTypeSelection]);
-
-// Add this helper function to check if multiple lines exist
-const hasMultipleLinesSelected = () => {
-  return blockSectionValue.some(block => {
-    const section = (formData.processedLineSections || []).find(
-      (s: any) => s.block === block
-    );
-    if (!section) return false;
-    const lineCount = [section.lineName, section.otherLines]
-      .filter(Boolean).length + (section.otherLines ? section.otherLines.split(',').length : 0);
-    return lineCount > 1;
-  });
-};
   // Initialize the depot from session when the session loads
   useEffect(() => {
     if (session?.user?.depot) {
@@ -849,6 +778,66 @@ const hasMultipleLinesSelected = () => {
       }));
     }
   }, [session]);
+
+  // Real-time site location validation
+  useEffect(() => {
+    if (formData.workLocationFrom || formData.workLocationTo) {
+      const currentErrors = { ...errors };
+      
+      // Clear previous site location errors
+      delete currentErrors.workLocationFrom;
+      delete currentErrors.workLocationTo;
+      
+      if (formData.selectedSection && blockSectionValue.length > 0 && userDepartment) {
+        if (formData.workLocationFrom && formData.workLocationTo) {
+          const siteLocationValidation = validateSiteLocationPair(
+            formData.workLocationFrom,
+            formData.workLocationTo,
+            formData.selectedSection,
+            blockSectionValue,
+            userDepartment
+          );
+          
+          if (!siteLocationValidation.fromValid && siteLocationValidation.fromError) {
+            currentErrors.workLocationFrom = siteLocationValidation.fromError;
+          }
+          
+          if (!siteLocationValidation.toValid && siteLocationValidation.toError) {
+            currentErrors.workLocationTo = siteLocationValidation.toError;
+          }
+          
+          if (siteLocationValidation.pairError) {
+            currentErrors.workLocationTo = siteLocationValidation.pairError;
+          }
+        }
+      }
+      
+      setErrors(currentErrors);
+    }
+  }, [formData.workLocationFrom, formData.workLocationTo, formData.selectedSection, blockSectionValue]);
+
+  // Auto-assign depot assignments when block sections change
+  useEffect(() => {
+    if (blockSectionValue.length > 0 && formData.selectedSection) {
+      // Auto-assign S&T depots (comma-separated if multiple)
+      const sntDepots = getAutoAssignedDepots(formData.selectedSection, blockSectionValue, "S&T");
+      if (sntDepots && formData.sntDisconnectionAssignTo !== sntDepots) {
+        setFormData(prev => ({
+          ...prev,
+          sntDisconnectionAssignTo: sntDepots
+        }));
+      }
+      
+      // Auto-assign TRD depots (comma-separated if multiple)
+      const trdDepots = getAutoAssignedDepots(formData.selectedSection, blockSectionValue, "TRD");
+      if (trdDepots && formData.powerBlockDisconnectionAssignTo !== trdDepots) {
+        setFormData(prev => ({
+          ...prev,
+          powerBlockDisconnectionAssignTo: trdDepots
+        }));
+      }
+    }
+  }, [blockSectionValue, formData.selectedSection]);
   const mutation = useCreateUserRequest();
   const userLocation = session?.user.location;
   // const majorSectionOptions =
@@ -1642,6 +1631,30 @@ const hasMultipleLinesSelected = () => {
         errors.workLocationFrom = "Work location from is required";
       if (!formData.workLocationTo)
         errors.workLocationTo = "Work location to is required";
+      
+      // Enhanced site location validation with range checking
+      if (formData.workLocationFrom && formData.workLocationTo) {
+        const siteLocationValidation = validateSiteLocationPair(
+          formData.workLocationFrom,
+          formData.workLocationTo,
+          formData.selectedSection,
+          blockSectionValue,
+          userDepartment || ""
+        );
+        
+        if (!siteLocationValidation.fromValid && siteLocationValidation.fromError) {
+          errors.workLocationFrom = siteLocationValidation.fromError;
+        }
+        
+        if (!siteLocationValidation.toValid && siteLocationValidation.toError) {
+          errors.workLocationTo = siteLocationValidation.toError;
+        }
+        
+        if (siteLocationValidation.pairError) {
+          errors.workLocationTo = siteLocationValidation.pairError;
+        }
+      }
+      
       if (formData.cautionRequired) {
         if (!formData.cautionSpeed)
           errors.cautionSpeed = "Caution speed is required";
@@ -3090,17 +3103,17 @@ const getDisplayInfo = (block: string) => {
                   //     ).filter((s: any) => values.includes(s.block)),
                   //   }));
                   // }
-                   if (userDepartment !== "TRD" && values.length > 2) {
-        return; 
-      }
+                  if (userDepartment !== "TRD" && values.length > 2) {
+                    return;
+                  }
                   setBlockSectionValue(values);
-      setFormData((prev) => ({
-        ...prev,
-        missionBlock: values.join(","),
-        processedLineSections: (
-          prev.processedLineSections || []
-        ).filter((s: any) => values.includes(s.block)),
-      }));
+                  setFormData((prev) => ({
+                    ...prev,
+                    missionBlock: values.join(","),
+                    processedLineSections: (
+                      prev.processedLineSections || []
+                    ).filter((s: any) => values.includes(s.block)),
+                  }));
                 }}
                 classNamePrefix="react-select"
                 styles={{
@@ -3176,18 +3189,18 @@ const getDisplayInfo = (block: string) => {
 
 
                 placeholder={
-      userDepartment === "TRD"
-        ? "Select Block Sections/Yards"
-        : "Select up to 2 Block Sections/Yards"
-    }
+                  userDepartment === "TRD"
+                    ? "Select Block Sections/Yards"
+                    : "Select up to 2 Block Sections/Yards"
+                }
                 closeMenuOnSelect={false}
                 // isOptionDisabled={() => blockSectionValue.length >= 2}
                 // isOptionDisabled={() =>
                 //   blockSectionValue.length >= (userDepartment === "TRD" ? 6 : 2)
                 // }
-                 isOptionDisabled={() => 
-      userDepartment !== "TRD" && blockSectionValue.length >= 2
-    }
+                isOptionDisabled={() =>
+                  userDepartment !== "TRD" && blockSectionValue.length >= 2
+                }
                 required
               />
               {errors.missionBlock && (
@@ -3600,12 +3613,12 @@ const getDisplayInfo = (block: string) => {
                         //   }
                         // }
                         if (isToday(formData.date)) {
-  const now = new Date();
-  const currentHour = now.getHours();
-  if (h < currentHour + 1 && h !== 0) {
-    return null;
-  }
-}
+                          const now = new Date();
+                          const currentHour = now.getHours();
+                          if (h < currentHour + 1 && h !== 0) {
+                            return null;
+                          }
+                        }
 
                         return (
                           <option key={h} value={hourStr}>
@@ -3742,59 +3755,69 @@ const getDisplayInfo = (block: string) => {
               {/* Site Location row */}
               <div className="flex flex-row items-center gap-4 w-full pl-1">
                 <div className="flex flex-col items-center bg-gradient-to-b from-[#fffbe9] to-[#fff7d6] border-2 border-[#b7cbe8] rounded-xl px-4 py-5 space-y-4 w-full shadow-md hover:shadow-lg transition-shadow duration-200">
-                  <span className="font-bold text-[#2c3e50] text-[24px] leading-none tracking-wide">
-                    Site Location
-                  </span>
-                  <div className="flex flex-wrap items-center justify-center gap-3">
-                    <input
-                      type="text"
-                      name="workLocationFrom"
-                      value={formData.workLocationFrom || ""}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        const prevValue = formData.workLocationFrom || "";
-                        if (value.length === 4 && value.length > prevValue.length) {
-                          handleInputChange({
-                            target: {
-                              name: "workLocationFrom",
-                              value: value + "/",
-                            },
-                          } as React.ChangeEvent<HTMLInputElement>);
-                        } else {
-                          handleInputChange(e);
-                        }
-                      }}
-                      maxLength={7}
-                      placeholder="From"
-                      className="border-2 border-[#2c3e50] rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] w-[120px] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200"
-                      required
-                    />
-                    <span className="font-bold text-[#2c3e50] text-[24px]">
-                      to
+                  <div className="flex flex-col items-center space-y-2">
+                    <span className="font-bold text-[#2c3e50] text-[24px] leading-none tracking-wide">
+                      Site Location
                     </span>
-                    <input
-                      type="text"
-                      name="workLocationTo"
-                      value={formData.workLocationTo || ""}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        const prevValue = formData.workLocationTo || "";
-                        if (value.length === 4 && value.length > prevValue.length) {
-                          handleInputChange({
-                            target: {
-                              name: "workLocationTo",
-                              value: value + "/",
-                            },
-                          } as React.ChangeEvent<HTMLInputElement>);
-                        } else {
-                          handleInputChange(e);
-                        }
-                      }}
-                      maxLength={7}
-                      placeholder="To"
-                      className="border-2 border-[#2c3e50] rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] w-[120px] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200"
-                      required
-                    />
+                    {/* Display range information */}
+                    {formData.selectedSection && blockSectionValue.length > 0 && userDepartment && (
+                      <span className="text-sm text-[#666] font-medium bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+                        {getSiteLocationRange(formData.selectedSection, blockSectionValue, userDepartment).displayText}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <div className="flex flex-col items-center">
+                      <input
+                        type="text"
+                        name="workLocationFrom"
+                        value={formData.workLocationFrom || ""}
+                        onChange={createSiteLocationChangeHandler(
+                          'workLocationFrom', 
+                          formData, 
+                          handleInputChange,
+                          formData.selectedSection,
+                          blockSectionValue,
+                          userDepartment || ""
+                        )}
+                        maxLength={7}
+                        placeholder="From"
+                        className={`border-2 ${errors.workLocationFrom ? 'border-red-500' : 'border-[#2c3e50]'} rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] w-[120px] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200`}
+                        required
+                      />
+                      <div className="h-8 mt-1 flex items-center justify-center">
+                        <span className={`text-xs text-center max-w-[120px] leading-tight ${errors.workLocationFrom ? 'text-red-500' : 'text-transparent'}`}>
+                          {errors.workLocationFrom || "No error"}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="font-bold text-[#2c3e50] text-[24px] mb-10">
+                      TO
+                    </span>
+                    <div className="flex flex-col items-center">
+                      <input
+                        type="text"
+                        name="workLocationTo"
+                        value={formData.workLocationTo || ""}
+                        onChange={createSiteLocationChangeHandler(
+                          'workLocationTo', 
+                          formData, 
+                          handleInputChange,
+                          formData.selectedSection,
+                          blockSectionValue,
+                          userDepartment || ""
+                        )}
+                        maxLength={7}
+                        placeholder="To"
+                        className={`border-2 ${errors.workLocationTo ? 'border-red-500' : 'border-[#2c3e50]'} rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] w-[120px] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200`}
+                        required
+                      />
+                      <div className="h-8 mt-1 flex items-center justify-center">
+                        <span className={`text-xs text-center max-w-[120px] leading-tight ${errors.workLocationTo ? 'text-red-500' : 'text-transparent'}`}>
+                          {errors.workLocationTo || "No error"}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -4213,44 +4236,30 @@ const getDisplayInfo = (block: string) => {
                         Assign To
                       </span>
 
-                      <select
-                        name="powerBlockDisconnectionAssignTo"
-                        value={formData.powerBlockDisconnectionAssignTo || ""}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            powerBlockDisconnectionAssignTo: e.target.value,
-                          }))
-                        }
-                        className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black placeholder-black py-2 px-1 w-full text-2xl"
-                        required
-                        style={{
-                          color: "black",
-                          borderColor: errors.powerBlockDisconnectionAssignTo
-                            ? "#dc2626"
-                            : "#45526c",
-                        }}
-                      >
-                        <option value="" disabled>
-                          Select Depo
-                        </option>
-                        {selectedMajorSection &&
-                          session?.user.department &&
-                          depot[selectedMajorSection] &&
-                          depot[selectedMajorSection]["TRD"] ? (
-                          depot[selectedMajorSection]["TRD"].map(
-                            (depotOption: string, index) => (
-                              <option key={index} value={depotOption}>
-                                {depotOption}
-                              </option>
-                            )
-                          )
-                        ) : (
-                          <option value="" disabled>
-                            Select Major Section first
-                          </option>
-                        )}
-                      </select>
+                      <div className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black px-3 py-2 w-full text-2xl rounded">
+                        {(() => {
+                          const depotString = getAutoAssignedDepots(
+                            formData.selectedSection,
+                            blockSectionValue,
+                            "TRD"
+                          );
+                          
+                          // Auto-assign the depot string to formData
+                          if (depotString && formData.powerBlockDisconnectionAssignTo !== depotString) {
+                            setTimeout(() => {
+                              setFormData(prev => ({
+                                ...prev,
+                                powerBlockDisconnectionAssignTo: depotString
+                              }));
+                            }, 0);
+                          }
+                          
+                          return depotString || 
+                            (formData.selectedSection && blockSectionValue.length > 0
+                              ? "No TRD depots available for selected sections"
+                              : "Select Major Section and Block Sections first");
+                        })()}
+                      </div>
                       {errors.powerBlockDisconnectionAssignTo && (
                         <span className="text-xs text-red-700 font-medium mt-1 block">
                           {errors.powerBlockDisconnectionAssignTo}
@@ -4553,33 +4562,30 @@ const getDisplayInfo = (block: string) => {
                         <span className="text-black font-bold text-2xl">
                           Assign To:
                         </span>
-                        <select
-                          name="sntDisconnectionAssignTo"
-                          value={formData.sntDisconnectionAssignTo}
-                          onChange={handleInputChange}
-                          required
-                          className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black placeholder-black px-1 w-full text-2xl"
-                        >
-                          <option value="" disabled>
-                            Select Depo
-                          </option>
-                          {selectedMajorSection &&
-                            session?.user.department &&
-                            depot[selectedMajorSection] &&
-                            depot[selectedMajorSection]["S&T"] ? (
-                            depot[selectedMajorSection]["S&T"].map(
-                              (depotOption: string, index) => (
-                                <option key={index} value={depotOption}>
-                                  {depotOption}
-                                </option>
-                              )
-                            )
-                          ) : (
-                            <option value="" disabled>
-                              Select Major Section first
-                            </option>
-                          )}
-                        </select>
+                        <div className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black px-3 py-2 w-full text-2xl rounded">
+                          {(() => {
+                            const depotString = getAutoAssignedDepots(
+                              formData.selectedSection,
+                              blockSectionValue,
+                              "S&T"
+                            );
+                            
+                            // Auto-assign the depot string to formData
+                            if (depotString && formData.sntDisconnectionAssignTo !== depotString) {
+                              setTimeout(() => {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  sntDisconnectionAssignTo: depotString
+                                }));
+                              }, 0);
+                            }
+                            
+                            return depotString || 
+                              (formData.selectedSection && blockSectionValue.length > 0
+                                ? "No S&T depots available for selected sections"
+                                : "Select Major Section and Block Sections first");
+                          })()}
+                        </div>
                         {errors.sntDisconnectionAssignTo && (
                           <span className="text-xs text-red-700 font-medium mt-1 block">
                             {errors.sntDisconnectionAssignTo}

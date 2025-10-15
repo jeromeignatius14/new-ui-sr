@@ -21,6 +21,175 @@ export let MajorSection = {
   "TVC": ["SRR-CHTS", "TCR-GUV", "ERS-KTYM-KYJ", "ERS-ALLP-KYJ", "KYJ-QLN", "QLN-TVC", "TVC-NCJ", "NCJ-TEN", "NCJ-CAPE"]
 };
 
+
+// Define structure for site location KM ranges
+export type KMRange = {
+  min: number;
+  max: number;
+};
+
+export type SiteLocationRanges = {
+  [majorSection: string]: {
+    [blockSection: string]: {
+      [department in Department]: KMRange;
+    };
+  };
+};
+
+// Site location KM ranges for each department and block section
+export const siteLocationRanges: SiteLocationRanges = {
+  "AJJ-KPD": {
+    "AJJ-MLPM": {
+      "S&T": { min: 0, max: 0 }, // No range
+      "TRD": { min: 67, max: 72 },
+      "ENGG": { min: 67, max: 72 }
+    },
+    "MLPM-CTRE": {
+      "S&T": { min: 67, max: 90 },
+      "TRD": { min: 0, max: 0 }, // No range
+      "ENGG": { min: 65, max: 99 }  // No range
+    },
+    "CTRE-MDVE": {
+      "S&T": { min: 0, max: 0 }, // No range
+      "TRD": { min: 0, max: 0 }, // No range
+      "ENGG": { min: 0, max: 0 }  // No range
+    },
+    "MDVE-SHU": {
+      "S&T": { min: 0, max: 0 }, // No range
+      "TRD": { min: 0, max: 0 }, // No range
+      "ENGG": { min: 0, max: 0 }  // No range
+    },
+    "SHU-TUG": {
+      "S&T": { min: 0, max: 0 }, // No range
+      "TRD": { min: 0, max: 0 }, // No range
+      "ENGG": { min: 0, max: 0 }  // No range
+    },
+    "TUG-WJR": {
+      "S&T": { min: 0, max: 0 }, // No range
+      "TRD": { min: 72, max: 112 },
+      "ENGG": { min: 72, max: 112 }
+    },
+    "WJR-MCN": {
+      "S&T": { min: 90, max: 124 },
+      "TRD": { min: 0, max: 0 }, // No range
+      "ENGG": { min: 0, max: 0 }  // No range
+    },
+    "MCN-THL": {
+      "S&T": { min: 0, max: 0 }, // No range
+      "TRD": { min: 0, max: 0 }, // No range
+      "ENGG": { min: 0, max: 0 }  // No range
+    },
+    "THL-SVUR": {
+      "S&T": { min: 0, max: 0 }, // No range
+      "TRD": { min: 0, max: 0 }, // No range
+      "ENGG": { min: 0, max: 0 }  // No range
+    },
+    "SVUR-KPD": {
+      "S&T": { min: 0, max: 0 }, // No range
+      "TRD": { min: 112, max: 153 },
+      "ENGG": { min: 112, max: 148 }
+    },
+    "KPD-RAM": {
+      "S&T": { min: 0, max: 0 }, // No range
+      "TRD": { min: 0, max: 0 }, // No range
+      "ENGG": { min: 0, max: 0 }  // No range
+    },
+    "KPD-VLR": {
+      "S&T": { min: 131, max: 176 },
+      "TRD": { min: 0, max: 0 }, // No range
+      "ENGG": { min: 0, max: 0 }  // No range
+    },
+      "MLPM-YD": {
+      "S&T": { min: 131, max: 176 },
+      "TRD": { min: 0, max: 0 }, // No range
+      "ENGG": { min: 70, max: 99 }  // No range
+    }
+  }
+  // More major sections as needed
+};
+
+// Site Location to Depot Mapping
+// This maps block sections to their corresponding depot codes for S&T and TRD
+export type SiteLocationDepotMapping = {
+  [majorSection: string]: {
+    [blockSection: string]: {
+      "S&T"?: string;
+      "TRD"?: string;
+    };
+  };
+};
+
+export const siteLocationDepotMapping: SiteLocationDepotMapping = {
+  "AJJ-KPD": {
+    "AJJ-MLPM": {
+      "TRD": "AJJ",
+      "S&T": "AJJW"
+    },
+    "MLPM-CTRE": {
+      "TRD": "WJR",
+      "S&T": "AJJW"
+    },
+    "CTRE-MDVE": {
+      "S&T": "AJJW",
+      "TRD": "WJR"
+    },
+    "MDVE-SHU": {
+      "S&T": "AJJW",
+      "TRD": "WJR"
+    },
+    "SHU-TUG": {
+      "S&T": "KPD E",
+      "TRD": "WJR"
+    },
+    "TUG-WJR": {
+      "S&T": "KPD E",
+      "TRD": "WJR"
+    },
+    "WJR-MCN": {
+      "S&T": "KPD E",
+      "TRD": "WJR"
+    },
+    "MCN-THL": {
+      "S&T": "KPD E",
+      "TRD": "KPD"
+    },
+    "THL-SVUR": {
+      "S&T": "KPD E",
+      "TRD": "KPD"
+    },
+    "SVUR-KPD": {
+      "S&T": "KPD E",
+      "TRD": "KPD"
+    },
+    "KPD-RAM": {
+      "S&T": "KPD E",
+      "TRD": "KPD"
+    },
+    "KPD-VLR": {
+      "S&T": "KPD E",
+      "TRD": "KPD"
+    },
+    "MLPM-YD": {
+      "S&T": "X",
+      "TRD": "Y"
+    }
+  },
+  // Add more major sections based on your requirements
+  "MAS-GDR": {
+    // Example mappings for MAS-GDR section
+    "MAS-BBQ": {
+      "S&T": "MAS",
+      "TRD": "MAS"
+    },
+    "BBQ-KOK": {
+      "S&T": "BBQ",
+      "TRD": "BBQ"
+    }
+    // Add more as needed
+  }
+  // Add more major sections as needed
+};
+
 // export let MajorSection = {
 //   MAS: ["MAS-GDR", "MAS-AJJ", "AJJ-KPD", "KPD-JTJ", "AJJ-RU", "AJJ-CGL", "MSB-VM", "MSB-VLCY"],
 //   TPJ: ["TPJ-VM", "VM-MV", "TPJ-MV", "TJ-KIK", "MV-TVR", "NMJ-MQ", "VM-PDY", "KPD-VM", "CUPJ-VRI", "TPJ-TP", "NGT-VLNK", "TVR-KKDI", "TTP-AGX"],
