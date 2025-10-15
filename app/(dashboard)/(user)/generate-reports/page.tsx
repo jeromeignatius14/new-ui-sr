@@ -990,6 +990,8 @@ export default function GenerateReportPage() {
                     Block Section
                   </th>
                   <th className="border-2 border-black px-2 py-1">Type</th>
+                  <th className="border-2 border-black px-2 py-1">Depo</th>
+
                   <th className="border-2 border-black px-2 py-1">Activity</th>
                   <th className="border-2 border-black px-2 py-1">
                     Demand time
@@ -1062,6 +1064,9 @@ export default function GenerateReportPage() {
                           </td>
                           <td className="border-2 border-black px-2 py-1 text-black">
                             {block.Type}
+                          </td>
+                          <td className="border-2 border-black px-2 py-1 text-black">
+                            {block.selectedDepo || "N/A"}
                           </td>
                           <td className="border-2 border-black px-2 py-1 text-black max-w-[200px] break-words">
                             {block.Activity}
