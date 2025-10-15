@@ -241,27 +241,61 @@ export default function OptimiseTablePage() {
   const [remark, setRemark] = useState("");
   const [selectedRequests, setSelectedRequests] = useState<UserRequest[]>([]);
   // Initialize currentWeekStart from URL parameter or default to current date
-  const [currentWeekStart, setCurrentWeekStart] = useState(() => {
-    const dateParam = searchParams.get("date");
-    if (dateParam) {
-      const parsedDate = new Date(dateParam);
-      if (!isNaN(parsedDate.getTime())) {
-        // return parsedDate;
-        return startOfWeek(parsedDate, { weekStartsOn: 1 })
-      }
+  // const [currentWeekStart, setCurrentWeekStart] = useState(() => {
+  //   const dateParam = searchParams.get("date");
+  //   if (dateParam) {
+  //     const parsedDate = new Date(dateParam);
+  //     if (!isNaN(parsedDate.getTime())) {
+  //       // return parsedDate;
+  //       return startOfWeek(parsedDate, { weekStartsOn: 1 })
+  //     }
+  //   }
+  //   // return new Date();
+  //   return startOfWeek(new Date(), { weekStartsOn: 1 })
+  // });
+
+  // // Update URL when currentWeekStart changes
+  // useEffect(() => {
+  //   const params = new URLSearchParams(searchParams.toString());
+  //   params.set("date", format(currentWeekStart, "yyyy-MM-dd"));
+  //   router.push(`?${params.toString()}`, { scroll: false });
+  // }, [currentWeekStart, router, searchParams]);
+
+// Initialize currentWeekStart from URL parameter or default to current date
+const [currentWeekStart, setCurrentWeekStart] = useState(() => {
+  const dateParam = searchParams.get("date");
+  if (dateParam) {
+    const parsedDate = new Date(dateParam);
+    if (!isNaN(parsedDate.getTime())) {
+      return startOfWeek(parsedDate, { weekStartsOn: 1 });
     }
-    // return new Date();
-    return startOfWeek(new Date(), { weekStartsOn: 1 })
-  });
+  }
+  // Always return the current week's Monday
+  return startOfWeek(new Date(), { weekStartsOn: 1 });
+});
 
-  // Update URL when currentWeekStart changes
-  useEffect(() => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("date", format(currentWeekStart, "yyyy-MM-dd"));
-    router.push(`?${params.toString()}`, { scroll: false });
-  }, [currentWeekStart, router, searchParams]);
+// Add this effect to synchronize week start properly
+useEffect(() => {
+  const dateParam = searchParams.get("date");
+  if (!dateParam) {
+    // If no date parameter, ensure we're using current week
+    const currentWeekMonday = startOfWeek(new Date(), { weekStartsOn: 1 });
+    setCurrentWeekStart(currentWeekMonday);
+  } else {
+    // If date parameter exists, ensure it's properly set as week start
+    const parsedDate = new Date(dateParam);
+    if (!isNaN(parsedDate.getTime())) {
+      setCurrentWeekStart(startOfWeek(parsedDate, { weekStartsOn: 1 }));
+    }
+  }
+}, [searchParams]);
 
-
+// Update URL when currentWeekStart changes
+useEffect(() => {
+  const params = new URLSearchParams();
+  params.set("date", format(currentWeekStart, "yyyy-MM-dd"));
+  router.push(`?${params.toString()}`, { scroll: false });
+}, [currentWeekStart, router]);
 
   // Edit state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -325,18 +359,32 @@ export default function OptimiseTablePage() {
 
   // For urgent mode, use the same day for start and end
   // For non-urgent mode, use Monday to Sunday
-  const weekStart = isUrgentMode
-    ? currentWeekStart
-    : startOfWeek(currentWeekStart, { weekStartsOn: 1 });
-  const weekEnd = isUrgentMode ? currentWeekStart : addDays(weekStart, 6);
+  // const weekStart = isUrgentMode
+  //   ? currentWeekStart
+  //   : startOfWeek(currentWeekStart, { weekStartsOn: 1 });
+  // const weekEnd = isUrgentMode ? currentWeekStart : addDays(weekStart, 6);
+
+
+// Use the helper function for consistent week boundaries
+const getWeekBoundaries = (date: Date) => {
+  const weekStart = startOfWeek(date, { weekStartsOn: 1 });
+  const weekEnd = endOfWeek(date, { weekStartsOn: 1 });
+  return { weekStart, weekEnd };
+};
+
+// For urgent mode, use the same day for start and end
+// For non-urgent mode, use Monday to Sunday
+const { weekStart, weekEnd } = getWeekBoundaries(currentWeekStart);
+const finalWeekStart = isUrgentMode ? currentWeekStart : weekStart;
+const finalWeekEnd = isUrgentMode ? currentWeekStart : weekEnd;
 
   // Fetch approved requests data
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["approved-requests", currentWeekStart, isUrgentMode],
     queryFn: () =>
       adminService.getApprovedRequests(
-        format(weekStart, "yyyy-MM-dd"),
-        format(weekEnd, "yyyy-MM-dd"),
+        format(finalWeekStart, "yyyy-MM-dd"),
+        format(finalWeekEnd, "yyyy-MM-dd"),
         5000
       ),
   });
@@ -1345,15 +1393,15 @@ export default function OptimiseTablePage() {
         })()}
         {/* Urgent Blocks Section - now at the top */}
         <div className="mt-4 mb-8">
-          <DaySwitcher
+<DaySwitcher
   currentDate={selectedDate}
   onDateChange={(newDate) => {
     setSelectedDate(newDate);
-    localStorage.setItem("urgentSelectedDate", newDate.toISOString());
+    // No need to manually save here - the DaySwitcher handles it
   }}
-  minDate={startOfWeek(currentWeekStart, { weekStartsOn: 1 })} 
-  maxDate={endOfWeek(currentWeekStart, { weekStartsOn: 1 })}
-  storageKey="urgentSelectedDate"
+  minDate={currentWeekStart} 
+  maxDate={addDays(currentWeekStart, 6)}
+  storageKey="urgentSelectedDate" // Unique key for urgent block
 />
           {/* <DaySwitcher
             currentDate={selectedDate}
