@@ -244,14 +244,26 @@ const [currentWeekStart, setCurrentWeekStart] = useState(() => {
   return startOfWeek(new Date(), { weekStartsOn: 1 });
 });
 
-// Add this effect to reset to current week when no date parameter
+// Add this effect to synchronize week start properly
 useEffect(() => {
   const dateParam = searchParams.get("date");
   if (!dateParam) {
+    // If no date parameter, ensure we're using current week
     const currentWeekMonday = startOfWeek(new Date(), { weekStartsOn: 1 });
     setCurrentWeekStart(currentWeekMonday);
+  } else {
+    // If date parameter exists, ensure it's properly set as week start
+    const parsedDate = new Date(dateParam);
+    if (!isNaN(parsedDate.getTime())) {
+      setCurrentWeekStart(startOfWeek(parsedDate, { weekStartsOn: 1 }));
+    }
   }
 }, [searchParams]);
+useEffect(() => {
+  const params = new URLSearchParams();
+  params.set("date", format(currentWeekStart, "yyyy-MM-dd"));
+  router.push(`?${params.toString()}`, { scroll: false });
+}, [currentWeekStart, router]);
 
   // Edit state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -426,17 +438,31 @@ useEffect(() => {
   // const weekEnd = isUrgentMode ? currentWeekStart : addDays(weekStart, 6);
 // For urgent mode, use the same day for start and end
 // For non-urgent mode, use Monday to Sunday
-const weekStart = isUrgentMode
-  ? currentWeekStart
-  : startOfWeek(currentWeekStart, { weekStartsOn: 1 });
-const weekEnd = isUrgentMode ? currentWeekStart : endOfWeek(currentWeekStart, { weekStartsOn: 1 });
+// const weekStart = isUrgentMode
+//   ? currentWeekStart
+//   : startOfWeek(currentWeekStart, { weekStartsOn: 1 });
+// const weekEnd = isUrgentMode ? currentWeekStart : endOfWeek(currentWeekStart, { weekStartsOn: 1 });
+
+
+// Use the helper function for consistent week boundaries
+const getWeekBoundaries = (date: Date) => {
+  const weekStart = startOfWeek(date, { weekStartsOn: 1 });
+  const weekEnd = endOfWeek(date, { weekStartsOn: 1 });
+  return { weekStart, weekEnd };
+};
+
+// For urgent mode, use the same day for start and end
+// For non-urgent mode, use Monday to Sunday
+const { weekStart, weekEnd } = getWeekBoundaries(currentWeekStart);
+const finalWeekStart = isUrgentMode ? currentWeekStart : weekStart;
+const finalWeekEnd = isUrgentMode ? currentWeekStart : weekEnd;
   // Fetch approved requests data
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["approved-requests", currentWeekStart, isUrgentMode],
     queryFn: () =>
       adminService.getApprovedRequests(
-        format(weekStart, "yyyy-MM-dd"),
-        format(weekEnd, "yyyy-MM-dd"),
+        format(finalWeekStart, "yyyy-MM-dd"),
+        format(finalWeekEnd, "yyyy-MM-dd"),
         5000
       ),
   });
@@ -1437,18 +1463,17 @@ const nonCorridorRequestsFiltered = pendingRequests
               Optimise
             </button>
           </div>
-   <DaySwitcher
-            currentDate={selectedDate}
-            onDateChange={(newDate) => {
-              setSelectedDate(newDate);
-              // No need to manually save here - the DaySwitcher handles it
-            }}
-              minDate={currentWeekStart} 
-              maxDate={addDays(currentWeekStart, 6)}
-            // minDate={startOfWeek(currentWeekStart, { weekStartsOn: 1 })}
-            // maxDate={addDays(startOfWeek(currentWeekStart, { weekStartsOn: 1 }), 6)}
-            storageKey="urgentSelectedDate" // Unique key for urgent block
-          />
+  <DaySwitcher
+  currentDate={selectedDate}
+  onDateChange={(newDate) => {
+    setSelectedDate(newDate);
+    // Save to localStorage for persistence
+    localStorage.setItem("urgentSelectedDate", newDate.toISOString());
+  }}
+  minDate={weekStart} 
+  maxDate={weekEnd}
+  storageKey="urgentSelectedDate"
+/>
           {/* <DaySwitcher
             currentDate={selectedDate}
             onDateChange={(newDate) => setSelectedDate(newDate)}
