@@ -1346,6 +1346,16 @@ export default function OptimiseTablePage() {
         {/* Urgent Blocks Section - now at the top */}
         <div className="mt-4 mb-8">
           <DaySwitcher
+  currentDate={selectedDate}
+  onDateChange={(newDate) => {
+    setSelectedDate(newDate);
+    localStorage.setItem("urgentSelectedDate", newDate.toISOString());
+  }}
+  minDate={startOfWeek(currentWeekStart, { weekStartsOn: 1 })} 
+  maxDate={endOfWeek(currentWeekStart, { weekStartsOn: 1 })}
+  storageKey="urgentSelectedDate"
+/>
+          {/* <DaySwitcher
             currentDate={selectedDate}
             onDateChange={(newDate) => {
               setSelectedDate(newDate);
@@ -1356,7 +1366,7 @@ export default function OptimiseTablePage() {
             // minDate={startOfWeek(currentWeekStart, { weekStartsOn: 1 })}
             // maxDate={addDays(startOfWeek(currentWeekStart, { weekStartsOn: 1 }), 6)}
             storageKey="urgentSelectedDate" // Unique key for urgent block
-          />
+          /> */}
           <h2 className="border-b-2 pb-2 border-[#13529e] text-[24px] font-semibold text-[#13529e]">Urgent Blocks</h2>
           <div className="flex justify-end py-2 gap-2">
             {/* <button
