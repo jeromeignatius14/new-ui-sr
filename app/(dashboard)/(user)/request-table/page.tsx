@@ -1126,7 +1126,7 @@ export default function RequestTablePage() {
                     </td>
 
                     <td className="border border-black px-2 py-1 bg-[#E6E6FA] text-center align-middle w-32">
-                      {(request.isSanctioned === true&&request.userResponse===null) ? (
+                      {(request.isSanctioned === true&&(request.userResponse===null||request.userResponse==="ACCEPTED")) ? (
                         <>
                           {
                             request.userResponse === "ACCEPTED" ? (
