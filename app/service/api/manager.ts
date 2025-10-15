@@ -33,6 +33,10 @@ export interface UsersResponse {
 }
 
 export interface UserRequest {
+    userAcceptanceForSanction: boolean;
+    disconnectionRequestRejectRemarks: string;
+    remarkByManager: string;
+    sanctionedRemarks: string;
     duration: any;
     sntDisconnectionAssignTo: string;
     powerBlockDisconnectionAssignTo: string;

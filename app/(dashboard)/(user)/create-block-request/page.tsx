@@ -3231,7 +3231,7 @@ export default function CreateBlockRequestPage() {
           </div>
 
           {/*  TODO:    remove "!" should be only for snt */}
-          {userDepartment === "S&T" && (
+          {/* {userDepartment === "S&T" && (
             <div className="flex flex-row items-center gap-4 w-full pl-1">
               <div className="flex flex-col items-center bg-gradient-to-b from-[#fffbe9] to-[#fff7d6] border-2 border-[#b7cbe8] rounded-xl px-4 py-5 space-y-4 w-full shadow-md hover:shadow-lg transition-shadow duration-200">
                 <span className="font-bold text-[#2c3e50] text-[24px] leading-none tracking-wide">
@@ -3262,7 +3262,7 @@ export default function CreateBlockRequestPage() {
                 </div>
               </div>
             </div>
-          )}
+          )} */}
 
           {/*  TODO:    remove "!" should be only for trd */}
 
