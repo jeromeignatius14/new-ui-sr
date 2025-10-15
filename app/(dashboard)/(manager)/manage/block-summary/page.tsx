@@ -1295,6 +1295,7 @@ export default function GenerateReportPage() {
                   <th className="border-2 border-black px-2 py-1">Date</th>
                   <th className="border-2 border-black px-2 py-1">ID</th>
                   <th className="border-2 border-black px-2 py-1">Block Section</th>
+                  <th className="border-2 border-black px-2 py-1">Depo</th>
                   <th className="border-2 border-black px-2 py-1">Type</th>
                   <th className="border-2 border-black px-2 py-1">Activity</th>
                   <th className="border-2 border-black px-2 py-1">Demand time</th>
@@ -1359,6 +1360,9 @@ export default function GenerateReportPage() {
                           </td>
                           <td className="border-2 border-black px-2 py-1 font-bold text-black">
                             {block.MissionBlock}
+                          </td>
+                          <td className="border-2 border-black px-2 py-1 font-bold text-black">
+                            {block.selectedDepo || "N/A"}
                           </td>
                           <td className="border-2 border-black px-2 py-1 text-black">
                             {block.Type}
