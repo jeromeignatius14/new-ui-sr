@@ -364,11 +364,7 @@ useEffect(() => {
 
 
 // Use the helper function for consistent week boundaries
-const getWeekBoundaries = (date: Date) => {
-  const weekStart = startOfWeek(date, { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(date, { weekStartsOn: 1 });
-  return { weekStart, weekEnd };
-};
+
 
   // For urgent mode, use the same day for start and end
   // For non-urgent mode, use Monday to Sunday
