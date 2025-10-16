@@ -769,7 +769,7 @@ export default function CreateBlockRequestPage() {
   };
 
   const [formData, setFormData] = useState<FormData>(initialFormData);
-
+const [selectionHistory, setSelectionHistory] = useState<Record<string, ('line' | 'road')[]>>({});
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showReview, setShowReview] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -801,7 +801,45 @@ export default function CreateBlockRequestPage() {
   const [showPopup, setShowPopup] = useState(false);
   const [popupLink, setPopupLink] = useState("");
   const [proceedAnyway, setProceedAnyway] = useState(false);
-  
+  // Add this useEffect to auto-set corridor type based on line selections
+
+  // Add this useEffect to auto-set corridor type based on line selections
+useEffect(() => {
+  // Only run if we have a date and corridor type is not Urgent Block
+  if (formData.date && formData.corridorTypeSelection !== "Urgent Block") {
+    // Check if any block has multiple lines
+    const hasMultipleLines = blockSectionValue.some(block => {
+      const section = (formData.processedLineSections || []).find(
+        (s: any) => s.block === block
+      );
+      if (!section) return false;
+      const lineCount = [section.lineName, section.otherLines]
+        .filter(Boolean).length + (section.otherLines ? section.otherLines.split(',').length : 0);
+      return lineCount > 1;
+    });
+
+    // Auto-set to Outside Corridor if multiple lines detected
+    if (hasMultipleLines && formData.corridorTypeSelection !== "Outside Corridor") {
+      setFormData(prev => ({
+        ...prev,
+        corridorTypeSelection: "Outside Corridor"
+      }));
+    }
+  }
+}, [formData.processedLineSections, blockSectionValue, formData.date, formData.corridorTypeSelection]);
+
+// Add this helper function to check if multiple lines exist
+const hasMultipleLinesSelected = () => {
+  return blockSectionValue.some(block => {
+    const section = (formData.processedLineSections || []).find(
+      (s: any) => s.block === block
+    );
+    if (!section) return false;
+    const lineCount = [section.lineName, section.otherLines]
+      .filter(Boolean).length + (section.otherLines ? section.otherLines.split(',').length : 0);
+    return lineCount > 1;
+  });
+};
   // Initialize the depot from session when the session loads
   useEffect(() => {
     if (session?.user?.depot) {
@@ -1857,52 +1895,180 @@ export default function CreateBlockRequestPage() {
     }
   };
 
-  const handleLineNameSelection = (block: string, values: string[]) => {
-    setFormData((prev) => {
-      const existingProcessedSections = [...(prev.processedLineSections || [])];
-      const sectionIndex = existingProcessedSections.findIndex(
-        (section) => section.block === block
-      );
+  // const handleLineNameSelection = (block: string, values: string[]) => {
+  //   setFormData((prev) => {
+  //     const existingProcessedSections = [...(prev.processedLineSections || [])];
+  //     const sectionIndex = existingProcessedSections.findIndex(
+  //       (section) => section.block === block
+  //     );
 
-      if (values.length === 0) {
-        if (sectionIndex !== -1) {
-          existingProcessedSections.splice(sectionIndex, 1);
-        }
-      } else {
-        const lineName = values[0].trim(); // First selected
-        const otherLines = values
-          .slice(1)
-          .map((v) => v.trim())
-          .filter(Boolean)
-          .join(","); // Rest
+  //     if (values.length === 0) {
+  //       if (sectionIndex !== -1) {
+  //         existingProcessedSections.splice(sectionIndex, 1);
+  //       }
+  //     } else {
+  //       const lineName = values[0].trim(); // First selected
+  //       const otherLines = values
+  //         .slice(1)
+  //         .map((v) => v.trim())
+  //         .filter(Boolean)
+  //         .join(","); // Rest
 
-        const newSection = {
-          block,
-          type: "line",
-          lineName,
-          otherLines,
-          stream: "",
-          road: "",
-          otherRoads: "",
-        };
+  //       const newSection = {
+  //         block,
+  //         type: "line",
+  //         lineName,
+  //         otherLines,
+  //         stream: "",
+  //         road: "",
+  //         otherRoads: "",
+  //       };
 
-        if (sectionIndex !== -1) {
-          existingProcessedSections[sectionIndex] = {
-            ...existingProcessedSections[sectionIndex],
-            ...newSection,
-          };
-        } else {
-          existingProcessedSections.push(newSection);
-        }
-      }
+  //       if (sectionIndex !== -1) {
+  //         existingProcessedSections[sectionIndex] = {
+  //           ...existingProcessedSections[sectionIndex],
+  //           ...newSection,
+  //         };
+  //       } else {
+  //         existingProcessedSections.push(newSection);
+  //       }
+  //     }
 
+  //     return {
+  //       ...prev,
+  //       processedLineSections: existingProcessedSections,
+  //     };
+  //   });
+  // };
+const updateSelectionHistory = (block: string, type: 'line' | 'road' | 'clear') => {
+  setSelectionHistory(prev => {
+    const blockHistory = prev[block] || [];
+    
+    if (type === 'clear') {
+      // Clear history when nothing is selected
+      const newHistory = { ...prev };
+      delete newHistory[block];
+      return newHistory;
+    }
+    
+    // Add to history if it's different from last
+    if (blockHistory[blockHistory.length - 1] !== type) {
       return {
         ...prev,
-        processedLineSections: existingProcessedSections,
+        [block]: [...blockHistory, type]
       };
-    });
-  };
+    }
+    
+    return prev;
+  });
+};
 
+const getFirstSelection = (block: string): 'line' | 'road' | null => {
+  const history = selectionHistory[block];
+  return history && history.length > 0 ? history[0] : null;
+};
+
+const getCurrentFirstSelection = (block: string, currentLines: number, currentRoads: number): 'line' | 'road' | null => {
+  // If nothing selected now, return null
+  if (currentLines === 0 && currentRoads === 0) return null;
+  
+  const history = selectionHistory[block];
+  if (!history || history.length === 0) {
+    // Determine based on current state
+    return currentLines > 0 ? 'line' : 'road';
+  }
+  
+  return history[0];
+};
+
+
+  const handleLineNameSelection = (block: string, values: string[]) => {
+  setFormData((prev) => {
+    const existingProcessedSections = [...(prev.processedLineSections || [])];
+    const sectionIndex = existingProcessedSections.findIndex(
+      (section) => section.block === block
+    );
+
+    if (values.length === 0) {
+      // Clear line selection
+      if (sectionIndex !== -1) {
+        const section = existingProcessedSections[sectionIndex];
+        const hasRoads = section.road || section.otherRoads;
+        
+        if (!hasRoads) {
+          // No roads left, clear everything
+          existingProcessedSections.splice(sectionIndex, 1);
+          updateSelectionHistory(block, 'clear');
+        } else {
+          // Keep section but clear line data
+          existingProcessedSections[sectionIndex] = {
+            ...section,
+            lineName: "",
+            otherLines: "",
+            type: "yard",
+          };
+          // Update history - roads become first selection
+          updateSelectionHistory(block, 'road');
+        }
+      }
+    } else {
+      const lineName = values[0].trim();
+      const otherLines = values
+        .slice(1)
+        .map((v) => v.trim())
+        .filter(Boolean)
+        .join(",");
+
+      const lineCount = values.length;
+      const newSectionData = {
+        block,
+        lineName,
+        otherLines,
+        stream: "",
+      };
+
+      if (sectionIndex !== -1) {
+        const existingSection = existingProcessedSections[sectionIndex];
+        const hasRoads = existingSection.road || existingSection.otherRoads;
+        const currentRoadCount = [existingSection.road, existingSection.otherRoads]
+          .filter(Boolean).length + (existingSection.otherRoads ? existingSection.otherRoads.split(',').length : 0);
+        
+        const firstSelection = getCurrentFirstSelection(block, lineCount, currentRoadCount);
+        
+        if (firstSelection === 'road') {
+          // Road was first - show NOTHING (Scenario 5)
+          existingProcessedSections[sectionIndex] = {
+            ...existingSection,
+            ...newSectionData,
+            type: "yard", // Force nothing display
+          };
+        } else {
+          // Line first or no roads - follow line count rules
+          existingProcessedSections[sectionIndex] = {
+            ...existingSection,
+            ...newSectionData,
+            type: lineCount === 1 ? "line" : "combined",
+          };
+          updateSelectionHistory(block, 'line');
+        }
+      } else {
+        // New section with lines
+        existingProcessedSections.push({
+          ...newSectionData,
+          type: lineCount === 1 ? "line" : "combined",
+          road: "",
+          otherRoads: "",
+        });
+        updateSelectionHistory(block, 'line');
+      }
+    }
+
+    return {
+      ...prev,
+      processedLineSections: existingProcessedSections,
+    };
+  });
+};
   const handleOtherAffectedLinesChange = (
     block: string,
     options: { value: string }[]
@@ -2019,54 +2185,177 @@ export default function CreateBlockRequestPage() {
     return allRoads;
   };
 
-  const handleRoadSelection = (block: string, value: string) => {
-    setFormData((prev) => {
-      const existingProcessedSections = [...prev.processedLineSections];
-      const sectionIndex = existingProcessedSections.findIndex(
-        (section) => section.block === block
-      );
+  // const handleRoadSelection = (block: string, value: string) => {
+  //   setFormData((prev) => {
+  //     const existingProcessedSections = [...prev.processedLineSections];
+  //     const sectionIndex = existingProcessedSections.findIndex(
+  //       (section) => section.block === block
+  //     );
+
+  //     if (sectionIndex !== -1) {
+  //       // Update existing section
+  //       const section = existingProcessedSections[sectionIndex];
+  //       if (section.type === "yard") {
+  //         // Split the value into road and otherRoads
+  //         const roads = value
+  //           .split(",")
+  //           .map((r) => r.trim())
+  //           .filter(Boolean);
+  //         const updatedSection = {
+  //           ...section,
+  //           road: roads[0] || "", // First item is road
+  //           otherRoads: roads.length > 1 ? roads.slice(1).join(",") : "", // Rest are otherRoads
+  //         };
+  //         existingProcessedSections[sectionIndex] = updatedSection;
+  //       }
+  //     } else {
+  //       // Create new section
+  //       const roads = value
+  //         .split(",")
+  //         .map((r) => r.trim())
+  //         .filter(Boolean);
+  //       existingProcessedSections.push({
+  //         block,
+  //         type: "yard",
+  //         lineName: "",
+  //         otherLines: "",
+  //         stream: "",
+  //         road: roads[0] || "", // First item is road
+  //         otherRoads: roads.length > 1 ? roads.slice(1).join(",") : "", // Rest are otherRoads
+  //       });
+  //     }
+
+  //     return {
+  //       ...prev,
+  //       processedLineSections: existingProcessedSections,
+  //     };
+  //   });
+  // };
+
+  // Add state to track if the success page should be shown and the submitted request summary
+ 
+ const handleRoadSelection = (block: string, value: string) => {
+  setFormData((prev) => {
+    const existingProcessedSections = [...prev.processedLineSections];
+    const sectionIndex = existingProcessedSections.findIndex(
+      (section) => section.block === block
+    );
+
+    if (!value) {
+      // Clear road selection
+      if (sectionIndex !== -1) {
+        const section = existingProcessedSections[sectionIndex];
+        const hasLines = section.lineName || section.otherLines;
+        
+        if (!hasLines) {
+          // No lines left, clear everything
+          existingProcessedSections.splice(sectionIndex, 1);
+          updateSelectionHistory(block, 'clear');
+        } else {
+          // Keep section but clear road data
+          existingProcessedSections[sectionIndex] = {
+            ...section,
+            road: "",
+            otherRoads: "",
+            type: section.otherLines ? "combined" : "line",
+          };
+          // Update history - lines become first selection
+          updateSelectionHistory(block, 'line');
+        }
+      }
+    } else {
+      const roads = value
+        .split(",")
+        .map((r) => r.trim())
+        .filter(Boolean);
+      
+      const roadCount = roads.length;
+      const roadData = {
+        block,
+        road: roads[0] || "",
+        otherRoads: roads.length > 1 ? roads.slice(1).join(",") : "",
+      };
 
       if (sectionIndex !== -1) {
-        // Update existing section
-        const section = existingProcessedSections[sectionIndex];
-        if (section.type === "yard") {
-          // Split the value into road and otherRoads
-          const roads = value
-            .split(",")
-            .map((r) => r.trim())
-            .filter(Boolean);
-          const updatedSection = {
-            ...section,
-            road: roads[0] || "", // First item is road
-            otherRoads: roads.length > 1 ? roads.slice(1).join(",") : "", // Rest are otherRoads
+        const existingSection = existingProcessedSections[sectionIndex];
+        const hasLines = existingSection.lineName || existingSection.otherLines;
+        const currentLineCount = [existingSection.lineName, existingSection.otherLines]
+          .filter(Boolean).length + (existingSection.otherLines ? existingSection.otherLines.split(',').length : 0);
+        
+        const firstSelection = getCurrentFirstSelection(block, currentLineCount, roadCount);
+        
+        if (firstSelection === 'line') {
+          // Line was first - roads don't affect display (Scenario 4)
+          existingProcessedSections[sectionIndex] = {
+            ...existingSection,
+            ...roadData,
+            type: currentLineCount === 1 ? "line" : "combined",
           };
-          existingProcessedSections[sectionIndex] = updatedSection;
+        } else {
+          // Road first or no lines - show NOTHING
+          existingProcessedSections[sectionIndex] = {
+            ...existingSection,
+            ...roadData,
+            type: "yard", // Force nothing display
+          };
+          updateSelectionHistory(block, 'road');
         }
       } else {
-        // Create new section
-        const roads = value
-          .split(",")
-          .map((r) => r.trim())
-          .filter(Boolean);
+        // New section with only roads
         existingProcessedSections.push({
-          block,
-          type: "yard",
+          ...roadData,
+          type: "yard", // Show nothing
           lineName: "",
           otherLines: "",
           stream: "",
-          road: roads[0] || "", // First item is road
-          otherRoads: roads.length > 1 ? roads.slice(1).join(",") : "", // Rest are otherRoads
         });
+        updateSelectionHistory(block, 'road');
       }
+    }
 
-      return {
-        ...prev,
-        processedLineSections: existingProcessedSections,
-      };
-    });
-  };
+    return {
+      ...prev,
+      processedLineSections: existingProcessedSections,
+    };
+  });
+};
+const getDisplayInfo = (block: string) => {
+  const section = (formData.processedLineSections || []).find(
+    (s: any) => s.block === block
+  );
+  
+  if (!section) return { display: 'nothing', text: 'Nothing' };
 
-  // Add state to track if the success page should be shown and the submitted request summary
+  const lineCount = [section.lineName, section.otherLines]
+    .filter(Boolean).length + (section.otherLines ? section.otherLines.split(',').length : 0);
+  const roadCount = [section.road, section.otherRoads]
+    .filter(Boolean).length + (section.otherRoads ? section.otherRoads.split(',').length : 0);
+
+  const firstSelection = getCurrentFirstSelection(block, lineCount, roadCount);
+
+  // Apply the rules from your scenarios
+  if (firstSelection === 'road') {
+    // Road first → NOTHING (Scenarios 1, 5)
+    return { display: 'nothing', text: 'Nothing' };
+  }
+  
+  if (firstSelection === 'line') {
+    // Line first → follow line count rules
+    if (lineCount === 0) {
+      return { display: 'nothing', text: 'Nothing' };
+    } else if (lineCount === 1) {
+      return { display: 'corridor', text: 'Corridor for this section' };
+    } else {
+      return { display: 'combined', text: 'Combined block' };
+    }
+  }
+
+  // Default fallback
+  return { display: 'nothing', text: 'Nothing' };
+};
+ 
+ 
+ 
   const [showSuccessPage, setShowSuccessPage] = useState(false);
   const [submittedSummary, setSubmittedSummary] = useState<any>(null);
   // Add state for showing the details modal
@@ -2663,6 +2952,7 @@ export default function CreateBlockRequestPage() {
                                 },
                               } as any)
                             }
+                            disabled={hasMultipleLinesSelected()}
                           >
                             C
                           </button>
@@ -2689,6 +2979,9 @@ export default function CreateBlockRequestPage() {
                     ) : null}
                   </div>
                 )}
+
+
+                
               </div>
               {errors.date && (
                 <span className="text-[24px] text-[#e07a5f] font-medium mt-2 block">
@@ -2903,7 +3196,7 @@ export default function CreateBlockRequestPage() {
               )}
             </div>
             {/* Lines/Roads Multi-select for each selected block section/yard */}
-            {blockSectionValue.map((block: string, idx: number) => {
+            {/* {blockSectionValue.map((block: string, idx: number) => {
               const isYard = block.includes("-YD");
               const lineOrRoadOptions = isYard
                 ? getAllRoadsForYard(block).map((road: string) => ({
@@ -3081,9 +3374,9 @@ export default function CreateBlockRequestPage() {
                   </div>
                 </div>
               );
-            })}
+            })} */}
             {/* Corridor for this section info bar (only once, after all lines/roads selects) */}
-            <div
+            {/* <div
               className="w-full mt-3 mb-2 px-4 py-2 rounded-lg border-2 border-[#e07a5f] bg-[#ffd6d6] flex flex-col items-center justify-center shadow-sm whitespace-nowrap overflow-x-auto min-w-0"
               style={{ boxSizing: "border-box" }}
             >
@@ -3095,7 +3388,169 @@ export default function CreateBlockRequestPage() {
                 <span className="mx-2">TO</span>
                 {corridorTime?.to || "--:--"}
               </span>
-            </div>
+            </div> */}
+
+
+
+{blockSectionValue.map((block: string, idx: number) => {
+  const isYard = block.includes("-YD");
+  const lineOrRoadOptions = isYard
+    ? getAllRoadsForYard(block).map((road: string) => ({
+      value: road,
+      label: road,
+    }))
+    : (lineData[block as keyof typeof lineData] || []).map(
+      (line: string) => ({
+        value: line,
+        label: line,
+      })
+    );
+  
+  const sectionEntry: any = (formData.processedLineSections || []).find(
+    (s: any) => s.block === block
+  ) || {};
+  
+  const displayInfo = getDisplayInfo(block);
+
+  return (
+    <div key={block} className="flex flex-col gap-1 w-full">
+      <span className="text-[24px] font-bold text-black mb-1">
+        Select {isYard ? "Road(s)" : "Line(s)"} for{" "}
+        <span className="text-[#3a506b]">{block}</span>
+      </span>
+      
+      <div className="flex flex-row items-center gap-3 w-full">
+        <Select
+          isMulti
+          name={`lineOrRoad-${block}`}
+          options={lineOrRoadOptions}
+          value={(() => {
+            const selectedValues: { value: string; label: string }[] = [];
+            if (isYard) {
+              if (sectionEntry?.road) {
+                selectedValues.push({ value: sectionEntry.road, label: sectionEntry.road });
+              }
+              if (sectionEntry?.otherRoads) {
+                const otherRoadList = sectionEntry.otherRoads.split(",").map((road: string) => road.trim()).filter(Boolean);
+                selectedValues.push(...otherRoadList.map((road: string) => ({ value: road, label: road })));
+              }
+            } else {
+              if (sectionEntry?.lineName) {
+                selectedValues.push({ value: sectionEntry.lineName, label: sectionEntry.lineName });
+              }
+              if (sectionEntry?.otherLines) {
+                const otherLineList = sectionEntry.otherLines.split(",").map((line: string) => line.trim()).filter(Boolean);
+                selectedValues.push(...otherLineList.map((line: string) => ({ value: line, label: line })));
+              }
+            }
+            return selectedValues;
+          })()}
+          onChange={(selected) => {
+            const values = selected ? selected.map((opt: any) => opt.value) : [];
+            if (isYard) {
+              handleRoadSelection(block, values.join(","));
+            } else {
+              handleLineNameSelection(block, values);
+            }
+          }}
+          classNamePrefix="react-select"
+          menuPortalTarget={typeof window !== "undefined" ? document.body : null}
+          styles={{
+            control: (base) => ({
+              ...base,
+              backgroundColor: "#e6f7fa",
+              borderColor: "black",
+              borderWidth: 2,
+              borderRadius: 12,
+              minHeight: "44px",
+              fontWeight: "bold",
+              fontSize: "24px",
+              boxShadow: "none",
+              padding: "0 2px",
+            }),
+            menu: (base) => ({ ...base, zIndex: 9999 }),
+            multiValue: (base) => ({
+              ...base,
+              backgroundColor: isYard ? "#e6f7fa" : "#f6fff6",
+              color: "black",
+              fontWeight: "bold",
+              fontSize: "22px",
+              border: "1.5px solid #b6e6c6",
+              borderRadius: 8,
+              marginRight: 4,
+            }),
+            multiValueLabel: (base) => ({
+              ...base,
+              color: "black",
+              fontWeight: "bold",
+              fontSize: "24px",
+              padding: "2px 8px",
+            }),
+            multiValueRemove: (base) => ({
+              ...base,
+              color: "#e07a5f",
+              ":hover": {
+                backgroundColor: "#f6fff6",
+                color: "#b91c1c",
+              },
+            }),
+            option: (base, state) => ({
+              ...base,
+              backgroundColor: state.isSelected
+                ? "#b6e6f7"
+                : state.isFocused
+                  ? "#b6e6f799"
+                  : "#e6f7fa",
+              color: "black",
+              fontWeight: "bold",
+              fontSize: "22px",
+              padding: "4px 8px",
+            }),
+            placeholder: (base) => ({
+              ...base,
+              color: "black",
+              fontWeight: "bold",
+              fontSize: "24px",
+            }),
+            dropdownIndicator: (base) => ({
+              ...base,
+              color: "black",
+              fontSize: "24px",
+              padding: 0,
+            }),
+          }}
+          placeholder={isYard ? "Select Road(s)" : "Select Line(s)"}
+          closeMenuOnSelect={false}
+          required
+        />
+        {renderError(`${block}.lineName`)}
+        {renderError(`${block}.road`)}
+        {renderError(`${block}.stream`)}
+      </div>
+    </div>
+  );
+})}
+
+{/* Corridor display - ONLY SHOW when NOT "nothing" */}
+{getDisplayInfo(blockSectionValue[0])?.display !== 'nothing' && (
+  <div
+    className="w-full mt-3 mb-2 px-4 py-2 rounded-lg border-2 border-[#e07a5f] bg-[#ffd6d6] flex flex-col items-center justify-center shadow-sm whitespace-nowrap overflow-x-auto min-w-0"
+    style={{ boxSizing: "border-box" }}
+  >
+    <span className="text-[26px] font-bold text-black text-center mr-4">
+      {getDisplayInfo(blockSectionValue[0])?.text === 'Corridor for this section' 
+        ? 'Corridor for this section'
+        : 'Combined block'}
+    </span>
+     {getDisplayInfo(blockSectionValue[0])?.text === 'Corridor for this section' && (
+      <span className="text-[24px] font-bold text-black text-center">
+        {corridorTime?.from || "--:--"}
+        <span className="mx-2">TO</span>
+        {corridorTime?.to || "--:--"}
+      </span>
+    )}
+  </div>
+)}
             {/* Preferred Slot and Site Location grouped in a box - ALIGNED, PROFESSIONAL, NO OVERFLOW, SINGLE LINE */}
             <div className="w-full mt-1 mb-4 p-6 rounded-2xl border-4 border-[#b6e6c6] bg-gradient-to-br from-[#f7f7a1] to-[#f0f0c0] flex flex-col gap-4 shadow-xl min-w-0 hover:shadow-2xl transition-shadow duration-300">
               {/* Preferred Slot label */}
