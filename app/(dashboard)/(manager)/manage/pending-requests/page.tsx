@@ -27,7 +27,7 @@ export default function PendingRequestsPage() {
         demandTimeTo: ""
     });
     const [isEditing, setIsEditing] = useState(false);
-
+    const [activeTab, setActiveTab] = useState<'urgent' | 'corridor' | 'non-corridor' | 'multi-line' | 'rejected'>('urgent');
     // CSS for flashing animation
     const flashingRowStyle = `
   @keyframes flashRed {
@@ -70,16 +70,71 @@ export default function PendingRequestsPage() {
     const pendingRequests = (Array.isArray(data?.data?.requests) ? data.data.requests : [])
         .filter((r: UserRequest) => r.status === 'PENDING' && r.managerAcceptance === false)
         .sort((a: UserRequest, b: UserRequest) => {
+            // Priority sort: urgent blocks first
+            const urgentA = a.corridorType === 'Urgent Block' ? 0 : 1;
+            const urgentB = b.corridorType === 'Urgent Block' ? 0 : 1;
+            if (urgentA !== urgentB) return urgentA - urgentB;
+
+            // Date sort (earliest first)
             const dateA = new Date(a.date).getTime();
             const dateB = new Date(b.date).getTime();
-            return dateB - dateA;
+            return dateA - dateB;
         })
+        const pendingCorridorRequests = (Array.isArray(data?.data?.requests) ? data.data.requests : [])
+    .filter((r: UserRequest) => 
+        r.status === 'PENDING' && 
+        r.managerAcceptance === false && 
+        r.corridorType === "Corridor"
+    )
+    .sort((a: UserRequest, b: UserRequest) => {
+        // Date sort (earliest first)
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return dateA - dateB;
+    });
+          const pendingNonCorridorRequests = (Array.isArray(data?.data?.requests) ? data.data.requests : [])
+    .filter((r: UserRequest) => 
+        r.status === 'PENDING' && 
+        r.managerAcceptance === false && 
+        r.corridorType === "Outside Corridor"
+    )
+    .sort((a: UserRequest, b: UserRequest) => {
+        // Date sort (earliest first)
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return dateA - dateB;
+    });
+    const pendingMultiLineRequests = (Array.isArray(data?.data?.requests) ? data.data.requests : [])
+    .filter((r: UserRequest) => 
+        r.status === 'PENDING' && 
+        r.managerAcceptance === false &&
+        r.processedLineSections?.some((section: any) => 
+            section.otherLines && section.otherLines.trim() !== ''
+        )
+    )
+    .sort((a: UserRequest, b: UserRequest) => {
+        // Priority sort: urgent blocks first
+        const urgentA = a.corridorType === 'Urgent Block' ? 0 : 1;
+        const urgentB = b.corridorType === 'Urgent Block' ? 0 : 1;
+        if (urgentA !== urgentB) return urgentA - urgentB;
+
+        // Date sort (earliest first)
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return dateA - dateB;
+    });
     const rejectedRequest = (Array.isArray(data?.data?.requests) ? data.data.requests : [])
         .filter((r: UserRequest) => (r.trdActionsNeeded === false && r.oheResponse !== "") || (r.sigActionsNeeded === false && r.sigResponse !== "") || (r.overAllStatus === "return to applicant by optg") || (r.overAllStatus === "return to applicant by trd.") || (r.overAllStatus === "return to applicant by s&t and trd.") || (r.overAllStatus === "return to applicant by s&t."))
         .sort((a: UserRequest, b: UserRequest) => {
+            // Priority sort: urgent blocks first
+            const urgentA = a.corridorType === 'Urgent Block' ? 0 : 1;
+            const urgentB = b.corridorType === 'Urgent Block' ? 0 : 1;
+            if (urgentA !== urgentB) return urgentA - urgentB;
+
+            // Date sort (earliest first)
             const dateA = new Date(a.date).getTime();
             const dateB = new Date(b.date).getTime();
-            return dateB - dateA;
+            return dateA - dateB;
         })
 
     // Mutations
@@ -673,165 +728,560 @@ export default function PendingRequestsPage() {
                 </div>
             )}
 
+<div className="mx-4 mt-6 flex flex-wrap gap-2 justify-center">
+        <button
+            onClick={() => setActiveTab('urgent')}
+            className={`px-4 py-2 rounded-lg border-2 border-black font-bold ${
+                activeTab === 'urgent' ? 'bg-[#FF6B6B] text-white' : 'bg-[#D6F3FF] text-black'
+            }`}
+        >
+            Urgent Block ({pendingRequests.filter(r => r.corridorType === "Urgent Block").length})
+        </button>
+    
+        <button
+            onClick={() => setActiveTab('corridor')}
+            className={`px-4 py-2 rounded-lg border-2 border-black font-bold ${
+                activeTab === 'corridor' ? 'bg-[#4ECDC4] text-white' : 'bg-[#D6F3FF] text-black'
+            }`}
+        >
+            Corridor ({pendingCorridorRequests.length})
+        </button>
+    
+        <button
+            onClick={() => setActiveTab('non-corridor')}
+            className={`px-4 py-2 rounded-lg border-2 border-black font-bold ${
+                activeTab === 'non-corridor' ? 'bg-[#45B7D1] text-white' : 'bg-[#D6F3FF] text-black'
+            }`}
+        >
+            Non-Corridor ({pendingNonCorridorRequests.length})
+        </button>
+    
+        <button
+            onClick={() => setActiveTab('multi-line')}
+            className={`px-4 py-2 rounded-lg border-2 border-black font-bold ${
+                activeTab === 'multi-line' ? 'bg-[#96CEB4] text-white' : 'bg-[#D6F3FF] text-black'
+            }`}
+        >
+            Multiple Line ({pendingMultiLineRequests.length})
+        </button>
+    
+        <button
+            onClick={() => setActiveTab('rejected')}
+            className={`px-4 py-2 rounded-lg border-2 border-black font-bold ${
+                activeTab === 'rejected' ? 'bg-[#FFA07A] text-white' : 'bg-[#D6F3FF] text-black'
+            }`}
+        >
+            Rejected ({rejectedRequest.length})
+        </button>
+</div>
 
-            {/* Table Section */}
-            {pendingRequests.length > 0 && (
-                <div className="mx-4 mt-6 overflow-x-auto">
-                    <div className={`rounded-xl overflow-hidden border-2 border-black bg-[#F5E7B2] min-w-[700px] ${showRejectModal || showSuccessModal ? 'invisible' : ''}`}>
-                        <table className="w-full text-black text-base border-collapse">
-                            <thead>
-                                <tr className="bg-[#D6F3FF] text-black font-bold">
-                                    <th className="border-2 border-black px-2 py-2 w-10 bg-[#D6F3FF]">{/* Checkbox */}
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedRequests.size === pendingRequests.length && pendingRequests.length > 0}
-                                            onChange={handleSelectAll}
-                                            className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]"
-                                        />
-                                    </th>
-                                    <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Date</th>
-                                    <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">ID</th>
-                                    <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Block Section</th>
-                                    <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Line</th>
-                                    <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Demanded</th>
-                                    <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Activity</th>
-                                    <th className="border-2 border-black px-2 py-2 sticky right-0 z-10 bg-[#D6F3FF] w-32">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {pendingRequests.map((request: UserRequest) => (
-                                    <tr key={request.id} className={`hover:bg-[#FFF86B] text-black ${request.corridorType === "Urgent Block" ? "urgent-block-row" : "bg-white"}`}>
-                                        <td className="border border-black px-2 py-1 text-center align-middle">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedRequests.has(request.id)}
-                                                onChange={() => handleSelectRequest(request.id)}
-                                                className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]"
-                                            />
-                                        </td>
-                                        <td className="border border-black px-2 py-1 text-center align-middle">{formatDate(request.date)}</td>
-                                        <td className="border border-black px-2 py-1 text-center align-middle">
-                                            <Link href={`/manage/view-request/${request.id}`} className="text-[#13529e] hover:underline font-semibold">
-                                                {request.divisionId || request.id}
-                                            </Link>
-                                        </td>
-                                        <td className="border border-black px-2 py-1 align-middle">{request.missionBlock}</td>
-                                        <td className="border border-black px-2 py-1 text-center align-middle">{request.processedLineSections?.[0]?.lineName || request.processedLineSections?.[0]?.road || 'N/A'}</td>
-                                        <td className="border border-black px-2 py-1 text-center align-middle">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
-                                        <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
-                                        <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-[#E6E6FA] text-center align-middle w-32">
-                                            <div className="flex gap-2 justify-center flex-col md:flex-row">
-                                                <button
-                                                    onClick={() => handleEditClick(request)}
-                                                    disabled={isAccepting || isRejecting || isEditing}
-                                                    className="px-2 py-1 text-xs md:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 font-bold"
-                                                >
-                                                    E
-                                                </button>
-                                                <button
-                                                    onClick={() => handleAccept(request.id, request.date, request.corridorType)}
-                                                    disabled={isAccepting || isRejecting}
-                                                    className="px-2 py-1 text-xs md:text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 font-bold"
-                                                >
-                                                    {isAccepting ? "Accepting..." : "F"}
-                                                </button>
-                                                <button
-                                                    onClick={() => handleReject(request.id)}
-                                                    disabled={isAccepting || isRejecting}
-                                                    className="px-2 py-1 text-xs md:text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-bold"
-                                                >
-                                                    {isRejecting ? "Rejecting..." : "R"}
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            )}
-
-
-            {/* Action Buttons */}
-            {pendingRequests.length > 0 && (
-                <div className="mx-4 mt-6 mb-8 flex justify-center gap-4">
-                    <button onClick={handleDownloadExcel} className="bg-[#FFA07A] px-8 py-2 rounded-[50%] border-2 border-black font-bold">
-                        Download
-                    </button>
-                    <Link href="/manage/request-table" className="bg-[#90EE90] px-8 py-2 rounded-[50%] border-2 border-black font-bold">
-                        Back
-                    </Link>
-                </div>
-            )}
-
-            {rejectedRequest.length > 0 && (
-                <div className="mx-4 mt-6 overflow-x-auto">
-                    <div className="w-full  py-2 flex flex-col items-center">
-                        <span className="text-xl font-bold text-black">Rejected Request</span>
-                    </div>
-                    <div className={`rounded-xl overflow-hidden border-2 border-black bg-[#F5E7B2] min-w-[900px] ${showRejectModal || showSuccessModal ? 'invisible' : ''}`}>
-
-                        <table className="w-full text-black text-base border-collapse">
-                            <thead>
-                                <tr className="bg-[#D6F3FF] text-black font-bold">
-
-                                    <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Date</th>
-                                    <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">ID</th>
-                                    <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Block Section</th>
-                                    <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Line/Road</th>
-                                    <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Demanded</th>
-                                    <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Activity</th>
-                                    <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Status</th>
-                                    <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Rejected remarks</th>
-
-
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {rejectedRequest.map((request: UserRequest) => (
-                                    <tr key={request.id} className="bg-white hover:bg-[#FFF86B] text-black">
-                                        <td className="border border-black px-2 py-1 text-center align-middle">{formatDate(request.date)}</td>
-                                        <td className="border border-black px-2 py-1 text-center align-middle">
-                                            <Link href={`/manage/view-request/${request.id}`} className="text-[#13529e] hover:underline font-semibold">
-                                                {request.divisionId || request.id}
-                                            </Link>
-                                        </td>
-                                        <td className="border border-black px-2 py-1 align-middle">{request.missionBlock}</td>
-                                        <td className="border border-black px-2 py-1 text-center align-middle">{request.processedLineSections?.[0]?.lineName || request.processedLineSections?.[0]?.road || 'N/A'}</td>
-                                        <td className="border border-black px-2 py-1 text-center align-middle">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
-                                        <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
-                                        <td className="border border-black px-2 py-1 align-middle">{request.overAllStatus}</td>
-                                       <td className="border border-black px-2 py-1 align-middle">
-    {(() => {
-        if (request.adminAcceptance === false && request.remarkByManager !== "") {
-            return request.remarkByManager;
-        } else if (request.managerAcceptance === false && request.remarkByManager !== "") {
-            return request.remarkByManager;
-        } else if ((request.disconnectionRequestRejectRemarks !== ""&&request.powerBlockRequired===true&&request.sntDisconnectionRequired===true)||(request.disconnectionRequestRejectRemarks !== ""&&request.sntDisconnectionRequired===true)||(request.disconnectionRequestRejectRemarks !== ""&&request.powerBlockRequired===true)||(request.oheResponse!=""&&request.powerBlockRequired===true)||(request.sigResponse!=""&&request.sntDisconnectionRequired===true)) {
-            return request.disconnectionRequestRejectRemarks||request.sigResponse ||request.oheResponse;
-        }else if(request.userResponse!==""&&request.userResponse!=="ACCEPTED"&&request.userAcceptanceForSanction===false){
-            return request.userResponse;
-        }
-         else {
-            return "N/A";
-        }
-    })()}
-</td>
-
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            )}
-            <div className="mx-4 mt-6 mb-8 flex justify-center gap-4">
-
-                <Link href="/manage/request-table" className="bg-[#90EE90] px-8 py-2 rounded-[50%] border-2 border-black font-bold">
-                    Back
-                </Link>
+{activeTab === 'urgent' && (
+    <div className="mx-4 mt-6 overflow-x-auto">
+        <div className={`rounded-xl overflow-hidden border-2 border-black bg-[#F5E7B2] min-w-[700px] ${showRejectModal || showSuccessModal ? 'invisible' : ''}`}>
+            <div className="bg-[#FF6B6B] text-white font-bold py-2 text-center">
+                Urgent Block Requests
             </div>
+            {pendingRequests.filter(r => r.corridorType === "Urgent Block").length > 0 ? (
+                <table className="w-full text-black text-base border-collapse">
+                    <thead>
+                        <tr className="bg-[#D6F3FF] text-black font-bold">
+                            <th className="border-2 border-black px-2 py-2 w-10 bg-[#D6F3FF]">
+                                <input
+                                    type="checkbox"
+                                    checked={selectedRequests.size === pendingRequests.filter(r => r.corridorType === "Urgent Block").length && pendingRequests.filter(r => r.corridorType === "Urgent Block").length > 0}
+                                    onChange={handleSelectAll}
+                                    className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]"
+                                />
+                            </th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Date</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">ID</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Block Section</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Line</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Demanded</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Activity</th>
+                            <th className="border-2 border-black px-2 py-2 sticky right-0 z-10 bg-[#D6F3FF] w-32">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {pendingRequests.filter((request: UserRequest) => request.corridorType === "Urgent Block").map((request: UserRequest) => (
+                            <tr key={request.id} className={`hover:bg-[#FFF86B] text-black ${request.corridorType === "Urgent Block" ? "urgent-block-row" : "bg-white"}`}>
+                                <td className="border border-black px-2 py-1 text-center align-middle">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedRequests.has(request.id)}
+                                        onChange={() => handleSelectRequest(request.id)}
+                                        className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]"
+                                    />
+                                </td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">{formatDate(request.date)}</td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">
+                                    <Link href={`/manage/view-request/${request.id}`} className="text-[#13529e] hover:underline font-semibold">
+                                        {request.divisionId || request.id}
+                                    </Link>
+                                </td>
+                                <td className="border border-black px-2 py-1 align-middle">{request.missionBlock}</td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">
+                                    {(() => {
+                                        const section = request.processedLineSections?.[0];
+                                        if (!section) return 'N/A';
+                                        
+                                        const { lineName, road, otherLines, otherRoads } = section;
+                                        
+                                        const allValues = [
+                                            lineName,
+                                            road,
+                                            ...(otherLines ? otherLines.split(',').map(item => item.trim()) : []),
+                                            ...(otherRoads ? otherRoads.split(',').map(item => item.trim()) : [])
+                                        ].filter(item => item && item !== '');
+                                        
+                                        return allValues.join(', ') || 'N/A';
+                                    })()}
+                                </td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
+                                <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
+                                <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-[#E6E6FA] text-center align-middle w-32">
+                                    <div className="flex gap-2 justify-center flex-col md:flex-row">
+                                        <button
+                                            onClick={() => handleEditClick(request)}
+                                            disabled={isAccepting || isRejecting || isEditing}
+                                            className="px-2 py-1 text-xs md:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 font-bold"
+                                        >
+                                            E
+                                        </button>
+                                        <button
+                                            onClick={() => handleAccept(request.id, request.date, request.corridorType)}
+                                            disabled={isAccepting || isRejecting}
+                                            className="px-2 py-1 text-xs md:text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 font-bold"
+                                        >
+                                            {isAccepting ? "Accepting..." : "F"}
+                                        </button>
+                                        <button
+                                            onClick={() => handleReject(request.id)}
+                                            disabled={isAccepting || isRejecting}
+                                            className="px-2 py-1 text-xs md:text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-bold"
+                                        >
+                                            {isRejecting ? "Rejecting..." : "R"}
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            ) : (
+                <div className="py-8 text-center text-gray-500 font-semibold">
+                    No data available
+                </div>
+            )}
+        </div>
+    </div>
+)}
+
+{activeTab === 'corridor' && (
+    <div className="mx-4 mt-6 overflow-x-auto">
+        <div className={`rounded-xl overflow-hidden border-2 border-black bg-[#F5E7B2] min-w-[700px] ${showRejectModal || showSuccessModal ? 'invisible' : ''}`}>
+            <div className="bg-[#4ECDC4] text-white font-bold py-2 text-center">
+                Corridor Requests
+            </div>
+            {pendingCorridorRequests.length > 0 ? (
+                <table className="w-full text-black text-base border-collapse">
+                    <thead>
+                        <tr className="bg-[#D6F3FF] text-black font-bold">
+                            <th className="border-2 border-black px-2 py-2 w-10 bg-[#D6F3FF]">
+                                <input
+                                    type="checkbox"
+                                    checked={selectedRequests.size === pendingCorridorRequests.length && pendingCorridorRequests.length > 0}
+                                    onChange={handleSelectAll}
+                                    className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]"
+                                />
+                            </th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Date</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">ID</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Block Section</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Line</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Demanded</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Activity</th>
+                            <th className="border-2 border-black px-2 py-2 sticky right-0 z-10 bg-[#D6F3FF] w-32">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {pendingCorridorRequests.map((request: UserRequest) => (
+                            <tr key={request.id} className={`hover:bg-[#FFF86B] text-black ${request.corridorType === "Urgent Block" ? "urgent-block-row" : "bg-white"}`}>
+                                <td className="border border-black px-2 py-1 text-center align-middle">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedRequests.has(request.id)}
+                                        onChange={() => handleSelectRequest(request.id)}
+                                        className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]"
+                                    />
+                                </td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">{formatDate(request.date)}</td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">
+                                    <Link href={`/manage/view-request/${request.id}`} className="text-[#13529e] hover:underline font-semibold">
+                                        {request.divisionId || request.id}
+                                    </Link>
+                                </td>
+                                <td className="border border-black px-2 py-1 align-middle">{request.missionBlock}</td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">
+                                    {(() => {
+                                        const section = request.processedLineSections?.[0];
+                                        if (!section) return 'N/A';
+                                        
+                                        const { lineName, road, otherLines, otherRoads } = section;
+                                        
+                                        const allValues = [
+                                            lineName,
+                                            road,
+                                            ...(otherLines ? otherLines.split(',').map(item => item.trim()) : []),
+                                            ...(otherRoads ? otherRoads.split(',').map(item => item.trim()) : [])
+                                        ].filter(item => item && item !== '');
+                                        
+                                        return allValues.join(', ') || 'N/A';
+                                    })()}
+                                </td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
+                                <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
+                                <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-[#E6E6FA] text-center align-middle w-32">
+                                    <div className="flex gap-2 justify-center flex-col md:flex-row">
+                                        <button
+                                            onClick={() => handleEditClick(request)}
+                                            disabled={isAccepting || isRejecting || isEditing}
+                                            className="px-2 py-1 text-xs md:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 font-bold"
+                                        >
+                                            E
+                                        </button>
+                                        <button
+                                            onClick={() => handleAccept(request.id, request.date, request.corridorType)}
+                                            disabled={isAccepting || isRejecting}
+                                            className="px-2 py-1 text-xs md:text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 font-bold"
+                                        >
+                                            {isAccepting ? "Accepting..." : "F"}
+                                        </button>
+                                        <button
+                                            onClick={() => handleReject(request.id)}
+                                            disabled={isAccepting || isRejecting}
+                                            className="px-2 py-1 text-xs md:text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-bold"
+                                        >
+                                            {isRejecting ? "Rejecting..." : "R"}
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            ) : (
+                <div className="py-8 text-center text-gray-500 font-semibold">
+                    No data available
+                </div>
+            )}
+        </div>
+    </div>
+)}
+
+{activeTab === 'non-corridor' && (
+    <div className="mx-4 mt-6 overflow-x-auto">
+        <div className={`rounded-xl overflow-hidden border-2 border-black bg-[#F5E7B2] min-w-[700px] ${showRejectModal || showSuccessModal ? 'invisible' : ''}`}>
+            <div className="bg-[#45B7D1] text-white font-bold py-2 text-center">
+                Non-Corridor Requests
+            </div>
+            {pendingNonCorridorRequests.length > 0 ? (
+                <table className="w-full text-black text-base border-collapse">
+                    <thead>
+                        <tr className="bg-[#D6F3FF] text-black font-bold">
+                            <th className="border-2 border-black px-2 py-2 w-10 bg-[#D6F3FF]">
+                                <input
+                                    type="checkbox"
+                                    checked={selectedRequests.size === pendingNonCorridorRequests.length && pendingNonCorridorRequests.length > 0}
+                                    onChange={handleSelectAll}
+                                    className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]"
+                                />
+                            </th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Date</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">ID</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Block Section</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Line</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Demanded</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Activity</th>
+                            <th className="border-2 border-black px-2 py-2 sticky right-0 z-10 bg-[#D6F3FF] w-32">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {pendingNonCorridorRequests.map((request: UserRequest) => (
+                            <tr key={request.id} className={`hover:bg-[#FFF86B] text-black ${request.corridorType === "Urgent Block" ? "urgent-block-row" : "bg-white"}`}>
+                                <td className="border border-black px-2 py-1 text-center align-middle">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedRequests.has(request.id)}
+                                        onChange={() => handleSelectRequest(request.id)}
+                                        className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]"
+                                    />
+                                </td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">{formatDate(request.date)}</td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">
+                                    <Link href={`/manage/view-request/${request.id}`} className="text-[#13529e] hover:underline font-semibold">
+                                        {request.divisionId || request.id}
+                                    </Link>
+                                </td>
+                                <td className="border border-black px-2 py-1 align-middle">{request.missionBlock}</td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">
+                                    {(() => {
+                                        const section = request.processedLineSections?.[0];
+                                        if (!section) return 'N/A';
+                                        
+                                        const { lineName, road, otherLines, otherRoads } = section;
+                                        
+                                        const allValues = [
+                                            lineName,
+                                            road,
+                                            ...(otherLines ? otherLines.split(',').map(item => item.trim()) : []),
+                                            ...(otherRoads ? otherRoads.split(',').map(item => item.trim()) : [])
+                                        ].filter(item => item && item !== '');
+                                        
+                                        return allValues.join(', ') || 'N/A';
+                                    })()}
+                                </td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
+                                <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
+                                <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-[#E6E6FA] text-center align-middle w-32">
+                                    <div className="flex gap-2 justify-center flex-col md:flex-row">
+                                        <button
+                                            onClick={() => handleEditClick(request)}
+                                            disabled={isAccepting || isRejecting || isEditing}
+                                            className="px-2 py-1 text-xs md:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 font-bold"
+                                        >
+                                            E
+                                        </button>
+                                        <button
+                                            onClick={() => handleAccept(request.id, request.date, request.corridorType)}
+                                            disabled={isAccepting || isRejecting}
+                                            className="px-2 py-1 text-xs md:text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 font-bold"
+                                        >
+                                            {isAccepting ? "Accepting..." : "F"}
+                                        </button>
+                                        <button
+                                            onClick={() => handleReject(request.id)}
+                                            disabled={isAccepting || isRejecting}
+                                            className="px-2 py-1 text-xs md:text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-bold"
+                                        >
+                                            {isRejecting ? "Rejecting..." : "R"}
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            ) : (
+                <div className="py-8 text-center text-gray-500 font-semibold">
+                    No data available
+                </div>
+            )}
+        </div>
+    </div>
+)}
+
+{activeTab === 'multi-line' && (
+    <div className="mx-4 mt-6 overflow-x-auto">
+        <div className={`rounded-xl overflow-hidden border-2 border-black bg-[#F5E7B2] min-w-[700px] ${showRejectModal || showSuccessModal ? 'invisible' : ''}`}>
+            <div className="bg-[#96CEB4] text-white font-bold py-2 text-center">
+                Multiple Line Requests
+            </div>
+            {pendingMultiLineRequests.length > 0 ? (
+                <table className="w-full text-black text-base border-collapse">
+                    <thead>
+                        <tr className="bg-[#D6F3FF] text-black font-bold">
+                            <th className="border-2 border-black px-2 py-2 w-10 bg-[#D6F3FF]">
+                                <input
+                                    type="checkbox"
+                                    checked={selectedRequests.size === pendingMultiLineRequests.length && pendingMultiLineRequests.length > 0}
+                                    onChange={handleSelectAll}
+                                    className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]"
+                                />
+                            </th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Date</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">ID</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Block Section</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Line</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Demanded</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Activity</th>
+                            <th className="border-2 border-black px-2 py-2 sticky right-0 z-10 bg-[#D6F3FF] w-32">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {pendingMultiLineRequests.map((request: UserRequest) => (
+                            <tr key={request.id} className={`hover:bg-[#FFF86B] text-black ${request.corridorType === "Urgent Block" ? "urgent-block-row" : "bg-white"}`}>
+                                <td className="border border-black px-2 py-1 text-center align-middle">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedRequests.has(request.id)}
+                                        onChange={() => handleSelectRequest(request.id)}
+                                        className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]"
+                                    />
+                                </td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">{formatDate(request.date)}</td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">
+                                    <Link href={`/manage/view-request/${request.id}`} className="text-[#13529e] hover:underline font-semibold">
+                                        {request.divisionId || request.id}
+                                    </Link>
+                                </td>
+                                <td className="border border-black px-2 py-1 align-middle">{request.missionBlock}</td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">
+                                    {(() => {
+                                        const section = request.processedLineSections?.[0];
+                                        if (!section) return 'N/A';
+                                        
+                                        const { lineName, road, otherLines, otherRoads } = section;
+                                        
+                                        const allValues = [
+                                            lineName,
+                                            road,
+                                            ...(otherLines ? otherLines.split(',').map(item => item.trim()) : []),
+                                            ...(otherRoads ? otherRoads.split(',').map(item => item.trim()) : [])
+                                        ].filter(item => item && item !== '');
+                                        
+                                        return allValues.join(', ') || 'N/A';
+                                    })()}
+                                </td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
+                                <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
+                                <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-[#E6E6FA] text-center align-middle w-32">
+                                    <div className="flex gap-2 justify-center flex-col md:flex-row">
+                                        <button
+                                            onClick={() => handleEditClick(request)}
+                                            disabled={isAccepting || isRejecting || isEditing}
+                                            className="px-2 py-1 text-xs md:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 font-bold"
+                                        >
+                                            E
+                                        </button>
+                                        <button
+                                            onClick={() => handleAccept(request.id, request.date, request.corridorType)}
+                                            disabled={isAccepting || isRejecting}
+                                            className="px-2 py-1 text-xs md:text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 font-bold"
+                                        >
+                                            {isAccepting ? "Accepting..." : "F"}
+                                        </button>
+                                        <button
+                                            onClick={() => handleReject(request.id)}
+                                            disabled={isAccepting || isRejecting}
+                                            className="px-2 py-1 text-xs md:text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-bold"
+                                        >
+                                            {isRejecting ? "Rejecting..." : "R"}
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            ) : (
+                <div className="py-8 text-center text-gray-500 font-semibold">
+                    No data available
+                </div>
+            )}
+        </div>
+    </div>
+)}
+
+
+
+{activeTab === 'rejected' && (
+    <div className="mx-4 mt-6 overflow-x-auto">
+        <div className={`rounded-xl overflow-hidden border-2 border-black bg-[#F5E7B2] min-w-[900px] ${showRejectModal || showSuccessModal ? 'invisible' : ''}`}>
+            <div className="bg-[#FFA07A] text-white font-bold py-2 text-center">
+                Rejected Requests
+            </div>
+            
+            {rejectedRequest.length > 0 ? (
+                <table className="w-full text-black text-base border-collapse">
+                    <thead>
+                        <tr className="bg-[#D6F3FF] text-black font-bold">
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Date</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">ID</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Block Section</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Line/Road</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Demanded</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Activity</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Status</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Rejected remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {rejectedRequest.map((request: UserRequest) => (
+                            <tr key={request.id} className="bg-white hover:bg-[#FFF86B] text-black">
+                                <td className="border border-black px-2 py-1 text-center align-middle">{formatDate(request.date)}</td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">
+                                    <Link href={`/manage/view-request/${request.id}`} className="text-[#13529e] hover:underline font-semibold">
+                                        {request.divisionId || request.id}
+                                    </Link>
+                                </td>
+                                <td className="border border-black px-2 py-1 align-middle">{request.missionBlock}</td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">
+                                    {(() => {
+                                        const section = request.processedLineSections?.[0];
+                                        if (!section) return 'N/A';
+                                        
+                                        const { lineName, road, otherLines, otherRoads } = section;
+                                        
+                                        const allValues = [
+                                            lineName,
+                                            road,
+                                            ...(otherLines ? otherLines.split(',').map(item => item.trim()) : []),
+                                            ...(otherRoads ? otherRoads.split(',').map(item => item.trim()) : [])
+                                        ].filter(item => item && item !== '');
+                                        
+                                        return allValues.join(', ') || 'N/A';
+                                    })()}
+                                </td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
+                                <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
+                                <td className="border border-black px-2 py-1 align-middle">{request.overAllStatus}</td>
+                                <td className="border border-black px-2 py-1 align-middle">
+                                    {(() => {
+                                        if (request.adminAcceptance === false && request.remarkByManager !== "") {
+                                            return request.remarkByManager;
+                                        } else if (request.managerAcceptance === false && request.remarkByManager !== "") {
+                                            return request.remarkByManager;
+                                        } else if ((request.disconnectionRequestRejectRemarks !== ""&&request.powerBlockRequired===true&&request.sntDisconnectionRequired===true)||(request.disconnectionRequestRejectRemarks !== ""&&request.sntDisconnectionRequired===true)||(request.disconnectionRequestRejectRemarks !== ""&&request.powerBlockRequired===true)||(request.oheResponse!=""&&request.powerBlockRequired===true)||(request.sigResponse!=""&&request.sntDisconnectionRequired===true)) {
+                                            return request.disconnectionRequestRejectRemarks||request.sigResponse ||request.oheResponse;
+                                        }else if(request.userResponse!==""&&request.userResponse!=="ACCEPTED"&&request.userAcceptanceForSanction===false){
+                                            return request.userResponse;
+                                        }
+                                        else {
+                                            return "N/A";
+                                        }
+                                    })()}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            ) : (
+                <div className="py-8 text-center text-gray-500 font-semibold">
+                    No data available
+                </div>
+            )}
+        </div>
+    </div>
+)}
+
+
+
+    <div className="mx-4 mt-6 mb-8 flex justify-center gap-4">
+        {activeTab !== 'rejected'&&(
+            <button onClick={handleDownloadExcel} className="bg-[#FFA07A] px-8 py-2 rounded-[50%] border-2 border-black font-bold">
+            Download
+        </button>
+        )}
+        
+        <Link href="/manage/request-table" className="bg-[#90EE90] px-8 py-2 rounded-[50%] border-2 border-black font-bold">
+            Back
+        </Link>
+    </div>
+
+
+
+        
             {/* Reject Modal */}
             {showRejectModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
