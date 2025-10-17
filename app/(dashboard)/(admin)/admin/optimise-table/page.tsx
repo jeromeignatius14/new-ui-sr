@@ -641,6 +641,13 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
         // First check if it's an urgent request
         const isCorridor = r.corridorType === "Corridor" ||r.corridorType === "Corridor Block";
         if (!isCorridor) return false;
+
+  const hasOtherLines = r.processedLineSections?.some((section: any) => 
+      section.otherLines && section.otherLines.trim() !== ''
+    );
+    if (hasOtherLines) return false;
+
+
   if (deptFilter !== 'ALL' && r.selectedDepartment !== deptFilter) return false;
         if (!matchesWorkType(r)) return false;
         if (!matchesActivity(r)) return false;
@@ -673,13 +680,11 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
       // First check if it's a non-corridor request
       const isNoncorridor = r.corridorType === "Outside Corridor" || r.corridorType === "Non-Corridor Block";
       if (!isNoncorridor) return false;
-
-      // Global filters
-      if (deptFilter !== 'ALL' && r.selectedDepartment !== deptFilter) return false;
-      if (!matchesWorkType(r)) return false;
-      if (!matchesActivity(r)) return false;
-      if (!matchesTimeSlot(r)) return false;
-
+      const hasOtherLines = r.processedLineSections?.some((section: any) => 
+      section.otherLines && section.otherLines.trim() !== ''
+    );
+    if (hasOtherLines) return false;
+  
         if (deptFilter !== 'ALL' && r.selectedDepartment !== deptFilter) return false;
         if (!matchesWorkType(r)) return false;
         if (!matchesActivity(r)) return false;
@@ -1541,7 +1546,13 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
                     </td>
                   </tr>
                 )}
-                {urgentRequestsForSelectedDate.map((request: UserRequest) => (
+                {urgentRequestsForSelectedDate .filter((request: UserRequest) => {
+    // Filter out requests that have otherLines with non-empty values
+    const hasOtherLines = request.processedLineSections?.some((section: any) => 
+      section.otherLines && section.otherLines.trim() !== ''
+    );
+    return !hasOtherLines; // Only keep requests WITHOUT otherLines
+  }).map((request: UserRequest) => (
                   <tr
                     key={`request-${request.id}-${request.date}`}
                     className={`hover:bg-blue-50 transition-colors ${request.optimizeTimeFrom && request.optimizeTimeTo ? "bg-green-50" : ""} ${request.corridorType === "Urgent Block" ? "urgent-block-row" : ""}`}
@@ -2116,6 +2127,316 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
           </div>
         </div>
 
+
+
+
+
+
+               <div className="mb-8">
+          <h2 className="text-[24px] font-semibold mb-2 text-[#13529e]">Combined Requests (Multiple Line Selected)</h2>
+          <div className="overflow-x-auto max-h-[70vh] overflow-y-auto rounded-lg border border-gray-300 shadow-sm">
+            <table className="w-full border-collapse text-black bg-white">
+              <thead className="sticky top-0 z-10 bg-gray-100 shadow">
+                <tr className="bg-gray-50">
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="date" title="Date" />
+                  </th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="date" title="Dept" />
+                  </th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="section" title="Major Section" />
+                  </th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="section" title="SSE" />
+                  </th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="section" title="Block Section" />
+                  </th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="line" title="Line / Road" />
+                  </th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="time" title="Demanded" />
+                  </th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="time" title="Optimize" />
+                  </th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="work" title="Activity" />
+                  </th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="action" title="Actions" />
+                  </th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="view" title="View" />
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {combinedRequestsFiltered.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={12}
+                      className="border border-black p-2 text-[24px] text-left"
+                    >
+                      <div className="text-center py-4">
+                        <p className="mb-2">No requests found.</p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                {combinedRequestsFiltered.sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
+                  <tr
+                    key={`request-${request.id}-${request.date}`}
+                    className={`hover:bg-blue-50 transition-colors ${request.optimizeTimeFrom && request.optimizeTimeTo
+                      ? "bg-green-50"
+                      : ""
+                      }`}
+                  >
+                    <td className="border border-black p-2 text-[24px]">
+                      {editingId === request.id ? (
+                        <input
+                          type="date"
+                          value={editDate}
+                          onChange={(e) => setEditDate(e.target.value)}
+                          className="w-28 border p-1 text-sm rounded"
+                        />
+                      ) : (
+                        dayjs(request.date).format("DD-MM-YY")
+                      )}
+                    </td>
+                    <td className="border border-black p-2 text-[24px]">
+                      {request.selectedDepartment}
+                    </td>
+                    <td className="border border-black p-2 text-[24px]">
+                      {request.selectedSection}
+                    </td>
+                    <td className="border border-black p-2 text-[24px]">
+                      {request.selectedDepo}
+                    </td>
+                    <td className="border border-black p-2 text-[24px]">
+                      {request.missionBlock}
+                    </td>
+                    <td className="border border-black p-2 text-[24px]">
+                      {getLineOrRoad(request)}
+                    </td>
+                    <td className="border border-black p-2 text-[24px]">
+                      {formatTime(request.demandTimeFrom)} -{" "}
+                      {formatTime(request.demandTimeTo)}
+                    </td>
+                    <td className="border border-black p-2 text-[24px]">
+                      {editingId === request.id ? (
+                        <div className="flex gap-1 items-center">
+                          <input
+                            type="time"
+                            value={timeFrom}
+                            onChange={(e) => setTimeFrom(e.target.value)}
+                            className="w-20 border p-1 text-sm rounded"
+                          />
+                          <span>-</span>
+                          <input
+                            type="time"
+                            value={timeTo}
+                            onChange={(e) => setTimeTo(e.target.value)}
+                            className="w-20 border p-1 text-sm rounded"
+                          />
+                        </div>
+                      ) : (
+                        <>
+                          {request.optimizeTimeFrom &&
+                            request.optimizeTimeFrom !== "WrongRequest"
+                            ? formatTime(request.optimizeTimeFrom)
+                            : "N/A"}{" "}
+                          -{" "}
+                          {request.optimizeTimeTo &&
+                            request.optimizeTimeTo !== "WrongRequest"
+                            ? formatTime(request.optimizeTimeTo)
+                            : "N/A"}
+                        </>
+                      )}
+                    </td>
+
+                    <td className="border border-black p-2 text-[24px]">
+                      {request.activity}
+                    </td>
+
+                    {/* <td className="border border-black p-2 text-[24px]">
+                      <div className="flex gap-2">
+                        {request.optimizeStatus === false ? (
+                          <span>Not Yet Optimized</span>
+                        ) : editingId === request.id ? (
+                          <>
+                            <button
+                              onClick={() => handleUpdateClick(request.id)}
+                              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
+                              disabled={updateOptimizedTimes.isPending}
+                            >
+                              {updateOptimizedTimes.isPending ? "Saving..." : "Save"}
+                            </button>
+                            <button
+                              onClick={handleCancelEdit}
+                              className="px-2 py-1 text-[24px] bg-gray-400 text-white border border-black rounded"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : modifyReturnOpenId === request.id ? (
+                          <>
+                            <button
+                              className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+                              onClick={() => { setEditingId(request.id); setEditDate(request.date.split("T")[0]); setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : ""); setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : ""); setModifyReturnOpenId(null); }}
+                            >
+                              Modify
+                            </button>
+                            <button
+                              className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
+                              onClick={() => { handleRejectClick(request.id); setModifyReturnOpenId(null); }}
+                            >
+                              Return
+                            </button>
+                            <button
+                              className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
+                              onClick={() => setModifyReturnOpenId(null)}
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
+                              // onClick={
+                              //   () => {
+                              //       handleSendNonUrgentRequests([request]);
+                              //   }
+                              // }
+                              onClick={() => {
+                                setSelectedRequests([request]); // save clicked request
+                                setIsNonUrgentModalOpen(true);           // open popup
+                              }}
+                            >
+                              Sanction
+                            </button>
+                            <button
+                              className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
+                              onClick={() => setModifyReturnOpenId(request.id)}
+                            >
+                              Modify/Return
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td> */}
+                    <td className="border border-black p-2 text-[24px]">
+  <div className="flex gap-2">
+    {editingId === request.id ? (
+      <>
+        <button
+          onClick={() => handleUpdateClick(request.id)}
+          className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
+          disabled={updateOptimizedTimes.isPending}
+        >
+          {updateOptimizedTimes.isPending ? "Saving..." : "Save"}
+        </button>
+        <button
+          onClick={handleCancelEdit}
+          className="px-2 py-1 text-[24px] bg-gray-400 text-white border border-black rounded"
+        >
+          Cancel
+        </button>
+      </>
+    ) : modifyReturnOpenId === request.id ? (
+      <>
+        <button
+          className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+          onClick={() => {
+            setEditingId(request.id);
+            setEditDate(request.date.split("T")[0]);
+            setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
+            setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
+            setModifyReturnOpenId(null);
+          }}
+        >
+          Modify
+        </button>
+        <button
+          className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
+          onClick={() => {
+            handleRejectClick(request.id);
+            setModifyReturnOpenId(null);
+          }}
+        >
+          Return
+        </button>
+        <button
+          className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
+          onClick={() => setModifyReturnOpenId(null)}
+        >
+          Cancel
+        </button>
+      </>
+    ) : (
+      <>
+        {request.optimizeStatus === false ? (
+          <button
+            className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+            onClick={() => {
+              setEditingId(request.id);
+              setEditDate(request.date.split("T")[0]);
+              setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
+              setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
+              setModifyReturnOpenId(null);
+            }}
+          >
+            Modify
+          </button>
+        ) : (
+          <>
+            <button
+              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
+              onClick={() => {
+                setSelectedRequests([request]);
+                setIsNonUrgentModalOpen(true);
+              }}
+            >
+              Sanction
+            </button>
+            <button
+              className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
+              onClick={() => setModifyReturnOpenId(request.id)}
+            >
+              Modify/Return
+            </button>
+          </>
+        )}
+      </>
+    )}
+  </div>
+</td>
+
+                    <td className="border border-black p-2 text-[24px] min-w-[140px]">
+                      <div className="flex gap-2">
+                        <Link
+                          href={`/admin/view-request/${request.id}?from=request-table`}
+                          className="px-2 py-1 bg-blue-600 text-white border border-black rounded inline-block text-center w-full min-w-[120px]"
+                        >
+                          View
+                        </Link>
+                      </div>
+                    </td>
+
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+
+
+
+
         {/* Non-Corridor Requests Section */}
         <div className="mb-8">
           <h2 className="text-[24px] font-semibold mb-2 text-[#13529e]">Non-Corridor Requests</h2>
@@ -2422,306 +2743,6 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
 
 
 
-               <div>
-          <h2 className="text-[24px] font-semibold mb-2 text-[#13529e]">Combined Requests</h2>
-          <div className="overflow-x-auto max-h-[70vh] overflow-y-auto rounded-lg border border-gray-300 shadow-sm">
-            <table className="w-full border-collapse text-black bg-white">
-              <thead className="sticky top-0 z-10 bg-gray-100 shadow">
-                <tr className="bg-gray-50">
-                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
-                    <ColumnHeader icon="date" title="Date" />
-                  </th>
-                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
-                    <ColumnHeader icon="date" title="Dept" />
-                  </th>
-                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
-                    <ColumnHeader icon="section" title="Major Section" />
-                  </th>
-                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
-                    <ColumnHeader icon="section" title="SSE" />
-                  </th>
-                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
-                    <ColumnHeader icon="section" title="Block Section" />
-                  </th>
-                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
-                    <ColumnHeader icon="line" title="Line / Road" />
-                  </th>
-                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
-                    <ColumnHeader icon="time" title="Demanded" />
-                  </th>
-                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
-                    <ColumnHeader icon="time" title="Optimize" />
-                  </th>
-                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
-                    <ColumnHeader icon="work" title="Activity" />
-                  </th>
-                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
-                    <ColumnHeader icon="action" title="Actions" />
-                  </th>
-                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
-                    <ColumnHeader icon="view" title="View" />
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {combinedRequestsFiltered.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={12}
-                      className="border border-black p-2 text-[24px] text-left"
-                    >
-                      <div className="text-center py-4">
-                        <p className="mb-2">No requests found.</p>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-                {combinedRequestsFiltered.sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
-                  <tr
-                    key={`request-${request.id}-${request.date}`}
-                    className={`hover:bg-blue-50 transition-colors ${request.optimizeTimeFrom && request.optimizeTimeTo
-                      ? "bg-green-50"
-                      : ""
-                      }`}
-                  >
-                    <td className="border border-black p-2 text-[24px]">
-                      {editingId === request.id ? (
-                        <input
-                          type="date"
-                          value={editDate}
-                          onChange={(e) => setEditDate(e.target.value)}
-                          className="w-28 border p-1 text-sm rounded"
-                        />
-                      ) : (
-                        dayjs(request.date).format("DD-MM-YY")
-                      )}
-                    </td>
-                    <td className="border border-black p-2 text-[24px]">
-                      {request.selectedDepartment}
-                    </td>
-                    <td className="border border-black p-2 text-[24px]">
-                      {request.selectedSection}
-                    </td>
-                    <td className="border border-black p-2 text-[24px]">
-                      {request.selectedDepo}
-                    </td>
-                    <td className="border border-black p-2 text-[24px]">
-                      {request.missionBlock}
-                    </td>
-                    <td className="border border-black p-2 text-[24px]">
-                      {getLineOrRoad(request)}
-                    </td>
-                    <td className="border border-black p-2 text-[24px]">
-                      {formatTime(request.demandTimeFrom)} -{" "}
-                      {formatTime(request.demandTimeTo)}
-                    </td>
-                    <td className="border border-black p-2 text-[24px]">
-                      {editingId === request.id ? (
-                        <div className="flex gap-1 items-center">
-                          <input
-                            type="time"
-                            value={timeFrom}
-                            onChange={(e) => setTimeFrom(e.target.value)}
-                            className="w-20 border p-1 text-sm rounded"
-                          />
-                          <span>-</span>
-                          <input
-                            type="time"
-                            value={timeTo}
-                            onChange={(e) => setTimeTo(e.target.value)}
-                            className="w-20 border p-1 text-sm rounded"
-                          />
-                        </div>
-                      ) : (
-                        <>
-                          {request.optimizeTimeFrom &&
-                            request.optimizeTimeFrom !== "WrongRequest"
-                            ? formatTime(request.optimizeTimeFrom)
-                            : "N/A"}{" "}
-                          -{" "}
-                          {request.optimizeTimeTo &&
-                            request.optimizeTimeTo !== "WrongRequest"
-                            ? formatTime(request.optimizeTimeTo)
-                            : "N/A"}
-                        </>
-                      )}
-                    </td>
-
-                    <td className="border border-black p-2 text-[24px]">
-                      {request.activity}
-                    </td>
-
-                    {/* <td className="border border-black p-2 text-[24px]">
-                      <div className="flex gap-2">
-                        {request.optimizeStatus === false ? (
-                          <span>Not Yet Optimized</span>
-                        ) : editingId === request.id ? (
-                          <>
-                            <button
-                              onClick={() => handleUpdateClick(request.id)}
-                              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-                              disabled={updateOptimizedTimes.isPending}
-                            >
-                              {updateOptimizedTimes.isPending ? "Saving..." : "Save"}
-                            </button>
-                            <button
-                              onClick={handleCancelEdit}
-                              className="px-2 py-1 text-[24px] bg-gray-400 text-white border border-black rounded"
-                            >
-                              Cancel
-                            </button>
-                          </>
-                        ) : modifyReturnOpenId === request.id ? (
-                          <>
-                            <button
-                              className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-                              onClick={() => { setEditingId(request.id); setEditDate(request.date.split("T")[0]); setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : ""); setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : ""); setModifyReturnOpenId(null); }}
-                            >
-                              Modify
-                            </button>
-                            <button
-                              className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
-                              onClick={() => { handleRejectClick(request.id); setModifyReturnOpenId(null); }}
-                            >
-                              Return
-                            </button>
-                            <button
-                              className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
-                              onClick={() => setModifyReturnOpenId(null)}
-                            >
-                              Cancel
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-                              // onClick={
-                              //   () => {
-                              //       handleSendNonUrgentRequests([request]);
-                              //   }
-                              // }
-                              onClick={() => {
-                                setSelectedRequests([request]); // save clicked request
-                                setIsNonUrgentModalOpen(true);           // open popup
-                              }}
-                            >
-                              Sanction
-                            </button>
-                            <button
-                              className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
-                              onClick={() => setModifyReturnOpenId(request.id)}
-                            >
-                              Modify/Return
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td> */}
-                    <td className="border border-black p-2 text-[24px]">
-  <div className="flex gap-2">
-    {editingId === request.id ? (
-      <>
-        <button
-          onClick={() => handleUpdateClick(request.id)}
-          className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-          disabled={updateOptimizedTimes.isPending}
-        >
-          {updateOptimizedTimes.isPending ? "Saving..." : "Save"}
-        </button>
-        <button
-          onClick={handleCancelEdit}
-          className="px-2 py-1 text-[24px] bg-gray-400 text-white border border-black rounded"
-        >
-          Cancel
-        </button>
-      </>
-    ) : modifyReturnOpenId === request.id ? (
-      <>
-        <button
-          className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-          onClick={() => {
-            setEditingId(request.id);
-            setEditDate(request.date.split("T")[0]);
-            setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
-            setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
-            setModifyReturnOpenId(null);
-          }}
-        >
-          Modify
-        </button>
-        <button
-          className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
-          onClick={() => {
-            handleRejectClick(request.id);
-            setModifyReturnOpenId(null);
-          }}
-        >
-          Return
-        </button>
-        <button
-          className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
-          onClick={() => setModifyReturnOpenId(null)}
-        >
-          Cancel
-        </button>
-      </>
-    ) : (
-      <>
-        {request.optimizeStatus === false ? (
-          <button
-            className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-            onClick={() => {
-              setEditingId(request.id);
-              setEditDate(request.date.split("T")[0]);
-              setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
-              setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
-              setModifyReturnOpenId(null);
-            }}
-          >
-            Modify
-          </button>
-        ) : (
-          <>
-            <button
-              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-              onClick={() => {
-                setSelectedRequests([request]);
-                setIsNonUrgentModalOpen(true);
-              }}
-            >
-              Sanction
-            </button>
-            <button
-              className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
-              onClick={() => setModifyReturnOpenId(request.id)}
-            >
-              Modify/Return
-            </button>
-          </>
-        )}
-      </>
-    )}
-  </div>
-</td>
-
-                    <td className="border border-black p-2 text-[24px] min-w-[140px]">
-                      <div className="flex gap-2">
-                        <Link
-                          href={`/admin/view-request/${request.id}?from=request-table`}
-                          className="px-2 py-1 bg-blue-600 text-white border border-black rounded inline-block text-center w-full min-w-[120px]"
-                        >
-                          View
-                        </Link>
-                      </div>
-                    </td>
-
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
 
 
         {isModalOpen && (
