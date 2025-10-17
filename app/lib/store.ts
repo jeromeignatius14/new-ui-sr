@@ -5331,7 +5331,7 @@ export const depotOnLocation = {
     "ICG", "KDM", "KDMD", "KII", "KKPM", "KLGM", "KMM", "KNB", "MV", "NCR", "NMJ", "NVL",
     "OTK", "PDY", "PKT", "PMB", "PRKL", "PRL", "PUC", "PVN", "PVI", "PYK", "SGM", "SLTH", "SMM",
     "SNDI", "SRGM", "SY", "TAM", "TJM", "TLI", "TLNR", "TNI", "TNM", "TPGY", "TPJ", "TRK",
-    "TUY", "TVNL", "ULU", "UMG", "VDL", "VLDE", "VKM", "VM", "VLR", "VRI", "vri", "kii", "pvn", "Sy"
+    "TUY", "TVNL", "ULU", "UMG", "VDL", "VLDE", "VKM", "VM", "VLR", "VRI", "vri", "kii", "pvn", "Sy","LLI"
   ]
 }
 
