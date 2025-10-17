@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -261,13 +261,39 @@ export default function PendingRequestsPage() {
     };
 
     // Handle bulk actions
-    const handleSelectAll = () => {
-        if (selectedRequests.size === pendingRequests.length) {
-            setSelectedRequests(new Set());
-        } else {
-            setSelectedRequests(new Set(pendingRequests.map(r => r.id)));
-        }
-    };
+    // const handleSelectAll = () => {
+    //     if (selectedRequests.size === pendingRequests.length) {
+    //         setSelectedRequests(new Set());
+    //     } else {
+    //         setSelectedRequests(new Set(pendingRequests.map(r => r.id)));
+    //     }
+    // };
+
+const handleSelectAll = () => {
+  let requestsToSelect: UserRequest[] = [];
+
+  // Select requests based on active tab
+  if (activeTab === "urgent") {
+    requestsToSelect = pendingRequests.filter(r => r.corridorType === "Urgent Block");
+  } else if (activeTab === "corridor") {
+    requestsToSelect = pendingCorridorRequests;
+  } else if (activeTab === "non-corridor") {
+    requestsToSelect = pendingNonCorridorRequests;
+  } else if (activeTab === "multi-line") {
+    requestsToSelect = pendingMultiLineRequests;
+  }
+
+  // Toggle selection
+  if (selectedRequests.size === requestsToSelect.length) {
+    setSelectedRequests(new Set());
+  } else {
+    setSelectedRequests(new Set(requestsToSelect.map(r => r.id)));
+  }
+};
+useEffect(() => {
+  setSelectedRequests(new Set());
+}, [activeTab]);
+
 
     const handleSelectRequest = (id: string) => {
         const newSelected = new Set(selectedRequests);
@@ -761,7 +787,7 @@ export default function PendingRequestsPage() {
                 activeTab === 'multi-line' ? 'bg-[#96CEB4] text-white' : 'bg-[#D6F3FF] text-black'
             }`}
         >
-            Multiple Line ({pendingMultiLineRequests.length})
+            Combined line(Multiple Line) ({pendingMultiLineRequests.length})
         </button>
     
         <button
