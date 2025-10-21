@@ -5292,7 +5292,7 @@ export const depotOnLocation = {
     "TSI", "TEN", "TIP", "KDNL", "RJPM", "TVN", "NZT", "ASD", "GDN", "CTND", "SVV", "SUX",
     "TCN", "SQD", "KAL", "SMD", "TAY", "ANY", "SDNR", "KRUR", "PNGI", "SCT", "SVGA", "VEL",
     "SVKS", "KRMG", "API", "DG", "ODC", "CHPT", "PLNI", "PPTR", "MVRD", "UDT", "GMGM", "TN",
-    "VPT", "NKK", "TCH","MTUR"
+    "VPT", "NKK", "TCH"
   ],
   MAS: [
     "MS", "MPK", "MSB", "VLCY", "WST", "RPM", "TNPM", "MTMY", "MCPK", "MLMR", "TZD", "OLA",
@@ -5331,7 +5331,7 @@ export const depotOnLocation = {
     "ICG", "KDM", "KDMD", "KII", "KKPM", "KLGM", "KMM", "KNB", "MV", "NCR", "NMJ", "NVL",
     "OTK", "PDY", "PKT", "PMB", "PRKL", "PRL", "PUC", "PVN", "PVI", "PYK", "SGM", "SLTH", "SMM",
     "SNDI", "SRGM", "SY", "TAM", "TJM", "TLI", "TLNR", "TNI", "TNM", "TPGY", "TPJ", "TRK",
-    "TUY", "TVNL", "ULU", "UMG", "VDL", "VLDE", "VKM", "VM", "VLR", "VRI", "vri", "kii", "pvn", "Sy","LLI"
+    "TUY", "TVNL", "ULU", "UMG", "VDL", "VLDE", "VKM", "VM", "VLR", "VRI", "PVN","LLI","MTUR"
   ]
 }
 
