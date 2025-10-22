@@ -9,8 +9,8 @@ import {
   workType,
   Activity,
   lineData,
-  depot,
   streamData,
+  depot
 } from "@/app/lib/store";
 import Select from "react-select";
 import { z } from "zod";
@@ -581,6 +581,138 @@ function getDurationFromTimes(from: string, to: string) {
   return `${hours}h ${mins}m`;
 }
 
+// Multi-Select Depot Component
+interface MultiSelectDepotProps {
+  department: "S&T" | "TRD";
+  selectedDepots: string[];
+  onDepotsChange: (depots: string[]) => void;
+  majorSection: string;
+  blockSections: string[];
+  disabled?: boolean;
+}
+
+function MultiSelectDepot({
+  department,
+  selectedDepots,
+  onDepotsChange,
+  majorSection,
+  blockSections,
+  disabled = false
+}: MultiSelectDepotProps) {
+  // Get available depots: combine auto-assigned depots + all depot options for this major section
+  const getAvailableDepots = () => {
+    if (!majorSection) return [];
+    
+    // Get auto-assigned depots from block section mapping
+    const autoAssignedDepots = getAutoAssignedDepots(majorSection, blockSections, department)
+      .split(", ")
+      .filter(d => d.trim());
+    
+    // Get all available depots from depot structure for this major section
+    const allMajorSectionDepots = depot[majorSection]?.[department] || [];
+    
+    // Combine and deduplicate: auto-assigned depots first, then other available ones
+    const combinedDepots = [...new Set([...autoAssignedDepots, ...allMajorSectionDepots])];
+    
+    return combinedDepots.sort();
+  };
+
+  // Get default depot from block section mapping
+  const getDefaultDepot = () => {
+    return getAutoAssignedDepots(majorSection, blockSections, department);
+  };
+
+  const availableDepots = getAvailableDepots();
+  const defaultDepot = getDefaultDepot();
+
+  // Initialize with default depot if no depots selected
+  React.useEffect(() => {
+    if (selectedDepots.length === 0 && defaultDepot) {
+      const defaultDepots = defaultDepot.split(", ").filter(d => d.trim());
+      if (defaultDepots.length > 0) {
+        onDepotsChange(defaultDepots);
+      }
+    }
+  }, [defaultDepot, selectedDepots.length, onDepotsChange]);
+
+  const handleAddDepot = (depotToAdd: string) => {
+    if (!selectedDepots.includes(depotToAdd)) {
+      onDepotsChange([...selectedDepots, depotToAdd]);
+    }
+  };
+
+  const handleRemoveDepot = (depotToRemove: string) => {
+    // Don't allow removing if it's the last depot
+    if (selectedDepots.length > 1) {
+      onDepotsChange(selectedDepots.filter(d => d !== depotToRemove));
+    }
+  };
+
+  return (
+    <div className="flex flex-col my-5">
+      <div className="flex flex-row flex-wrap gap-1 w-full items-center justify-center">
+        <span className="text-black font-bold text-2xl">
+          Assign To:
+        </span>
+        <div className="flex flex-col space-y-2 w-full items-center justify-center">
+          {/* Selected Depots as Tags */}
+          <div className="flex flex-wrap gap-2 min-h-[40px] items-center">
+            {selectedDepots.map((depotCode, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center px-3 py-1 rounded-xl text-medium font-bold bg-blue-100 text-blue-800 border border-black"
+              >
+                {depotCode}
+                {selectedDepots.length > 1 && !disabled && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveDepot(depotCode)}
+                    className="ml-2 inline-flex items-center justify-center w-4 h-4 text-blue-600 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors"
+                  >
+                    ×
+                  </button>
+                )}
+              </span>
+            ))}
+            {selectedDepots.length === 0 && (
+              <span className="text-gray-500 text-sm">
+                {majorSection && blockSections.length > 0
+                  ? `No ${department} depots available for selected sections`
+                  : "Select Major Section and Block Sections first"}
+              </span>
+            )}
+          </div>
+
+          {/* Dropdown to Add More Depots */}
+          {!disabled && availableDepots.length > 0 && (
+            <select
+              onChange={(e) => {
+                if (e.target.value) {
+                  handleAddDepot(e.target.value);
+                  e.target.value = ""; // Reset dropdown
+                }
+              }}
+              className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black px-3 py-2 text-lg rounded w-full max-w-xs"
+              defaultValue=""
+            >
+              <option value="" disabled>
+                Add more depots...
+              </option>
+              {availableDepots
+                .filter(depotOption => !selectedDepots.includes(depotOption))
+                .map((depotOption, index) => (
+                  <option key={index} value={depotOption}>
+                    {depotOption}
+                  </option>
+                ))}
+            </select>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 type FormDataValue = string | number | boolean | null | string[];
 
 interface FormData {
@@ -737,7 +869,11 @@ export default function CreateBlockRequestPage() {
   };
 
   const [formData, setFormData] = useState<FormData>(initialFormData);
-const [selectionHistory, setSelectionHistory] = useState<Record<string, ('line' | 'road')[]>>({});
+
+  // State for multi-select depots
+  const [selectedSTDepots, setSelectedSTDepots] = React.useState<string[]>([]);
+  const [selectedTRDDepots, setSelectedTRDDepots] = React.useState<string[]>([]);
+
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showReview, setShowReview] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -795,7 +931,8 @@ const [selectionHistory, setSelectionHistory] = useState<Record<string, ('line' 
             formData.workLocationTo,
             formData.selectedSection,
             blockSectionValue,
-            userDepartment
+            userDepartment,
+            userDepot
           );
           
           if (!siteLocationValidation.fromValid && siteLocationValidation.fromError) {
@@ -819,25 +956,50 @@ const [selectionHistory, setSelectionHistory] = useState<Record<string, ('line' 
   // Auto-assign depot assignments when block sections change
   useEffect(() => {
     if (blockSectionValue.length > 0 && formData.selectedSection) {
-      // Auto-assign S&T depots (comma-separated if multiple)
+      
+      // Auto-assign S&T depots
       const sntDepots = getAutoAssignedDepots(formData.selectedSection, blockSectionValue, "S&T");
-      if (sntDepots && formData.sntDisconnectionAssignTo !== sntDepots) {
-        setFormData(prev => ({
-          ...prev,
-          sntDisconnectionAssignTo: sntDepots
-        }));
+      if (sntDepots) {
+        const sntDepotArray = sntDepots.split(", ").filter(d => d.trim());
+        if (sntDepotArray.length > 0) {
+          // Always update when block sections change to ensure we get all depots
+          setSelectedSTDepots(sntDepotArray);
+        }
+      } else {
+        setSelectedSTDepots([]);
       }
       
-      // Auto-assign TRD depots (comma-separated if multiple)
+      // Auto-assign TRD depots
       const trdDepots = getAutoAssignedDepots(formData.selectedSection, blockSectionValue, "TRD");
-      if (trdDepots && formData.powerBlockDisconnectionAssignTo !== trdDepots) {
-        setFormData(prev => ({
-          ...prev,
-          powerBlockDisconnectionAssignTo: trdDepots
-        }));
+      if (trdDepots) {
+        const trdDepotArray = trdDepots.split(", ").filter(d => d.trim());
+        if (trdDepotArray.length > 0) {
+          // Always update when block sections change to ensure we get all depots
+          setSelectedTRDDepots(trdDepotArray);
+        }
+      } else {
+        setSelectedTRDDepots([]);
       }
+    } else {
+      // Clear depots when no block sections are selected
+      setSelectedSTDepots([]);
+      setSelectedTRDDepots([]);
     }
   }, [blockSectionValue, formData.selectedSection]);
+
+
+  // Sync depot arrays with form data for API submission
+  useEffect(() => {
+    const sntDepotsString = selectedSTDepots.join(", ");
+    const trdDepotsString = selectedTRDDepots.join(", ");
+
+    setFormData(prev => ({
+      ...prev,
+      sntDisconnectionAssignTo: sntDepotsString,
+      powerBlockDisconnectionAssignTo: trdDepotsString
+    }));
+  }, [selectedSTDepots, selectedTRDDepots]);
+
   const mutation = useCreateUserRequest();
   const userLocation = session?.user.location;
   // const majorSectionOptions =
@@ -1432,7 +1594,7 @@ const [selectionHistory, setSelectionHistory] = useState<Record<string, ('line' 
         }),
         activity: formData.activity === "others" ? customActivity : formData.activity
       };
-
+      
       // ─── 7. Submit to backend ────────────────────────────────────────────
       const response = await mutation.mutateAsync(submitData);
       if (response) {
@@ -1639,7 +1801,8 @@ const [selectionHistory, setSelectionHistory] = useState<Record<string, ('line' 
           formData.workLocationTo,
           formData.selectedSection,
           blockSectionValue,
-          userDepartment || ""
+          userDepartment || "",
+          userDepot
         );
         
         if (!siteLocationValidation.fromValid && siteLocationValidation.fromError) {
@@ -1792,6 +1955,15 @@ const [selectionHistory, setSelectionHistory] = useState<Record<string, ('line' 
       formData.powerBlockRequired
     );
   }, [formData.powerBlockRequired]);
+
+  // Sync depot arrays with formData
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      stDepotAssignTo: selectedSTDepots.join(", "),
+      trdDepotAssignTo: selectedTRDDepots.join(", ")
+    }));
+  }, [selectedSTDepots, selectedTRDDepots]);
 
   // Handle date change and corridor type selection logic
   useEffect(() => {
@@ -3778,7 +3950,8 @@ const getDisplayInfo = (block: string) => {
                           handleInputChange,
                           formData.selectedSection,
                           blockSectionValue,
-                          userDepartment || ""
+                          userDepartment || "",
+                          userDepot
                         )}
                         maxLength={7}
                         placeholder="From"
@@ -3805,7 +3978,8 @@ const getDisplayInfo = (block: string) => {
                           handleInputChange,
                           formData.selectedSection,
                           blockSectionValue,
-                          userDepartment || ""
+                          userDepartment || "",
+                          userDepot
                         )}
                         maxLength={7}
                         placeholder="To"
@@ -4232,34 +4406,14 @@ const getDisplayInfo = (block: string) => {
                       />
                     </div>
                     <div className="col-span-1">
-                      <span className="text-black font-bold text-2xl">
-                        Assign To
-                      </span>
-
-                      <div className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black px-3 py-2 w-full text-2xl rounded">
-                        {(() => {
-                          const depotString = getAutoAssignedDepots(
-                            formData.selectedSection,
-                            blockSectionValue,
-                            "TRD"
-                          );
-                          
-                          // Auto-assign the depot string to formData
-                          if (depotString && formData.powerBlockDisconnectionAssignTo !== depotString) {
-                            setTimeout(() => {
-                              setFormData(prev => ({
-                                ...prev,
-                                powerBlockDisconnectionAssignTo: depotString
-                              }));
-                            }, 0);
-                          }
-                          
-                          return depotString || 
-                            (formData.selectedSection && blockSectionValue.length > 0
-                              ? "No TRD depots available for selected sections"
-                              : "Select Major Section and Block Sections first");
-                        })()}
-                      </div>
+                      <MultiSelectDepot
+                        department="TRD"
+                        selectedDepots={selectedTRDDepots}
+                        onDepotsChange={setSelectedTRDDepots}
+                        majorSection={formData.selectedSection}
+                        blockSections={blockSectionValue}
+                        disabled={false}
+                      />
                       {errors.powerBlockDisconnectionAssignTo && (
                         <span className="text-xs text-red-700 font-medium mt-1 block">
                           {errors.powerBlockDisconnectionAssignTo}
@@ -4282,14 +4436,12 @@ const getDisplayInfo = (block: string) => {
                       value={formData.sntDisconnectionRequired ? "Y" : "N"}
                       onChange={(e) => {
                         const value = e.target.value === "Y";
-                        console.log("Setting sntDisconnectionRequired to:", value);
                         setFormData({
                           ...formData,
-                          sntDisconnectionRequired: value,
-                        });
+                          sntDisconnectionRequired: e.target.value === "Y",
+                        })
                       }}
-                      className="ml-2 pr-8 border-2  border-black rounded 
-                px-1 my-3 text-2xl font-bold bg-white text-black placeholder-black"
+                      className="ml-2 pr-8 border-2  border-black rounded px-1 my-3 text-2xl font-bold bg-white text-black placeholder-black"
                       style={{
                         appearance: "none",
                         backgroundImage: `url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9L12 15L18 9' stroke='%23000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
@@ -4558,42 +4710,19 @@ const getDisplayInfo = (block: string) => {
                         </div>
                       </div>
 
-                      <div className="flex flex-row flex-wrap gap-1 w-full">
-                        <span className="text-black font-bold text-2xl">
-                          Assign To:
+                      <MultiSelectDepot
+                        department="S&T"
+                        selectedDepots={selectedSTDepots}
+                        onDepotsChange={setSelectedSTDepots}
+                        majorSection={formData.selectedSection}
+                        blockSections={blockSectionValue}
+                        disabled={false}
+                      />
+                      {errors.sntDisconnectionAssignTo && (
+                        <span className="text-xs text-red-700 font-medium mt-1 block">
+                          {errors.sntDisconnectionAssignTo}
                         </span>
-                        <div className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black px-3 py-2 w-full text-2xl rounded">
-                          {(() => {
-                            const depotString = getAutoAssignedDepots(
-                              formData.selectedSection,
-                              blockSectionValue,
-                              "S&T"
-                            );
-                            
-                            // Auto-assign the depot string to formData
-                            if (depotString && formData.sntDisconnectionAssignTo !== depotString) {
-                              setTimeout(() => {
-                                setFormData(prev => ({
-                                  ...prev,
-                                  sntDisconnectionAssignTo: depotString
-                                }));
-                              }, 0);
-                            }
-                            
-                            return depotString || 
-                              (formData.selectedSection && blockSectionValue.length > 0
-                                ? "No S&T depots available for selected sections"
-                                : "Select Major Section and Block Sections first");
-                          })()}
-                        </div>
-                        {errors.sntDisconnectionAssignTo && (
-                          <span className="text-xs text-red-700 font-medium mt-1 block">
-                            {errors.sntDisconnectionAssignTo}
-                          </span>
-                        )}
-
-                        {/* {false && ( */}
-                      </div>
+                      )}
                     </div>
                   )}
                 </div>

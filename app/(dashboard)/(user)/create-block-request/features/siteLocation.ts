@@ -3,7 +3,7 @@
  * Pattern: xxx/yyy where xxx is numeric (max 3) and yyy is alphanumeric (max 4)
  */
 
-import { siteLocationRanges, siteLocationDepotMapping, type SiteLocationRanges } from '../../../../lib/store';
+import { siteLocationRanges, blockSectionDepotAssignment, type SiteLocationRanges } from '../../../../lib/store';
 
 export interface SiteLocationValidation {
   isValid: boolean;
@@ -84,16 +84,23 @@ export const getSiteLocationRange = (
  * @param majorSection - The selected major section
  * @param blockSections - Array of selected block sections
  * @param department - The user's department
+ * @param userDepot - The user's depot (optional, for special depot handling)
  * @returns Validation result
  */
 export const validateSiteLocationRange = (
   value: string,
   majorSection: string,
   blockSections: string[],
-  department: string
+  department: string,
+  userDepot?: string
 ): { isValid: boolean; error?: string } => {
   if (!value || !value.includes("/")) {
     return { isValid: true }; // Let basic validation handle incomplete values
+  }
+
+  // Skip range validation for BRIDGES depot users
+  if (userDepot === "BRIDGES") {
+    return { isValid: true };
   }
 
   const parts = value.split("/");
@@ -160,6 +167,7 @@ export const validateSiteLocationFromTo = (
  * @param majorSection - The selected major section (optional for range validation)
  * @param blockSections - Array of selected block sections (optional for range validation)
  * @param department - The user's department (optional for range validation)
+ * @param userDepot - The user's depot (optional for special depot handling)
  * @returns SiteLocationValidation object with validation result and formatted value
  */
 export const validateSiteLocation = (
@@ -167,7 +175,8 @@ export const validateSiteLocation = (
   prevValue: string = "",
   majorSection?: string,
   blockSections?: string[],
-  department?: string
+  department?: string,
+  userDepot?: string
 ): SiteLocationValidation => {
   // Remove any characters that aren't alphanumeric or slash
   let cleanValue = value.replace(/[^0-9a-zA-Z/]/g, "");
@@ -185,10 +194,22 @@ export const validateSiteLocation = (
   let beforeSlash = parts[0] || "";
   let afterSlash = parts[1] || "";
   
-  // Validate and format the part before slash (numeric only, max 3)
-  beforeSlash = beforeSlash.replace(/[^0-9]/g, ""); // Only numeric
-  if (beforeSlash.length > 3) {
-    beforeSlash = beforeSlash.substring(0, 3);
+  // Special handling for MSB-VLCY major section - allow alphanumeric before slash
+  const isMsbVlcy = majorSection === "MSB-VLCY";
+  
+  // Validate and format the part before slash
+  if (isMsbVlcy) {
+    // For MSB-VLCY: allow alphanumeric, max 3 characters
+    beforeSlash = beforeSlash.replace(/[^0-9a-zA-Z]/g, ""); // Allow alphanumeric
+    if (beforeSlash.length > 3) {
+      beforeSlash = beforeSlash.substring(0, 3);
+    }
+  } else {
+    // For other sections: numeric only, max 3 characters
+    beforeSlash = beforeSlash.replace(/[^0-9]/g, ""); // Only numeric
+    if (beforeSlash.length > 3) {
+      beforeSlash = beforeSlash.substring(0, 3);
+    }
   }
   
   // Auto-add slash when beforeSlash reaches 3 characters and we're typing forward
@@ -211,19 +232,20 @@ export const validateSiteLocation = (
   }
   
   // Validation rules
-  const basicValidation = validatePattern(formattedValue);
+  const basicValidation = validatePattern(formattedValue, isMsbVlcy);
   let isValid = basicValidation;
   let error: string | undefined;
 
   if (!basicValidation) {
-    error = getValidationError(formattedValue);
+    error = getValidationError(formattedValue, isMsbVlcy);
   } else if (majorSection && blockSections && department) {
     // Additional range validation if context is provided
     const rangeValidation = validateSiteLocationRange(
       formattedValue,
       majorSection,
       blockSections,
-      department
+      department,
+      userDepot
     );
     if (!rangeValidation.isValid) {
       isValid = false;
@@ -241,14 +263,21 @@ export const validateSiteLocation = (
 /**
  * Validates if the site location follows the correct pattern
  * @param value - The value to validate
+ * @param isMsbVlcy - Whether this is for MSB-VLCY section (allows alphanumeric before slash)
  * @returns boolean indicating if the pattern is valid
  */
-const validatePattern = (value: string): boolean => {
+const validatePattern = (value: string, isMsbVlcy: boolean = false): boolean => {
   if (!value) return false;
   
-  // If no slash, check if it's a valid numeric prefix (1-3 digits)
+  // If no slash, check if it's a valid prefix
   if (!value.includes("/")) {
-    return /^[0-9]{1,3}$/.test(value);
+    if (isMsbVlcy) {
+      // For MSB-VLCY: allow alphanumeric, 1-3 characters
+      return /^[0-9a-zA-Z]{1,3}$/.test(value);
+    } else {
+      // For other sections: numeric only, 1-3 characters
+      return /^[0-9]{1,3}$/.test(value);
+    }
   }
   
   // If slash exists, validate full pattern
@@ -258,8 +287,15 @@ const validatePattern = (value: string): boolean => {
   const beforeSlash = parts[0];
   const afterSlash = parts[1];
   
-  // Before slash: numeric, 1-3 characters
-  const beforeSlashValid = /^[0-9]{1,3}$/.test(beforeSlash);
+  // Before slash validation based on section type
+  let beforeSlashValid: boolean;
+  if (isMsbVlcy) {
+    // For MSB-VLCY: alphanumeric, 1-3 characters
+    beforeSlashValid = /^[0-9a-zA-Z]{1,3}$/.test(beforeSlash);
+  } else {
+    // For other sections: numeric, 1-3 characters
+    beforeSlashValid = /^[0-9]{1,3}$/.test(beforeSlash);
+  }
   
   // After slash: alphanumeric, 1-4 characters (empty is allowed for incomplete input)
   const afterSlashValid = afterSlash === "" || /^[0-9a-zA-Z]{1,4}$/.test(afterSlash);
@@ -270,21 +306,32 @@ const validatePattern = (value: string): boolean => {
 /**
  * Gets appropriate error message for invalid input
  * @param value - The invalid value
+ * @param isMsbVlcy - Whether this is for MSB-VLCY section (allows alphanumeric before slash)
  * @returns Error message string
  */
-const getValidationError = (value: string): string => {
+const getValidationError = (value: string, isMsbVlcy: boolean = false): string => {
   if (!value) {
     return "Site location is required";
   }
   
   if (!value.includes("/")) {
-    if (!/^[0-9]+$/.test(value)) {
-      return "First part must be numeric only";
+    if (isMsbVlcy) {
+      if (!/^[0-9a-zA-Z]+$/.test(value)) {
+        return "First part must be alphanumeric only";
+      }
+      if (value.length > 3) {
+        return "First part must be maximum 3 characters";
+      }
+      return "Invalid format. Use pattern: xxx/yyy (alphanumeric/alphanumeric)";
+    } else {
+      if (!/^[0-9]+$/.test(value)) {
+        return "First part must be numeric only";
+      }
+      if (value.length > 3) {
+        return "First part must be maximum 3 digits";
+      }
+      return "Invalid format. Use pattern: xxx/yyy";
     }
-    if (value.length > 3) {
-      return "First part must be maximum 3 digits";
-    }
-    return "Invalid format. Use pattern: xxx/yyy";
   }
   
   const parts = value.split("/");
@@ -295,15 +342,21 @@ const getValidationError = (value: string): string => {
   const beforeSlash = parts[0];
   const afterSlash = parts[1];
   
-  if (!/^[0-9]{1,3}$/.test(beforeSlash)) {
-    return "Before slash must be numeric";
+  if (isMsbVlcy) {
+    if (!/^[0-9a-zA-Z]{1,3}$/.test(beforeSlash)) {
+      return "Before slash must be alphanumeric (max 3 characters)";
+    }
+  } else {
+    if (!/^[0-9]{1,3}$/.test(beforeSlash)) {
+      return "Before slash must be numeric";
+    }
   }
   
   if (afterSlash && !/^[0-9a-zA-Z]{1,4}$/.test(afterSlash)) {
     return "After slash must be alphanumeric";
   }
   
-  return "Valid pattern: xxx/yyy";
+  return isMsbVlcy ? "Valid pattern: xxx/yyy (alphanumeric/alphanumeric)" : "Valid pattern: xxx/yyy";
 };
 
 /**
@@ -314,6 +367,7 @@ const getValidationError = (value: string): string => {
  * @param majorSection - The selected major section
  * @param blockSections - Array of selected block sections
  * @param department - The user's department
+ * @param userDepot - The user's depot (optional for special depot handling)
  * @returns onChange event handler function
  */
 export const createSiteLocationChangeHandler = (
@@ -322,7 +376,8 @@ export const createSiteLocationChangeHandler = (
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void,
   majorSection?: string,
   blockSections?: string[],
-  department?: string
+  department?: string,
+  userDepot?: string
 ) => {
   return (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -333,7 +388,8 @@ export const createSiteLocationChangeHandler = (
       prevValue, 
       majorSection, 
       blockSections, 
-      department
+      department,
+      userDepot
     );
     
     // Call the original handler with the formatted value
@@ -395,7 +451,7 @@ export const getAvailableDepots = (
     return [];
   }
 
-  const majorSectionMapping = siteLocationDepotMapping[majorSection];
+  const majorSectionMapping = blockSectionDepotAssignment[majorSection];
   if (!majorSectionMapping) {
     return [];
   }
@@ -439,6 +495,7 @@ export const getAllAvailableDepots = (
  * @param majorSection - The selected major section
  * @param blockSections - Array of selected block sections
  * @param department - The user's department
+ * @param userDepot - The user's depot (optional for special depot handling)
  * @returns Combined validation result for both fields
  */
 export const validateSiteLocationPair = (
@@ -446,7 +503,8 @@ export const validateSiteLocationPair = (
   toValue: string,
   majorSection: string,
   blockSections: string[],
-  department: string
+  department: string,
+  userDepot?: string
 ): {
   fromValid: boolean;
   toValid: boolean;
@@ -455,8 +513,8 @@ export const validateSiteLocationPair = (
   pairError?: string;
 } => {
   // Validate individual values
-  const fromValidation = validateSiteLocation(fromValue, "", majorSection, blockSections, department);
-  const toValidation = validateSiteLocation(toValue, "", majorSection, blockSections, department);
+  const fromValidation = validateSiteLocation(fromValue, "", majorSection, blockSections, department, userDepot);
+  const toValidation = validateSiteLocation(toValue, "", majorSection, blockSections, department, userDepot);
   
   // Validate from < to relationship
   const fromToValidation = validateSiteLocationFromTo(fromValue, toValue);

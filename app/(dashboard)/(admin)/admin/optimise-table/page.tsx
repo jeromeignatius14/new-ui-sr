@@ -609,17 +609,17 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
 
       // Handle cases where both flags are true
       if (r.powerBlockRequired && r.sntDisconnectionRequired) {
-        return r.trdActionsNeeded && r.sigActionsNeeded;
+        return r.trdActionsNeeded && r.sigActionsNeeded || r.allTrdAcceptance && r.allSntAcceptance;
       }
 
       // Handle powerBlockRequired case
       if (r.powerBlockRequired) {
-        return r.trdActionsNeeded;
+        return r.trdActionsNeeded || r.allTrdAcceptance;
       }
 
       // Handle sntDisconnectionRequired case
       if (r.sntDisconnectionRequired) {
-        return r.sigActionsNeeded;
+        return r.sigActionsNeeded || r.allSntAcceptance;
       }
 
       // If neither special flag is true, just return the urgent status
@@ -657,14 +657,19 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
             return r.trdActionsNeeded && r.sigActionsNeeded;
         }
 
+      // Handle cases where both flags are true
+      if (r.powerBlockRequired && r.sntDisconnectionRequired) {
+        return r.trdActionsNeeded && r.sigActionsNeeded || r.allTrdAcceptance && r.allSntAcceptance;
+      }
+
       // Handle powerBlockRequired case
       if (r.powerBlockRequired) {
-        return r.trdActionsNeeded;
+        return r.trdActionsNeeded || r.allTrdAcceptance;
       }
 
       // Handle sntDisconnectionRequired case
       if (r.sntDisconnectionRequired) {
-        return r.sigActionsNeeded;
+        return r.sigActionsNeeded || r.allSntAcceptance;
       }
 
       // If neither special flag is true, just return the status
@@ -694,14 +699,19 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
             return r.trdActionsNeeded && r.sigActionsNeeded;
         }
 
+      // Handle cases where both flags are true
+      if (r.powerBlockRequired && r.sntDisconnectionRequired) {
+        return r.trdActionsNeeded && r.sigActionsNeeded || r.allTrdAcceptance && r.allSntAcceptance;
+      }
+
       // Handle powerBlockRequired case
       if (r.powerBlockRequired) {
-        return r.trdActionsNeeded;
+        return r.trdActionsNeeded || r.allTrdAcceptance;
       }
 
       // Handle sntDisconnectionRequired case
       if (r.sntDisconnectionRequired) {
-        return r.sigActionsNeeded;
+        return r.sigActionsNeeded || r.allSntAcceptance;
       }
 
       // If neither special flag is true, just return the status

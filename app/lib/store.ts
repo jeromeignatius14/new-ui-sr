@@ -110,7 +110,7 @@ export const siteLocationRanges: SiteLocationRanges = {
 
 // Site Location to Depot Mapping
 // This maps block sections to their corresponding depot codes for S&T and TRD
-export type SiteLocationDepotMapping = {
+export type BlockSectionDepotAssignment = {
   [majorSection: string]: {
     [blockSection: string]: {
       "S&T"?: string;
@@ -119,7 +119,7 @@ export type SiteLocationDepotMapping = {
   };
 };
 
-export const siteLocationDepotMapping: SiteLocationDepotMapping = {
+export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
   "AJJ-KPD": {
     "AJJ-MLPM": {
       "TRD": "AJJ",
@@ -170,22 +170,24 @@ export const siteLocationDepotMapping: SiteLocationDepotMapping = {
       "TRD": "KPD"
     },
     "MLPM-YD": {
-      "S&T": "X",
-      "TRD": "Y"
+      "S&T": "KPDE",
+      "TRD": "WJR"
     }
   },
   // Add more major sections based on your requirements
-  "MAS-GDR": {
-    // Example mappings for MAS-GDR section
-    "MAS-BBQ": {
-      "S&T": "MAS",
-      "TRD": "MAS"
+  "MSB-VLCY": {
+    "MSB-MCPK": {
+      "S&T": "MSB",
+      "TRD": "MS"
     },
-    "BBQ-KOK": {
-      "S&T": "BBQ",
-      "TRD": "BBQ"
+  "MCPK-MTMY": {
+      "S&T": "MSB",
+      "TRD": "MS"
+    },
+      "MTMY-VLCY": {
+      "S&T": "MSB",
+      "TRD": "MS"
     }
-    // Add more as needed
   }
   // Add more major sections as needed
 };
