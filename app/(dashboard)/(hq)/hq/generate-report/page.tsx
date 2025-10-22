@@ -84,6 +84,8 @@ export default function GenerateReportPage() {
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([
     "Engineering",
   ]);
+  const [displayStartDate, setDisplayStartDate] = useState<string>("");
+const [displayEndDate, setDisplayEndDate] = useState<string>("");
   const router = useRouter();
   const {
     register,
@@ -197,7 +199,7 @@ export default function GenerateReportPage() {
 
       const formattedStartDate = format(startDate, "dd/MM/yy");
       const formattedEndDate = format(endDate, "dd/MM/yy");
-
+      
       // Update query parameters
       setQueryParams({
         startDate: formattedStartDate,
@@ -206,7 +208,9 @@ export default function GenerateReportPage() {
         department: selectedDepartments,
         blockType: selectedBlockTypes,
       });
-
+          // Set display dates for showing in tables
+setDisplayStartDate(formattedStartDate);
+setDisplayEndDate(formattedEndDate);
       // Trigger the query - react-query will handle the loading state
       await refetch();
     } catch (error) {
@@ -550,8 +554,8 @@ export default function GenerateReportPage() {
       {/* Past Block Summary Table */}
       <div className="mb-6">
         <div className="bg-[#ff914d] p-2 font-semibold text-black">
-          (A)Past Block Summary:....... to .......Division
-          Department:.............(In Hrs)
+         (A) Past Block Summary: {displayStartDate} to {displayEndDate} Division
+Department: {selectedDepartments.join(", ")}
         </div>
         <div className="overflow-x-auto border border-gray-200 rounded-b">
           <table className="min-w-full bg-white">
@@ -684,7 +688,7 @@ export default function GenerateReportPage() {
       {/* Upcoming Blocks Table */}
       <div className="mb-6">
         <div className="bg-[#ffc000] p-2 font-semibold text-black">
-          (B) Upcoming Blocks (Summary):...... Division ...... Department.......
+          (B) Upcoming Blocks (Summary): {displayStartDate} to {displayEndDate} Division {selectedDepartments.join(", ")} Department
         </div>
         <div className="overflow-x-auto border border-gray-200 rounded-b">
           <table className="min-w-full bg-white">
