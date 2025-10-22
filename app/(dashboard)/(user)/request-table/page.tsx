@@ -571,7 +571,6 @@ export default function RequestTablePage() {
   };
   const handleConfirmAccept = () => {
     if (!requestToAccept || !acceptReason.trim()) return;
-
     updateOtherRequest(
       {
         id: requestToAccept.id,
@@ -579,7 +578,7 @@ export default function RequestTablePage() {
         userDepartment: requestToAccept.userDepartment,
         depot: selectedDepo,
         mobileView: requestToAccept.mobileView,
-        acceptRemarks: acceptReason // Using acceptRemarks for accept actions
+        acceptRemarks: acceptReason // Make sure your API accepts this field
       },
       {
         onSuccess: () => {
