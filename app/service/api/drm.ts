@@ -45,21 +45,51 @@ export interface GenerateReportResponse {
   status: boolean;
 }
 
+// const BASE_URL = "api/drm";
+
+// export const drmService = {
+//   generateReport: async (
+//     params: GenerateReportParams
+//   ): Promise<GenerateReportResponse> => {
+//     // Format array parameters correctly for URL
+//     const locations = params.location.join(",");
+//     const departments = params.department.join(",");
+//     const blockTypes = params.blockType.join(",");
+
+//     const response = await axiosInstance.get<GenerateReportResponse>(
+//       `${BASE_URL}/generate-report?startDate=${params.startDate}&endDate=${params.endDate}&location=${locations}&department=${departments}&blockType=${blockTypes}`
+//     );
+//     console.log("response.data", response.data);
+//     return response.data;
+//   },
+// };
+
+
 const BASE_URL = "api/drm";
+const EXTERNAL_URL = process.env.NEXT_PUBLIC_BACKEND_URL_OTHER;
 
 export const drmService = {
-  generateReport: async (
-    params: GenerateReportParams
-  ): Promise<GenerateReportResponse> => {
-    // Format array parameters correctly for URL
+  generateReport: async (params: GenerateReportParams): Promise<GenerateReportResponse> => {
+
     const locations = params.location.join(",");
     const departments = params.department.join(",");
     const blockTypes = params.blockType.join(",");
 
-    const response = await axiosInstance.get<GenerateReportResponse>(
-      `${BASE_URL}/generate-report?startDate=${params.startDate}&endDate=${params.endDate}&location=${locations}&department=${departments}&blockType=${blockTypes}`
-    );
-    console.log("response.data", response.data);
-    return response.data;
+    const isMAS = params.location.length === 1 && params.location[0] === "MAS";
+
+    let url = "";
+
+    if (isMAS) {
+      // ✅ Call existing API
+      url = `${BASE_URL}/generate-report?startDate=${params.startDate}&endDate=${params.endDate}&location=${locations}&department=${departments}&blockType=${blockTypes}`;
+      const response = await axiosInstance.get<GenerateReportResponse>(url);
+      return response.data;
+    } 
+    else {
+      // ✅ Call external backend
+      url = `${EXTERNAL_URL}/api/drm/generate-report?startDate=${params.startDate}&endDate=${params.endDate}&location=${locations}&department=${departments}&blockType=${blockTypes}`;
+      const response = await axios.get<GenerateReportResponse>(url);
+      return response.data;
+    }
   },
 };
