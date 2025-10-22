@@ -730,6 +730,15 @@ export default function ViewRequest() {
         </div>
       )}
 
+       {request.isSanctioned && request.userResponse && (
+        <div className="border border-black p-3 mb-4">
+          <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
+            User Reject Remarks
+          </h2>
+          <p className="text-sm">{request.userResponse}</p>
+        </div>
+      )}
+
       <div className="text-[10px] text-gray-600 mt-2 border-t border-black pt-1">
         © {new Date().getFullYear()} Indian Railways. All Rights Reserved.
       </div>

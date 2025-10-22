@@ -1363,10 +1363,10 @@ export default function RequestTablePage() {
                           </div>
                         </td>
                         <td className="border border-black px-2 py-1 text-center whitespace-nowrap">
-                          {request.status === "APPROVED" ? (
+                          {request.status === "REJECTED" ? (
+
                             <>
-                              {/*
-                              <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                              <span className="inline-flex items-center px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
                                 <svg
                                   className="w-3 h-3 mr-1"
                                   fill="currentColor"
@@ -1374,118 +1374,94 @@ export default function RequestTablePage() {
                                 >
                                   <path
                                     fillRule="evenodd"
-                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
                                     clipRule="evenodd"
                                   />
                                 </svg>
-                                Accepted 
+                                {request.overAllStatus || "Rejected"}
                               </span>
-                              */}
-                              {request.isSanctioned ? (
-                                request.userResponse === "ACCEPTED" ? (
-                                  <div className="px-2 py-1 bg-green-100 text-green-800 mx-auto">
-                                    Sanctioned and Accepted
-                                  </div>
-                                ) : (<span className="bg-gray-100 p-2 text-gray-600 rounded">
-                                  Sanctioned and Pending for Acceptance
-                                </span>)
-                              ) : (
-                                <span className="text-gray-500 ">
-                                  {request.overAllStatus || "Pending"}
-                                </span>
-                              )}
-                            </>
-                          ) : request.status === "REJECTED" ? (
-                            <span className="inline-flex items-center px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
-                              <svg
-                                className="w-3 h-3 mr-1"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                              {request.overAllStatus}
-                            </span>
-                          ) : (
-                            <>
-                              {/* For JE role, only show status without any buttons */}
-                              {session?.user?.role === "JE" ? (
-                                <span className="bg-gray-100 p-2 text-gray-600 rounded">
-                                  {request.overAllStatus || "Pending"}
-                                </span>
-                              ) : (
-                                // For USER role, check conditions for showing buttons
-                                ((userDepartment === "S&T") && request.sntDisconnectionRequired && request.sntDisconnections?.[0]?.status === "PENDING") ||
-                                  (userDepartment === "TRD" && request.powerBlockRequired && request.trdDisconnections?.[0]?.status === "PENDING") ? (
-                                  <div className="flex gap-2 justify-center">
-                                    <button
-                                      onClick={() =>
-                                        handleStatusUpdate(
-                                          request.id,
-                                          true,
-                                          userDepartment,
-                                          "mobileView",
-                                          request.date,
-                                          request.corridorType
-                                        )
-                                      }
-                                      disabled={isMutating}
-                                      className="px-3 py-1 bg-green-50 hover:bg-green-100 text-green-700 text-xs rounded-md border border-green-200 flex items-center transition-colors"
-                                    >
-                                      <svg
-                                        className="w-3 h-3 mr-1"
-                                        fill="currentColor"
-                                        viewBox="0 0 20 20"
-                                      >
-                                        <path
-                                          fillRule="evenodd"
-                                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                          clipRule="evenodd"
-                                        />
-                                      </svg>
-                                      Accept
-                                    </button>
-                                    <button
-                                      onClick={() =>
-                                        handleStatusUpdate(
-                                          request.id,
-                                          false,
-                                          userDepartment,
-                                          "mobileView",
-                                          request.date,
-                                          request.corridorType
-                                        )
-                                      }
-                                      disabled={isMutating}
-                                      className="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-700 text-xs rounded-md border border-red-200 flex items-center transition-colors"
-                                    >
-                                      <svg
-                                        className="w-3 h-3 mr-1"
-                                        fill="currentColor"
-                                        viewBox="0 0 20 20"
-                                      >
-                                        <path
-                                          fillRule="evenodd"
-                                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                          clipRule="evenodd"
-                                        />
-                                      </svg>
-                                      Reject
-                                    </button>
-                                  </div>
 
-                                ) : (
-                                  <span className="bg-green-100 p-2 text-green-600">
-                                    {request.overAllStatus === "Sanctioned" ? "Sanctioned, Pending for Acceptance" : request.overAllStatus || "Pending"}
-                                  </span>
-                                )
-                              )}
                             </>
-                          )}
+                          ) : request.isSanctioned ? (
+                            request.userResponse === "ACCEPTED" ? (
+                              <div className="px-2 py-1 bg-green-100 text-green-800 mx-auto">
+                                Sanctioned and Accepted
+                              </div>
+                            ) : (<span className="bg-gray-100 p-2 text-gray-600 rounded">
+                              Sanctioned and Pending for Acceptance
+                            </span>)
+                          ) : session?.user?.role === "JE" ? (
+                            <span className="bg-gray-100 p-2 text-gray-600 rounded">
+                              {request.overAllStatus || "Pending"}
+                            </span>
+                          ) :
+                            // For USER role, check conditions for showing buttons
+                            (userDepartment === "S&T" && request.sntDisconnectionRequired && request.sntDisconnections?.[0]?.status === "PENDING") ||
+                              (userDepartment === "TRD" && request.powerBlockRequired && request.trdDisconnections?.[0]?.status === "PENDING") ? (
+                              <div className="flex gap-2 justify-center">
+                                <button
+                                  onClick={() =>
+                                    handleStatusUpdate(
+                                      request.id,
+                                      true,
+                                      userDepartment,
+                                      "mobileView",
+                                      request.date,
+                                      request.corridorType
+                                    )
+                                  }
+                                  disabled={isMutating}
+                                  className="px-3 py-1 bg-green-50 hover:bg-green-100 text-green-700 text-xs rounded-md border border-green-200 flex items-center transition-colors"
+                                >
+                                  <svg
+                                    className="w-3 h-3 mr-1"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                  Accept
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    handleStatusUpdate(
+                                      request.id,
+                                      false,
+                                      userDepartment,
+                                      "mobileView",
+                                      request.date,
+                                      request.corridorType
+                                    )
+                                  }
+                                  disabled={isMutating}
+                                  className="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-700 text-xs rounded-md border border-red-200 flex items-center transition-colors"
+                                >
+                                  <svg
+                                    className="w-3 h-3 mr-1"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                  Reject
+                                </button>
+                              </div>
+                            )
+                              : (
+                                <span className="bg-green-100 p-2 text-green-600">
+                                  {request.overAllStatus === "Sanctioned" ? "Sanctioned, Pending for Acceptance" : request.overAllStatus || "Pending"}
+                                </span>
+                              )
+                          }
+
                         </td>
                       </tr>
                     )

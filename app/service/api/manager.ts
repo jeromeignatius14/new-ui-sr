@@ -123,8 +123,8 @@ export interface UserRequest {
     managerAcceptance: boolean;
     adminAcceptanceId: string;
     adminAcceptance: boolean;
-    allTrdAcceptance?: boolean;
-    allSntAcceptance?: boolean;
+    allTrdAcceptance: "ACCEPTED" | "PENDING" | "REJECTED" | null;
+    allSntAcceptance: "ACCEPTED" | "PENDING" | "REJECTED" | null;
     user: {
         id: string;
         name: string;

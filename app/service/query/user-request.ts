@@ -100,6 +100,7 @@ export interface RequestItem {
   sanctionedRemarks: string | null;
   disconnectionRequestRejectRemarks: string | null;
   remarkByManager: string | null;
+  userResponse: string | null;
   sntDisconnections:
     | {
         depot: string;
@@ -118,6 +119,8 @@ export interface RequestItem {
     | null;
   user: User;
   rejectedBy: User | null;
+  AvailedTimeFrom: string | null;
+  AvailedTimeTo: string | null;
 }
 
 export type User = {
