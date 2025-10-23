@@ -983,40 +983,40 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
   };
 
   const handleOptimize = async () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const nextWeekStart = new Date(today);
-    nextWeekStart.setDate(today.getDate() + (7 - today.getDay()));
-    nextWeekStart.setHours(0, 0, 0, 0);
+    // const today = new Date();
+    // today.setHours(0, 0, 0, 0);
+    // const nextWeekStart = new Date(today);
+    // nextWeekStart.setDate(today.getDate() + (7 - today.getDay()));
+    // nextWeekStart.setHours(0, 0, 0, 0);
 
     const preData = isUrgentRequests ? urgentRequestsForSelectedDate : [...corridorRequestsFiltered]
     if (!preData) return;
 
     // For non-urgent requests, check if trying to optimize for current week
-    if (!isUrgentRequests) {
-      const hasCurrentWeekDates = preData.some((request: UserRequest) => {
-        const requestDate = new Date(request.date);
-        requestDate.setHours(0, 0, 0, 0);
-        return requestDate < nextWeekStart;
-      });
+    // if (!isUrgentRequests) {
+    //   const hasCurrentWeekDates = preData.some((request: UserRequest) => {
+    //     const requestDate = new Date(request.date);
+    //     requestDate.setHours(0, 0, 0, 0);
+    //     return requestDate < nextWeekStart;
+    //   });
 
-      if (hasCurrentWeekDates) {
-        setShowDateValidationAlert(true);
-        return;
-      }
-    } else {
-      // For urgent requests, check if any requests are for previous dates
-      const hasPreviousDates = preData.some((request: UserRequest) => {
-        const requestDate = new Date(request.date);
-        requestDate.setHours(0, 0, 0, 0);
-        return requestDate < today;
-      });
+    //   if (hasCurrentWeekDates) {
+    //     setShowDateValidationAlert(true);
+    //     return;
+    //   }
+    // } else {
+    //   // For urgent requests, check if any requests are for previous dates
+    //   const hasPreviousDates = preData.some((request: UserRequest) => {
+    //     const requestDate = new Date(request.date);
+    //     requestDate.setHours(0, 0, 0, 0);
+    //     return requestDate < today;
+    //   });
 
-      if (hasPreviousDates) {
-        setShowDateValidationAlert(true);
-        return;
-      }
-    }
+    //   if (hasPreviousDates) {
+    //     setShowDateValidationAlert(true);
+    //     return;
+    //   }
+    // }
     try {
       // Preprocess the requests
       //const preprocessedRequests = await flattenRecords(data.data.requests);
@@ -1475,17 +1475,17 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
             </button> */}
             <button
               onClick={() => {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const hasPreviousDays = urgentRequestsForSelectedDate.some((request: UserRequest) => {
-                  const reqDate = new Date(request.date);
-                  reqDate.setHours(0, 0, 0, 0);
-                  return reqDate < today;
-                });
-                if (hasPreviousDays) {
-                  setShowDateValidationAlert(true);
-                  return;
-                }
+                // const today = new Date();
+                // today.setHours(0, 0, 0, 0);
+                // const hasPreviousDays = urgentRequestsForSelectedDate.some((request: UserRequest) => {
+                //   const reqDate = new Date(request.date);
+                //   reqDate.setHours(0, 0, 0, 0);
+                //   return reqDate < today;
+                // });
+                // if (hasPreviousDays) {
+                //   setShowDateValidationAlert(true);
+                //   return;
+                // }
                 setIsOptimizeDialogOpen(true);
                 setIsUrgentRequests(true);
               }}
@@ -1793,22 +1793,22 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
             </button> */}
             <button
               onClick={() => {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const nextWeekStart = new Date(today);
-                nextWeekStart.setDate(today.getDate() + (7 - today.getDay()));
-                nextWeekStart.setHours(0, 0, 0, 0);
+                // const today = new Date();
+                // today.setHours(0, 0, 0, 0);
+                // const nextWeekStart = new Date(today);
+                // nextWeekStart.setDate(today.getDate() + (7 - today.getDay()));
+                // nextWeekStart.setHours(0, 0, 0, 0);
 
-                const hasCurrentWeekDates = [...corridorRequestsFiltered].some((request: UserRequest) => {
-                  const reqDate = new Date(request.date);
-                  reqDate.setHours(0, 0, 0, 0);
-                  return reqDate < nextWeekStart;
-                });
+                // const hasCurrentWeekDates = [...corridorRequestsFiltered].some((request: UserRequest) => {
+                //   const reqDate = new Date(request.date);
+                //   reqDate.setHours(0, 0, 0, 0);
+                //   return reqDate < nextWeekStart;
+                // });
 
-                if (hasCurrentWeekDates) {
-                  setShowDateValidationAlert(true);
-                  return;
-                }
+                // if (hasCurrentWeekDates) {
+                //   setShowDateValidationAlert(true);
+                //   return;
+                // }
                 setIsOptimizeDialogOpen(true);
                 setIsUrgentRequests(false);
               }}
