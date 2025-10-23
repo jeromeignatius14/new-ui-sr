@@ -633,7 +633,7 @@ Department: {selectedDepartments.join(", ")}
                       ? pastBlockSummary.reduce(
                           (sum, item) => sum + item.Demanded,
                           0
-                        )
+                        ).toFixed(2)
                       : "0"}
                   </td>
                   <td className="border px-4 py-2 text-center text-black">
@@ -641,7 +641,7 @@ Department: {selectedDepartments.join(", ")}
                       ? pastBlockSummary.reduce(
                           (sum, item) => sum + item.Approved,
                           0
-                        )
+                        ).toFixed(2)
                       : "0"}
                   </td>
                   <td className="border px-4 py-2 text-center text-black">
@@ -649,28 +649,28 @@ Department: {selectedDepartments.join(", ")}
                       ? pastBlockSummary.reduce(
                           (sum, item) => sum + item.Granted,
                           0
-                        )
+                        ).toFixed(2)
                       : "0"}
                   </td>
                   <td className="border px-4 py-2 text-center text-black">
                     {pastBlockSummary.reduce(
                       (sum, item) => sum + (item.PercentGranted || 0),
                       0
-                    )}
+                    ).toFixed(2)}
                   </td>
                   <td className="border px-4 py-2 text-center text-black">
                     {pastBlockSummary.length > 0
                       ? pastBlockSummary.reduce(
                           (sum, item) => sum + item.Availed,
                           0
-                        )
+                        ).toFixed(2)
                       : "0"}
                   </td>
                   <td className="border px-4 py-2 text-center text-black">
                     {pastBlockSummary.reduce(
                       (sum, item) => sum + (item.PercentAvailed || 0),
                       0
-                    )}
+                    ).toFixed(2)}
                   </td>
                 </tr>
               )}
