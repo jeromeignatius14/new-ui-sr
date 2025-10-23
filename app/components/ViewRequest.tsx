@@ -1,4 +1,5 @@
 "use client";
+import React from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { userRequestService } from "@/app/service/api/user-request";
@@ -257,6 +258,16 @@ export default function ViewRequest() {
                     `${formatTime(request.sanctionedTimeFrom)} to ${formatTime(request.sanctionedTimeTo)}`
                   ) : (
                     "Not yet sanctioned"
+                  )}
+                </td>
+              </tr>
+                 <tr>
+                <td className="py-1 font-medium">Availed Time:</td>
+                <td className="py-1">
+                  {request.AvailedTimeFrom && request.AvailedTimeTo ? (
+                    `${formatTime(request.AvailedTimeFrom)} to ${formatTime(request.AvailedTimeTo)}`
+                  ) : (
+                    "N/A"
                   )}
                 </td>
               </tr>
