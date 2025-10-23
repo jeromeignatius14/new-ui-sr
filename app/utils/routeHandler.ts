@@ -20,6 +20,9 @@ export const handleUserRedirect = (user: User | undefined) => {
   else if (user.role === "BOARD_CONTROLLER") {
     window.location.href = "/tpc";
   }
+   else if (user.role === "HQ") {
+        window.location.href="/hq/generate-report";
+      }
   else if (user.role === "ADMIN") {
     window.location.href = "/admin/request-table";
   } else {

@@ -472,9 +472,9 @@ setDisplayEndDate(formattedEndDate);
                 type="button"
                 className={`px-3 py-1.5 text-sm rounded-full text-black ${
                   selectedDepartments.includes("Engineering")
-                    ? "bg-green-300"
-                    : "bg-green-100"
-                } border border-green-400`}
+                  ? "bg-[#e49edd] border-[#b07be0] text-black"
+                    : "bg-[#f3e6f7] border-[#b07be0] text-black"
+                } border border-black-400`}
                 onClick={() => toggleDepartment("Engineering")}
               >
                 {selectedDepartments.includes("Engineering") && (
@@ -486,9 +486,9 @@ setDisplayEndDate(formattedEndDate);
                 type="button"
                 className={`px-3 py-1.5 text-sm rounded-full text-black ${
                   selectedDepartments.includes("ST")
-                    ? "bg-blue-300"
-                    : "bg-blue-100"
-                } border border-blue-400`}
+                    ? "bg-[#fff35c] border-[#e0e0e0] text-black"
+                      : "bg-[#fffbe9] border-[#e0e0e0] text-black"
+                } border border-yellow-400`}
                 onClick={() => toggleDepartment("ST")}
               >
                 {selectedDepartments.includes("ST") && (
@@ -500,9 +500,9 @@ setDisplayEndDate(formattedEndDate);
                 type="button"
                 className={`px-3 py-1.5 text-sm rounded-full text-black ${
                   selectedDepartments.includes("TRD")
-                    ? "bg-yellow-300"
-                    : "bg-yellow-100"
-                } border border-yellow-400`}
+                      ? "bg-[#c7f7c7] border-[#7be09b] text-black"
+                      : "bg-[#e0fff0] border-[#7be09b] text-black"
+                } border border-black-400`}
                 onClick={() => toggleDepartment("TRD")}
               >
                 {selectedDepartments.includes("TRD") && (
@@ -553,14 +553,14 @@ setDisplayEndDate(formattedEndDate);
 
       {/* Past Block Summary Table */}
       <div className="mb-6">
-        <div className="bg-[#ff914d] p-2 font-semibold text-black">
+        <div className="bg-[#f1a983] p-2 font-semibold text-black">
          (A) Past Block Summary: {displayStartDate} to {displayEndDate} Division
 Department: {selectedDepartments.join(", ")}
         </div>
         <div className="overflow-x-auto border border-gray-200 rounded-b">
           <table className="min-w-full bg-white">
             <thead>
-              <tr className="bg-[#f7c7ac]">
+              <tr className="bg-[#e49edd]">
                 <th className="border px-4 py-2 text-left text-black">
                   Section
                 </th>
@@ -593,7 +593,7 @@ Department: {selectedDepartments.join(", ")}
                       index % 2 === 0 ? "bg-[#f4dcf1]" : "bg-white"
                     } hover:bg-gray-50 transition-colors text-black`}
                   >
-                    <td
+                    {/* <td
                       className="border px-4 py-2 cursor-pointer hover:bg-purple-100"
                       onClick={() => handleSectionClick(item.Section)}
                     >
@@ -601,6 +601,11 @@ Department: {selectedDepartments.join(", ")}
                         {item.Department && item.Department} -{" "}
                         {item.corridorType && item.corridorType}
                       </span>
+                    </td> */}
+                    <td
+                     className="border px-4 py-2 text-center text-black" 
+                    >
+                      {item.Department}
                     </td>
                     <td className="border px-4 py-2 text-center text-black">
                       {item.Demanded}
@@ -687,13 +692,13 @@ Department: {selectedDepartments.join(", ")}
 
       {/* Upcoming Blocks Table */}
       <div className="mb-6">
-        <div className="bg-[#ffc000] p-2 font-semibold text-black">
+        <div className=" bg-[#f1a983] p-2 font-semibold text-black">
           (B) Upcoming Blocks (Summary): {displayStartDate} to {displayEndDate} Division {selectedDepartments.join(", ")} Department
         </div>
         <div className="overflow-x-auto border border-gray-200 rounded-b">
           <table className="min-w-full bg-white">
             <thead>
-              <tr className="bg-[#f7c7ac]">
+              <tr className="bg-[#e49edd]">
                 <th className="border px-4 py-2 text-center text-black">
                   Date
                 </th>
@@ -732,7 +737,11 @@ Department: {selectedDepartments.join(", ")}
                       </span>
                     </td>
                     <td className="border px-4 py-2 text-center text-black">
-                      {block.Duration}
+                      {(Number(block.Duration) < 0 
+    ? 24 + Number(block.Duration) 
+    : Number(block.Duration)
+  ).toFixed(2)}
+
                     </td>
                     <td className="border px-4 py-2 text-center text-black">
                       {block.Type}
@@ -786,11 +795,16 @@ Department: {selectedDepartments.join(", ")}
         >
           Back
         </button>
-        <Link href="/drm">
-          <button className="bg-[#a0d815] text-black px-8 py-2 rounded-md hover:bg-gray-300 shadow-md transition-all border border-gray-400">
-            Home
+      
+          <button className="bg-[#a0d815] text-black px-8 py-2 rounded-md hover:bg-gray-300 shadow-md transition-all border border-gray-400"
+           onClick={async () => {
+            const { signOut } = await import("next-auth/react");
+            await signOut({ redirect: true, callbackUrl: "/auth/login" });
+          }}
+          >
+            Logout
           </button>
-        </Link>
+        
       </div>
     </div>
   );
