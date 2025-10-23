@@ -40,6 +40,9 @@ interface PastBlockSummary {
 }
 
 interface DetailedData {
+  id?: any;
+  Activity?: string;
+  DivisionId?: string;
   Date: string;
   Section: string;
   Duration: number;
@@ -706,6 +709,12 @@ Department: {selectedDepartments.join(", ")}
                   Section
                 </th>
                 <th className="border px-4 py-2 text-center text-black">
+                  DivisionId
+                </th>
+                <th className="border px-4 py-2 text-center text-black">
+                  Activity
+                </th>
+                <th className="border px-4 py-2 text-center text-black">
                   Duration (Hours)
                 </th>
                 <th className="border px-4 py-2 text-center text-black">
@@ -735,6 +744,14 @@ Department: {selectedDepartments.join(", ")}
                       <span className="text-blue-600 font-medium underline">
                         {block.Section}
                       </span>
+                    </td>
+                    <td className="border px-4 py-2 text-center text-black">
+                    
+                      {block.DivisionId}
+                     
+                    </td>
+                    <td className="border px-4 py-2 text-center text-black">
+                      {block.Activity}
                     </td>
                     <td className="border px-4 py-2 text-center text-black">
                       {(Number(block.Duration) < 0 
@@ -776,7 +793,7 @@ Department: {selectedDepartments.join(", ")}
       </div>
 
       {/* Click SectionBlock ID Info Section */}
-      <div className="mt-6 mb-4 p-4 bg-blue-100 rounded-md flex items-center justify-center">
+      {/* <div className="mt-6 mb-4 p-4 bg-blue-100 rounded-md flex items-center justify-center">
         <div className="bg-[#cfd4ff] px-6 py-3 rounded-md border border-blue-300 shadow-sm text-center">
           <span className="font-bold text-black">Click</span>
           <span className="mx-1 px-4 py-1 bg-[#0da84a] rounded-md font-bold text-black">
@@ -786,7 +803,7 @@ Department: {selectedDepartments.join(", ")}
             to see further details of datewise details of blocks in the division
           </span>
         </div>
-      </div>
+      </div> */}
 
       <div className="mt-4 bg-white p-4 rounded flex justify-center items-center gap-6 border-2 border-gray-300">
         <button
