@@ -187,7 +187,9 @@ const hasInProgressBlock = requestsData?.data?.requests?.find(
 if (session?.user?.role === "DEPT_CONTROLLER") {
     window.location.href = "/manage/request-table";
 }
-
+if (session?.user?.role === "HQ") {
+    window.location.href = "/hq/generate-report";
+}
 if (session?.user?.role === "BOARD_CONTROLLER") {
     window.location.href = "/tpc";
 }
@@ -379,7 +381,7 @@ if (session?.user?.role === "PUNCTUALITY_CONTROLLER") {
       </div>
     );
   }
-
+ 
 
 
   if (session?.user?.role === "DRM") {

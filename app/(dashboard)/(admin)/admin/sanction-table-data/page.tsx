@@ -896,13 +896,13 @@ export default function GenerateReportPage() {
             <table className="w-full border-2 border-black">
               <thead>
                 <tr className="bg-[#f7c7ac] text-black text-[24px] font-bold">
-                  <th className="border-2 border-black px-2 py-1">Section</th>
-                  <th className="border-2 border-black px-2 py-1">Demanded  / No. of Blocks</th>
-                  <th className="border-2 border-black px-2 py-1">Approved / No. of Blocks</th>
-                  <th className="border-2 border-black px-2 py-1">Granted</th>
-                  <th className="border-2 border-black px-2 py-1">% Granted</th>
-                  <th className="border-2 border-black px-2 py-1">Availed / No. of Blocks</th>
-                  <th className="border-2 border-black px-2 py-1">% Availed</th>
+                  <th className="border-2 border-black px-4 py-2">Section</th>
+                  <th className="border-2 border-black px-4 py-2">Demanded  / No. of Blocks</th>
+                  <th className="border-2 border-black px-4 py-2">Approved / No. of Blocks</th>
+                  <th className="border-2 border-black px-4 py-2">Granted</th>
+                  <th className="border-2 border-black px-4 py-2">% Granted</th>
+                  <th className="border-2 border-black px-4 py-2">Availed / No. of Blocks</th>
+                  <th className="border-2 border-black px-4 py-2">% Availed</th>
                 </tr>
               </thead>
               <tbody>
@@ -924,31 +924,31 @@ export default function GenerateReportPage() {
                       key={idx}
                     >
                       <td
-                        className="border-2 border-black px-2 py-1 text-center"
+                        className="border-2 border-black px-4 py-2 text-center"
                         style={{ color: "black" }}
                       >
                         {summary.Department || summary.Section || ""}
                       </td>
                       <td
-                        className="border-2 border-black px-2 py-1 text-center"
+                        className="border-2 border-black px-4 py-2 text-center"
                         style={{ color: "black" }}
                       >
                         {summary.Demanded.toFixed(2)} / {summary.DemandsCount}
                       </td>
                       <td
-                        className="border-2 border-black px-2 py-1 text-center"
+                        className="border-2 border-black px-4 py-2 text-center"
                         style={{ color: "black" }}
                       >
                         {summary.Approved.toFixed(2)} / {summary.ApprovedCount}
                       </td>
                       <td
-                        className="border-2 border-black px-2 py-1 text-center"
+                        className="border-2 border-black px-4 py-2 text-center"
                         style={{ color: "black" }}
                       >
                         {summary.Granted.toFixed(2)}
                       </td>
                       <td
-                        className="border-2 border-black px-2 py-1 text-center"
+                        className="border-2 border-black px-4 py-2 text-center"
                         style={{ color: "black" }}
                       >
                         {summary.PercentGranted !== undefined
@@ -956,13 +956,13 @@ export default function GenerateReportPage() {
                           : ""}
                       </td>
                       <td
-                        className="border-2 border-black px-2 py-1 text-center"
+                        className="border-2 border-black px-4 py-2 text-center"
                         style={{ color: "black" }}
                       >
                         {summary.Availed.toFixed(2)} / {summary.AvailedCount}
                       </td>
                       <td
-                        className="border-2 border-black px-2 py-1 text-center"
+                        className="border-2 border-black px-4 py-2 text-center"
                         style={{ color: "black" }}
                       >
                         {summary.PercentAvailed !== undefined
@@ -976,9 +976,9 @@ export default function GenerateReportPage() {
                 {pastBlockSummary.length > 0 && (
                   <>
                     <tr className="bg-[#ff914d] text-white font-bold">
-                      <td className="border-2 border-black px-2 py-1 text-center">Total</td>
+                      <td className="border-2 border-black px-4 py-2 text-center">Total</td>
                       <td
-                        className="border-2 border-black px-2 py-1 text-center"
+                        className="border-2 border-black px-4 py-2 text-center"
                         style={{ color: "black" }}
                       >
                         {pastBlockSummary
@@ -991,7 +991,7 @@ export default function GenerateReportPage() {
                         )}
                       </td>
                       <td
-                        className="border-2 border-black px-2 py-1 text-center"
+                        className="border-2 border-black px-4 py-2 text-center"
                         style={{ color: "black" }}
                       >
                         {pastBlockSummary
@@ -1004,7 +1004,7 @@ export default function GenerateReportPage() {
                         )}
                       </td>
                       <td
-                        className="border-2 border-black px-2 py-1 text-center"
+                        className="border-2 border-black px-4 py-2 text-center"
                         style={{ color: "black" }}
                       >
                         {pastBlockSummary.reduce(
@@ -1013,7 +1013,7 @@ export default function GenerateReportPage() {
                         ).toFixed(2)}
                       </td>
                       <td
-                        className="border-2 border-black px-2 py-1 text-center"
+                        className="border-2 border-black px-4 py-2 text-center"
                         style={{ color: "black" }}
                       >
                         {pastBlockSummary.reduce(
@@ -1022,7 +1022,7 @@ export default function GenerateReportPage() {
                         ).toFixed(2)}
                       </td>
                       <td
-                        className="border-2 border-black px-2 py-1 text-center"
+                        className="border-2 border-black px-4 py-2 text-center"
                         style={{ color: "black" }}
                       >
                         {pastBlockSummary.reduce(
@@ -1036,7 +1036,7 @@ export default function GenerateReportPage() {
                         )}
                       </td>
                       <td
-                        className="border-2 border-black px-2 py-1 text-center"
+                        className="border-2 border-black px-4 py-2 text-center"
                         style={{ color: "black" }}
                       >
                         {pastBlockSummary.reduce(
@@ -1181,7 +1181,7 @@ export default function GenerateReportPage() {
               </div>
             </div>
           </div>
-          <div className="overflow-x-auto w-full max-w-full">
+          <div className="w-full mt-4">
             {/* <table className="w-full border-2 border-black mt-1 text-sm">
               <thead>
                 <tr className="bg-[#e49edd] text-black text-lg font-bold">
@@ -1224,22 +1224,22 @@ export default function GenerateReportPage() {
               </tbody>
             </table> */}
 
-            <table className="w-full border-2 border-black mt-1 text-[24px]">
+            <table className="w-full border-2 border-black mt-1 text-[25px]">
               <thead>
-                <tr className="bg-[#e49edd] text-black text-[24px] font-bold">
+                <tr className="bg-[#e49edd] text-black text-[25px] font-bold">
 
-                  <th className="border-2 border-black px-2 py-1">Date</th>
-                  <th className="border-2 border-black px-2 py-1">RequestId</th>
-                  <th className="border-2 border-black px-2 py-1">Block Section</th>
-                  <th className="border-2 border-black px-2 py-1">Depo</th>
-                  <th className="border-2 border-black px-2 py-1">Type</th>
-                  <th className="border-2 border-black px-2 py-1">Duration</th>
-                  <th className="border-2 border-black px-2 py-1">
+                  <th className="border-2 border-black px-4 py-2">Date</th>
+                  <th className="border-2 border-black px-4 py-2">RequestId</th>
+                  <th className="border-2 border-black px-4 py-2">Block Section</th>
+                  <th className="border-2 border-black px-4 py-2">Depo</th>
+                  <th className="border-2 border-black px-4 py-2">Type</th>
+                  <th className="border-2 border-black px-4 py-2">Duration</th>
+                  <th className="border-2 border-black px-4 py-2">
                     Availed time
                   </th>
 
-                  <th className="border-2 border-black px-2 py-1">Station ID</th>
-                  <th className="border-2 border-black px-2 py-1">Status</th>
+                  <th className="border-2 border-black px-4 py-2">Station ID</th>
+                  <th className="border-2 border-black px-4 py-2">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -1286,11 +1286,11 @@ export default function GenerateReportPage() {
                           key={idx}
                           className={`${rowBgColor} hover:bg-[#F3F3F3]`}
                         >
-                          <td className="border-2 border-black px-2 py-1 text-black">
+                          <td className="border-2 border-black px-4 py-2 text-black">
                             {dayjs(block.Date).format("DD-MM-YY")}
 
                           </td>
-                          <td className="border-2 border-black px-2 py-1 font-bold text-black">
+                          <td className="border-2 border-black px-4 py-2 font-bold text-black">
                             <Link
                               href={`/admin/view-request/${block.id}?from=sanction-table-data`}
                               className="block w-full h-full"
@@ -1299,19 +1299,19 @@ export default function GenerateReportPage() {
                             </Link>
                           </td>
 
-                          <td className="border-2 border-black px-2 py-1 font-bold text-black">
+                          <td className="border-2 border-black px-4 py-2 font-bold text-black">
                             {block.MissionBlock}
                           </td>
-                           <td className="border-2 border-black px-2 py-1 font-bold text-black">
+                           <td className="border-2 border-black px-4 py-2 font-bold text-black">
                             {block.selectedDepo}
                           </td>
-                          <td className="border-2 border-black px-2 py-1 text-black">
+                          <td className="border-2 border-black px-4 py-2 text-black">
                             {block.Type}
                           </td>
-                          <td className="border-2 border-black px-2 py-1 text-black">
+                          <td className="border-2 border-black px-4 py-2 text-black">
                             {block.Duration}
                           </td>
-                          <td className="border-2 border-black px-2 py-1 text-black">
+                          <td className="border-2 border-black px-4 py-2 text-black">
                             {block.AvailedTimeFrom && block.AvailedTimeTo ? (
                               <>
                                 {formatTime(block.AvailedTimeFrom)} to{" "}
@@ -1321,11 +1321,11 @@ export default function GenerateReportPage() {
                               "Not Availed Yet"
                             )}
                           </td>
-                          <td className="border-2 border-black px-2 py-1 font-bold text-black">
+                          <td className="border-2 border-black px-4 py-2 font-bold text-black">
                             {block.stationId || "N/A"}
                           </td>
                           <td
-                            className="border-2 border-black px-2 py-1 font-bold text-center text-black"
+                            className="border-2 border-black px-4 py-2 font-bold text-center text-black"
                             style={statusStyle}
                           >
                             {statusLabel}

@@ -40,6 +40,9 @@ interface PastBlockSummary {
 }
 
 interface DetailedData {
+  id?: any;
+  Activity?: string;
+  DivisionId?: string;
   Date: string;
   Section: string;
   Duration: number;
@@ -84,6 +87,8 @@ export default function GenerateReportPage() {
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([
     "Engineering",
   ]);
+  const [displayStartDate, setDisplayStartDate] = useState<string>("");
+const [displayEndDate, setDisplayEndDate] = useState<string>("");
   const router = useRouter();
   const {
     register,
@@ -197,7 +202,7 @@ export default function GenerateReportPage() {
 
       const formattedStartDate = format(startDate, "dd/MM/yy");
       const formattedEndDate = format(endDate, "dd/MM/yy");
-
+      
       // Update query parameters
       setQueryParams({
         startDate: formattedStartDate,
@@ -206,7 +211,9 @@ export default function GenerateReportPage() {
         department: selectedDepartments,
         blockType: selectedBlockTypes,
       });
-
+          // Set display dates for showing in tables
+setDisplayStartDate(formattedStartDate);
+setDisplayEndDate(formattedEndDate);
       // Trigger the query - react-query will handle the loading state
       await refetch();
     } catch (error) {
@@ -468,9 +475,9 @@ export default function GenerateReportPage() {
                 type="button"
                 className={`px-3 py-1.5 text-sm rounded-full text-black ${
                   selectedDepartments.includes("Engineering")
-                    ? "bg-green-300"
-                    : "bg-green-100"
-                } border border-green-400`}
+                  ? "bg-[#e49edd] border-[#b07be0] text-black"
+                    : "bg-[#f3e6f7] border-[#b07be0] text-black"
+                } border border-black-400`}
                 onClick={() => toggleDepartment("Engineering")}
               >
                 {selectedDepartments.includes("Engineering") && (
@@ -482,9 +489,9 @@ export default function GenerateReportPage() {
                 type="button"
                 className={`px-3 py-1.5 text-sm rounded-full text-black ${
                   selectedDepartments.includes("ST")
-                    ? "bg-blue-300"
-                    : "bg-blue-100"
-                } border border-blue-400`}
+                    ? "bg-[#fff35c] border-[#e0e0e0] text-black"
+                      : "bg-[#fffbe9] border-[#e0e0e0] text-black"
+                } border border-yellow-400`}
                 onClick={() => toggleDepartment("ST")}
               >
                 {selectedDepartments.includes("ST") && (
@@ -496,9 +503,9 @@ export default function GenerateReportPage() {
                 type="button"
                 className={`px-3 py-1.5 text-sm rounded-full text-black ${
                   selectedDepartments.includes("TRD")
-                    ? "bg-yellow-300"
-                    : "bg-yellow-100"
-                } border border-yellow-400`}
+                      ? "bg-[#c7f7c7] border-[#7be09b] text-black"
+                      : "bg-[#e0fff0] border-[#7be09b] text-black"
+                } border border-black-400`}
                 onClick={() => toggleDepartment("TRD")}
               >
                 {selectedDepartments.includes("TRD") && (
@@ -549,14 +556,14 @@ export default function GenerateReportPage() {
 
       {/* Past Block Summary Table */}
       <div className="mb-6">
-        <div className="bg-[#ff914d] p-2 font-semibold text-black">
-          (A)Past Block Summary:....... to .......Division
-          Department:.............(In Hrs)
+        <div className="bg-[#f1a983] p-2 font-semibold text-black">
+         (A) Past Block Summary: {displayStartDate} to {displayEndDate} Division
+Department: {selectedDepartments.join(", ")}
         </div>
         <div className="overflow-x-auto border border-gray-200 rounded-b">
           <table className="min-w-full bg-white">
             <thead>
-              <tr className="bg-[#f7c7ac]">
+              <tr className="bg-[#e49edd]">
                 <th className="border px-4 py-2 text-left text-black">
                   Section
                 </th>
@@ -589,7 +596,7 @@ export default function GenerateReportPage() {
                       index % 2 === 0 ? "bg-[#f4dcf1]" : "bg-white"
                     } hover:bg-gray-50 transition-colors text-black`}
                   >
-                    <td
+                    {/* <td
                       className="border px-4 py-2 cursor-pointer hover:bg-purple-100"
                       onClick={() => handleSectionClick(item.Section)}
                     >
@@ -597,6 +604,11 @@ export default function GenerateReportPage() {
                         {item.Department && item.Department} -{" "}
                         {item.corridorType && item.corridorType}
                       </span>
+                    </td> */}
+                    <td
+                     className="border px-4 py-2 text-center text-black" 
+                    >
+                      {item.Department}
                     </td>
                     <td className="border px-4 py-2 text-center text-black">
                       {item.Demanded}
@@ -629,7 +641,7 @@ export default function GenerateReportPage() {
                       ? pastBlockSummary.reduce(
                           (sum, item) => sum + item.Demanded,
                           0
-                        )
+                        ).toFixed(2)
                       : "0"}
                   </td>
                   <td className="border px-4 py-2 text-center text-black">
@@ -637,7 +649,7 @@ export default function GenerateReportPage() {
                       ? pastBlockSummary.reduce(
                           (sum, item) => sum + item.Approved,
                           0
-                        )
+                        ).toFixed(2)
                       : "0"}
                   </td>
                   <td className="border px-4 py-2 text-center text-black">
@@ -645,28 +657,28 @@ export default function GenerateReportPage() {
                       ? pastBlockSummary.reduce(
                           (sum, item) => sum + item.Granted,
                           0
-                        )
+                        ).toFixed(2)
                       : "0"}
                   </td>
                   <td className="border px-4 py-2 text-center text-black">
                     {pastBlockSummary.reduce(
                       (sum, item) => sum + (item.PercentGranted || 0),
                       0
-                    )}
+                    ).toFixed(2)}
                   </td>
                   <td className="border px-4 py-2 text-center text-black">
                     {pastBlockSummary.length > 0
                       ? pastBlockSummary.reduce(
                           (sum, item) => sum + item.Availed,
                           0
-                        )
+                        ).toFixed(2)
                       : "0"}
                   </td>
                   <td className="border px-4 py-2 text-center text-black">
                     {pastBlockSummary.reduce(
                       (sum, item) => sum + (item.PercentAvailed || 0),
                       0
-                    )}
+                    ).toFixed(2)}
                   </td>
                 </tr>
               )}
@@ -683,18 +695,24 @@ export default function GenerateReportPage() {
 
       {/* Upcoming Blocks Table */}
       <div className="mb-6">
-        <div className="bg-[#ffc000] p-2 font-semibold text-black">
-          (B) Upcoming Blocks (Summary):...... Division ...... Department.......
+        <div className=" bg-[#f1a983] p-2 font-semibold text-black">
+          (B) Upcoming Blocks (Summary): {displayStartDate} to {displayEndDate} Division {selectedDepartments.join(", ")} Department
         </div>
         <div className="overflow-x-auto border border-gray-200 rounded-b">
           <table className="min-w-full bg-white">
             <thead>
-              <tr className="bg-[#f7c7ac]">
+              <tr className="bg-[#e49edd]">
                 <th className="border px-4 py-2 text-center text-black">
                   Date
                 </th>
                 <th className="border px-4 py-2 text-left text-black">
                   Section
+                </th>
+                <th className="border px-4 py-2 text-center text-black">
+                  DivisionId
+                </th>
+                <th className="border px-4 py-2 text-center text-black">
+                  Activity
                 </th>
                 <th className="border px-4 py-2 text-center text-black">
                   Duration (Hours)
@@ -728,7 +746,19 @@ export default function GenerateReportPage() {
                       </span>
                     </td>
                     <td className="border px-4 py-2 text-center text-black">
-                      {block.Duration}
+                    
+                      {block.DivisionId}
+                     
+                    </td>
+                    <td className="border px-4 py-2 text-center text-black">
+                      {block.Activity}
+                    </td>
+                    <td className="border px-4 py-2 text-center text-black">
+                      {(Number(block.Duration) < 0 
+    ? 24 + Number(block.Duration) 
+    : Number(block.Duration)
+  ).toFixed(2)}
+
                     </td>
                     <td className="border px-4 py-2 text-center text-black">
                       {block.Type}
@@ -763,7 +793,7 @@ export default function GenerateReportPage() {
       </div>
 
       {/* Click SectionBlock ID Info Section */}
-      <div className="mt-6 mb-4 p-4 bg-blue-100 rounded-md flex items-center justify-center">
+      {/* <div className="mt-6 mb-4 p-4 bg-blue-100 rounded-md flex items-center justify-center">
         <div className="bg-[#cfd4ff] px-6 py-3 rounded-md border border-blue-300 shadow-sm text-center">
           <span className="font-bold text-black">Click</span>
           <span className="mx-1 px-4 py-1 bg-[#0da84a] rounded-md font-bold text-black">
@@ -773,7 +803,7 @@ export default function GenerateReportPage() {
             to see further details of datewise details of blocks in the division
           </span>
         </div>
-      </div>
+      </div> */}
 
       <div className="mt-4 bg-white p-4 rounded flex justify-center items-center gap-6 border-2 border-gray-300">
         <button
@@ -782,11 +812,16 @@ export default function GenerateReportPage() {
         >
           Back
         </button>
-        <Link href="/drm">
-          <button className="bg-[#a0d815] text-black px-8 py-2 rounded-md hover:bg-gray-300 shadow-md transition-all border border-gray-400">
-            Home
+      
+          <button className="bg-[#a0d815] text-black px-8 py-2 rounded-md hover:bg-gray-300 shadow-md transition-all border border-gray-400"
+           onClick={async () => {
+            const { signOut } = await import("next-auth/react");
+            await signOut({ redirect: true, callbackUrl: "/auth/login" });
+          }}
+          >
+            Logout
           </button>
-        </Link>
+        
       </div>
     </div>
   );

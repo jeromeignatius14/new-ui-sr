@@ -51,6 +51,9 @@ export const useAuth = () => {
       else if (user.role === "BOARD_CONTROLLER") {
         router.push("/tpc");
       }
+      else if (user.role === "HQ") {
+        router.push("/hq/generate-report");
+      }
       
       else if (user.role === "ADMIN") {
         router.push("/admin/request-table");
