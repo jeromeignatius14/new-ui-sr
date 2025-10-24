@@ -33,6 +33,9 @@ interface FormData {
 
 // Interfaces aligned with the API service
 interface PastBlockSummary {
+  Applied?: number;
+  AppliedCount?: number;
+  GrantedCount?: number;
   SectionId?: string;
   Section: string;
   Demanded: number;
@@ -51,6 +54,8 @@ interface PastBlockSummary {
 }
 
 interface DetailedData {
+  isGranted?: boolean;
+  isSanctioned?: boolean;
   Date: string;
   Section: string;
   Duration: number;
@@ -85,6 +90,8 @@ export default function GenerateReportPage() {
   const [pastBlockSummary, setPastBlockSummary] = useState<PastBlockSummary[]>(
     []
   );
+  const [activeFilter, setActiveFilter] = useState<"approved" | "granted" | "all">("all");
+  const [activeSection, setActiveSection] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [reportGenerated, setReportGenerated] = useState(false);
   const [selectedLocations, setSelectedLocations] = useState<string[]>(["All"]);
@@ -366,6 +373,17 @@ export default function GenerateReportPage() {
   const divisionId = block.DivisionId || "";
   return divisionId.toLowerCase().includes(upcomingDivisionIdSearch.toLowerCase());
 });
+
+
+const filteredBlocks = filteredUpcomingBlocks.filter((block) => {
+   if (activeFilter === "approved" && !block.isSanctioned) return false;
+  if (activeFilter === "granted" && !block.isGranted) return false;
+
+  // Filter by selected section
+  if (activeSection && block.Section !== activeSection) return false;
+  return true;
+});
+
   function formatDateB(dateString: string) {
     if (!dateString) return "";
     // Accepts both MM/DD/YYYY and DD/MM/YYYY
@@ -899,7 +917,8 @@ export default function GenerateReportPage() {
                   <th className="border-2 border-black px-4 py-2">Section</th>
                   <th className="border-2 border-black px-4 py-2">Demanded  / No. of Blocks</th>
                   <th className="border-2 border-black px-4 py-2">Approved / No. of Blocks</th>
-                  <th className="border-2 border-black px-4 py-2">Granted</th>
+                  <th className="border-2 border-black px-4 py-2">isApplied</th>
+                  <th className="border-2 border-black px-4 py-2">Granted/No. of Blocks</th>
                   <th className="border-2 border-black px-4 py-2">% Granted</th>
                   <th className="border-2 border-black px-4 py-2">Availed / No. of Blocks</th>
                   <th className="border-2 border-black px-4 py-2">% Availed</th>
@@ -936,16 +955,27 @@ export default function GenerateReportPage() {
                         {summary.Demanded.toFixed(2)} / {summary.DemandsCount}
                       </td>
                       <td
-                        className="border-2 border-black px-4 py-2 text-center"
-                        style={{ color: "black" }}
-                      >
+                        className="border-2 border-black px-4 py-2 text-center text-blue-600 underline cursor-pointer"
+                         onClick={() => {
+    setActiveFilter("approved");
+    setActiveSection(summary.Department || summary.Section);
+  }} >
                         {summary.Approved.toFixed(2)} / {summary.ApprovedCount}
                       </td>
                       <td
                         className="border-2 border-black px-4 py-2 text-center"
                         style={{ color: "black" }}
                       >
-                        {summary.Granted.toFixed(2)}
+                        {summary.Applied.toFixed(2)} /{summary.AppliedCount}
+                      </td>
+                      <td
+                        className="border-2 border-black px-4 py-2 text-center text-blue-600 underline cursor-pointer"
+                          onClick={() => {
+    setActiveFilter("granted");
+    setActiveSection(summary.Department || summary.Section);
+  }}
+                      >
+                        {summary.Granted.toFixed(2)} /{summary.GrantedCount}
                       </td>
                       <td
                         className="border-2 border-black px-4 py-2 text-center"
@@ -1008,9 +1038,26 @@ export default function GenerateReportPage() {
                         style={{ color: "black" }}
                       >
                         {pastBlockSummary.reduce(
+                          (sum, item) => sum + (item.Applied || 0),
+                          0
+                        ).toFixed(2)} /{" "}
+                        {pastBlockSummary.reduce(
+                          (sum, item) => sum + (item.AppliedCount || 0),
+                          0
+                        )}
+                      </td>
+                      <td
+                        className="border-2 border-black px-4 py-2 text-center"
+                        style={{ color: "black" }}
+                      >
+                        {pastBlockSummary.reduce(
                           (sum, item) => sum + (item.Granted || 0),
                           0
-                        ).toFixed(2)}
+                        ).toFixed(2)} /{" "}
+                        {pastBlockSummary.reduce(
+                          (sum, item) => sum + (item.GrantedCount || 0),
+                          0
+                        )}
                       </td>
                       <td
                         className="border-2 border-black px-4 py-2 text-center"
@@ -1160,6 +1207,8 @@ export default function GenerateReportPage() {
                       onClick={() => {
                         setUpcomingSectionFilter("All");
                         setSectionDropdownOpenB(false);
+                        setActiveFilter("all")
+                        setActiveSection(null);
                       }}
                     >
                       All
@@ -1233,13 +1282,12 @@ export default function GenerateReportPage() {
                   <th className="border-2 border-black px-4 py-2">Block Section</th>
                   <th className="border-2 border-black px-4 py-2">Depo</th>
                   <th className="border-2 border-black px-4 py-2">Type</th>
-                  <th className="border-2 border-black px-4 py-2">Duration</th>
+                  <th className="border-2 border-black px-2 py-1">Duration</th>
                   <th className="border-2 border-black px-4 py-2">
                     Availed time
                   </th>
-
                   <th className="border-2 border-black px-4 py-2">Station ID</th>
-                  <th className="border-2 border-black px-4 py-2">Status</th>
+                  <th className="border-2 border-black px-2 py-1">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -1254,7 +1302,7 @@ export default function GenerateReportPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredUpcomingBlocks
+                  filteredBlocks
                     .slice(0, 200)
                     .map((block: any, idx: number) => {
                       // Status color logic
@@ -1308,7 +1356,7 @@ export default function GenerateReportPage() {
                           <td className="border-2 border-black px-4 py-2 text-black">
                             {block.Type}
                           </td>
-                          <td className="border-2 border-black px-4 py-2 text-black">
+                          <td className="border-2 border-black px-2 py-1 text-black">
                             {block.Duration}
                           </td>
                           <td className="border-2 border-black px-4 py-2 text-black">
@@ -1325,7 +1373,7 @@ export default function GenerateReportPage() {
                             {block.stationId || "N/A"}
                           </td>
                           <td
-                            className="border-2 border-black px-4 py-2 font-bold text-center text-black"
+                            className="border-2 border-black px-2 py-1 font-bold text-center text-black"
                             style={statusStyle}
                           >
                             {statusLabel}
