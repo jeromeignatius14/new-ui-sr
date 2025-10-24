@@ -690,7 +690,8 @@ if (activeSummaryFilters.searchId) {
 
       {/* View Summary of Upcoming Blocks CTA */}
       <div className="flex justify-center mb-8 w-full">
-        <div className="w-full max-w-4xl rounded-2xl border-4 border-[#00B4D8] bg-[#CAF0F8] shadow-lg p-0">
+        {/* <div className="w-full max-w-4xl rounded-2xl border-4 border-[#00B4D8] bg-[#CAF0F8] shadow-lg p-0"> */}
+        <div className="w-full max-w-full rounded-2xl border-4 border-[#00B4D8] bg-[#CAF0F8] shadow-lg p-0">
           <div className="text-[24px] font-bold text-[#0077B6] text-center py-3 tracking-wide">
             View Summary of Sanctioned Blocks
           </div>
@@ -875,7 +876,8 @@ if (activeSummaryFilters.searchId) {
             {/* Table only shows after clicking Click to View */}
             {showTable && (
               <div className="mx-2 overflow-x-auto">
-                <div className="max-h-[1000px] overflow-y-auto border-2 border-[#00B4D8] rounded-lg bg-white">
+                {/* <div className="max-h-[1000px] overflow-y-auto border-2 border-[#00B4D8] rounded-lg bg-white"> */}
+                          <div className="max-h-[1000px] overflow-y-auto border-2 border-[#00B4D8] rounded-lg bg-white w-full">
                   <table className="w-full text-black text-[24px] relative">
                     <thead>
                       <tr className="bg-[#e49edd] text-black">
