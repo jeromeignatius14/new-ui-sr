@@ -1748,13 +1748,13 @@ export const depot: DepotStructure = {
 
   "ED-TP": {
     'TRD': ["KMD", "PLI","KRR"],
-    'S&T': ["KRR-W", "KRR-E","ED"],
+    'S&T': ["KRR-W", "KRR-E","ED","KRR-Tele"],
     'ENGG': ["TP","W-KRR","GS","BR-ED"]
   },
 
   "KRR-DG": {
     'TRD': ["KRR"],
-    'S&T': ["KRR-E"],
+    'S&T': ["KRR-E","KRR-Tele"],
     'ENGG': ["E-KRR","GS","BR-ED"]
   },
 
@@ -1772,7 +1772,7 @@ export const depot: DepotStructure = {
   
   "SA-KRR": {
     'TRD': ["SA", "NMKL", "KRR"],
-    'S&T': ["SA","KRR-W","SXT","VRI"],
+    'S&T': ["SA","KRR-W","SXT","VRI","KRR-Tele"],
     'ENGG': ["NMKL","GS","BR-ED"]
   },
 
