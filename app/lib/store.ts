@@ -5332,6 +5332,7 @@ export const depotOnLocation = {
     "OTK", "PDY", "PKT", "PMB", "PRKL", "PRL", "PUC", "PVN", "PVI", "PYK", "SGM", "SLTH", "SMM",
     "SNDI", "SRGM", "SY", "TAM", "TJM", "TLI", "TLNR", "TNI", "TNM", "TPGY", "TPJ", "TRK",
     "TUY", "TVNL", "ULU", "UMG", "VDL", "VLDE", "VKM", "VM", "VLR", "VRI", "PVN","LLI","MTUR","TRB","MQ"
+    
   ]
 }
 
