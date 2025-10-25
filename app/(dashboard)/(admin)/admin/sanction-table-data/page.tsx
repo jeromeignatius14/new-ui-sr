@@ -917,7 +917,7 @@ const filteredBlocks = filteredUpcomingBlocks.filter((block) => {
                   <th className="border-2 border-black px-4 py-2">Section</th>
                   <th className="border-2 border-black px-4 py-2">Demanded  / No. of Blocks</th>
                   <th className="border-2 border-black px-4 py-2">Approved / No. of Blocks</th>
-                  <th className="border-2 border-black px-4 py-2">isApplied</th>
+                  <th className="border-2 border-black px-4 py-2">Applied/No. of Blocks</th>
                   <th className="border-2 border-black px-4 py-2">Granted/No. of Blocks</th>
                   <th className="border-2 border-black px-4 py-2">% Granted</th>
                   <th className="border-2 border-black px-4 py-2">Availed / No. of Blocks</th>
