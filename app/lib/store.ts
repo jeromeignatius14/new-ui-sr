@@ -21,6 +21,10 @@ export let MajorSection = {
   "TVC": ["SRR-CHTS", "TCR-GUV", "ERS-KTYM-KYJ", "ERS-ALLP-KYJ", "KYJ-QLN", "QLN-TVC", "TVC-NCJ", "NCJ-TEN", "NCJ-CAPE"]
 };
 
+export const sectionsWithAlphanumericSiteLocation = [
+  "MSB-VLCY"
+];
+
 
 // Define structure for site location KM ranges
 export type KMRange = {

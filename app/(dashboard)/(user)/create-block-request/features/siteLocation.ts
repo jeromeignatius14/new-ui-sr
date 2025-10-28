@@ -3,7 +3,7 @@
  * Pattern: xxx/yyy where xxx is numeric (max 3) and yyy is alphanumeric (max 4)
  */
 
-import { siteLocationRanges, blockSectionDepotAssignment, type SiteLocationRanges } from '../../../../lib/store';
+import { siteLocationRanges, blockSectionDepotAssignment, sectionsWithAlphanumericSiteLocation, type SiteLocationRanges } from '../../../../lib/store';
 
 export interface SiteLocationValidation {
   isValid: boolean;
@@ -178,6 +178,9 @@ export const validateSiteLocation = (
   department?: string,
   userDepot?: string
 ): SiteLocationValidation => {
+  // Check if this major section allows alphanumeric before slash
+  const allowsAlphanumeric = majorSection && sectionsWithAlphanumericSiteLocation.includes(majorSection);
+  
   // Remove any characters that aren't alphanumeric or slash
   let cleanValue = value.replace(/[^0-9a-zA-Z/]/g, "");
   
@@ -194,12 +197,9 @@ export const validateSiteLocation = (
   let beforeSlash = parts[0] || "";
   let afterSlash = parts[1] || "";
   
-  // Special handling for MSB-VLCY major section - allow alphanumeric before slash
-  const isMsbVlcy = majorSection === "MSB-VLCY";
-  
   // Validate and format the part before slash
-  if (isMsbVlcy) {
-    // For MSB-VLCY: allow alphanumeric, max 3 characters
+  if (allowsAlphanumeric) {
+    // For sections that allow alphanumeric: allow alphanumeric, max 3 characters
     beforeSlash = beforeSlash.replace(/[^0-9a-zA-Z]/g, ""); // Allow alphanumeric
     if (beforeSlash.length > 3) {
       beforeSlash = beforeSlash.substring(0, 3);
@@ -232,12 +232,12 @@ export const validateSiteLocation = (
   }
   
   // Validation rules
-  const basicValidation = validatePattern(formattedValue, isMsbVlcy);
+  const basicValidation = validatePattern(formattedValue, allowsAlphanumeric || false);
   let isValid = basicValidation;
   let error: string | undefined;
 
   if (!basicValidation) {
-    error = getValidationError(formattedValue, isMsbVlcy);
+    error = getValidationError(formattedValue, allowsAlphanumeric || false);
   } else if (majorSection && blockSections && department) {
     // Additional range validation if context is provided
     const rangeValidation = validateSiteLocationRange(
@@ -263,16 +263,16 @@ export const validateSiteLocation = (
 /**
  * Validates if the site location follows the correct pattern
  * @param value - The value to validate
- * @param isMsbVlcy - Whether this is for MSB-VLCY section (allows alphanumeric before slash)
+ * @param allowsAlphanumeric - Whether this section allows alphanumeric before slash
  * @returns boolean indicating if the pattern is valid
  */
-const validatePattern = (value: string, isMsbVlcy: boolean = false): boolean => {
+const validatePattern = (value: string, allowsAlphanumeric: boolean = false): boolean => {
   if (!value) return false;
   
   // If no slash, check if it's a valid prefix
   if (!value.includes("/")) {
-    if (isMsbVlcy) {
-      // For MSB-VLCY: allow alphanumeric, 1-3 characters
+    if (allowsAlphanumeric) {
+      // For sections that allow alphanumeric: allow alphanumeric, 1-3 characters
       return /^[0-9a-zA-Z]{1,3}$/.test(value);
     } else {
       // For other sections: numeric only, 1-3 characters
@@ -289,8 +289,8 @@ const validatePattern = (value: string, isMsbVlcy: boolean = false): boolean => 
   
   // Before slash validation based on section type
   let beforeSlashValid: boolean;
-  if (isMsbVlcy) {
-    // For MSB-VLCY: alphanumeric, 1-3 characters
+  if (allowsAlphanumeric) {
+    // For sections that allow alphanumeric: alphanumeric, 1-3 characters
     beforeSlashValid = /^[0-9a-zA-Z]{1,3}$/.test(beforeSlash);
   } else {
     // For other sections: numeric, 1-3 characters
@@ -306,16 +306,16 @@ const validatePattern = (value: string, isMsbVlcy: boolean = false): boolean => 
 /**
  * Gets appropriate error message for invalid input
  * @param value - The invalid value
- * @param isMsbVlcy - Whether this is for MSB-VLCY section (allows alphanumeric before slash)
+ * @param allowsAlphanumeric - Whether this section allows alphanumeric before slash
  * @returns Error message string
  */
-const getValidationError = (value: string, isMsbVlcy: boolean = false): string => {
+const getValidationError = (value: string, allowsAlphanumeric: boolean = false): string => {
   if (!value) {
     return "Site location is required";
   }
   
   if (!value.includes("/")) {
-    if (isMsbVlcy) {
+    if (allowsAlphanumeric) {
       if (!/^[0-9a-zA-Z]+$/.test(value)) {
         return "First part must be alphanumeric only";
       }
@@ -342,7 +342,7 @@ const getValidationError = (value: string, isMsbVlcy: boolean = false): string =
   const beforeSlash = parts[0];
   const afterSlash = parts[1];
   
-  if (isMsbVlcy) {
+  if (allowsAlphanumeric) {
     if (!/^[0-9a-zA-Z]{1,3}$/.test(beforeSlash)) {
       return "Before slash must be alphanumeric (max 3 characters)";
     }
@@ -356,7 +356,7 @@ const getValidationError = (value: string, isMsbVlcy: boolean = false): string =
     return "After slash must be alphanumeric";
   }
   
-  return isMsbVlcy ? "Valid pattern: xxx/yyy (alphanumeric/alphanumeric)" : "Valid pattern: xxx/yyy";
+  return allowsAlphanumeric ? "Valid pattern: xxx/yyy (alphanumeric/alphanumeric)" : "Valid pattern: xxx/yyy";
 };
 
 /**
