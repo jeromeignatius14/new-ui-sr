@@ -40,6 +40,7 @@ export const userRequestSchema = z.object({
     routeTo: z.string(),  // present in both
     powerBlockRequired: z.boolean().nullable().optional(),
     sntDisconnectionRequired: z.boolean().nullable().optional(),
+    enggDisconnectionsRequired: z.boolean().nullable().optional(),
     sntDisconnectionRequirements: z.array(z.string().optional()).optional(),  // present in both
     powerBlockRequirements: z.array(z.string().optional()).optional(),  // present in both
     powerBlockDisconnectionAssignTo: z.string().optional(),
@@ -76,6 +77,8 @@ export const userRequestSchema = z.object({
         approvedAt: z.string().nullable().optional(),
         remarks: z.string().optional(),
     })).optional(),
+     engDisconnectionAssignTo: z.string().optional(),
+    engDisconnectionRemarks: z.string().optional(),
 });
 
 export type UserRequestInput = z.infer<typeof userRequestSchema>;

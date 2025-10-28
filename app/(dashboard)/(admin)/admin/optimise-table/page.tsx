@@ -606,15 +606,17 @@ const urgentRequestsFiltered = pendingRequests
       if (!isUrgent) return false;
 
       // Handle cases where both flags are true
-      if (r.powerBlockRequired && r.sntDisconnectionRequired) {
-        return r.trdActionsNeeded && r.sigActionsNeeded || r.allTrdAcceptance === "ACCEPTED" && r.allSntAcceptance === "ACCEPTED";
+      if (r.powerBlockRequired && r.sntDisconnectionRequired&&r.enggDisconnectionsRequired) {
+        return r.trdActionsNeeded && r.sigActionsNeeded || r.allTrdAcceptance === "ACCEPTED" && r.allSntAcceptance === "ACCEPTED"&&r.allEnggAcceptance==="ACCEPTED";
       }
 
       // Handle powerBlockRequired case
       if (r.powerBlockRequired) {
         return r.trdActionsNeeded || r.allTrdAcceptance === "ACCEPTED";
       }
-
+       if (r.enggDisconnectionsRequired) {
+        return  r.allEnggAcceptance === "ACCEPTED";
+      }
       // Handle sntDisconnectionRequired case
       if (r.sntDisconnectionRequired) {
         return r.sigActionsNeeded || r.allSntAcceptance === "ACCEPTED";
@@ -634,15 +636,18 @@ const urgentRequestsFiltered = pendingRequests
 
         const allSntAcceptance = r.allSntAcceptance === "ACCEPTED";
         const allTrdAcceptance = r.allTrdAcceptance === "ACCEPTED";
-
+        const allEnggAcceptance = r.allEnggAcceptance === "ACCEPTED";
       // Handle cases where both flags are true
-      if (r.powerBlockRequired && r.sntDisconnectionRequired) {
-        return r.trdActionsNeeded && r.sigActionsNeeded || allTrdAcceptance && allSntAcceptance;
+      if (r.powerBlockRequired && r.sntDisconnectionRequired&&r.enggDisconnectionsRequired) {
+        return r.trdActionsNeeded && r.sigActionsNeeded || allTrdAcceptance && allSntAcceptance&&allEnggAcceptance;
       }
 
       // Handle powerBlockRequired case
       if (r.powerBlockRequired) {
         return r.trdActionsNeeded || allTrdAcceptance;
+      }
+      if (r.enggDisconnectionsRequired) {
+        return  allEnggAcceptance;
       }
 
       // Handle sntDisconnectionRequired case
@@ -665,17 +670,20 @@ const urgentRequestsFiltered = pendingRequests
 
         const allSntAcceptance = r.allSntAcceptance === "ACCEPTED";
         const allTrdAcceptance = r.allTrdAcceptance === "ACCEPTED";
+        const allEnggAcceptance = r.allEnggAcceptance === "ACCEPTED";
 
       // Handle cases where both flags are true
-      if (r.powerBlockRequired && r.sntDisconnectionRequired) {
-        return r.trdActionsNeeded && r.sigActionsNeeded || allTrdAcceptance && allSntAcceptance;
+      if (r.powerBlockRequired && r.sntDisconnectionRequired&&r.enggDisconnectionsRequired) {
+        return r.trdActionsNeeded && r.sigActionsNeeded || allTrdAcceptance && allSntAcceptance&&allEnggAcceptance;
       }
 
       // Handle powerBlockRequired case
       if (r.powerBlockRequired) {
         return r.trdActionsNeeded || allTrdAcceptance;
       }
-
+if (r.enggDisconnectionsRequired) {
+        return  allEnggAcceptance;
+      }
       // Handle sntDisconnectionRequired case
       if (r.sntDisconnectionRequired) {
         return r.sigActionsNeeded || allSntAcceptance;

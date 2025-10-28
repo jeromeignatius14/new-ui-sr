@@ -17,6 +17,7 @@ export interface RequestResponse {
 }
 
 export interface RequestItem {
+  enggDisconnectionsRequired: boolean;
   overAllStatus: String;
   emergencyBlockRemarks: string;
   powerBlockDisconnectionAssignTo: string;
@@ -110,6 +111,14 @@ export interface RequestItem {
       }[]
     | null;
   trdDisconnections:
+    | {
+        depot: string;
+        status: "PENDING" | "ACCEPTED" | "REJECTED";
+        approvedAt: string | null;
+        remarks: string | null;
+      }[]
+    | null;
+    enggDisconnections:
     | {
         depot: string;
         status: "PENDING" | "ACCEPTED" | "REJECTED";

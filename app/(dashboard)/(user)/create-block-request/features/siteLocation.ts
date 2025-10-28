@@ -429,7 +429,7 @@ export const isCompleteSiteLocation = (value: string): boolean => {
 export const getAutoAssignedDepots = (
   majorSection: string,
   blockSections: string[],
-  department: "S&T" | "TRD"
+  department: "S&T" | "TRD"| "ENGG"
 ): string => {
   const depots = getAvailableDepots(majorSection, blockSections, department);
   return depots.join(", ");
@@ -445,7 +445,7 @@ export const getAutoAssignedDepots = (
 export const getAvailableDepots = (
   majorSection: string,
   blockSections: string[],
-  department: "S&T" | "TRD"
+  department: "S&T" | "TRD"| "ENGG"
 ): string[] => {
   if (!majorSection || !blockSections.length || !department) {
     return [];
@@ -481,10 +481,12 @@ export const getAllAvailableDepots = (
 ): {
   "S&T": string[];
   "TRD": string[];
+  "ENGG": string[];
 } => {
   return {
     "S&T": getAvailableDepots(majorSection, blockSections, "S&T"),
-    "TRD": getAvailableDepots(majorSection, blockSections, "TRD")
+    "TRD": getAvailableDepots(majorSection, blockSections, "TRD"),
+    "ENGG": getAvailableDepots(majorSection, blockSections, "ENGG")
   };
 };
 
