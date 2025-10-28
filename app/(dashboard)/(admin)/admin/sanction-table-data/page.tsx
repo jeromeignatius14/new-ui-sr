@@ -1289,6 +1289,7 @@ interface PastBlockSummary {
 }
 
 interface DetailedData {
+  DemandedTimeFrom?: any;
   isApplied?: boolean;
   AvailedTimeFrom?: any;
   isGranted?: boolean;
@@ -1327,7 +1328,7 @@ export default function GenerateReportPage() {
   const [pastBlockSummary, setPastBlockSummary] = useState<PastBlockSummary[]>(
     []
   );
-  const [activeFilter, setActiveFilter] = useState<"approved" | "granted" | "availed" |"applied" |"all">("all");
+  const [activeFilter, setActiveFilter] = useState<"approved" | "granted" | "availed" |"applied" |"demanded"|"all">("all");
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [reportGenerated, setReportGenerated] = useState(false);
@@ -1556,6 +1557,7 @@ const filteredBlocks = filteredUpcomingBlocks.filter((block) => {
   if (activeFilter === "applied" && !block.isApplied) return false;
 
   if( activeFilter === "availed" && block.AvailedTimeFrom===null) return false;
+if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false;
 
   // Filter by selected section
   if (activeSection && block.Section !== activeSection) return false;
@@ -2057,9 +2059,10 @@ const filteredBlocks = filteredUpcomingBlocks.filter((block) => {
                       </td>
                       <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
-                        onClick={() => {
-                          setActiveSection(summary.Department || summary.Section);
-                        }}
+                         onClick={() => {
+    setActiveFilter("demanded");
+    setActiveSection(summary.Department || summary.Section);
+  }}
                       >
                         {summary.Demanded.toFixed(2)} / {summary.DemandsCount}
                       </td>
