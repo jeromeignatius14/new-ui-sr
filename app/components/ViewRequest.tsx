@@ -271,6 +271,39 @@ export default function ViewRequest() {
                   )}
                 </td>
               </tr>
+                 <tr>
+                <td className="py-1 font-medium">Granted Time:</td>
+                <td className="py-1">
+                  {request.grantedFromTime && request.grantedToTime ? (
+                    `${formatTime(request.grantedFromTime)} to ${formatTime(request.grantedToTime)}`
+                  ) : (
+                    "N/A"
+                  )}
+                </td>
+              </tr>
+
+               <tr>
+                <td className="py-1 font-medium">S&T Availed Time:</td>
+                <td className="py-1">
+                  {request.SntDisconnectionAvailedTimeFrom && request.SntDisconnectionAvailedTimeTo ? (
+                    `${formatTime(request.SntDisconnectionAvailedTimeFrom)} to ${formatTime(request.SntDisconnectionAvailedTimeTo)}`
+                  ) : (
+                    "N/A"
+                  )}
+                </td>
+              </tr>
+
+               <tr>
+                <td className="py-1 font-medium">TRD Availed Time:</td>
+                <td className="py-1">
+                  {request.TrdDisconnectionAvailedTimeFrom && request.TrdDisconnectionAvailedTimeTo ? (
+                    `${formatTime(request.TrdDisconnectionAvailedTimeFrom)} to ${formatTime(request.TrdDisconnectionAvailedTimeTo)}`
+                  ) : (
+                    "N/A"
+                  )}
+                </td>
+              </tr>
+
               <tr>
                 <td className="py-1 font-medium">Block Section:</td>
                 <td className="py-1">{request.missionBlock}</td>
