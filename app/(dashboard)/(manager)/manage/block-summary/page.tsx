@@ -1401,6 +1401,11 @@ interface PastBlockSummary {
 }
 
 interface DetailedData {
+  DemandedTimeFrom?: any;
+  AvailedTimeFrom?: any;
+  isApplied?: boolean;
+  isGranted?:boolean;
+  isSanctioned?:boolean;
   Date: string;
   Section: string;
   Duration: number;
@@ -1426,6 +1431,8 @@ const blockTypeOptions: OptionType[] = [
 ];
 
 export default function GenerateReportPage() {
+  const [activeFilter, setActiveFilter] = useState<"approved" | "granted" | "availed" |"applied" |"demanded"|"all">("all");
+    const [activeSection, setActiveSection] = useState<string | null>(null);
       const [pastBlockSummary, setPastBlockSummary] = useState<PastBlockSummary[]>(
     []
   );
@@ -1687,7 +1694,18 @@ export default function GenerateReportPage() {
     return divisionId.toLowerCase().includes(upcomingDivisionIdSearch.toLowerCase());
   });
   
+const filteredBlocks = filteredUpcomingBlocks.filter((block) => {
+   if (activeFilter === "approved" && !block.isSanctioned) return false;
+  if (activeFilter === "granted" && !block.isGranted) return false;
+  if (activeFilter === "applied" && !block.isApplied) return false;
 
+  if( activeFilter === "availed" && block.AvailedTimeFrom===null) return false;
+if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false;
+
+  // Filter by selected section
+  if (activeSection && block.Section !== activeSection) return false;
+  return true;
+});
 
   function formatDateB(dateString: string) {
     if (!dateString) return "";
@@ -2124,22 +2142,38 @@ export default function GenerateReportPage() {
                       <td className="border-2 border-black px-2 py-2 md:px-4 md:py-3 text-black text-center">
                         {summary.Department || summary.Section || ""}
                       </td>
-                      <td className="border-2 border-black px-2 py-2 md:px-4 md:py-3 text-black text-center"
+                                       <td
+                        className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                         onClick={() => {
+    setActiveFilter("demanded");
+    setActiveSection(summary.Department || summary.Section);
+  }}
                       >
                         {summary.Demanded.toFixed(2)} / {summary.DemandsCount}
                       </td>
-                      <td 
-                       className="border-2 border-black px-2 py-2 md:px-4 md:py-3 text-black text-center"
+                         <td
+                        className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                        onClick={() => {
+                          setActiveFilter("approved");
+                          setActiveSection(summary.Department || summary.Section);
+                        }}
                       >
                         {summary.Approved.toFixed(2)} / {summary.ApprovedCount}
                       </td>
-                      <td className="border-2 border-black px-2 py-2 md:px-4 md:py-3 text-black text-center"
-             
+                      <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                         onClick={() => {
+                          setActiveFilter("applied");
+                          setActiveSection(summary.Department || summary.Section);
+                        }}
                       >
                         {summary.Applied.toFixed(2)} /{summary.AppliedCount}
                       </td>
-                      <td 
-                      className="border-2 border-black px-2 py-2 md:px-4 md:py-3 text-black text-center"
+                       <td
+                        className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                        onClick={() => {
+                          setActiveFilter("granted");
+                          setActiveSection(summary.Department || summary.Section);
+                        }}
                       >
                          {summary.Granted.toFixed(2)} /{summary.GrantedCount}
                       </td>
@@ -2148,8 +2182,13 @@ export default function GenerateReportPage() {
                           ? summary.PercentGranted.toFixed(2) + "%"
                           : ""}
                       </td>
-                      <td className="border-2 border-black px-2 py-2 md:px-4 md:py-3 text-black text-center"
-                     >
+                        <td
+                        className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                        onClick={() => {
+                          setActiveFilter("availed");
+                          setActiveSection(summary.Department || summary.Section);
+                        }}
+                      >
                         {summary.Availed.toFixed(2)} / {summary.AvailedCount}
                       </td>
                       <td className="border-2 border-black px-2 py-2 md:px-4 md:py-3 text-black text-center">
@@ -2285,6 +2324,8 @@ export default function GenerateReportPage() {
                       onClick={() => {
                         setUpcomingSectionFilter("All");
                         setSectionDropdownOpenB(false);
+                        setActiveFilter("all")
+                        setActiveSection(null);
                       }}
                     >
                       All
@@ -2333,7 +2374,7 @@ export default function GenerateReportPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredUpcomingBlocks.slice(0, 200).map((block: any, idx: number) => {
+                  filteredBlocks.slice(0, 200).map((block: any, idx: number) => {
                     let statusLabel = "";
                     let statusStyle = { background: "#fff", color: "#222" };
                     if (block.overAllStatus === "with optg.") {
