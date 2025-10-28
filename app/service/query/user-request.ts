@@ -17,6 +17,12 @@ export interface RequestResponse {
 }
 
 export interface RequestItem {
+    TrdDisconnectionAvailedTimeTo: any;
+    TrdDisconnectionAvailedTimeFrom: any;
+    SntDisconnectionAvailedTimeTo: any;
+    SntDisconnectionAvailedTimeFrom: any;
+    grantedFromTime?: any;
+    grantedToTime?: any;
     AvailedTimeTo: string;
     AvailedTimeFrom: string;
     overAllStatus: String;
