@@ -17,6 +17,12 @@ export interface RequestResponse {
 }
 
 export interface RequestItem {
+  grantedFromTime?: any;
+  TrdDisconnectionAvailedTimeTo?: any;
+  TrdDisconnectionAvailedTimeFrom?: any;
+  SntDisconnectionAvailedTimeFrom?: any;
+  SntDisconnectionAvailedTimeTo?: any;
+  grantedToTime?: any;
   enggDisconnectionsRequired: boolean;
   overAllStatus: String;
   emergencyBlockRemarks: string;
