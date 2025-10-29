@@ -40,6 +40,14 @@ export default function ViewRequest() {
     }
   };
 
+  const formatDateTime = (dateString: string) => {
+    try {
+      return format(parseISO(dateString), "dd-MM-yyyy HH:mm");
+    } catch {
+      return "Invalid date";
+    }
+  };
+
   const formatTime = (dateString: string): string => {
     if (!dateString) return "N/A";
     try {
@@ -108,6 +116,8 @@ export default function ViewRequest() {
   const blockSections = request.missionBlock
     ? request.missionBlock.split(",")
     : [];
+
+    console.log("Request Data:", request);
 
   return (
     <div className="bg-white p-3 border border-black mb-3 text-black">
@@ -622,31 +632,169 @@ export default function ViewRequest() {
           <p className="text-sm">{request.ManagerResponse}</p>
         </div>
       )}
-      
-      {request.trdAcceptRemarks && (
+
+
+      {/* ENGG Disconnection Approvals Table */}
+      {request.enggDisconnectionsRequired && request.enggDisconnections && Object.keys(request.enggDisconnections).length > 0 && (
         <div className="border border-black p-3 mb-4">
           <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
-            TRD Disconnection Remarks
+            ENGG Disconnection Approvals
           </h2>
-          <p className="text-sm">{request.trdAcceptRemarks}</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="border border-gray-300 px-3 py-2 text-left">Depot</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left">Status</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left">Approved At</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left">Remarks</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(request.enggDisconnections).map(([depotCode, approval]) => (
+                  <tr key={depotCode} className="hover:bg-gray-50">
+                    <td className="border border-gray-300 px-3 py-2 font-medium">{approval.depot}</td>
+                    <td className="border border-gray-300 px-3 py-2">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        approval.status === 'ACCEPTED' ? 'bg-green-100 text-green-800' :
+                        approval.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {approval.status}
+                      </span>
+                    </td>
+                    <td className="border border-gray-300 px-3 py-2">
+                      {approval.approvedAt ? formatDateTime(approval.approvedAt) : 'N/A'}
+                    </td>
+                    <td className="border border-gray-300 px-3 py-2">{approval.remarks || 'N/A'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
       
-      {request.sntAcceptRemarks && (
+      {/* TRD Disconnection Approvals Table */}
+      {request.powerBlockRequired && request.trdDisconnections && Object.keys(request.trdDisconnections).length > 0 && (
         <div className="border border-black p-3 mb-4">
           <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
-            S&T Disconnection Remarks
+            TRD Disconnection Approvals
           </h2>
-          <p className="text-sm">{request.sntAcceptRemarks}</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="border border-gray-300 px-3 py-2 text-left">Depot</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left">Status</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left">Approved At</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left">Remarks</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(request.trdDisconnections).map(([depotCode, approval]) => (
+                  <tr key={depotCode} className="hover:bg-gray-50">
+                    <td className="border border-gray-300 px-3 py-2 font-medium">{approval.depot}</td>
+                    <td className="border border-gray-300 px-3 py-2">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        approval.status === 'ACCEPTED' ? 'bg-green-100 text-green-800' :
+                        approval.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {approval.status}
+                      </span>
+                    </td>
+                    <td className="border border-gray-300 px-3 py-2">
+                      {approval.approvedAt ? formatDateTime(approval.approvedAt) : 'N/A'}
+                    </td>
+                    <td className="border border-gray-300 px-3 py-2">{approval.remarks || 'N/A'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
       
-      {(request.remarkByManager || request.disconnectionRequestRejectRemarks) && (
+      {/* S&T Disconnection Approvals Table */}
+      {request.sntDisconnectionRequired && request.sntDisconnections && Object.keys(request.sntDisconnections).length > 0 && (
         <div className="border border-black p-3 mb-4">
           <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
-            Rejection Remarks {!request.sntAcceptRemarks ? "By S&T" : !request.trdAcceptRemarks ? "By TRD" : ""}
+            S&T Disconnection Approvals
           </h2>
-          <p className="text-sm">{request.remarkByManager || request.disconnectionRequestRejectRemarks}</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="border border-gray-300 px-3 py-2 text-left">Depot</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left">Status</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left">Approved At</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left">Remarks</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(request.sntDisconnections).map(([depotCode, approval]) => (
+                  <tr key={depotCode} className="hover:bg-gray-50">
+                    <td className="border border-gray-300 px-3 py-2 font-medium">{approval.depot}</td>
+                    <td className="border border-gray-300 px-3 py-2">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        approval.status === 'ACCEPTED' ? 'bg-green-100 text-green-800' :
+                        approval.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {approval.status}
+                      </span>
+                    </td>
+                    <td className="border border-gray-300 px-3 py-2">
+                      {approval.approvedAt ? formatDateTime(approval.approvedAt) : 'N/A'}
+                    </td>
+                    <td className="border border-gray-300 px-3 py-2">{approval.remarks || 'N/A'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+      
+      {/* Rejection Remarks - Only show when request is REJECTED */}
+      {request.status === "REJECTED" && (
+        <div className="border border-black p-3 mb-4">
+          <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
+            Request Rejection Details
+          </h2>
+          {request.rejectedBy ? (
+            <div className="mb-2">
+              <p className="text-sm font-medium">Rejected by: {request.rejectedBy.name} ({request.rejectedBy.role})</p>
+            </div>
+          ) : (
+            // Fallback logic to determine who rejected based on approval status
+            (() => {
+              let rejectedBy = "Unknown";
+              
+              // Check if manager rejected
+              if (request.remarkByManager) {
+                rejectedBy = "Manager";
+              }
+              // Check if any S&T depot rejected
+              else if (request.sntDisconnections && Object.values(request.sntDisconnections).some(approval => approval.status === 'REJECTED')) {
+                rejectedBy = "S&T Department";
+              }
+              // Check if any TRD depot rejected
+              else if (request.trdDisconnections && Object.values(request.trdDisconnections).some(approval => approval.status === 'REJECTED')) {
+                rejectedBy = "TRD Department";
+              }
+              else if (request.enggDisconnections && Object.values(request.enggDisconnections).some(approval => approval.status === 'REJECTED')) {
+                rejectedBy = "ENGG Department";
+              }
+              return (
+                <div className="mb-2">
+                  <p className="text-sm font-medium">Rejected by: {rejectedBy}</p>
+                </div>
+              );
+            })()
+          )}
+          <p className="text-sm">{request.remarkByManager || request.disconnectionRequestRejectRemarks || "No rejection remarks provided"}</p>
         </div>
       )}
       
@@ -656,6 +804,15 @@ export default function ViewRequest() {
             Sanction Remarks
           </h2>
           <p className="text-sm">{request.sanctionedRemarks}</p>
+        </div>
+      )}
+
+       {request.isSanctioned && request.userResponse && (
+        <div className="border border-black p-3 mb-4">
+          <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
+            User Reject Remarks
+          </h2>
+          <p className="text-sm">{request.userResponse}</p>
         </div>
       )}
 

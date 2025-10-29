@@ -33,6 +33,7 @@ export interface UsersResponse {
 }
 
 export interface UserRequest {
+    enggDisconnectionsRequired: boolean | undefined;
     userAcceptanceForSanction: boolean;
     disconnectionRequestRejectRemarks: string;
     remarkByManager: string;
@@ -123,6 +124,9 @@ export interface UserRequest {
     managerAcceptance: boolean;
     adminAcceptanceId: string;
     adminAcceptance: boolean;
+    allTrdAcceptance: "ACCEPTED" | "PENDING" | "REJECTED" | null;
+    allSntAcceptance: "ACCEPTED" | "PENDING" | "REJECTED" | null;
+    allEnggAcceptance: "ACCEPTED" | "PENDING" | "REJECTED" | null;
     user: {
         id: string;
         name: string;

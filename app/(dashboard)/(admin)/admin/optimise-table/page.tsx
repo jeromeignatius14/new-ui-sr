@@ -575,12 +575,16 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const pendingRequests = (data?.data?.requests || []).filter((request: UserRequest) => {
-    if (!request.status || request.status.toUpperCase() !== "APPROVED") return false;
-    if (request.isSanctioned) return false;
-    if (!request.date) return false;
-    return true;
-  });
+const pendingRequests = UrgentRequests.filter((request: UserRequest) => {
+  if (!request.status || request.status.toUpperCase() !== "APPROVED") return false;
+  if (request.isSanctioned) return false;
+  if (!request.date) return false;
+  const reqDate = new Date(request.date);
+  reqDate.setHours(0, 0, 0, 0);
+
+  // Include requests for today and future dates
+  return reqDate >= today;
+});
 
   // console.log("pendingRequests.length", pendingRequests.length);
   // Group and sort
@@ -595,45 +599,33 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
   //   .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
 
-  const urgentRequests = pendingRequests
+const urgentRequestsFiltered = pendingRequests
     .filter((r: UserRequest) => {
       // First check if it's an urgent request
       const isUrgent = r.corridorType === "Urgent Block" || r.workType === "EMERGENCY";
       if (!isUrgent) return false;
 
-      // Global filters
-      if (deptFilter !== 'ALL' && r.selectedDepartment !== deptFilter) return false;
-      if (!matchesWorkType(r)) return false;
-      if (!matchesActivity(r)) return false;
-      if (!matchesTimeSlot(r)) return false;
-
       // Handle cases where both flags are true
-      if (r.powerBlockRequired && r.sntDisconnectionRequired) {
-        return r.trdActionsNeeded && r.sigActionsNeeded;
+      if (r.powerBlockRequired && r.sntDisconnectionRequired&&r.enggDisconnectionsRequired) {
+        return r.trdActionsNeeded && r.sigActionsNeeded || r.allTrdAcceptance === "ACCEPTED" && r.allSntAcceptance === "ACCEPTED"&&r.allEnggAcceptance==="ACCEPTED";
       }
 
       // Handle powerBlockRequired case
       if (r.powerBlockRequired) {
-        return r.trdActionsNeeded;
+        return r.trdActionsNeeded || r.allTrdAcceptance === "ACCEPTED";
       }
-
+       if (r.enggDisconnectionsRequired) {
+        return  r.allEnggAcceptance === "ACCEPTED";
+      }
       // Handle sntDisconnectionRequired case
       if (r.sntDisconnectionRequired) {
-        return r.sigActionsNeeded;
+        return r.sigActionsNeeded || r.allSntAcceptance === "ACCEPTED";
       }
 
       // If neither special flag is true, just return the urgent status
       return true;
     })
     .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-  // Filter urgent requests by selected date and filters
-  const urgentRequestsForSelectedDate = urgentRequests.filter((req: UserRequest) => {
-    const requestDate = typeof req.date === "string" ? parseISO(req.date) : req.date;
-    return isSameDay(requestDate, selectedDate);
-  }).filter((request: UserRequest) => !request.isSanctioned)
-    .sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime());
-
 
 
   const corridorRequestsFiltered = pendingRequests
@@ -642,31 +634,26 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
         const isCorridor = r.corridorType === "Corridor" ||r.corridorType === "Corridor Block";
         if (!isCorridor) return false;
 
-  const hasOtherLines = r.processedLineSections?.some((section: any) => 
-      section.otherLines && section.otherLines.trim() !== ''
-    );
-    if (hasOtherLines) return false;
-
-
-  if (deptFilter !== 'ALL' && r.selectedDepartment !== deptFilter) return false;
-        if (!matchesWorkType(r)) return false;
-        if (!matchesActivity(r)) return false;
-        if (!matchesTimeSlot(r)) return false;
-        // Handle cases where both flags are true
-        if (r.powerBlockRequired && r.sntDisconnectionRequired) {
-            return r.trdActionsNeeded && r.sigActionsNeeded;
-        }
+        const allSntAcceptance = r.allSntAcceptance === "ACCEPTED";
+        const allTrdAcceptance = r.allTrdAcceptance === "ACCEPTED";
+        const allEnggAcceptance = r.allEnggAcceptance === "ACCEPTED";
+      // Handle cases where both flags are true
+      if (r.powerBlockRequired && r.sntDisconnectionRequired&&r.enggDisconnectionsRequired) {
+        return r.trdActionsNeeded && r.sigActionsNeeded || allTrdAcceptance && allSntAcceptance&&allEnggAcceptance;
+      }
 
       // Handle powerBlockRequired case
       if (r.powerBlockRequired) {
-        return r.trdActionsNeeded;
+        return r.trdActionsNeeded || allTrdAcceptance;
+      }
+      if (r.enggDisconnectionsRequired) {
+        return  allEnggAcceptance;
       }
 
       // Handle sntDisconnectionRequired case
       if (r.sntDisconnectionRequired) {
-        return r.sigActionsNeeded;
+        return r.sigActionsNeeded || allSntAcceptance;
       }
-
       // If neither special flag is true, just return the status
       return true;
     })
@@ -677,31 +664,29 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
 
   const nonCorridorRequestsFiltered = pendingRequests
     .filter((r: UserRequest) => {
-      // First check if it's a non-corridor request
-      const isNoncorridor = r.corridorType === "Outside Corridor" || r.corridorType === "Non-Corridor Block";
-      if (!isNoncorridor) return false;
-      const hasOtherLines = r.processedLineSections?.some((section: any) => 
-      section.otherLines && section.otherLines.trim() !== ''
-    );
-    if (hasOtherLines) return false;
-  
-        if (deptFilter !== 'ALL' && r.selectedDepartment !== deptFilter) return false;
-        if (!matchesWorkType(r)) return false;
-        if (!matchesActivity(r)) return false;
-        if (!matchesTimeSlot(r)) return false;
-        // Handle cases where both flags are true
-        if (r.powerBlockRequired && r.sntDisconnectionRequired) {
-            return r.trdActionsNeeded && r.sigActionsNeeded;
-        }
+        // First check if it's an urgent request
+        const isNoncorridor = r.corridorType === "Outside Corridor" ||r.corridorType === "Non-Corridor Block";
+        if (!isNoncorridor) return false;
+
+        const allSntAcceptance = r.allSntAcceptance === "ACCEPTED";
+        const allTrdAcceptance = r.allTrdAcceptance === "ACCEPTED";
+        const allEnggAcceptance = r.allEnggAcceptance === "ACCEPTED";
+
+      // Handle cases where both flags are true
+      if (r.powerBlockRequired && r.sntDisconnectionRequired&&r.enggDisconnectionsRequired) {
+        return r.trdActionsNeeded && r.sigActionsNeeded || allTrdAcceptance && allSntAcceptance&&allEnggAcceptance;
+      }
 
       // Handle powerBlockRequired case
       if (r.powerBlockRequired) {
-        return r.trdActionsNeeded;
+        return r.trdActionsNeeded || allTrdAcceptance;
       }
-
+if (r.enggDisconnectionsRequired) {
+        return  allEnggAcceptance;
+      }
       // Handle sntDisconnectionRequired case
       if (r.sntDisconnectionRequired) {
-        return r.sigActionsNeeded;
+        return r.sigActionsNeeded || allSntAcceptance;
       }
 
       // If neither special flag is true, just return the status
@@ -989,7 +974,7 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
     nextWeekStart.setDate(today.getDate() + (7 - today.getDay()));
     nextWeekStart.setHours(0, 0, 0, 0);
 
-    const preData = isUrgentRequests ? urgentRequestsForSelectedDate : [...corridorRequestsFiltered]
+    const preData = isUrgentRequests ? urgentRequestsFiltered : [...corridorRequestsFiltered, ...  nonCorridorRequestsFiltered]
     if (!preData) return;
 
     // For non-urgent requests, check if trying to optimize for current week
@@ -1202,13 +1187,7 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
 
   if (error) {
     router.push('/auth/login');
-    // return (
-    //   <div className="min-h-screen bg-white p-3 border border-black flex items-center justify-center">
-    //     <div className="text-center py-5 text-red-600">
-    //       Error loading approved requests. Please try again.
-    //     </div>
-    //   </div>
-    // );
+    return null;
   }
 
 
@@ -1397,68 +1376,77 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
           </button>
         </div>
 
-
-        {isOptimizeDialogOpen && (() => {
-          // Calculate the requests to be optimized for dialog preview
-          const preData = isUrgentRequests ? urgentRequestsForSelectedDate : [...corridorRequestsFiltered];
-          const requestsToOptimize = preData.filter(
-            (request: UserRequest) => {
-              const requestDate = format(parseISO(request.date), "yyyy-MM-dd");
-              const selected = format(selectedDate, "yyyy-MM-dd");
-              return isUrgentRequests
-                ? request.corridorType === "Urgent Block" && requestDate === selected
-                : request.corridorType !== "Urgent Block";
-            }
-          );
-          return (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
-              <div className="bg-white p-6 w-full max-w-md border border-black">
-                <div className="border-b-2 border-[#13529e] pb-3 mb-4 flex justify-between items-center">
-                  <div className="flex items-center gap-4">
-                    <h2 className="text-lg font-bold text-[#13529e]">
-                      Optimize Requests
-                    </h2>
-                    <span
-                      className={`px-3 py-1 text-sm rounded-full ${isUrgentMode
-                        ? "bg-red-100 text-red-800"
-                        : "bg-blue-100 text-blue-800"
-                        } border border-black`}
-                    >
-                      {isUrgentMode ? "Urgent Mode" : "Normal Mode"}
-                    </span>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setIsOptimizeDialogOpen(false)}
-                      className="px-4 py-1 text-sm bg-white text-[#13529e] border border-black"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={() => handleOptimize()}
-                      disabled={optimizeMutation.isPending}
-                      className="px-4 py-1 text-sm bg-[#13529e] text-white border border-black disabled:opacity-50"
-                    >
-                      {optimizeMutation.isPending ? "Optimizing..." : "Optimize"}
-                    </button>
-                  </div>
-                </div>
-                <div className="mb-4 space-y-2">
-                  <p>Are you sure you want to optimize the requests for:</p>
-                  <p className="font-medium">
-                    Week: {format(weekStart, "dd MMM")} -{" "}
-                    {format(weekEnd, "dd MMM yyyy")}
-                  </p>
-                  <p className="font-medium">
-                    {isUrgentRequests
-                      ? `Total Block Request for Urgent: ${requestsToOptimize.length}`
-                      : `Total Block Request for Corridor: ${requestsToOptimize.length}`}
-                  </p>
-                </div>
-              </div>
-            </div>
-          );
-        })()}
+        </div>
+        {/* Week Switcher at the top */}
+        <div className="border-b-2 border-[#13529e] pb-3 flex justify-between items-center mb-4">
+          <WeeklySwitcher
+            currentWeekStart={currentWeekStart}
+            onWeekChange={handleWeekChange}
+            weekStartsOn={1}
+          />
+        </div>
+{isOptimizeDialogOpen && (() => {
+  // Calculate the requests to be optimized for dialog preview
+  const preData = isUrgentRequests ? urgentRequestsFiltered : [...corridorRequestsFiltered, ...nonCorridorRequestsFiltered];
+  const requestsToOptimize = preData.filter(
+    (request: UserRequest) => {
+      const requestDate = format(parseISO(request.date), "yyyy-MM-dd");
+      const selected = format(selectedDate, "yyyy-MM-dd");
+      return isUrgentRequests
+        ? request.corridorType === "Urgent Block" && requestDate === selected
+        : request.corridorType !== "Urgent Block";
+    }
+  );
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
+      <div className="bg-white p-6 w-full max-w-md border border-black">
+        <div className="border-b-2 border-[#13529e] pb-3 mb-4 flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <h2 className="text-lg font-bold text-[#13529e]">
+              Optimize Requests
+            </h2>
+            <span
+              className={`px-3 py-1 text-sm rounded-full ${
+                isUrgentMode
+                  ? "bg-red-100 text-red-800"
+                  : "bg-blue-100 text-blue-800"
+              } border border-black`}
+            >
+              {isUrgentMode ? "Urgent Mode" : "Normal Mode"}
+            </span>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setIsOptimizeDialogOpen(false)}
+              className="px-4 py-1 text-sm bg-white text-[#13529e] border border-black"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => handleOptimize()}
+              disabled={optimizeMutation.isPending}
+              className="px-4 py-1 text-sm bg-[#13529e] text-white border border-black disabled:opacity-50"
+            >
+              {optimizeMutation.isPending ? "Optimizing..." : "Optimize"}
+            </button>
+          </div>
+        </div>
+        <div className="mb-4 space-y-2">
+          <p>Are you sure you want to optimize the requests for:</p>
+          <p className="font-medium">
+            Week: {format(weekStart, "dd MMM")} -{" "}
+            {format(weekEnd, "dd MMM yyyy")}
+          </p>
+          <p className="font-medium">
+    {isUrgentRequests
+      ? `Total Block Request for Urgent: ${requestsToOptimize.length}`
+      : `Total Block Request for Corridor and Outside Corridor: ${requestsToOptimize.length}`}
+  </p>
+        </div>
+      </div>
+    </div>
+  );
+})()}
         {/* Urgent Blocks Section - now at the top */}
         <div className="mt-4 mb-8">
          
@@ -1477,7 +1465,7 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
               onClick={() => {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
-                const hasPreviousDays = urgentRequestsForSelectedDate.some((request: UserRequest) => {
+                const hasPreviousDays = urgentRequestsFiltered.some((request: UserRequest) => {
                   const reqDate = new Date(request.date);
                   reqDate.setHours(0, 0, 0, 0);
                   return reqDate < today;
@@ -1537,7 +1525,7 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
                 </tr>
               </thead>
               <tbody>
-                {urgentRequestsForSelectedDate.length === 0 && (
+                {urgentRequestsFiltered.length === 0 && (
                   <tr>
                     <td colSpan={12} className="border border-black p-2 text-[24px] text-left">
                       <div className="text-center py-4">
@@ -1546,18 +1534,9 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
                     </td>
                   </tr>
                 )}
-                {urgentRequestsForSelectedDate .filter((request: UserRequest) => {
-    // Filter out requests that have otherLines with non-empty values
-    const hasOtherLines = request.processedLineSections?.some((section: any) => 
-      section.otherLines && section.otherLines.trim() !== ''
-    );
-    return !hasOtherLines; // Only keep requests WITHOUT otherLines
-  }).map((request: UserRequest) => (
-                  <tr
-                    key={`request-${request.id}-${request.date}`}
-                    className={`hover:bg-blue-50 transition-colors ${request.optimizeTimeFrom && request.optimizeTimeTo ? "bg-green-50" : ""} ${request.corridorType === "Urgent Block" ? "urgent-block-row" : ""}`}
-                  >
-                    <td className="border border-black p-2 text-[24px]">
+                {urgentRequestsFiltered.map((request: UserRequest) => (
+                  <tr key={`request-${request.id}-${request.date}`} className={`hover:bg-blue-50 transition-colors ${request.optimizeTimeFrom && request.optimizeTimeTo ? "bg-green-50" : ""}`}>
+                     <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (
                         <input
                           type="date"
@@ -2849,8 +2828,6 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
             </div>
           </div>
         )}
-      </div>
-      <div>
         <div className="flex justify-center gap-3 mb-2 mt-8">
 
           <a
@@ -2866,7 +2843,6 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
           © {new Date().getFullYear()} Indian Railways
         </div>
       </div>
-    </div>
   );
 }
 
