@@ -3956,11 +3956,11 @@ const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
                       Site Location
                     </span>
                     {/* Display range information */}
-                    {formData.selectedSection && blockSectionValue.length > 0 && userDepartment && (
+                    {/* {formData.selectedSection && blockSectionValue.length > 0 && userDepartment && (
                       <span className="text-sm text-[#666] font-medium bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
                         {getSiteLocationRange(formData.selectedSection, blockSectionValue, userDepartment).displayText}
                       </span>
-                    )}
+                    )} */}
                   </div>
                   <div className="flex flex-wrap items-center justify-center gap-3">
                     <div className="flex flex-col items-center">
