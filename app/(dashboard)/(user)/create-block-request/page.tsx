@@ -924,42 +924,42 @@ const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
   }, [session]);
 
   // Real-time site location validation
-  useEffect(() => {
-    if (formData.workLocationFrom || formData.workLocationTo) {
-      const currentErrors = { ...errors };
+  // useEffect(() => {
+  //   if (formData.workLocationFrom || formData.workLocationTo) {
+  //     const currentErrors = { ...errors };
 
-      // Clear previous site location errors
-      delete currentErrors.workLocationFrom;
-      delete currentErrors.workLocationTo;
+  //     // Clear previous site location errors
+  //     delete currentErrors.workLocationFrom;
+  //     delete currentErrors.workLocationTo;
 
-      if (formData.selectedSection && blockSectionValue.length > 0 && userDepartment) {
-        if (formData.workLocationFrom && formData.workLocationTo) {
-          const siteLocationValidation = validateSiteLocationPair(
-            formData.workLocationFrom,
-            formData.workLocationTo,
-            formData.selectedSection,
-            blockSectionValue,
-            userDepartment,
-            userDepot
-          );
+  //     if (formData.selectedSection && blockSectionValue.length > 0 && userDepartment) {
+  //       if (formData.workLocationFrom && formData.workLocationTo) {
+  //         const siteLocationValidation = validateSiteLocationPair(
+  //           formData.workLocationFrom,
+  //           formData.workLocationTo,
+  //           formData.selectedSection,
+  //           blockSectionValue,
+  //           userDepartment,
+  //           userDepot
+  //         );
 
-          if (!siteLocationValidation.fromValid && siteLocationValidation.fromError) {
-            currentErrors.workLocationFrom = siteLocationValidation.fromError;
-          }
+  //         if (!siteLocationValidation.fromValid && siteLocationValidation.fromError) {
+  //           currentErrors.workLocationFrom = siteLocationValidation.fromError;
+  //         }
 
-          if (!siteLocationValidation.toValid && siteLocationValidation.toError) {
-            currentErrors.workLocationTo = siteLocationValidation.toError;
-          }
+  //         if (!siteLocationValidation.toValid && siteLocationValidation.toError) {
+  //           currentErrors.workLocationTo = siteLocationValidation.toError;
+  //         }
 
-          if (siteLocationValidation.pairError) {
-            currentErrors.workLocationTo = siteLocationValidation.pairError;
-          }
-        }
-      }
+  //         if (siteLocationValidation.pairError) {
+  //           currentErrors.workLocationTo = siteLocationValidation.pairError;
+  //         }
+  //       }
+  //     }
 
-      setErrors(currentErrors);
-    }
-  }, [formData.workLocationFrom, formData.workLocationTo, formData.selectedSection, blockSectionValue]);
+  //     setErrors(currentErrors);
+  //   }
+  // }, [formData.workLocationFrom, formData.workLocationTo, formData.selectedSection, blockSectionValue]);
 
   // Add this helper function to check if multiple lines exist
   const hasMultipleLinesSelected = () => {
@@ -1819,28 +1819,28 @@ const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
         errors.workLocationTo = "Work location to is required";
 
       // Enhanced site location validation with range checking
-      if (formData.workLocationFrom && formData.workLocationTo) {
-        const siteLocationValidation = validateSiteLocationPair(
-          formData.workLocationFrom,
-          formData.workLocationTo,
-          formData.selectedSection,
-          blockSectionValue,
-          userDepartment || "",
-          userDepot
-        );
+      // if (formData.workLocationFrom && formData.workLocationTo) {
+      //   const siteLocationValidation = validateSiteLocationPair(
+      //     formData.workLocationFrom,
+      //     formData.workLocationTo,
+      //     formData.selectedSection,
+      //     blockSectionValue,
+      //     userDepartment || "",
+      //     userDepot
+      //   );
 
-        if (!siteLocationValidation.fromValid && siteLocationValidation.fromError) {
-          errors.workLocationFrom = siteLocationValidation.fromError;
-        }
+      //   if (!siteLocationValidation.fromValid && siteLocationValidation.fromError) {
+      //     errors.workLocationFrom = siteLocationValidation.fromError;
+      //   }
 
-        if (!siteLocationValidation.toValid && siteLocationValidation.toError) {
-          errors.workLocationTo = siteLocationValidation.toError;
-        }
+      //   if (!siteLocationValidation.toValid && siteLocationValidation.toError) {
+      //     errors.workLocationTo = siteLocationValidation.toError;
+      //   }
 
-        if (siteLocationValidation.pairError) {
-          errors.workLocationTo = siteLocationValidation.pairError;
-        }
-      }
+      //   if (siteLocationValidation.pairError) {
+      //     errors.workLocationTo = siteLocationValidation.pairError;
+      //   }
+      // }
 
       if (formData.cautionRequired) {
         if (!formData.cautionSpeed)
@@ -3956,11 +3956,11 @@ const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
                       Site Location
                     </span>
                     {/* Display range information */}
-                    {formData.selectedSection && blockSectionValue.length > 0 && userDepartment && (
+                    {/* {formData.selectedSection && blockSectionValue.length > 0 && userDepartment && (
                       <span className="text-sm text-[#666] font-medium bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
                         {getSiteLocationRange(formData.selectedSection, blockSectionValue, userDepartment).displayText}
                       </span>
-                    )}
+                    )} */}
                   </div>
                   <div className="flex flex-wrap items-center justify-center gap-3">
                     <div className="flex flex-col items-center">
@@ -3979,14 +3979,14 @@ const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
                         )}
                         maxLength={7}
                         placeholder="From"
-                        className={`border-2 ${errors.workLocationFrom ? 'border-red-500' : 'border-[#2c3e50]'} rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] w-[120px] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200`}
+                        className={`border-2 ${errors.workLocationFrom ?  'border-[#2c3e50]' : 'border-[#2c3e50]'} rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] w-[120px] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200`}
                         required
                       />
-                      <div className="h-8 mt-1 flex items-center justify-center">
+                      {/* <div className="h-8 mt-1 flex items-center justify-center">
                         <span className={`text-xs text-center max-w-[120px] leading-tight ${errors.workLocationFrom ? 'text-red-500' : 'text-transparent'}`}>
                           {errors.workLocationFrom || "No error"}
                         </span>
-                      </div>
+                      </div> */}
                     </div>
                     <span className="font-bold text-[#2c3e50] text-[24px] mb-10">
                       TO
@@ -4007,14 +4007,14 @@ const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
                         )}
                         maxLength={7}
                         placeholder="To"
-                        className={`border-2 ${errors.workLocationTo ? 'border-red-500' : 'border-[#2c3e50]'} rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] w-[120px] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200`}
+                        className={`border-2 ${errors.workLocationTo ? 'border-[#2c3e50]' : 'border-[#2c3e50]'} rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] w-[120px] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200`}
                         required
                       />
-                      <div className="h-8 mt-1 flex items-center justify-center">
+                      {/* <div className="h-8 mt-1 flex items-center justify-center">
                         <span className={`text-xs text-center max-w-[120px] leading-tight ${errors.workLocationTo ? 'text-red-500' : 'text-transparent'}`}>
                           {errors.workLocationTo || "No error"}
                         </span>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 </div>
