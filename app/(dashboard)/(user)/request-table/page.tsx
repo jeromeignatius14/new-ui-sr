@@ -1234,7 +1234,7 @@ export default function RequestTablePage() {
         </div>
       </div>
 
-      {session?.user?.department !== "ENGG" && (
+     
         <div className="flex justify-center mt-3 mb-6">
           <div className="w-full rounded-2xl border-2 border-[#B5B5B5] bg-[#F5E7B2] shadow p-0">
             <div className="text-[24px] font-bold text-black text-center py-2">
@@ -1471,7 +1471,7 @@ export default function RequestTablePage() {
             </div>
           </div>
         </div>
-      )}
+      
 
 
 
