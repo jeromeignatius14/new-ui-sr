@@ -5324,16 +5324,20 @@ export const depotOnLocation = {
     "KUMM", "KYJ", "KZK", "KZT", "MAKM", "MGK", "MP", "MQU", "MVLK", "NNN", "NYY", "OCR",
     "OLR", "PASA", "PNQ", "PRND", "QLN", "PUK", "PVRD", "PVU", "SRTL", "STKT", "TCR", "TRTR",
     "TUVR", "TVCS", "VARD", "VLY", "VTK", "WKI", "IPL", "CGY", "KVU", "ERS/D", "MNTT", "ERS",
-    "TVC", "NPK", "ETM", "TVCN", "VAK", "QIN", "NJT", "TRVL","KIK","KVL","TJ"
+    "TVC", "NPK", "ETM", "TVCN", "VAK", "QIN", "NJT", "TRVL","KIK","KVL"
     
   ],
   TPJ: [
-    "AGM", "AGX", "ALU", "ALK", "AMM", "ANP", "ARV", "ATQ", "AYI", "BAL", "CDM", "CLN", "GOC",
-    "ICG", "KDM", "KDMD", "KII", "KKPM", "KLGM", "KMM", "KNB", "MV", "NCR", "NMJ", "NVL",
-    "OTK", "PDY", "PKT", "PMB", "PRKL", "PRL", "PUC", "PVN", "PVI", "PYK", "SGM", "SLTH", "SMM",
-    "SNDI", "SRGM", "SY", "TAM", "TJM", "TLI", "TLNR", "TNI", "TNM", "TPGY", "TPJ", "TRK",
-    "TUY", "TVNL", "ULU", "UMG", "VDL", "VLDE", "VKM", "VM", "VLR", "VRI", "PVN","LLI","MTUR","TRB","MQ"
-    
+    "AMM", "ADT", "AGM", "AGX", "ALK", "ALP", "ANP", "ATQ", "ALU", "ARV",
+     "AYI", "BAL", "CDM", "CBU", "CUPJ", "ICG", "KLGM", "KLGM", "KDMD", "KNB", 
+     "KMM", "KIK", "KII", "KVL", "CLN", "KDE", "KU", "KMU", "KJPD", "KTM", "LLI",
+      "MMP", "MQ", "MTUR", "MV", "MBU", "NGT", "NCR", "NNM", "NPM", "NVL", "NMJ", 
+      "OTK", "PDV", "PRT", "PRKL", "PKT", "PEM", "PVN", "PYK", "PRL", "GOC", "PUC", 
+      "PDY", "PMB", "PVN", "SMM", "SNDI", "SXR", "SLTH", "SY", "SGM", "SRGM", "SPL",
+       "TLNR", "TNI", "TJ", "TUY", "TVR", "TAM", "TP", "TPJ", "TRK", "TXR", "TNK", "TDPR",
+        "TTP", "TNM", "TVNL", "TRB", "TT", "TJM", "ULU", "UMG", "VLU", "VDL", "VLDE", "VLNK", "VLR", 
+        "VKM", "VM", "VRI"
+
   ]
 }
 
