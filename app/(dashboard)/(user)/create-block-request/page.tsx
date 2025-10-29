@@ -583,7 +583,7 @@ function getDurationFromTimes(from: string, to: string) {
 
 // Multi-Select Depot Component
 interface MultiSelectDepotProps {
-  department: "S&T" | "TRD";
+  department: "S&T" | "TRD"|"ENGG";
   selectedDepots: string[];
   onDepotsChange: (depots: string[]) => void;
   majorSection: string;
@@ -716,6 +716,8 @@ function MultiSelectDepot({
 type FormDataValue = string | number | boolean | null | string[];
 
 interface FormData {
+  engDisconnectionAssignTo: string;
+  engDisconnectionRemarks: string;
   freshCautions: {
     adjacentLinesAffected: string;
     freshCautionLocationFrom: string;
@@ -779,6 +781,7 @@ interface FormData {
   routeTo: string;
   powerBlockRequired: boolean | null;
   sntDisconnectionRequired: boolean | null;
+  enggDisconnectionsRequired: boolean | null;
   sntDisconnectionRequirements: string[];
   powerBlockRequirements: string[];
   sigResponse: string;
@@ -841,6 +844,7 @@ export default function CreateBlockRequestPage() {
     routeTo: "",
     powerBlockRequired: null,
     sntDisconnectionRequired: null,
+    enggDisconnectionsRequired: null,
     sntDisconnectionRequirements: [],
     powerBlockRequirements: [],
     sigResponse: "",
@@ -858,6 +862,8 @@ export default function CreateBlockRequestPage() {
     sntDisconnectionAssignTo: "",
     powerBlockDisconnectionAssignTo: "",
     emergencyBlockRemarks: "",
+    engDisconnectionAssignTo: "",
+    engDisconnectionRemarks: "",
     freshCautions: [
       {
         adjacentLinesAffected: "",
@@ -872,6 +878,8 @@ export default function CreateBlockRequestPage() {
 
   // State for multi-select depots
   const [selectedSTDepots, setSelectedSTDepots] = React.useState<string[]>([]);
+  // Add this with your other state declarations
+const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
   const [selectedTRDDepots, setSelectedTRDDepots] = React.useState<string[]>([]);
   const [selectionHistory, setSelectionHistory] = useState<Record<string, ('line' | 'road')[]>>({});
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -1005,13 +1013,15 @@ export default function CreateBlockRequestPage() {
   useEffect(() => {
     const sntDepotsString = selectedSTDepots.join(", ");
     const trdDepotsString = selectedTRDDepots.join(", ");
+    const engDepotsString = selectedENGDepots.join(", ");
 
     setFormData(prev => ({
       ...prev,
       sntDisconnectionAssignTo: sntDepotsString,
-      powerBlockDisconnectionAssignTo: trdDepotsString
+      powerBlockDisconnectionAssignTo: trdDepotsString,
+      engDisconnectionAssignTo: engDepotsString
     }));
-  }, [selectedSTDepots, selectedTRDDepots]);
+  }, [selectedSTDepots, selectedTRDDepots,selectedENGDepots]);
 
   const mutation = useCreateUserRequest();
   const userLocation = session?.user.location;
@@ -1557,6 +1567,7 @@ export default function CreateBlockRequestPage() {
         ...formData,
         corridorType: formData.corridorTypeSelection,
         sntDisconnectionRequired: formData.sntDisconnectionRequired ?? false,
+        enggDisconnectionsRequired: formData.enggDisconnectionsRequired ?? false,
         powerBlockRequired: formData.powerBlockRequired ?? false,
         freshCautionRequired: formData.freshCautionRequired ?? false,
         sntDisconnectionRequirements: formData.sntDisconnectionRequired
@@ -4740,6 +4751,81 @@ export default function CreateBlockRequestPage() {
                   )}
                 </div>
               )}
+
+
+
+
+{session?.user.department === "S&T" && (
+  <div className="w-full mt-2 bg-orange-200 rounded-2xl">
+    <div className="flex justify-between items-center mb-1 bg-orange-400 rounded-2xl px-2">
+      <span className="text-black font-bold text-[24px]">
+        ENG Disconnection Needed?
+      </span>
+      <select
+        name="enggDisconnectionsRequired"
+        value={formData.enggDisconnectionsRequired ? "Y" : "N"}
+        onChange={(e) => {
+          const value = e.target.value === "Y";
+          console.log("Setting enggDisconnectionsRequired to:", value);
+          setFormData({
+            ...formData,
+            enggDisconnectionsRequired: value,
+          });
+        }}
+        className="ml-2 pr-8 border-2 border-black rounded px-1 my-3 text-2xl font-bold bg-white text-black placeholder-black"
+        style={{
+          appearance: "none",
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9L12 15L18 9' stroke='%23000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "right 0.5rem center",
+          backgroundSize: "1.2rem",
+        }}
+      >
+        <option value="N">N</option>
+        <option value="Y">Y</option>
+      </select>
+      {renderError("enggDisconnectionsRequired")}
+    </div>
+    
+    {/* ENG Disconnection Details */}
+    {formData.enggDisconnectionsRequired && (
+      <div className="flex flex-col gap-2 mt-2 pb-2">
+        {/* Remarks Field */}
+        <div className="flex flex-col gap-1">
+          <span className="text-black font-bold text-2xl">Remarks:</span>
+          <textarea
+            name="engDisconnectionRemarks"
+            value={formData.engDisconnectionRemarks || ""}
+            onChange={handleInputChange}
+            placeholder="Enter ENG disconnection remarks"
+            rows={2}
+            className="w-full border-2 border-[#b71c1c] bg-[#fffbe9] text-black placeholder-black px-2 py-1 text-2xl rounded"
+            required
+          />
+          {renderError("engDisconnectionRemarks")}
+        </div>
+
+        {/* Assign To using MultiSelectDepot component */}
+        <MultiSelectDepot
+          department="ENGG"
+          selectedDepots={selectedENGDepots}
+          onDepotsChange={setSelectedENGDepots}
+          majorSection={formData.selectedSection}
+          blockSections={blockSectionValue}
+          disabled={false}
+        />
+        {errors.engDisconnectionAssignTo && (
+          <span className="text-xs text-red-700 font-medium mt-1 block">
+            {errors.engDisconnectionAssignTo}
+          </span>
+        )}
+      </div>
+    )}
+  </div>
+)}
+
+
+
 
             </div>
           )}

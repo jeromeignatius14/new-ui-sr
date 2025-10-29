@@ -119,6 +119,7 @@ export type BlockSectionDepotAssignment = {
     [blockSection: string]: {
       "S&T"?: string;
       "TRD"?: string;
+      "ENGG"?: string;
     };
   };
 };
