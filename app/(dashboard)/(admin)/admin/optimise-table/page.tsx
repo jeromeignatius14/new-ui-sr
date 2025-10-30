@@ -575,17 +575,26 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-const pendingRequests = UrgentRequests.filter((request: UserRequest) => {
-  if (!request.status || request.status.toUpperCase() !== "APPROVED") return false;
+// const pendingRequests = UrgentRequests.filter((request: UserRequest) => {
+//   if (!request.status || request.status.toUpperCase() !== "APPROVED") return false;
+//   if (request.isSanctioned) return false;
+//   if (!request.date) return false;
+//   const reqDate = new Date(request.date);
+//   reqDate.setHours(0, 0, 0, 0);
+
+//   // Include requests for today and future dates
+//   return reqDate >= today;
+// });
+  const pendingRequests = (data?.data?.requests || []).filter((request: UserRequest) => {
+     if (!request.status || request.status.toUpperCase() !== "APPROVED") return false;
   if (request.isSanctioned) return false;
   if (!request.date) return false;
   const reqDate = new Date(request.date);
   reqDate.setHours(0, 0, 0, 0);
 
   // Include requests for today and future dates
-  return reqDate >= today;
-});
-
+  return reqDate >= today
+  });
   // console.log("pendingRequests.length", pendingRequests.length);
   // Group and sort
   // const urgentRequests = pendingRequests
@@ -599,137 +608,315 @@ const pendingRequests = UrgentRequests.filter((request: UserRequest) => {
   //   .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
 
+// const urgentRequestsFiltered = pendingRequests
+//     .filter((r: UserRequest) => {
+//       // First check if it's an urgent request
+//       const isUrgent = r.corridorType === "Urgent Block" || r.workType === "EMERGENCY";
+//       if (!isUrgent) return false;
+
+//       // Handle cases where both flags are true
+//       if (r.powerBlockRequired && r.sntDisconnectionRequired&&r.enggDisconnectionsRequired) {
+//         return r.trdActionsNeeded && r.sigActionsNeeded || r.allTrdAcceptance === "ACCEPTED" && r.allSntAcceptance === "ACCEPTED"&&r.allEnggAcceptance==="ACCEPTED";
+//       }
+
+//       // Handle powerBlockRequired case
+//       if (r.powerBlockRequired) {
+//         return r.trdActionsNeeded || r.allTrdAcceptance === "ACCEPTED";
+//       }
+//        if (r.enggDisconnectionsRequired) {
+//         return  r.allEnggAcceptance === "ACCEPTED";
+//       }
+//       // Handle sntDisconnectionRequired case
+//       if (r.sntDisconnectionRequired) {
+//         return r.sigActionsNeeded || r.allSntAcceptance === "ACCEPTED";
+//       }
+
+//       // If neither special flag is true, just return the urgent status
+//       return true;
+//     })
+//     .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+
+
 const urgentRequestsFiltered = pendingRequests
-    .filter((r: UserRequest) => {
-      // First check if it's an urgent request
-      const isUrgent = r.corridorType === "Urgent Block" || r.workType === "EMERGENCY";
-      if (!isUrgent) return false;
+  .filter((r: UserRequest) => {
+    // First check if it's an urgent request
+    const isUrgent = r.corridorType === "Urgent Block" || r.workType === "EMERGENCY";
+    if (!isUrgent) return false;
 
-      // Handle cases where both flags are true
-      if (r.powerBlockRequired && r.sntDisconnectionRequired&&r.enggDisconnectionsRequired) {
-        return r.trdActionsNeeded && r.sigActionsNeeded || r.allTrdAcceptance === "ACCEPTED" && r.allSntAcceptance === "ACCEPTED"&&r.allEnggAcceptance==="ACCEPTED";
-      }
+    // Global filters
+    if (deptFilter !== 'ALL' && r.selectedDepartment !== deptFilter) return false;
+    if (!matchesWorkType(r)) return false;
+    if (!matchesActivity(r)) return false;
+    if (!matchesTimeSlot(r)) return false;
 
-      // Handle powerBlockRequired case
-      if (r.powerBlockRequired) {
-        return r.trdActionsNeeded || r.allTrdAcceptance === "ACCEPTED";
-      }
-       if (r.enggDisconnectionsRequired) {
-        return  r.allEnggAcceptance === "ACCEPTED";
-      }
-      // Handle sntDisconnectionRequired case
-      if (r.sntDisconnectionRequired) {
-        return r.sigActionsNeeded || r.allSntAcceptance === "ACCEPTED";
-      }
+    // Handle cases where all three flags are true
+    if (r.powerBlockRequired && r.sntDisconnectionRequired && r.enggDisconnectionsRequired) {
+      return (r.trdActionsNeeded && r.sigActionsNeeded) || 
+             (r.allTrdAcceptance === "ACCEPTED" && r.allSntAcceptance === "ACCEPTED" && r.allEnggAcceptance === "ACCEPTED");
+    }
 
-      // If neither special flag is true, just return the urgent status
-      return true;
-    })
-    .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    // Handle powerBlockRequired case
+    if (r.powerBlockRequired) {
+      return r.trdActionsNeeded || r.allTrdAcceptance === "ACCEPTED";
+    }
+
+    // Handle enggDisconnectionsRequired case
+    if (r.enggDisconnectionsRequired) {
+      return r.allEnggAcceptance === "ACCEPTED";
+    }
+
+    // Handle sntDisconnectionRequired case
+    if (r.sntDisconnectionRequired) {
+      return r.sigActionsNeeded || r.allSntAcceptance === "ACCEPTED";
+    }
+
+    // If neither special flag is true, just return the urgent status
+    return true;
+  })
+  .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+
 
 
   const corridorRequestsFiltered = pendingRequests
-    .filter((r: UserRequest) => {
-        // First check if it's an urgent request
-        const isCorridor = r.corridorType === "Corridor" ||r.corridorType === "Corridor Block";
-        if (!isCorridor) return false;
+  .filter((r: UserRequest) => {
+    // First check if it's a corridor request
+    const isCorridor = r.corridorType === "Corridor" || r.corridorType === "Corridor Block";
+    if (!isCorridor) return false;
 
-        const allSntAcceptance = r.allSntAcceptance === "ACCEPTED";
-        const allTrdAcceptance = r.allTrdAcceptance === "ACCEPTED";
-        const allEnggAcceptance = r.allEnggAcceptance === "ACCEPTED";
-      // Handle cases where both flags are true
-      if (r.powerBlockRequired && r.sntDisconnectionRequired&&r.enggDisconnectionsRequired) {
-        return r.trdActionsNeeded && r.sigActionsNeeded || allTrdAcceptance && allSntAcceptance&&allEnggAcceptance;
-      }
+    // Global filters
+    if (deptFilter !== 'ALL' && r.selectedDepartment !== deptFilter) return false;
+    if (!matchesWorkType(r)) return false;
+    if (!matchesActivity(r)) return false;
+    if (!matchesTimeSlot(r)) return false;
 
-      // Handle powerBlockRequired case
-      if (r.powerBlockRequired) {
-        return r.trdActionsNeeded || allTrdAcceptance;
-      }
-      if (r.enggDisconnectionsRequired) {
-        return  allEnggAcceptance;
-      }
+    const hasOtherLines = r.processedLineSections?.some((section: any) => 
+      section.otherLines && section.otherLines.trim() !== ''
+    );
+    if (hasOtherLines) return false;
 
-      // Handle sntDisconnectionRequired case
-      if (r.sntDisconnectionRequired) {
-        return r.sigActionsNeeded || allSntAcceptance;
-      }
-      // If neither special flag is true, just return the status
-      return true;
-    })
-    .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const allSntAcceptance = r.allSntAcceptance === "ACCEPTED";
+    const allTrdAcceptance = r.allTrdAcceptance === "ACCEPTED";
+    const allEnggAcceptance = r.allEnggAcceptance === "ACCEPTED";
+
+    // Handle cases where all three flags are true - FIXED PARENTHESES
+    if (r.powerBlockRequired && r.sntDisconnectionRequired && r.enggDisconnectionsRequired) {
+      return (r.trdActionsNeeded && r.sigActionsNeeded) || (allTrdAcceptance && allSntAcceptance && allEnggAcceptance);
+    }
+
+    // Handle powerBlockRequired case
+    if (r.powerBlockRequired) {
+      return r.trdActionsNeeded || allTrdAcceptance;
+    }
+
+    // Handle enggDisconnectionsRequired case
+    if (r.enggDisconnectionsRequired) {
+      return allEnggAcceptance;
+    }
+
+    // Handle sntDisconnectionRequired case
+    if (r.sntDisconnectionRequired) {
+      return r.sigActionsNeeded || allSntAcceptance;
+    }
+
+    // If neither special flag is true, just return the status
+    return true;
+  })
+  .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+const nonCorridorRequestsFiltered = pendingRequests
+  .filter((r: UserRequest) => {
+    // First check if it's a non-corridor request
+    const isNoncorridor = r.corridorType === "Outside Corridor" || r.corridorType === "Non-Corridor Block";
+    if (!isNoncorridor) return false;
+
+    // Global filters
+    if (deptFilter !== 'ALL' && r.selectedDepartment !== deptFilter) return false;
+    if (!matchesWorkType(r)) return false;
+    if (!matchesActivity(r)) return false;
+    if (!matchesTimeSlot(r)) return false;
+
+    const hasOtherLines = r.processedLineSections?.some((section: any) => 
+      section.otherLines && section.otherLines.trim() !== ''
+    );
+    if (hasOtherLines) return false;
+
+    const allSntAcceptance = r.allSntAcceptance === "ACCEPTED";
+    const allTrdAcceptance = r.allTrdAcceptance === "ACCEPTED";
+    const allEnggAcceptance = r.allEnggAcceptance === "ACCEPTED";
+
+    // Handle cases where all three flags are true - FIXED PARENTHESES
+    if (r.powerBlockRequired && r.sntDisconnectionRequired && r.enggDisconnectionsRequired) {
+      return (r.trdActionsNeeded && r.sigActionsNeeded) || (allTrdAcceptance && allSntAcceptance && allEnggAcceptance);
+    }
+
+    // Handle powerBlockRequired case
+    if (r.powerBlockRequired) {
+      return r.trdActionsNeeded || allTrdAcceptance;
+    }
+
+    // Handle enggDisconnectionsRequired case
+    if (r.enggDisconnectionsRequired) {
+      return allEnggAcceptance;
+    }
+
+    // Handle sntDisconnectionRequired case
+    if (r.sntDisconnectionRequired) {
+      return r.sigActionsNeeded || allSntAcceptance;
+    }
+
+    // If neither special flag is true, just return the status
+    return true;
+  })
+  .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+const combinedRequestsFiltered = pendingRequests
+  .filter((r: UserRequest) => {
+    // Check if the request has otherLines in processedLineSections
+    const hasOtherLines = r.processedLineSections?.some((section: any) => 
+      section.otherLines && section.otherLines.trim() !== ''
+    );
+    if (!hasOtherLines) return false;
+
+    // Global filters
+    if (deptFilter !== 'ALL' && r.selectedDepartment !== deptFilter) return false;
+    if (!matchesWorkType(r)) return false;
+    if (!matchesActivity(r)) return false;
+    if (!matchesTimeSlot(r)) return false;
+
+    // For combined requests, use the same complex logic as other tables for consistency
+    const allSntAcceptance = r.allSntAcceptance === "ACCEPTED";
+    const allTrdAcceptance = r.allTrdAcceptance === "ACCEPTED";
+    const allEnggAcceptance = r.allEnggAcceptance === "ACCEPTED";
+
+    // Handle cases where all three flags are true - FIXED PARENTHESES
+    if (r.powerBlockRequired && r.sntDisconnectionRequired && r.enggDisconnectionsRequired) {
+      return (r.trdActionsNeeded && r.sigActionsNeeded) || (allTrdAcceptance && allSntAcceptance && allEnggAcceptance);
+    }
+
+    // Handle powerBlockRequired case
+    if (r.powerBlockRequired) {
+      return r.trdActionsNeeded || allTrdAcceptance;
+    }
+
+    // Handle enggDisconnectionsRequired case
+    if (r.enggDisconnectionsRequired) {
+      return allEnggAcceptance;
+    }
+
+    // Handle sntDisconnectionRequired case
+    if (r.sntDisconnectionRequired) {
+      return r.sigActionsNeeded || allSntAcceptance;
+    }
+
+    // If neither special flag is true, just return the status
+    return true;
+  })
+  .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+//   const corridorRequestsFiltered = pendingRequests
+//     .filter((r: UserRequest) => {
+//         // First check if it's an urgent request
+//         const isCorridor = r.corridorType === "Corridor" ||r.corridorType === "Corridor Block";
+//         if (!isCorridor) return false;
+
+//         const allSntAcceptance = r.allSntAcceptance === "ACCEPTED";
+//         const allTrdAcceptance = r.allTrdAcceptance === "ACCEPTED";
+//         const allEnggAcceptance = r.allEnggAcceptance === "ACCEPTED";
+//       // Handle cases where both flags are true
+//       if (r.powerBlockRequired && r.sntDisconnectionRequired&&r.enggDisconnectionsRequired) {
+//         return r.trdActionsNeeded && r.sigActionsNeeded || allTrdAcceptance && allSntAcceptance&&allEnggAcceptance;
+//       }
+
+//       // Handle powerBlockRequired case
+//       if (r.powerBlockRequired) {
+//         return r.trdActionsNeeded || allTrdAcceptance;
+//       }
+//       if (r.enggDisconnectionsRequired) {
+//         return  allEnggAcceptance;
+//       }
+
+//       // Handle sntDisconnectionRequired case
+//       if (r.sntDisconnectionRequired) {
+//         return r.sigActionsNeeded || allSntAcceptance;
+//       }
+//       // If neither special flag is true, just return the status
+//       return true;
+//     })
+//     .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
 
 
 
-  const nonCorridorRequestsFiltered = pendingRequests
-    .filter((r: UserRequest) => {
-        // First check if it's an urgent request
-        const isNoncorridor = r.corridorType === "Outside Corridor" ||r.corridorType === "Non-Corridor Block";
-        if (!isNoncorridor) return false;
+//   const nonCorridorRequestsFiltered = pendingRequests
+//     .filter((r: UserRequest) => {
+//         // First check if it's an urgent request
+//         const isNoncorridor = r.corridorType === "Outside Corridor" ||r.corridorType === "Non-Corridor Block";
+//         if (!isNoncorridor) return false;
 
-        const allSntAcceptance = r.allSntAcceptance === "ACCEPTED";
-        const allTrdAcceptance = r.allTrdAcceptance === "ACCEPTED";
-        const allEnggAcceptance = r.allEnggAcceptance === "ACCEPTED";
+//         const allSntAcceptance = r.allSntAcceptance === "ACCEPTED";
+//         const allTrdAcceptance = r.allTrdAcceptance === "ACCEPTED";
+//         const allEnggAcceptance = r.allEnggAcceptance === "ACCEPTED";
 
-      // Handle cases where both flags are true
-      if (r.powerBlockRequired && r.sntDisconnectionRequired&&r.enggDisconnectionsRequired) {
-        return r.trdActionsNeeded && r.sigActionsNeeded || allTrdAcceptance && allSntAcceptance&&allEnggAcceptance;
-      }
+//       // Handle cases where both flags are true
+//       if (r.powerBlockRequired && r.sntDisconnectionRequired&&r.enggDisconnectionsRequired) {
+//         return r.trdActionsNeeded && r.sigActionsNeeded || allTrdAcceptance && allSntAcceptance&&allEnggAcceptance;
+//       }
 
-      // Handle powerBlockRequired case
-      if (r.powerBlockRequired) {
-        return r.trdActionsNeeded || allTrdAcceptance;
-      }
-if (r.enggDisconnectionsRequired) {
-        return  allEnggAcceptance;
-      }
-      // Handle sntDisconnectionRequired case
-      if (r.sntDisconnectionRequired) {
-        return r.sigActionsNeeded || allSntAcceptance;
-      }
+//       // Handle powerBlockRequired case
+//       if (r.powerBlockRequired) {
+//         return r.trdActionsNeeded || allTrdAcceptance;
+//       }
+// if (r.enggDisconnectionsRequired) {
+//         return  allEnggAcceptance;
+//       }
+//       // Handle sntDisconnectionRequired case
+//       if (r.sntDisconnectionRequired) {
+//         return r.sigActionsNeeded || allSntAcceptance;
+//       }
 
-      // If neither special flag is true, just return the status
-      return true;
-    })
-    .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-
+//       // If neither special flag is true, just return the status
+//       return true;
+//     })
+//     .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
 
-    const combinedRequestsFiltered = pendingRequests
-    .filter((r: UserRequest) => {
-      // Check if the request has otherLines in processedLineSections
-      const hasOtherLines = r.processedLineSections?.some((section: any) => 
-          section.otherLines && section.otherLines.trim() !== ''
-      );
-      if (!hasOtherLines) return false;
 
-      // Global filters
-      if (deptFilter !== 'ALL' && r.selectedDepartment !== deptFilter) return false;
-      if (!matchesWorkType(r)) return false;
-      if (!matchesActivity(r)) return false;
-      if (!matchesTimeSlot(r)) return false;
 
-      // Handle cases where both flags are true
-      if (r.powerBlockRequired && r.sntDisconnectionRequired) {
-          return r.trdActionsNeeded && r.sigActionsNeeded;
-      }
+//     const combinedRequestsFiltered = pendingRequests
+//     .filter((r: UserRequest) => {
+//       // Check if the request has otherLines in processedLineSections
+//       const hasOtherLines = r.processedLineSections?.some((section: any) => 
+//           section.otherLines && section.otherLines.trim() !== ''
+//       );
+//       if (!hasOtherLines) return false;
 
-      // Handle powerBlockRequired case
-      if (r.powerBlockRequired) {
-        return r.trdActionsNeeded;
-      }
+//       // Global filters
+//       if (deptFilter !== 'ALL' && r.selectedDepartment !== deptFilter) return false;
+//       if (!matchesWorkType(r)) return false;
+//       if (!matchesActivity(r)) return false;
+//       if (!matchesTimeSlot(r)) return false;
 
-      // Handle sntDisconnectionRequired case
-      if (r.sntDisconnectionRequired) {
-        return r.sigActionsNeeded;
-      }
+//       // Handle cases where both flags are true
+//       if (r.powerBlockRequired && r.sntDisconnectionRequired) {
+//           return r.trdActionsNeeded && r.sigActionsNeeded;
+//       }
 
-      // If neither special flag is true, just return the status
-      return true;
-    })
-    .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
+//       // Handle powerBlockRequired case
+//       if (r.powerBlockRequired) {
+//         return r.trdActionsNeeded;
+//       }
+
+//       // Handle sntDisconnectionRequired case
+//       if (r.sntDisconnectionRequired) {
+//         return r.sigActionsNeeded;
+//       }
+
+//       // If neither special flag is true, just return the status
+//       return true;
+//     })
+//     .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   const [isOptimizeDialogOpen, setIsOptimizeDialogOpen] = useState(false);
   const [isUrgentRequests, setIsUrgentRequests] = useState<boolean>(false);
@@ -1218,13 +1405,7 @@ if (r.enggDisconnectionsRequired) {
         )}
 
         {/* Week Switcher at the top */}
-        <div className="border-b-2 border-[#13529e] pb-3 flex justify-between items-center mb-4">
-          <WeeklySwitcher
-            currentWeekStart={currentWeekStart}
-            onWeekChange={handleWeekChange}
-            weekStartsOn={1}
-          />
-        </div>
+      
 
         {/* Global Filter Buttons */}
         <div className="flex gap-4 mb-4 p-3 bg-gray-50 border border-gray-300 rounded">
@@ -1496,6 +1677,7 @@ if (r.enggDisconnectionsRequired) {
   maxDate={weekEnd}
   storageKey="urgentSelectedDate"
 />
+
           {/* <DaySwitcher
             currentDate={selectedDate}
             onDateChange={(newDate) => setSelectedDate(newDate)}
@@ -1534,7 +1716,10 @@ if (r.enggDisconnectionsRequired) {
                     </td>
                   </tr>
                 )}
-                {urgentRequestsFiltered.map((request: UserRequest) => (
+                {urgentRequestsFiltered .filter((request: UserRequest) => {
+    const requestDate = typeof request.date === "string" ? parseISO(request.date) : request.date;
+    return isSameDay(requestDate, selectedDate);
+  }).map((request: UserRequest) => (
                   <tr key={`request-${request.id}-${request.date}`} className={`hover:bg-blue-50 transition-colors ${request.optimizeTimeFrom && request.optimizeTimeTo ? "bg-green-50" : ""}`}>
                      <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (
