@@ -989,45 +989,9 @@ const filteredBlocks = filteredUpcomingBlocks.filter((block) => {
                           0
                         )}
                       </td>
-                      <td
-                        className="border-2 border-black px-4 py-2 text-center"
-                        style={{ color: "black" }}
-                      >
-                        {pastBlockSummary.reduce(
-                          (sum, item) => sum + (item.Applied || 0),
-                          0
-                        ).toFixed(2)} /{" "}
-                        {pastBlockSummary.reduce(
-                          (sum, item) => sum + (item.AppliedCount || 0),
-                          0
-                        )}
-                      </td>
-                      <td
-                        className="border-2 border-black px-4 py-2 text-center"
-                        style={{ color: "black" }}
-                      >
-                        {pastBlockSummary.reduce(
-                          (sum, item) => sum + (item.Applied || 0),
-                          0
-                        ).toFixed(2)} /{" "}
-                        {pastBlockSummary.reduce(
-                          (sum, item) => sum + (item.AppliedCount || 0),
-                          0
-                        )}
-                      </td>
-                      <td
-                        className="border-2 border-black px-4 py-2 text-center"
-                        style={{ color: "black" }}
-                      >
-                        {pastBlockSummary.reduce(
-                          (sum, item) => sum + (item.Applied || 0),
-                          0
-                        ).toFixed(2)} /{" "}
-                        {pastBlockSummary.reduce(
-                          (sum, item) => sum + (item.AppliedCount || 0),
-                          0
-                        )}
-                      </td>
+                     
+                    
+                 
                       <td
                         className="border-2 border-black px-2 py-1 text-center"
                         style={{ color: "black" }}
@@ -1262,7 +1226,7 @@ const filteredBlocks = filteredUpcomingBlocks.filter((block) => {
                   <th className="border-2 border-black px-4 py-2">Date</th>
                   <th className="border-2 border-black px-4 py-2">RequestId</th>
                   <th className="border-2 border-black px-4 py-2">Block Section</th>
-                  <th className="border-2 border-black px-4 py-2">Depo</th>
+                  <th className="border-2 border-black px-4 py-2">MissionBlock</th>
                   <th className="border-2 border-black px-4 py-2">Type</th>
                   <th className="border-2 border-black px-2 py-1">Duration</th>
                   <th className="border-2 border-black px-4 py-2">
@@ -1334,20 +1298,20 @@ const filteredBlocks = filteredUpcomingBlocks.filter((block) => {
                           <td className="border-2 border-black px-2 py-1 font-bold text-black">
                             {block.MissionBlock}
                           </td>
-                           <td className="border-2 border-black px-2 py-1 font-bold text-black">
+                           {/* <td className="border-2 border-black px-2 py-1 font-bold text-black">
                             {block.selectedDepo}
-                          </td>
+                          </td> */}
                           <td className="border-2 border-black px-2 py-1 text-black">
                             {block.Type}
                           </td>
-                          <td className="border-2 border-black px-2 py-1 text-black">
+                          {/* <td className="border-2 border-black px-2 py-1 text-black">
                             {block.Activity}
-                          </td>
-                          <td className="border-2 border-black px-2 py-1 text-black">
+                          </td> */}
+                          {/* <td className="border-2 border-black px-2 py-1 text-black">
                             {formatTime(block.DemandedTimeFrom)} to{" "}
                             {formatTime(block.DemandedTimeTo)}
-                          </td>
-                          <td className="border-2 border-black px-2 py-1 text-black">
+                          </td> */}
+                          {/* <td className="border-2 border-black px-2 py-1 text-black">
                             {block.SanctionedTimeFrom &&
                               block.SanctionedTimeTo ? (
                               <>
@@ -1357,7 +1321,7 @@ const filteredBlocks = filteredUpcomingBlocks.filter((block) => {
                             ) : (
                               "Not Optimized Yet"
                             )}
-                          </td>
+                          </td> */}
                           <td className="border-2 border-black px-2 py-1 text-black">
                             {block.Duration}
                           </td>
