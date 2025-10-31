@@ -2718,7 +2718,7 @@ export const depot: DepotStructure = {
   },
  "KYJ-QLN": {
     "S&T": ["KYJ", "QLN","KPY"],
-    "ENGG": ["MVLK", "QLN","BRI/QLN","CN"],
+    "ENGG": ["MVLK", "QLN","BRI/QLN","CN","TVC"],
     "TRD": ["KYJ", "QLN","CN"]
   },
   "QLN-TVC": {
