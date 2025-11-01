@@ -1071,7 +1071,7 @@ filteredRequests = data?.data?.requests?.filter((request: any) => {
                 </tr>
               </thead>
               <tbody>
-                {filteredRequests.map((request: any, idx: number) => (
+                {filteredRequests.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map((request: any, idx: number) => (
                   <tr
                     key={request.id}
                     className={idx % 2 === 0 ? "bg-[#FFF86B]" : "bg-[#E6E6FA]"}
@@ -1277,7 +1277,7 @@ filteredRequests = data?.data?.requests?.filter((request: any) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {otherRequestsData?.data.requests.map(
+                  {otherRequestsData?.data.requests.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(
                     (request: any, idx: number) => (
                       <tr
                         key={request.id}
@@ -1552,7 +1552,7 @@ filteredRequests = data?.data?.requests?.filter((request: any) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {otherRequestsData?.data.requests.filter(request => request.enggDisconnectionsRequired === true).map(
+                  {otherRequestsData?.data.requests.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).filter(request => request.enggDisconnectionsRequired === true).map(
                     (request: any, idx: number) => (
                       <tr
                         key={request.id}
@@ -1791,7 +1791,7 @@ filteredRequests = data?.data?.requests?.filter((request: any) => {
                 </tr>
               </thead>
               <tbody>
-                {sanctionedBlocksData?.data.requests?.map(
+                {sanctionedBlocksData?.data.requests?.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())?.map(
                   (request: any, idx: number) => (
                     <tr
                       key={request.id}
