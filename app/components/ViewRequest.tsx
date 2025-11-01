@@ -314,6 +314,17 @@ export default function ViewRequest() {
                 </td>
               </tr>
 
+                 <tr>
+                <td className="py-1 font-medium">Applied Time:</td>
+                <td className="py-1">
+                  {request.AppliedTimeFrom && request.AppliedTimeTo ? (
+                    `${formatTime(request.AppliedTimeFrom)} to ${formatTime(request.AppliedTimeTo)}`
+                  ) : (
+                    "N/A"
+                  )}
+                </td>
+              </tr>
+
               <tr>
                 <td className="py-1 font-medium">Block Section:</td>
                 <td className="py-1">{request.missionBlock}</td>

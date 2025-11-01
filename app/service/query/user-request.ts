@@ -17,6 +17,8 @@ export interface RequestResponse {
 }
 
 export interface RequestItem {
+  AppliedTimeTo?: any;
+  AppliedTimeFrom?: any;
   grantedFromTime?: any;
   TrdDisconnectionAvailedTimeTo?: any;
   TrdDisconnectionAvailedTimeFrom?: any;
