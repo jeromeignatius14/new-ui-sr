@@ -593,7 +593,156 @@ if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false
       toast.error("Failed to download Excel file. Please try again.");
     }
   };
+const handleDownloadDepartmentCount = () => {
+  try {
+    if (countBlock.length === 0) {
+      toast.error("No data available to download");
+      return;
+    }
 
+    // Prepare the Excel data matching your table structure
+    const excelData = [
+      // ENGG Rows
+      {
+        "Location": "MAS",
+        "Department": "ENGG",
+        "Supporting Department": "-",
+        "Total Block Requested": enggTotal,
+        "Total Block Sanctioned": getCount(block => block.selectedDepartment === "ENGG" && block.isSanctioned),
+        "Total Block Availed": getCount(block => block.selectedDepartment === "ENGG" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+      },
+      {
+        "Location": "MAS",
+        "Department": "ENGG",
+        "Supporting Department": "S&T",
+        "Total Block Requested": enggWithSnt,
+        "Total Block Sanctioned": getCount(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.isSanctioned),
+        "Total Block Availed": getCount(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+      },
+      {
+        "Location": "MAS",
+        "Department": "ENGG",
+        "Supporting Department": "TRD",
+        "Total Block Requested": enggWithPower,
+        "Total Block Sanctioned": getCount(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.isSanctioned),
+        "Total Block Availed": getCount(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+      },
+      {
+        "Location": "MAS",
+        "Department": "ENGG",
+        "Supporting Department": "S&T and TRD",
+        "Total Block Requested": enggWithSntAndPower,
+        "Total Block Sanctioned": getCount(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.powerBlockRequired === true && block.isSanctioned),
+        "Total Block Availed": getCount(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+      },
+      
+      // TRD Rows
+      {
+        "Location": "MAS",
+        "Department": "TRD",
+        "Supporting Department": "-",
+        "Total Block Requested": trdTotal,
+        "Total Block Sanctioned": getCount(block => block.selectedDepartment === "TRD" && block.isSanctioned),
+        "Total Block Availed": getCount(block => block.selectedDepartment === "TRD" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+      },
+      
+      // S&T Rows
+      {
+        "Location": "MAS",
+        "Department": "S&T",
+        "Supporting Department": "-",
+        "Total Block Requested": sntTotal,
+        "Total Block Sanctioned": getCount(block => block.selectedDepartment === "S&T" && block.isSanctioned),
+        "Total Block Availed": getCount(block => block.selectedDepartment === "S&T" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+      },
+      {
+        "Location": "MAS",
+        "Department": "S&T",
+        "Supporting Department": "ENGG",
+        "Total Block Requested": sntWithEngg,
+        "Total Block Sanctioned": getCount(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.isSanctioned),
+        "Total Block Availed": getCount(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+      },
+      {
+        "Location": "MAS",
+        "Department": "S&T",
+        "Supporting Department": "TRD",
+        "Total Block Requested": sntWithPower,
+        "Total Block Sanctioned": getCount(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.isSanctioned),
+        "Total Block Availed": getCount(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+      },
+      {
+        "Location": "MAS",
+        "Department": "S&T",
+        "Supporting Department": "ENGG and TRD",
+        "Total Block Requested": sntWithEnggAndPower,
+        "Total Block Sanctioned": getCount(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.powerBlockRequired === true && block.isSanctioned),
+        "Total Block Availed": getCount(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+      },
+      
+      // Total Row
+      {
+        "Location": "TOTAL",
+        "Department": "",
+        "Supporting Department": "",
+        "Total Block Requested": totalRequested,
+        "Total Block Sanctioned": totalSanctioned,
+        "Total Block Availed": totalAvailed
+      }
+    ];
+
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+    // Add title before the data
+    XLSX.utils.sheet_add_aoa(
+      worksheet,
+      [
+        [`Department Wise Request Count`],
+        [], // Empty row for spacing
+      ],
+      { origin: "A1" }
+    );
+
+    // Adjust column widths for better readability
+    const colWidths = [
+      { wch: 12 }, // Location
+      { wch: 15 }, // Department
+      { wch: 25 }, // Supporting Department
+      { wch: 20 }, // Total Block Requested
+      { wch: 20 }, // Total Block Sanctioned
+      { wch: 20 }, // Total Block Availed
+    ];
+    worksheet["!cols"] = colWidths;
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Department Count");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `department_wise_request_count_${format(
+      new Date(),
+      "dd-MM-yyyy"
+    )}.xlsx`;
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast.success("Department wise request count downloaded successfully");
+  } catch (error) {
+    console.error("Download error:", error);
+    toast.error("Failed to download Excel file. Please try again.");
+  }
+};
   return (
     <div className="min-h-screen w-full bg-[#fffbe9] flex flex-col items-center">
       {/* RBMS Header */}
@@ -1000,9 +1149,9 @@ if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false
 
   <div className="flex flex-col md:flex-row w-full mt-8 gap-4 mb-2 ">
   <button
-    onClick={handleDownloadUpcomingBlocks}
+    onClick={handleDownloadDepartmentCount}
     className="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1 shadow border border-green-800 text-[12px] md:text-base flex items-center"
-    disabled={filteredUpcomingBlocks.length === 0}
+    disabled={countBlock.length === 0}
   >
     <svg
       xmlns="http://www.w3.org/2000/svg"
