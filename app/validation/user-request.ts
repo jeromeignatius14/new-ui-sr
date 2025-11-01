@@ -40,6 +40,9 @@ export const userRequestSchema = z.object({
     routeFrom: z.string(),  // present in both
     routeTo: z.string(),  // present in both
     powerBlockRequired: z.boolean().nullable().optional(),
+    enggDisconnectionRequired: z.boolean().nullable().optional(),
+    engDisconnectionRemarks: z.string().optional(),
+    engDisconnectionAssignTo: z.string().optional(),
     sntDisconnectionRequired: z.boolean().nullable().optional(),
     sntDisconnectionRequirements: z.array(z.string().optional()).optional(),  // present in both
     powerBlockRequirements: z.array(z.string().optional()).optional(),  // present in both
