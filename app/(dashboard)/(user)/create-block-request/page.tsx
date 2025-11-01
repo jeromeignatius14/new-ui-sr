@@ -616,6 +616,9 @@ function getDurationFromTimes(from: string, to: string) {
 type FormDataValue = string | number | boolean | null | string[];
 
 interface FormData {
+  engDisconnectionRemarks?: string;
+  engDisconnectionAssignTo?: string;
+  enggDisconnectionRequired?: boolean | null;
   freshCautions: {
     adjacentLinesAffected: string;
     freshCautionLocationFrom: string;
@@ -742,6 +745,9 @@ export default function CreateBlockRequestPage() {
     routeFrom: "",
     routeTo: "",
     powerBlockRequired: null,
+    enggDisconnectionRequired: null,
+    engDisconnectionRemarks: "",
+    engDisconnectionAssignTo: "",
     sntDisconnectionRequired: null,
     sntDisconnectionRequirements: [],
     powerBlockRequirements: [],
@@ -1396,6 +1402,9 @@ const hasMultipleLinesSelected = () => {
         corridorType: formData.corridorTypeSelection,
         sntDisconnectionRequired: formData.sntDisconnectionRequired ?? false,
         powerBlockRequired: formData.powerBlockRequired ?? false,
+        enggDisconnectionRequired: formData.enggDisconnectionRequired ?? false,
+        engDisconnectionRemarks: formData.engDisconnectionRemarks || "",
+        engDisconnectionAssignTo: formData.engDisconnectionAssignTo || "",
         freshCautionRequired: formData.freshCautionRequired ?? false,
         sntDisconnectionRequirements: formData.sntDisconnectionRequired
           ? [
@@ -4262,6 +4271,116 @@ const getDisplayInfo = (block: string) => {
                   </div>
                 )}
               </div>
+
+
+{session?.user.department === "S&T" && (
+<div className="w-full mt-2 bg-indigo-200 rounded-2xl">
+  <div className="flex justify-between items-center mb-1 bg-magenta-400 rounded-2xl px-2">
+    <span className="text-black font-bold text-[24px]">
+      Engineering Disconnection Needed?
+    </span>
+    <select
+      name="enggDisconnectionRequired"
+      value={formData.enggDisconnectionRequired ? "Y" : "N"}
+      onChange={(e) => {
+        const value = e.target.value === "Y";
+        console.log("Setting enggDisconnectionRequired to:", value);
+        setFormData({
+          ...formData,
+          enggDisconnectionRequired: value,
+        });
+      }}
+      className="ml-2 pr-8 border-2 border-black px-1 my-3 text-2xl font-bold bg-white text-black placeholder-black"
+      style={{
+        appearance: "none",
+        backgroundImage: `url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9L12 15L18 9' stroke='%23000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "right 0.5rem center",
+        backgroundSize: "1.2rem",
+      }}
+    >
+      <option value="N">N</option>
+      <option value="Y">Y</option>
+    </select>
+    {renderError("enggDisconnectionRequired")}
+  </div>
+  
+  {/* ───── Engineering Disconnection ───── */}
+  {formData.enggDisconnectionRequired && (
+    <div className="flex flex-col gap-2 mt-2 pb-2">
+      <div className="flex flex-col gap-2">
+        <span className="text-black font-bold text-2xl">Remarks</span>
+        <textarea
+          name="engDisconnectionRemarks"
+          value={formData.engDisconnectionRemarks || ""}
+          onChange={handleInputChange}
+          placeholder="Enter remarks for engineering disconnection..."
+          required
+          rows={3}
+          className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black placeholder-black px-2 py-1 text-xl resize-y min-h-[80px]"
+          style={{
+            borderColor: errors.engDisconnectionRemarks ? "#dc2626" : "#b71c1c",
+          }}
+        />
+        {errors.engDisconnectionRemarks && (
+          <span className="text-xs text-red-700 font-medium mt-1 block">
+            {errors.engDisconnectionRemarks}
+          </span>
+        )}
+      </div>
+      
+      <div className="col-span-1">
+        <span className="text-black font-bold text-2xl">
+          Assign To
+        </span>
+        <select
+          name="engDisconnectionAssignTo"
+          value={formData.engDisconnectionAssignTo || ""}
+          onChange={(e) =>
+            setFormData((prev) => ({
+              ...prev,
+              engDisconnectionAssignTo: e.target.value,
+            }))
+          }
+          className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black placeholder-black py-2 px-1 w-full text-2xl"
+          required
+          style={{
+            color: "black",
+            borderColor: errors.engDisconnectionAssignTo
+              ? "#dc2626"
+              : "#45526c",
+          }}
+        >
+          <option value="" disabled>
+            Select Depo
+          </option>
+          {selectedMajorSection &&
+            session?.user.department &&
+            depot[selectedMajorSection] &&
+            depot[selectedMajorSection]["ENGG"] ? (
+            depot[selectedMajorSection]["ENGG"].map(
+              (depotOption: string, index) => (
+                <option key={index} value={depotOption}>
+                  {depotOption}
+                </option>
+              )
+            )
+          ) : (
+            <option value="" disabled>
+              Select Major Section first
+            </option>
+          )}
+        </select>
+        {errors.engDisconnectionAssignTo && (
+          <span className="text-xs text-red-700 font-medium mt-1 block">
+            {errors.engDisconnectionAssignTo}
+          </span>
+        )}
+      </div>
+    </div>
+  )}
+</div>
+)}
 
               {/* S&T Disconnection Section */}
               {session?.user.department !== "S&T" && (
