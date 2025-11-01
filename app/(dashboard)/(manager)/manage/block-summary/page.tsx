@@ -1357,7 +1357,7 @@ import { format } from "date-fns";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useGenerateReport } from "@/app/service/query/hq";
-import { MajorSection } from "@/app/lib/store";
+import { Activity, MajorSection } from "@/app/lib/store";
 import { useSession } from "next-auth/react";
 import { managerService, UserRequest } from "@/app/service/api/manager";
 import { useQuery } from "@tanstack/react-query";
@@ -1854,6 +1854,16 @@ if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false
           "Request ID": block.DivisionId || "N/A",
           "Station ID": block.stationId || "N/A",
           Type: block.Type || "N/A",
+          Activity: block.Activity || "N/A",
+          "Demanded Time":block.DemandedTimeFrom && block.DemandedTimeTo
+            ? `${formatTime(block.DemandedTimeFrom)} to ${formatTime(
+              block.DemandedTimeTo)}`
+            : "Not Available",
+          "Sanctioned Time": block.SanctionedTimeFrom && block.SanctionedTimeTo
+            ? `${formatTime(block.SanctionedTimeFrom)} to ${formatTime(
+              block.SanctionedTimeTo
+            )}`
+            : "Not Optimized Yet",
           Duration: block.Duration,
           "Availed Time":
             block.AvailedTimeFrom && block.AvailedTimeTo
