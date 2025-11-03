@@ -5080,7 +5080,7 @@ export let lineData = {
 
 export const depot: DepotStructure = {
   "TPJ-VM": {
-    'ENGG': ["TPJ","LLI","ALU","A-VRI","VM"],
+    'ENGG': ["TPJ","LLI","ALU","A-VRI","VM","BRI-TPJ"],
     'S&T': ["RRI","Lines","VRI-A","VRI-B","VM"],
     'TRD': ["TPJ", "ALU","VRI","VM"]
   },
@@ -5088,74 +5088,74 @@ export const depot: DepotStructure = {
   "VM-MV": {
     'TRD': ["CUP J", "MV", "VM"],
     'S&T': ["CUP J", "MV", "VM"],
-    'ENGG': ["CUP J", "MV"]
+    'ENGG': ["CUP J", "MV","BRI-TPJ"]
   },
 
   "TPJ-MV": {
     'TRD': ["TPJ","TJ", "MV","VM","CUP J"],
     'S&T': ["TPJ", "TJ", "MV","RRI"],
-    'ENGG': ["TPJ", "TJ", "KMU", "MV"]
+    'ENGG': ["TPJ", "TJ", "KMU", "MV","BRI-TPJ"]
   },
 
   "TJ-KIK": {
     'TRD': ["TJ", "TVR","KIK"],
     'S&T': ["TJ", "KIK", "TVR"],
-    'ENGG': ["TJ", "A-TVR"]
+    'ENGG': ["TJ", "A-TVR","BRI-TPJ"]
   },
 
   "MV-TVR": {
     'TRD': ["MV", "TVR"],
     'S&T': ["MV", "TVR"],
-    'ENGG': ["MV", "B-TVR"]
+    'ENGG': ["MV", "B-TVR","BRI-TPJ"]
   },
 
   "NMJ-MQ": {
     'TRD': ["TJ", "TVR"],
     'S&T': ["TJ", "TVR"],
-    'ENGG': ["TJ", "TVR"]
+    'ENGG': ["TJ", "TVR","BRI-TPJ"]
   },
 
   "VM-PDY": {
     'TRD': ["VM"],
     'S&T': ["VM"],
-    'ENGG': ["VM"]
+    'ENGG': ["VM","BRI-TPJ"]
   },
 
   "KPD-VM": {
     'TRD': ["ARV", "TNM"],
     'S&T': ["TNM", "VM", "ARV"],
-    'ENGG': ["TNM", "VLR",]
+    'ENGG': ["TNM", "VLR","BRI-TPJ"]
   },
 
   "CUP J-VRI": {
     'TRD': ["CUP J", "VRI"],
     'S&T': ["CUP J", "VRI-B"],
-    'ENGG': ["BVR"]
+    'ENGG': ["BVR","BRI-TPJ"]
   },
 
   "TPJ-TP": {
     'TRD': ["TPJ"],
     'S&T': ["RRI", "Lines"],
-    'ENGG': ["TPJ"]
+    'ENGG': ["TPJ","BRI-TPJ"]
   },
 
   "NGT-VLNK": {
     'TRD': ["KIK"],
     'S&T': ["KIK"],
-    'ENGG': ["A-TVR"]
+    'ENGG': ["A-TVR","BRI-TPJ"]
   },
 
   "TVR-KKDI": {
     'TRD': ["TVR","PKT"],
     'S&T': ["PKT","TVR"],
-    'ENGG': ["PKT", "TTP", "B-TVR"]
+    'ENGG': ["PKT", "TTP", "B-TVR","BRI-TPJ"]
   },
 
 
   "TTP-AGX": {
     'TRD': ["PKT"],
     'S&T': ["PKT","TVR"],
-    'ENGG': ["TTP"]
+    'ENGG': ["TTP","BRI-TPJ"]
   },
 "PTJ-SRR": {
     'ENGG': ["PTJ/W", "PGT/E", "PGT/W", "SRR"],
