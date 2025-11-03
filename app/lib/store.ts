@@ -219,7 +219,7 @@ export let blockSection = {
   ],
 'KRR-DG': [
     "KRR-VEI", "VEI-PALM", "PALM-EDU","EDU-DG",
-    "KRR-YD", "VEI-YD", "PALM-YD", "EDU-YD"
+    "KRR-YD", "VEI-YD",,"VEI UTCL siding", "PALM-YD","EDU-YD","PALM CCCL siding","PALM LAYBY"
   ],
 'SA-VRI': [
     "SA-SAMT", "SAMT-SXT", "SXT-MPLI", "MPLI-ETP", 
@@ -569,13 +569,13 @@ export const streamData = {
   "PGR-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2"],
+    "both direction affected": ["Rd 1", "Rd 2","Rd 3"],
     "both direction not affected": [],
   },
    "PGR TNPL SIDING": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2"],
+    "both direction affected": ["Rd 1", "Rd 2","Rd 3","Rd 4"],
     "both direction not affected": [],
   },
   "MPLM-YD": {
@@ -651,6 +651,12 @@ export const streamData = {
     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
     "both direction not affected": [],
   },
+   "VEI UTCL siding": {
+    "up direction affected": [],
+    "down direction affected": [],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3","Rd 4"],
+    "both direction not affected": [],
+  },
   "PALM-YD": {
     "up direction affected": [],
     "down direction affected": [],
@@ -667,6 +673,18 @@ export const streamData = {
     "up direction affected": [],
     "down direction affected": [],
     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
+    "both direction not affected": [],
+  },
+   "PALM CCCL siding": {
+    "up direction affected": [],
+    "down direction affected": [],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
+    "both direction not affected": [],
+  },
+   "PALM LAYBY": {
+    "up direction affected": [],
+    "down direction affected": [],
+    "both direction affected": ["Rd 1"],
     "both direction not affected": [],
   },
  "SAMT-YD": {
@@ -1325,8 +1343,11 @@ export let lineData = {
   "PALM-EDU": ["Single"],
   "EDU-DG": ["Single"],
   "VEI-YD": ["Single"],
+  "VEI UTCL siding":["Single"],
   "PALM-YD": ["Single"],
   "EDU-YD": ["Single"],
+  "PALM CCCL siding": ["Single"],
+  "PALM LAYBY": ["Single"],
 
   // SA-VRI Section
   "SA-SAMT": ["Single"],
