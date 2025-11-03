@@ -618,7 +618,7 @@ type FormDataValue = string | number | boolean | null | string[];
 interface FormData {
   engDisconnectionRemarks?: string;
   engDisconnectionAssignTo?: string;
-  enggDisconnectionRequired?: boolean | null;
+  enggDisconnectionsRequired?: boolean | null;
   freshCautions: {
     adjacentLinesAffected: string;
     freshCautionLocationFrom: string;
@@ -745,7 +745,7 @@ export default function CreateBlockRequestPage() {
     routeFrom: "",
     routeTo: "",
     powerBlockRequired: null,
-    enggDisconnectionRequired: null,
+    enggDisconnectionsRequired: null,
     engDisconnectionRemarks: "",
     engDisconnectionAssignTo: "",
     sntDisconnectionRequired: null,
@@ -1306,42 +1306,6 @@ const hasMultipleLinesSelected = () => {
     console.log("level 0 passed");
 
     try {
-      // ─── 2. Fetch existing requests and run block check ──────────────────
-      // const existing = await userRequestService.getUserRequests(1, 100);
-      // const requests: any[] = Array.isArray(existing?.data.requests)
-      //   ? existing.data.requests
-      //   : [];
-      // const now = Date.now();
-
-      // let hasUnavailedSanctionedBlock = false;
-
-      // for (let i = 0; i < requests.length; i++) {
-      //   const req = requests[i];
-      //   if (
-      //     req?.isSanctioned === true && // sanctioned
-      //     req?.availedResponse === null && // not availed
-      //     req?.sanctionedTimeFrom // has date
-      //   ) {
-      //     const sanctionMs = new Date(req.sanctionedTimeFrom).getTime();
-      //     if (!Number.isNaN(sanctionMs) && now >= sanctionMs) {
-      //       // sanction start time is in the past (covers >24 h automatically)
-      //       hasUnavailedSanctionedBlock = true;
-      //       break;
-      //     }
-      //   }
-      // }
-      // console.log("level 1 passed");
-
-      // if (hasUnavailedSanctionedBlock && !proceedAnyway) {
-      //   const link = `https://mobile-bms.plattrtechstudio.com/?cugNumber=${
-      //     session?.user?.phone}`;
-      //   setPopupLink(link);
-      //   setShowPopup(true);
-      //   setFormSubmitting(false);
-      //   return;
-      // }
-
-      console.log("level 2 passed");
       // ─── 3. Client‑side validation ───────────────────────────────────────
       const validation = handleFormValidation();
       if (!validation.isValid) {
@@ -1401,7 +1365,7 @@ const hasMultipleLinesSelected = () => {
         corridorType: formData.corridorTypeSelection,
         sntDisconnectionRequired: formData.sntDisconnectionRequired ?? false,
         powerBlockRequired: formData.powerBlockRequired ?? false,
-        enggDisconnectionRequired: formData.enggDisconnectionRequired ?? false,
+        enggDisconnectionsRequired: formData.enggDisconnectionsRequired ?? false,
         engDisconnectionRemarks: formData.engDisconnectionRemarks || "",
         engDisconnectionAssignTo: formData.engDisconnectionAssignTo || "",
         freshCautionRequired: formData.freshCautionRequired ?? false,
@@ -1507,124 +1471,6 @@ const hasMultipleLinesSelected = () => {
     );
   }
 
-  // Refactor handleSubmit to work with reviewMode
-  //   const handleFormSubmit = async (e: React.FormEvent) => {
-  //     e.preventDefault();
-  //     if (!reviewMode) {
-  //       setReviewMode(true); // Enter review mode
-  //       return;
-  //     }
-  //     // Only submit in review mode
-  //     setFormSubmitting(true);
-  //     setFormError(null);
-  //     try {
-  //       const validationResult = handleFormValidation();
-  //       if (!validationResult.isValid) {
-  //         setErrors(validationResult.errors);
-  //         scrollToFirstError(validationResult.errors);
-  //         setFormSubmitting(false);
-  //         return;
-  //       }
-  //       const validProcessedSections = (
-  //         formData.processedLineSections || []
-  //       ).filter((section) => blockSectionValue.includes(section.block));
-  //       const processedSectionsWithDefaults = validProcessedSections.map(
-  //         (section) => {
-  //           if (section.type === "yard") {
-  //             return {
-  //               ...section,
-  //               lineName: section.lineName || "",
-  //               otherLines: section.otherLines || "",
-  //               stream: section.stream || "",
-  //               road: section.road || "",
-  //               otherRoads: section.otherRoads || "",
-  //             };
-  //           } else {
-  //             return {
-  //               ...section,
-  //               lineName: section.lineName || "",
-  //               otherLines: section.otherLines || "",
-  //               stream: "",
-  //               road: "",
-  //               otherRoads: "",
-  //             };
-  //           }
-  //         }
-  //       );
-  // //       const firstCaution = formData.freshCautions[0] || {
-  // //   freshCautionLocationFrom: "",
-  // //   freshCautionLocationTo: "",
-  // //   adjacentLinesAffected: "",
-  // //   freshCautionSpeed: 0,
-  // // };
-  //       const submitData: UserRequestInput = {
-  //         ...formData,
-  //         corridorType: formData.corridorTypeSelection,
-  //         sntDisconnectionRequired: formData.sntDisconnectionRequired ?? false,
-  //         powerBlockRequired: formData.powerBlockRequired ?? false,
-  //         freshCautionRequired: formData.freshCautionRequired ?? false,
-  //          adjacentLinesAffected: formData.freshCautions.map(c => c.adjacentLinesAffected).filter(Boolean).join(","),
-  //   freshCautionLocationFrom: formData.freshCautions.map(c => c.freshCautionLocationFrom).filter(Boolean).join(","),
-  //   freshCautionLocationTo: formData.freshCautions.map(c => c.freshCautionLocationTo).filter(Boolean).join(","),
-  //   freshCautionSpeed: Number(formData.freshCautions[0]?.freshCautionSpeed) || 0,
-  //         date: formatDateToISO(formData.date || ""),
-  //         demandTimeFrom: formatTimeToDatetime(
-  //           formData.date || "",
-  //           formData.demandTimeFrom || ""
-  //         ),
-  //         demandTimeTo: formatTimeToDatetime(
-  //           formData.date || "",
-  //           formData.demandTimeTo || ""
-  //         ),
-  //         processedLineSections: processedSectionsWithDefaults,
-  //         adminAcceptance: false,
-  //         selectedDepo: formData.selectedDepo,
-  //       };
-  //       const response = await mutation.mutateAsync(submitData);
-  //       if (response) {
-  //         toast.success("Block request submitted successfully!");
-  //         setSubmittedSummary({
-  //           date: submitData.date,
-  //           id: response.data?.divisionId || response.data?.id,
-  //           blockSection: submitData.missionBlock || "-",
-  //           lineOrRoad:
-  //             submitData.processedLineSections &&
-  //             submitData.processedLineSections.length > 0
-  //               ? submitData.processedLineSections
-  //                   .map((s: any) => s.lineName || s.road)
-  //                   .join(", ")
-  //               : "-",
-  //           duration:
-  //             getDurationFromTimes(
-  //               formData.demandTimeFrom || "",
-  //               formData.demandTimeTo || ""
-  //             ) || "-",
-  //         });
-  //         setFormData(initialFormData);
-  //         setBlockSectionValue([]);
-  //         setProcessedLineSections([]);
-  //         setSelectedActivities([]);
-  //         setCustomActivity("");
-  //         setErrors({});
-  //         setShowSuccessPage(true);
-  //         setReviewMode(false);
-  //       }
-  //     } catch (error: any) {
-  //       console.error("Form submission error:", error);
-  //       if (error.response) {
-  //         console.error("Error response data:", error.response.data);
-  //         console.error("Error response status:", error.response.status);
-  //         console.error("Error response headers:", error.response.headers);
-  //       }
-  //       setFormError(
-  //         error.message ||
-  //           "An error occurred while submitting the form. Please try again."
-  //       );
-  //       toast.error(error.message || "Failed to submit block request");
-  //     } finally {
-  //       setFormSubmitting(false);
-  //     }
-  //   };
 
   const handleFormValidation = () => {
     const errors: Record<string, string> = {};
@@ -4277,14 +4123,14 @@ const getDisplayInfo = (block: string) => {
       Engineering Disconnection Needed?
     </span>
     <select
-      name="enggDisconnectionRequired"
-      value={formData.enggDisconnectionRequired ? "Y" : "N"}
+      name="enggDisconnectionsRequired"
+      value={formData.enggDisconnectionsRequired ? "Y" : "N"}
       onChange={(e) => {
         const value = e.target.value === "Y";
-        console.log("Setting enggDisconnectionRequired to:", value);
+        console.log("Setting enggDisconnectionsRequired to:", value);
         setFormData({
           ...formData,
-          enggDisconnectionRequired: value,
+          enggDisconnectionsRequired: value,
         });
       }}
       className="ml-2 pr-8 border-2 border-black px-1 my-3 text-2xl font-bold bg-white text-black placeholder-black"
@@ -4299,11 +4145,11 @@ const getDisplayInfo = (block: string) => {
       <option value="N">N</option>
       <option value="Y">Y</option>
     </select>
-    {renderError("enggDisconnectionRequired")}
+    {renderError("enggDisconnectionsRequired")}
   </div>
   
   {/* ───── Engineering Disconnection ───── */}
-  {formData.enggDisconnectionRequired && (
+  {formData.enggDisconnectionsRequired && (
     <div className="flex flex-col gap-2 mt-2 pb-2">
       <div className="flex flex-col gap-2">
         <span className="text-black font-bold text-2xl">Remarks</span>
