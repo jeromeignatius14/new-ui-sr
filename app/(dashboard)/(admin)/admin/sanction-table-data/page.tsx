@@ -324,7 +324,7 @@ const getCount = (criteria: (block: any) => boolean) => {
 };
 
 // ENGG counts
-const enggTotal = getCount(block => block.selectedDepartment === "ENGG");
+const enggTotal = getCount(block => block.selectedDepartment === "ENGG"&&block.sntDisconnectionRequired === false && block.powerBlockRequired === false);
 const enggWithSnt = getCount(block => 
   block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true
 );
@@ -338,7 +338,7 @@ const enggWithSntAndPower = getCount(block =>
 );
 
 // S&T counts
-const sntTotal = getCount(block => block.selectedDepartment === "S&T");
+const sntTotal = getCount(block => block.selectedDepartment === "S&T"&&block.enggDisconnectionsRequired === false && block.powerBlockRequired === false);
 const sntWithPower = getCount(block => 
   block.selectedDepartment === "S&T" && block.powerBlockRequired === true
 );
@@ -1199,10 +1199,10 @@ const handleDownloadDepartmentCount = () => {
           {enggTotal}
         </td>
         <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]">
-          {getCount(block => block.selectedDepartment === "ENGG" && block.isSanctioned)}
+          {getCount(block => block.selectedDepartment === "ENGG" && block.isSanctioned&&block.powerBlockRequired===false&&block.sntDisconnectionRequired===false)}
         </td>
         <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]">
-          {getCount(block => block.selectedDepartment === "ENGG" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)}
+          {getCount(block => block.selectedDepartment === "ENGG" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null&&block.powerBlockRequired===false&&block.sntDisconnectionRequired===false)}
         </td>
       </tr>
       <tr className="bg-[#f4dcf1] font-bold">
@@ -1213,10 +1213,10 @@ const handleDownloadDepartmentCount = () => {
           {enggWithSnt}
         </td>
         <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]">
-          {getCount(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.isSanctioned)}
+          {getCount(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.isSanctioned&&block.powerBlockRequired===false&&block.enggDisconnectionsRequired===false)}
         </td>
         <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]">
-          {getCount(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)}
+          {getCount(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null&&block.powerBlockRequired===false&&block.enggDisconnectionsRequired===false)}
         </td>
       </tr>
       <tr className="bg-white font-bold">
