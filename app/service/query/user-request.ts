@@ -17,6 +17,7 @@ export interface RequestResponse {
 }
 
 export interface RequestItem {
+    enggDisconnectionsRequired: boolean;
     TrdDisconnectionAvailedTimeTo: any;
     TrdDisconnectionAvailedTimeFrom: any;
     SntDisconnectionAvailedTimeTo: any;
