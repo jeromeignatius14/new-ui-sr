@@ -213,7 +213,7 @@ export let blockSection = {
     "KLT-PLI", "PLI-PGN", "PGN-EL", "EL-MTNL", 
     "MTNL-TP",
 
-    "ED-YD", "CVD-YD", "PAS-YD", "URL-YD", "KMD-YD", "PGR-YD",
+    "ED-YD", "CVD-YD", "PAS-YD", "URL-YD", "KMD-YD", "PGR-YD","PGR TNPL SIDING",
     "MPLM-YD", "KRR-YD", "VRQ-YD","MMH-YD", "MYU-YD", "LP-YD", "KLT-YD",
     "PLI-YD", "PGN-YD", "EL-YD", "MTNL-YD", "TP-YD","PALM-YD","UTCL-YD"
   ],
@@ -567,6 +567,12 @@ export const streamData = {
     "both direction not affected": [],
   },
   "PGR-YD": {
+    "up direction affected": [],
+    "down direction affected": [],
+    "both direction affected": ["Rd 1", "Rd 2"],
+    "both direction not affected": [],
+  },
+   "PGR TNPL SIDING": {
     "up direction affected": [],
     "down direction affected": [],
     "both direction affected": ["Rd 1", "Rd 2"],
@@ -1299,6 +1305,7 @@ export let lineData = {
   "URL-YD": ["Single"],
   "KMD-YD": ["Single"],
   "PGR-YD": ["Single"],
+  "PGR TNPL SIDING": ["Single"],
   "MPLM-YD": ["Single"],
   "KRR-YD": ["Single"],
   "VRQ-YD": ["Single"],
