@@ -1370,7 +1370,7 @@ const updateQueryParams = (updates: Record<string, string | string[] | null>) =>
 <tbody>
   {filteredRequests.filter((request: UserRequest) => request.isSanctioned === true).length > 0 ? (
     filteredRequests
-      .filter((request: UserRequest) => request.isSanctioned === true)
+      .filter((request: UserRequest) => request.isSanctioned === true&&request.overAllStatus==="Sanctioned")
       .sort((a,b)=>new Date(b.date).getTime() - new Date(a.date).getTime())
       .map((request: UserRequest, index: number) => {
         const status = getDisplayStatus(request);
