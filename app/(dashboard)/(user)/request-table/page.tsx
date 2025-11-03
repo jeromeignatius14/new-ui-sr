@@ -1129,7 +1129,7 @@ export default function RequestTablePage() {
                       {(request.isSanctioned === true&&(request.userResponse===null||request.userResponse==="ACCEPTED")) ? (
                         <>
                           {
-                            request.userResponse === "ACCEPTED" ? (
+                            request.userResponse === "ACCEPTED" ||request.overAllStatus === "Sanctioned and Accepted"? (
                               <div className="px-2 py-1 bg-green-100 text-green-800 mx-auto">
                                 Sanctioned and Accepted
                               </div>
@@ -1381,7 +1381,7 @@ export default function RequestTablePage() {
                           </span>
                               */}
                               {request.isSanctioned ? (
-                                request.userResponse === "ACCEPTED" ? (
+                                request.userResponse === "ACCEPTED"||request.overAllStatus === "Sanctioned and Accepted" ? (
                                   <div className="px-2 py-1 bg-green-100 text-green-800 mx-auto">
                                     Sanctioned and Accepted
                                   </div>
