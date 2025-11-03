@@ -722,7 +722,7 @@ const updateQueryParams = (updates: Record<string, string | string[] | null>) =>
   ) : (
     filteredRequests.filter((request: UserRequest) => request.isSanctioned === true).length > 0 ? (
     filteredRequests
-      .filter((request: UserRequest) => request.isSanctioned === true)
+      .filter((request: UserRequest) => request.isSanctioned === true&& request.overAllStatus==="Sanctioned")
       .sort((a, b) => new Date(a.sanctionedTimeFrom || a.optimizeTimeFrom || a.demandTimeFrom).getTime() - new Date(b.sanctionedTimeFrom || b.optimizeTimeFrom || b.demandTimeTo).getTime())
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .map((request: UserRequest, index: number) => {
