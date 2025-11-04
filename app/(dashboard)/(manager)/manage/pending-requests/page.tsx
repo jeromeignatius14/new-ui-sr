@@ -24,7 +24,8 @@ export default function PendingRequestsPage() {
     const [editFormData, setEditFormData] = useState({
         date: "",
         demandTimeFrom: "",
-        demandTimeTo: ""
+        demandTimeTo: "",
+        tpcRemarks: "" 
     });
     const [isEditing, setIsEditing] = useState(false);
     const [activeTab, setActiveTab] = useState<'urgent' | 'corridor' | 'non-corridor' | 'multi-line' | 'rejected'>('urgent');
@@ -348,13 +349,14 @@ useEffect(() => {
         setEditFormData({
             date: formattedDate,
             demandTimeFrom: timeFrom,
-            demandTimeTo: timeTo
+            demandTimeTo: timeTo,
+            tpcRemarks: request.tpcRemarks ||""
         });
         setShowEditModal(true);
     };
 
     // Handle edit form input changes
-    const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement| HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setEditFormData(prev => ({
             ...prev,
@@ -391,6 +393,7 @@ useEffect(() => {
                 date: `${editFormData.date}T00:00:00.000Z`,
                 demandTimeFrom: `${editFormData.date}T${editFormData.demandTimeFrom}:00.000Z`,
                 demandTimeTo: `${editFormData.date}T${editFormData.demandTimeTo}:00.000Z`,
+                tpcRemarks: editFormData.tpcRemarks||""
             };
 
             await editMutation.mutateAsync({
@@ -407,7 +410,8 @@ useEffect(() => {
                             ...req,
                             date: formattedData.date,
                             demandTimeFrom: formattedData.demandTimeFrom,
-                            demandTimeTo: formattedData.demandTimeTo
+                            demandTimeTo: formattedData.demandTimeTo,
+                            tpcRemarks: formattedData.tpcRemarks||""
                         };
                     }
                     return req;
@@ -1476,7 +1480,19 @@ useEffect(() => {
                                 {getDuration(editFormData.demandTimeFrom || "", editFormData.demandTimeTo || "") || "--"}
                             </div>
                         </div>
-
+ <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                    TPC Remarks
+                </label>
+                <textarea
+                    name="tpcRemarks"
+                    value={editFormData.tpcRemarks || ""}
+                    onChange={handleEditFormChange}
+                    className="w-full p-2 border border-gray-300 rounded text-black"
+                    rows={3}
+                    placeholder="Enter TPC remarks..."
+                />
+            </div>
                         <div className="flex justify-end gap-2">
                             <button
                                 onClick={() => {
