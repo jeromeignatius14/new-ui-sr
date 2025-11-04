@@ -111,6 +111,9 @@ export default function GenerateReportPage() {
     []
   );
     const [upcomingDivisionIdSearch, setUpcomingDivisionIdSearch] = useState<string>("");
+const [sseFilter, setSseFilter] = useState("All");
+const [sseDropdownOpen, setSseDropdownOpen] = useState(false);
+const sseDropdownRef = useRef<HTMLDivElement>(null);
   
   const router = useRouter();
   const {
@@ -149,7 +152,6 @@ export default function GenerateReportPage() {
       }
     }
   }, [session]);
-
   // Use the react-query hook with enabled: false initially
   const {
     data: reportData,
@@ -301,21 +303,46 @@ export default function GenerateReportPage() {
       reportData?.data?.detailedData?.map((b: DetailedData) => b.Section) || []
     )
   );
-   const filteredUpcomingBlocks: DetailedData[] = (
+//    const filteredUpcomingBlocks: DetailedData[] = (
+//   upcomingSectionFilter === "All"
+//     ? reportData?.data?.detailedData || []
+//     : reportData?.data?.detailedData?.filter(
+//       (b: DetailedData) => b.Section === upcomingSectionFilter
+//     ) || []
+// ).filter((block: any) => {
+//   // Division ID search filter
+//   if (upcomingDivisionIdSearch.trim() === "") return true;
+  
+//   const divisionId = block.DivisionId || "";
+//   return divisionId.toLowerCase().includes(upcomingDivisionIdSearch.toLowerCase());
+// });
+
+const filteredUpcomingBlocks: DetailedData[] = (
   upcomingSectionFilter === "All"
     ? reportData?.data?.detailedData || []
     : reportData?.data?.detailedData?.filter(
       (b: DetailedData) => b.Section === upcomingSectionFilter
     ) || []
-).filter((block: any) => {
+)
+.filter((block: any) => {
   // Division ID search filter
-  if (upcomingDivisionIdSearch.trim() === "") return true;
+  if (upcomingDivisionIdSearch.trim() !== "") {
+    const divisionId = block.DivisionId || "";
+    if (!divisionId.toLowerCase().includes(upcomingDivisionIdSearch.toLowerCase())) {
+      return false;
+    }
+  }
   
-  const divisionId = block.DivisionId || "";
-  return divisionId.toLowerCase().includes(upcomingDivisionIdSearch.toLowerCase());
+  // SSE filter
+  if (sseFilter !== "All") {
+    const userName = block.userName || "";
+    if (userName !== sseFilter) {
+      return false;
+    }
+  }
+  
+  return true;
 });
-
-
 
 const countBlock: DetailedData[] = reportData?.data?.detailedData || [];
 
@@ -595,6 +622,12 @@ if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false
       toast.error("Failed to download Excel file. Please try again.");
     }
   };
+  // Get unique SSE names from your data
+const sseOptions = [...new Set(
+  reportData?.data?.detailedData
+    ?.map((item: any) => item.userName)
+    .filter(Boolean) // Remove null/undefined
+)].sort();
 const handleDownloadDepartmentCount = () => {
   try {
     if (countBlock.length === 0) {
@@ -1447,6 +1480,41 @@ const handleDownloadDepartmentCount = () => {
                 )}
               </div>
             </div>
+              <div className="relative inline-block" ref={sseDropdownRef}>
+      <button
+        onClick={() => setSseDropdownOpen((v) => !v)}
+        className="bg-[#B2F3F5] px-3 py-1 rounded-full border-2 border-black font-semibold text-black flex items-center gap-2 text-[12px] md:text-base min-w-[80px] md:min-w-[100px]"
+      >
+        {sseFilter === "All" ? "All SSE" : sseFilter}
+        <span className="ml-1">▼</span>
+      </button>
+      {sseDropdownOpen && (
+        <div className="absolute z-10 mt-2 w-32 md:w-40 bg-white border-2 border-black rounded shadow-lg max-h-60 overflow-y-auto">
+          <div
+            className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-[12px] md:text-base"
+            onClick={() => {
+              setSseFilter("All");
+              setSseDropdownOpen(false);
+            }}
+          >
+            All SSE
+          </div>
+          {sseOptions.map((sse: string) => (
+            <div
+              key={sse}
+              className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-[14px] md:text-[24px]"
+              onClick={() => {
+                setSseFilter(sse);
+                setSseDropdownOpen(false);
+              }}
+            >
+              {sse}
+            </div>
+          ))}
+        </div>
+      )}
+ 
+</div>
           </div>
 
           <div className="w-full mt-4 overflow-x-auto">
@@ -1455,6 +1523,7 @@ const handleDownloadDepartmentCount = () => {
                 <tr className="bg-[#e49edd] text-black text-[12px] md:text-[20px] font-bold">
                   <th className="border-2 border-black px-1 md:px-2 py-2">S.No</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Date</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Department</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">RequestId</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Block Section</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Depo</th>
@@ -1509,6 +1578,9 @@ const handleDownloadDepartmentCount = () => {
                           >
                             {block.DivisionId}
                           </Link>
+                        </td>
+                         <td className="border-2 border-black px-1 md:px-2 py-2 font-bold text-black text-[10px] md:text-[14px]">
+                          {block.selectedDepartment}
                         </td>
                         <td className="border-2 border-black px-1 md:px-2 py-2 font-bold text-black text-[10px] md:text-[14px]">
                           {block.MissionBlock}
