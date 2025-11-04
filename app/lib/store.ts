@@ -3814,60 +3814,60 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
   "MSB-VLCY": {
     "MSB-MCPK": {
       "S&T": "MSB",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "WST"
     },
     "MCPK-MTMY": {
       "S&T": "MSB",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "WST"
     },
     "MTMY-VLCY": {
       "S&T": "MSB",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "WST"
     },
 
     "MSB-YD": {
       "S&T": "MSB",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "WST"
     },
     "MCPK-YD": {
       "S&T": "MSB",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "WST"
     },
     "MTMY-YD": {
       "S&T": "MSB",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "WST"
     },
     "VLCY-YD": {
       "S&T": "MSB",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "WST"
     }
   },
   "MSB-VM": {
     "MSB-MS": {
       "S&T": "MS",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "MS"
     },
     "MS-MKK": {
       "S&T": "MS",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "MS"
     },
     "MKK-MBM": {
       "S&T": "MS",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "MS"
     },
     "MBM-STM": {
       "S&T": "MS",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "MS"
     },
     "STM-PV": {
@@ -3973,22 +3973,22 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
 
     "MSB-YD": {
       "S&T": "MS",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "MS"
     },
     "MS-YD": {
       "S&T": "MS",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "MS"
     },
     "MKK-YD": {
       "S&T": "MS",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "MS"
     },
     "MBM-YD": {
       "S&T": "MS",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "MS"
     },
     "STM-YD": {
