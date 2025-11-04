@@ -33,6 +33,8 @@ export interface UsersResponse {
 }
 
 export interface UserRequest {
+    tpcRemarks?: string;
+    enggDisconnectionsRequired: boolean | undefined;
     userAcceptanceForSanction: boolean;
     disconnectionRequestRejectRemarks: string;
     remarkByManager: string;
@@ -373,7 +375,7 @@ export const managerService = {
     /**
      * Edit a user request's date and time details
      */
-    editUserRequest: async (id: string, data: { date: string; demandTimeFrom: string; demandTimeTo: string }): Promise<{ status: boolean; message: string }> => {
+    editUserRequest: async (id: string, data: { date: string; demandTimeFrom: string; demandTimeTo: string;tpcRemarks:string }): Promise<{ status: boolean; message: string }> => {
         const response = await axiosInstance.put(`/api/user-request/manager/edit/${id}`, data);
         return response.data;
     },
