@@ -624,7 +624,14 @@ export default function ViewRequest() {
           <p className="text-sm">{request.requestremarks}</p>
         </div>
       )}
-
+ {request.tpcRemarks && (
+        <div className="border border-black p-3 mb-4">
+          <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
+            TPC Remarks
+          </h2>
+          <p className="text-sm">{request.tpcRemarks}</p>
+        </div>
+      )}
       {request.status !== "PENDING" && request.ManagerResponse && (
         <div className="border border-black p-3 mb-4">
           <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">

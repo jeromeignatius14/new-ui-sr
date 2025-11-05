@@ -896,11 +896,33 @@ const hasMultipleLinesSelected = () => {
       ? workType[userDepartment as keyof typeof workType]
       : [];
   const selectedWorkType = formData.workType;
-  const activityOptions =
-    selectedWorkType && Activity[selectedWorkType as keyof typeof Activity]
-      ? Activity[selectedWorkType as keyof typeof Activity]
-      : [];
+  // const activityOptions =
+  //   selectedWorkType && Activity[selectedWorkType as keyof typeof Activity]
+  //     ? Activity[selectedWorkType as keyof typeof Activity]
+  //     : [];
 
+const getActivityOptions = () => {
+  if (!formData.workType) return [];
+  
+  // Handle both single and multiple work types
+  const workTypes = formData.workType.split(',').map(type => type.trim()).filter(type => type !== '');
+  
+  // Get all unique activities from all selected work types
+  const allActivities = new Set<string>();
+  
+  workTypes.forEach(workType => {
+    const activitiesForType = Activity[workType as keyof typeof Activity] || [];
+    activitiesForType.forEach(activity => {
+      if (activity && activity.trim() !== '') {
+        allActivities.add(activity.trim());
+      }
+    });
+  });
+  
+  return Array.from(allActivities);
+};
+
+const activityOptions = getActivityOptions();
   const blockSectionOptionsList = blockSectionOptions.map((block: string) => ({
     value: block,
     label: block,
@@ -3824,110 +3846,42 @@ const getDisplayInfo = (block: string) => {
             </div>
           </div> */}
 {/* Type of Work and Activity - horizontal, pastel green */}
+
+
+{/* Type of Work and Activity - both multi-select */}
 <div className="w-full flex flex-row items-center bg-[#e6f7c6] rounded-2xl p-3 mb-8 border-2 border-[#b6e6c6] shadow">
-  {/* Type of Work dropdown */}
+  {/* Type of Work Multi-Select */}
   <div className="flex-1 pr-2 border-r-2 border-slate-400">
-    <label
-      htmlFor="workType"
-      className="block text-[24px] text-nowrap font-bold text-black mb-2"
-    >
+    <label className="block text-[24px] text-nowrap font-bold text-black mb-2">
       Type of Work
-    </label>
-    <select
-      id="workType"
-      name="workType"
-      value={formData.workType || ""}
-      onChange={handleInputChange}
-      className="h-full w-full border-2 border-[#b7cbe8] rounded-xl px-4 pr-8 py-3 text-[24px] font-bold bg-white text-[#3a506b] focus:outline-none focus:ring-2 focus:ring-[#b7cbe8] appearance-none"
-      aria-required="true"
-      style={{
-        appearance: "none",
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9L12 15L18 9' stroke='%23000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "right 8px center",
-        backgroundSize: "1.2rem",
-      }}
-      required
-    >
-      <option value="" disabled>
-        Select Type of Work
-      </option>
-      {workTypeOptions.map((type: string) => (
-        <option key={type} value={type} className="text-[24px]">
-          {type}
-        </option>
-      ))}
-    </select>
-    {errors.workType && (
-      <span className="text-[24px] text-[#e07a5f] font-medium mt-2 block">
-        {errors.workType}
-      </span>
-    )}
-  </div>
-  
-  {/* Activity multi-select */}
-  <div className="flex-1 pl-2">
-    <label
-      htmlFor="activity"
-      className="block text-[24px] font-bold text-black mb-2"
-    >
-      Activity
     </label>
     <Select
       isMulti
-      id="activity"
-      name="activity"
-      options={[
-        ...(activityOptions.map((activity: string) => ({
-          value: activity,
-          label: activity,
-        }))),
-        { value: "others", label: "Others" }
-      ]}
-      value={(() => {
-        const selectedValues: { value: string; label: string }[] = [];
-        
-        // Add regular selected activities
-        if (formData.activity) {
-          const activities = formData.activity.split(",").filter(a => a.trim() && a !== "others");
-          activities.forEach(activity => {
-            selectedValues.push({
-              value: activity,
-              label: activity
-            });
-          });
-        }
-        
-        // Add "others" if custom activity exists
-        if (customActivity && (formData.activity?.includes("others") || selectedActivities.includes("others"))) {
-          selectedValues.push({
-            value: "others",
-            label: "Others"
-          });
-        }
-        
-        return selectedValues;
-      })()}
+      value={formData.workType 
+        ? formData.workType.split(',').map(type => ({
+            value: type.trim(),
+            label: type.trim()
+          }))
+        : []
+      }
       onChange={(selectedOptions) => {
         const selected = selectedOptions || [];
         const selectedValues = selected.map(option => option.value);
-        
-        // Update selected activities state
-        setSelectedActivities(selectedValues);
-        
-        // Join all selected values except "others" for form data
-        const activityValues = selectedValues.filter(val => val !== "others").join(",");
+        const workTypeValues = selectedValues.join(",");
         
         setFormData(prev => ({
           ...prev,
-          activity: activityValues
+          workType: workTypeValues,
+          activity: ""
         }));
         
-        // Clear custom activity if "others" is not selected
-        if (!selectedValues.includes("others")) {
-          setCustomActivity("");
-        }
+        setSelectedActivities([]);
+        setCustomActivity("");
       }}
+      options={workTypeOptions.map((type: string) => ({
+        value: type,
+        label: type,
+      }))}
       classNamePrefix="react-select"
       styles={{
         control: (base, state) => ({
@@ -4023,7 +3977,162 @@ const getDisplayInfo = (block: string) => {
           height: "52px",
         }),
       }}
-      placeholder={formData.workType ? "Select Activities" : "Select Type of Work first"}
+      placeholder="Select Types of Work"
+      closeMenuOnSelect={false}
+      required
+    />
+    {errors.workType && (
+      <span className="text-[24px] text-[#e07a5f] font-medium mt-2 block">
+        {errors.workType}
+      </span>
+    )}
+  </div>
+
+  {/* Activity Multi-Select */}
+  <div className="flex-1 pl-2">
+    <label className="block text-[24px] font-bold text-black mb-2">
+      Activity
+    </label>
+    <Select
+      isMulti
+      value={(() => {
+        const selectedValues: { value: string; label: string }[] = [];
+        
+        if (formData.activity) {
+          const activities = formData.activity.split(",").filter(a => a.trim() && a !== "others");
+          activities.forEach(activity => {
+            if (activityOptions.includes(activity)) {
+              selectedValues.push({ value: activity, label: activity });
+            }
+          });
+        }
+        
+        if (customActivity && selectedActivities.includes("others")) {
+          selectedValues.push({ value: "others", label: "Others" });
+        }
+        
+        return selectedValues;
+      })()}
+      onChange={(selectedOptions) => {
+        const selected = selectedOptions || [];
+        const selectedValues = selected.map(option => option.value);
+        
+        setSelectedActivities(selectedValues);
+        
+        const activityValues = selectedValues.filter(val => val !== "others").join(",");
+        
+        setFormData(prev => ({
+          ...prev,
+          activity: activityValues
+        }));
+        
+        if (!selectedValues.includes("others")) {
+          setCustomActivity("");
+        }
+      }}
+      options={[
+        ...activityOptions.map((activity: string) => ({
+          value: activity,
+          label: activity,
+        })),
+        { value: "others", label: "Others" }
+      ]}
+      classNamePrefix="react-select"
+      styles={{
+        control: (base, state) => ({
+          ...base,
+          backgroundColor: "white",
+          borderColor: state.isFocused ? "#b7cbe8" : "#b7cbe8",
+          borderWidth: 2,
+          borderRadius: 12,
+          minHeight: "60px",
+          maxHeight: "60px",
+          fontWeight: "bold",
+          fontSize: "18px",
+          boxShadow: "none",
+        }),
+        valueContainer: (base) => ({
+          ...base,
+          padding: "4px 8px",
+          height: "52px",
+          overflowY: "auto",
+          flexWrap: "wrap",
+          alignItems: "flex-start",
+          alignContent: "flex-start",
+        }),
+        multiValue: (base) => ({
+          ...base,
+          backgroundColor: "#e6f7fa",
+          color: "black",
+          fontWeight: "bold",
+          fontSize: "16px",
+          border: "1.5px solid #b6e6c6",
+          borderRadius: 6,
+          margin: "2px 4px 2px 0",
+          flexShrink: 0,
+        }),
+        multiValueLabel: (base) => ({
+          ...base,
+          color: "black",
+          fontWeight: "bold",
+          fontSize: "16px",
+          padding: "4px 8px",
+        }),
+        multiValueRemove: (base) => ({
+          ...base,
+          color: "#e07a5f",
+          padding: "0 6px",
+          ":hover": {
+            backgroundColor: "#f6fff6",
+            color: "#b91c1c",
+          },
+        }),
+        option: (base, state) => ({
+          ...base,
+          backgroundColor: state.isSelected
+            ? "#b6e6f7"
+            : state.isFocused
+            ? "#b6e6f799"
+            : "white",
+          color: "black",
+          fontWeight: "bold",
+          fontSize: "18px",
+          padding: "8px 12px",
+        }),
+        menu: (base) => ({
+          ...base,
+          zIndex: 9999,
+        }),
+        menuList: (base) => ({
+          ...base,
+          maxHeight: "200px",
+          overflowY: "auto",
+        }),
+        placeholder: (base) => ({
+          ...base,
+          color: "#3a506b",
+          fontWeight: "bold",
+          fontSize: "18px",
+        }),
+        dropdownIndicator: (base) => ({
+          ...base,
+          color: "#3a506b",
+          fontSize: "18px",
+          padding: "0 8px",
+        }),
+        input: (base) => ({
+          ...base,
+          fontSize: "18px",
+          color: "black",
+          margin: 0,
+          padding: 0,
+        }),
+        indicatorsContainer: (base) => ({
+          ...base,
+          height: "52px",
+        }),
+      }}
+      placeholder={formData.workType ? `Select Activities (${activityOptions.length} available)` : "Select Type of Work first"}
       closeMenuOnSelect={false}
       isDisabled={!formData.workType}
       required
