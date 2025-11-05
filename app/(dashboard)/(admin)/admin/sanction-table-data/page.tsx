@@ -1545,17 +1545,14 @@ const handleDownloadDepartmentCount = () => {
                   filteredBlocks.slice(0, 200).map((block: any, idx: number) => {
                     let statusLabel = "";
                     let statusStyle = { background: "#fff", color: "#222" };
-                    if (block.overAllStatus === "Sanctioned") {
-                      statusLabel = "Sanctioned";
+                    if (block.Status === "APPROVED" && block.isSanctioned&&block.userResponse===null) {
+                      statusLabel = "Sanctioned Pending with SSE";
                       statusStyle = { background: "#fff86b", color: "#222" };
-                    } else if (block.overAllStatus === "with optg.") {
-                      statusLabel = "with optg.";
+                    }  else if (block.userResponse === "ACCEPTED"|| block.overAllStatus === "Sanctioned and Accepted") {
+                      statusLabel = "Sanctioned and Accepted by SSE";
                       statusStyle = { background: "#d47ed4", color: "#222" };
-                    } else if (block.Status === "PENDING") {
-                      statusLabel = "Pending with dept control";
-                      statusStyle = { background: "#d47ed4", color: "#222" };
-                    } else if (block.Status === "REJECTED") {
-                      statusLabel = "Returned by Optg";
+                    } else if ( block.isSanctioned === true&&block.userAcceptanceForSanction===false&&block.userResponse!=="ACCEPTED" ) {
+                      statusLabel = "Sanctioned and Rejected by SSE";
                       statusStyle = { background: "#ff4e36", color: "#fff" };
                     } else {
                       statusLabel = block.overAllStatus || block.Status;
@@ -1571,6 +1568,9 @@ const handleDownloadDepartmentCount = () => {
                         <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
                           {dayjs(block.Date).format("DD-MM-YY")}
                         </td>
+                         <td className="border-2 border-black px-1 md:px-2 py-2 font-bold text-black text-[10px] md:text-[14px]">
+                          {block.selectedDepartment}
+                        </td>
                         <td className="border-2 border-black px-1 md:px-2 py-2 font-bold text-black text-[10px] md:text-[14px]">
                           <Link
                             href={`/admin/view-request/${block.id}?from=sanction-table-data`}
@@ -1579,9 +1579,7 @@ const handleDownloadDepartmentCount = () => {
                             {block.DivisionId}
                           </Link>
                         </td>
-                         <td className="border-2 border-black px-1 md:px-2 py-2 font-bold text-black text-[10px] md:text-[14px]">
-                          {block.selectedDepartment}
-                        </td>
+                        
                         <td className="border-2 border-black px-1 md:px-2 py-2 font-bold text-black text-[10px] md:text-[14px]">
                           {block.MissionBlock}
                         </td>
