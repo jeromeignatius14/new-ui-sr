@@ -235,31 +235,6 @@ export default function OptimiseTablePage() {
   const searchParams = useSearchParams();
   const { isUrgentMode } = useUrgentMode();
   const queryClient = useQueryClient();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isNonUrgentModalOpen, setIsNonUrgentModalOpen] = useState(false);
-
-  const [remark, setRemark] = useState("");
-  const [selectedRequests, setSelectedRequests] = useState<UserRequest[]>([]);
-  // Initialize currentWeekStart from URL parameter or default to current date
-  // const [currentWeekStart, setCurrentWeekStart] = useState(() => {
-  //   const dateParam = searchParams.get("date");
-  //   if (dateParam) {
-  //     const parsedDate = new Date(dateParam);
-  //     if (!isNaN(parsedDate.getTime())) {
-  //       // return parsedDate;
-  //       return startOfWeek(parsedDate, { weekStartsOn: 1 })
-  //     }
-  //   }
-  //   // return new Date();
-  //   return startOfWeek(new Date(), { weekStartsOn: 1 })
-  // });
-
-  // Update URL when currentWeekStart changes
-  // useEffect(() => {
-  //   const params = new URLSearchParams();
-  //   params.set("date", format(currentWeekStart, "yyyy-MM-dd"));
-  //   router.push(`?${params.toString()}`, { scroll: false });
-  // }, [currentWeekStart, router]);
 
 // Initialize currentWeekStart from URL parameter or default to current date
 const [currentWeekStart, setCurrentWeekStart] = useState(() => {
@@ -317,7 +292,9 @@ useEffect(() => {
   const [showWorkTypeDropdown, setShowWorkTypeDropdown] = useState(false);
   const [showActivityDropdown, setShowActivityDropdown] = useState(false);
   const [showTimeSlotDropdown, setShowTimeSlotDropdown] = useState(false);
-
+  const [isDraftModalOpen, setIsDraftModalOpen] = useState(false);
+  const [draftRemark, setDraftRemark] = useState("");
+  const [selectedRequests, setSelectedRequests] = useState<UserRequest[]>([]);
   // Update URL when deptFilter changes
   useEffect(() => {
     // Only update URL if dept filter changes to something other than ALL
@@ -354,31 +331,6 @@ useEffect(() => {
     if (!request.activity) return false;
     return request.activity.trim() === activityFilter.trim();
   };
-
-  // For urgent mode, use the same day for start and end
-  // For non-urgent mode, use Monday to Sunday
-  // const weekStart = isUrgentMode
-  //   ? currentWeekStart
-  //   : startOfWeek(currentWeekStart, { weekStartsOn: 1 });
-  // const weekEnd = isUrgentMode ? currentWeekStart : addDays(weekStart, 6);
-
-
-// Use the helper function for consistent week boundaries
-
-
-  // For urgent mode, use the same day for start and end
-  // For non-urgent mode, use Monday to Sunday
-  // const weekStart = isUrgentMode
-  //   ? currentWeekStart
-  //   : startOfWeek(currentWeekStart, { weekStartsOn: 1 });
-  // const weekEnd = isUrgentMode ? currentWeekStart : addDays(weekStart, 6);
-// For urgent mode, use the same day for start and end
-// For non-urgent mode, use Monday to Sunday
-// const weekStart = isUrgentMode
-//   ? currentWeekStart
-//   : startOfWeek(currentWeekStart, { weekStartsOn: 1 });
-// const weekEnd = isUrgentMode ? currentWeekStart : endOfWeek(currentWeekStart, { weekStartsOn: 1 });
-
 
 // Use the helper function for consistent week boundaries
 const getWeekBoundaries = (date: Date) => {
@@ -428,21 +380,7 @@ const finalWeekEnd = isUrgentMode ? currentWeekStart : weekEnd;
       }
     }
   };
-  //   const handleRequestAction = async (requestId: string, accept: boolean) => {
-  //   if (confirm("Are you sure you want to  reject this request?")) {
-  //     try {
-  //       await acceptMutation.mutateAsync({ id: requestId, accept });
-  //       alert("Request  rejected successfully");
-  //     } catch (error) {
-  //       console.error("Failed to process request:", error);
-  //       alert("Failed to process request. Please try again.");
-  //     }
-  //   }
-  // };
-  // Filter requests based on urgent mode
-  const filteredRequests =
-
-    data?.data?.requests?.filter((request: UserRequest) => {
+  const filteredRequests = data?.data?.requests?.filter((request: UserRequest) => {
       return isUrgentMode
         ? request.corridorType === "Urgent Block" || request.workType === "EMERGENCY"
         : request.corridorType !== "Urgent Block" && request.workType !== "EMERGENCY";
@@ -479,25 +417,6 @@ const finalWeekEnd = isUrgentMode ? currentWeekStart : weekEnd;
       return request.corridorType === "Urgent Block";
     }) || [];
 
-  // const { minDate, maxDate } = UrgentRequests.reduce(
-  //   (acc: { minDate: Date; maxDate: Date }, request: any) => {
-  //     const requestDate =
-  //       typeof request.date === "string"
-  //         ? parseISO(request.date)
-  //         : request.date;
-
-  //     if (!acc.minDate || requestDate < acc.minDate) {
-  //       acc.minDate = requestDate;
-  //     }
-  //     if (!acc.maxDate || requestDate > acc.maxDate) {
-  //       acc.maxDate = requestDate;
-  //     }
-
-  //     return acc;
-  //   },
-  //   { minDate: null, maxDate: null }
-  // );
-
   const isValidDate = (date: unknown): date is Date => {
     return date instanceof Date && !isNaN(date.getTime());
   };
@@ -529,26 +448,7 @@ const finalWeekEnd = isUrgentMode ? currentWeekStart : weekEnd;
     },
     { minDate: null, maxDate: null }
   );
-  // console.log(minDate, maxDate);
-  // const [selectedDate, setSelectedDate] = useState<Date>(minDate);
-  // const [selectedDate, setSelectedDate] = useState<Date>(
-  //   startOfWeek(currentWeekStart, { weekStartsOn: 1 })
-  // );
 
-
-
-//   const [selectedDate, setSelectedDate] = useState<Date>(() => {
-//   // Try to get saved date from localStorage
-//   const savedDate = localStorage.getItem("urgentSelectedDate");
-//   if (savedDate) {
-//     const parsedDate = new Date(savedDate);
-//     if (!isNaN(parsedDate.getTime())) {
-//       return parsedDate;
-//     }
-//   }
-//   // Fallback to the start of week if no saved date
-//   return startOfWeek(currentWeekStart, { weekStartsOn: 1 });
-// });
 
 const [selectedDate, setSelectedDate] = useState<Date>(() => {
   // Try to get saved date from localStorage
@@ -563,28 +463,12 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
   return new Date();
 });
 
-  // Set selectedDate only when minDate is ready
-  // useEffect(() => {
-  //   if (minDate && !selectedDate) {
-  //     setSelectedDate(startOfWeek(currentWeekStart, { weekStartsOn: 1 }));
-  //   }
-  // }, []);
-
 
   // --- Custom: Only show requests that are pending with me, not sanctioned, and after today ---
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-// const pendingRequests = UrgentRequests.filter((request: UserRequest) => {
-//   if (!request.status || request.status.toUpperCase() !== "APPROVED") return false;
-//   if (request.isSanctioned) return false;
-//   if (!request.date) return false;
-//   const reqDate = new Date(request.date);
-//   reqDate.setHours(0, 0, 0, 0);
 
-//   // Include requests for today and future dates
-//   return reqDate >= today;
-// });
   const pendingRequests = (data?.data?.requests || []).filter((request: UserRequest) => {
      if (!request.status || request.status.toUpperCase() !== "APPROVED") return false;
   if (request.isSanctioned) return false;
@@ -595,46 +479,7 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
   // Include requests for today and future dates
   return reqDate >= today
   });
-  // console.log("pendingRequests.length", pendingRequests.length);
-  // Group and sort
-  // const urgentRequests = pendingRequests
-  //   .filter((r: UserRequest) => r.corridorType === "Urgent Block" || r.workType === "EMERGENCY")
-  //   .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  // const corridorRequestsFiltered = pendingRequests
-  //   .filter((r: UserRequest) => r.corridorType === "Corridor" || r.corridorType === "Corridor Block")
-  //   .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  // const nonCorridorRequestsFiltered = pendingRequests
-  //   .filter((r: UserRequest) => r.corridorType === "Outside Corridor" || r.corridorType === "Non-Corridor Block")
-  //   .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-
-// const urgentRequestsFiltered = pendingRequests
-//     .filter((r: UserRequest) => {
-//       // First check if it's an urgent request
-//       const isUrgent = r.corridorType === "Urgent Block" || r.workType === "EMERGENCY";
-//       if (!isUrgent) return false;
-
-//       // Handle cases where both flags are true
-//       if (r.powerBlockRequired && r.sntDisconnectionRequired&&r.enggDisconnectionsRequired) {
-//         return r.trdActionsNeeded && r.sigActionsNeeded || r.allTrdAcceptance === "ACCEPTED" && r.allSntAcceptance === "ACCEPTED"&&r.allEnggAcceptance==="ACCEPTED";
-//       }
-
-//       // Handle powerBlockRequired case
-//       if (r.powerBlockRequired) {
-//         return r.trdActionsNeeded || r.allTrdAcceptance === "ACCEPTED";
-//       }
-//        if (r.enggDisconnectionsRequired) {
-//         return  r.allEnggAcceptance === "ACCEPTED";
-//       }
-//       // Handle sntDisconnectionRequired case
-//       if (r.sntDisconnectionRequired) {
-//         return r.sigActionsNeeded || r.allSntAcceptance === "ACCEPTED";
-//       }
-
-//       // If neither special flag is true, just return the urgent status
-//       return true;
-//     })
-//     .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
 
 
@@ -815,108 +660,6 @@ const combinedRequestsFiltered = pendingRequests
   })
   .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-//   const corridorRequestsFiltered = pendingRequests
-//     .filter((r: UserRequest) => {
-//         // First check if it's an urgent request
-//         const isCorridor = r.corridorType === "Corridor" ||r.corridorType === "Corridor Block";
-//         if (!isCorridor) return false;
-
-//         const allSntAcceptance = r.allSntAcceptance === "ACCEPTED";
-//         const allTrdAcceptance = r.allTrdAcceptance === "ACCEPTED";
-//         const allEnggAcceptance = r.allEnggAcceptance === "ACCEPTED";
-//       // Handle cases where both flags are true
-//       if (r.powerBlockRequired && r.sntDisconnectionRequired&&r.enggDisconnectionsRequired) {
-//         return r.trdActionsNeeded && r.sigActionsNeeded || allTrdAcceptance && allSntAcceptance&&allEnggAcceptance;
-//       }
-
-//       // Handle powerBlockRequired case
-//       if (r.powerBlockRequired) {
-//         return r.trdActionsNeeded || allTrdAcceptance;
-//       }
-//       if (r.enggDisconnectionsRequired) {
-//         return  allEnggAcceptance;
-//       }
-
-//       // Handle sntDisconnectionRequired case
-//       if (r.sntDisconnectionRequired) {
-//         return r.sigActionsNeeded || allSntAcceptance;
-//       }
-//       // If neither special flag is true, just return the status
-//       return true;
-//     })
-//     .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-
-
-
-//   const nonCorridorRequestsFiltered = pendingRequests
-//     .filter((r: UserRequest) => {
-//         // First check if it's an urgent request
-//         const isNoncorridor = r.corridorType === "Outside Corridor" ||r.corridorType === "Non-Corridor Block";
-//         if (!isNoncorridor) return false;
-
-//         const allSntAcceptance = r.allSntAcceptance === "ACCEPTED";
-//         const allTrdAcceptance = r.allTrdAcceptance === "ACCEPTED";
-//         const allEnggAcceptance = r.allEnggAcceptance === "ACCEPTED";
-
-//       // Handle cases where both flags are true
-//       if (r.powerBlockRequired && r.sntDisconnectionRequired&&r.enggDisconnectionsRequired) {
-//         return r.trdActionsNeeded && r.sigActionsNeeded || allTrdAcceptance && allSntAcceptance&&allEnggAcceptance;
-//       }
-
-//       // Handle powerBlockRequired case
-//       if (r.powerBlockRequired) {
-//         return r.trdActionsNeeded || allTrdAcceptance;
-//       }
-// if (r.enggDisconnectionsRequired) {
-//         return  allEnggAcceptance;
-//       }
-//       // Handle sntDisconnectionRequired case
-//       if (r.sntDisconnectionRequired) {
-//         return r.sigActionsNeeded || allSntAcceptance;
-//       }
-
-//       // If neither special flag is true, just return the status
-//       return true;
-//     })
-//     .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-
-
-
-//     const combinedRequestsFiltered = pendingRequests
-//     .filter((r: UserRequest) => {
-//       // Check if the request has otherLines in processedLineSections
-//       const hasOtherLines = r.processedLineSections?.some((section: any) => 
-//           section.otherLines && section.otherLines.trim() !== ''
-//       );
-//       if (!hasOtherLines) return false;
-
-//       // Global filters
-//       if (deptFilter !== 'ALL' && r.selectedDepartment !== deptFilter) return false;
-//       if (!matchesWorkType(r)) return false;
-//       if (!matchesActivity(r)) return false;
-//       if (!matchesTimeSlot(r)) return false;
-
-//       // Handle cases where both flags are true
-//       if (r.powerBlockRequired && r.sntDisconnectionRequired) {
-//           return r.trdActionsNeeded && r.sigActionsNeeded;
-//       }
-
-//       // Handle powerBlockRequired case
-//       if (r.powerBlockRequired) {
-//         return r.trdActionsNeeded;
-//       }
-
-//       // Handle sntDisconnectionRequired case
-//       if (r.sntDisconnectionRequired) {
-//         return r.sigActionsNeeded;
-//       }
-
-//       // If neither special flag is true, just return the status
-//       return true;
-//     })
-//     .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   const [isOptimizeDialogOpen, setIsOptimizeDialogOpen] = useState(false);
   const [isUrgentRequests, setIsUrgentRequests] = useState<boolean>(false);
@@ -1037,83 +780,83 @@ const combinedRequestsFiltered = pendingRequests
     }
   };
 
-  const handleSendUrgentRequests = async (requests: UserRequest[], remark: string) => {
-    try {
-      const UrgentRequestsData =
-        requests?.filter(
-          (request: UserRequest) =>
-            request.optimizeTimeFrom != null &&
-            request.optimizeTimeTo != null
-        )
-          .map((request: UserRequest) => ({
-            id: request.id,
-            optimizeTimeFrom: request.optimizeTimeFrom,
-            optimizeTimeTo: request.optimizeTimeTo,
-            sanctionedRemark: remark,
-          })) || [];
+  
 
-      if (UrgentRequestsData.length === 0) {
-        alert("No requests to update");
-        return;
-      }
+  // const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: string) => {
+  //   try {
+  //     // Only send the required fields for each non-urgent request
+  //     const nonUrgentRequestsData =
+  //       requests?.filter(
+  //         (request: UserRequest) =>
+  //           request.optimizeTimeFrom != null &&
+  //           request.optimizeTimeTo != null
+  //       )
+  //         .map((request: UserRequest) => ({
+  //           id: request.id,
+  //           optimizeTimeFrom: request.optimizeTimeFrom,
+  //           optimizeTimeTo: request.optimizeTimeTo,
+  //           sanctionedRemark: remark,
+  //         })) || [];
 
-      console.dir(UrgentRequestsData);
-      const response = await adminService.updateSanctionStatus(
-        UrgentRequestsData
-      );
-      if (response.success) {
-        alert("Optimization status updated successfully!");
-        refetch();
-      } else {
-        alert("Failed to update optimization status");
-      }
-    } catch (err) {
-      console.error("Failed to update optimization status", err);
-      alert("Error updating optimization status. Please try again.");
-    }
-  };
+  //     if (nonUrgentRequestsData.length === 0) {
+  //       alert("No requests to update");
+  //       return;
+  //     }
 
-  const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: string) => {
-    try {
-      // Only send the required fields for each non-urgent request
-      const nonUrgentRequestsData =
-        requests?.filter(
-          (request: UserRequest) =>
-            request.optimizeTimeFrom != null &&
-            request.optimizeTimeTo != null
-        )
-          .map((request: UserRequest) => ({
-            id: request.id,
-            optimizeTimeFrom: request.optimizeTimeFrom,
-            optimizeTimeTo: request.optimizeTimeTo,
-            sanctionedRemark: remark,
-          })) || [];
+  //     console.dir("nonUrgentRequestsData");
+  //     console.dir(nonUrgentRequestsData);
 
-      if (nonUrgentRequestsData.length === 0) {
-        alert("No requests to update");
-        return;
-      }
-
-      console.dir("nonUrgentRequestsData");
-      console.dir(nonUrgentRequestsData);
-
-      console.dir(data);
-      const response = await adminService.updateSanctionStatus(
-        nonUrgentRequestsData
-      );
-      if (response.success) {
-        alert("Optimization status updated successfully!");
-        refetch();
-      } else {
-        alert("Failed to update optimization status");
-      }
-    } catch (err) {
-      console.error("Failed to update optimization status", err);
-      alert("Error updating optimization status. Please try again.");
-    }
-  };
+  //     console.dir(data);
+  //     const response = await adminService.updateSanctionStatus(
+  //       nonUrgentRequestsData
+  //     );
+  //     if (response.success) {
+  //       alert("Optimization status updated successfully!");
+  //       refetch();
+  //     } else {
+  //       alert("Failed to update optimization status");
+  //     }
+  //   } catch (err) {
+  //     console.error("Failed to update optimization status", err);
+  //     alert("Error updating optimization status. Please try again.");
+  //   }
+  // };
 
   // Format date
+  
+  const handleDraftClick = (request: UserRequest) => {
+  setSelectedRequests([request]);
+  setIsDraftModalOpen(true);
+};
+const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: string) => {
+  try {
+    const draftRequestsData = requests?.map((request: UserRequest) => ({
+      id: request.id,
+      sanctionedRemark: remark,
+    })) || [];
+
+    if (draftRequestsData.length === 0) {
+      alert("No requests to update");
+      return;
+    }
+
+    console.log("Updating draft status:", draftRequestsData);
+    
+    const response = await adminService.updateDraftStatus(draftRequestsData);
+    
+    if (response.success) {
+      alert("Requests moved to draft successfully!");
+      refetch();
+      setIsDraftModalOpen(false);
+      setDraftRemark("");
+    } else {
+      alert("Failed to update draft status");
+    }
+  } catch (err) {
+    console.error("Failed to update draft status", err);
+    alert("Error updating draft status. Please try again.");
+  }
+};
   const formatDate = (dateString: string) => {
     try {
       return format(parseISO(dateString), "dd-MM-yyyy");
@@ -1687,15 +1430,6 @@ const combinedRequestsFiltered = pendingRequests
          
           <h2 className="border-b-2 pb-2 border-[#13529e] text-[24px] font-semibold text-[#13529e]">Urgent Blocks</h2>
           <div className="flex justify-end py-2 gap-2">
-            {/* <button
-              onClick={handleSendUrgentRequests}
-              className="px-3 py-1 text-sm bg-white text-[#13529e] border border-black cursor-pointer hover:bg-gray-50 flex items-center"
-            >
-              <svg className="w-4 h-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V3a1 1 0 102 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-              Sanction
-            </button> */}
             <button
               onClick={() => {
                 const today = new Date();
@@ -1732,12 +1466,6 @@ const combinedRequestsFiltered = pendingRequests
   storageKey="urgentSelectedDate"
 />
 
-          {/* <DaySwitcher
-            currentDate={selectedDate}
-            onDateChange={(newDate) => setSelectedDate(newDate)}
-            minDate={startOfWeek(currentWeekStart, { weekStartsOn: 1 })}
-            maxDate={addDays(weekStart, 7)}
-          /> */}
           <div className="overflow-x-auto max-h-[70vh] overflow-y-auto rounded-lg border border-gray-300 shadow-sm mt-4">
   <table className="w-full border-collapse text-black bg-white">
     <thead className={`sticky top-0 ${showRejectionModal ? "z-0" : "z-10"} bg-gray-100 shadow`}>
@@ -1771,7 +1499,7 @@ const combinedRequestsFiltered = pendingRequests
       )}
       {urgentRequestsFiltered.filter((request: UserRequest) => {
         const requestDate = typeof request.date === "string" ? parseISO(request.date) : request.date;
-        return isSameDay(requestDate, selectedDate);
+        return isSameDay(requestDate, selectedDate)&&(request.Draft === false);
       }).map((request: UserRequest) => {
         // Enhanced department-based background colors with combination detection
         const getDepartmentColor = (request: UserRequest) => {
@@ -1936,12 +1664,9 @@ const combinedRequestsFiltered = pendingRequests
                       <>
                         <button
                           className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-                          onClick={() => {
-                            setSelectedRequests([request]);
-                            setIsNonUrgentModalOpen(true);
-                          }}
+                         onClick={() => handleDraftClick(request)}
                         >
-                          Sanction
+                          Draft
                         </button>
                         <button
                           className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
@@ -1977,15 +1702,6 @@ const combinedRequestsFiltered = pendingRequests
         <div className="mb-8">
           <h2 className="text-[24px] font-semibold mb-2 text-[#13529e]">Corridor Requests</h2>
           <div className="flex justify-end py-2 gap-2">
-            {/* <button
-              onClick={handleSendNonUrgentRequests}
-              className="px-3 py-1 text-sm bg-white text-[#13529e] border border-black cursor-pointer hover:bg-gray-50 flex items-center"
-            >
-              <svg className="w-4 h-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V3a1 1 0 102 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-              Sanction
-            </button> */}
             <button
               onClick={() => {
                 const today = new Date();
@@ -2077,7 +1793,7 @@ const combinedRequestsFiltered = pendingRequests
                     </td>
                   </tr>
                 )}
-                {corridorRequestsFiltered.sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
+                {corridorRequestsFiltered.filter((request: UserRequest) => request.Draft === false).sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
                   <tr
                     key={`request-${request.id}-${request.date}`}
                      className={`hover:bg-blue-50 transition-colors ${
@@ -2168,74 +1884,6 @@ const combinedRequestsFiltered = pendingRequests
                     <td className="border border-black p-2 text-[24px]">
                       {request.activity}
                     </td>
-
-                    {/* <td className="border border-black p-2 text-[24px]">
-                      <div className="flex gap-2">
-                        {request.optimizeStatus === false ? (
-                          <span>Not Yet Optimized</span>
-                        ) : editingId === request.id ? (
-                          <>
-                            <button
-                              onClick={() => handleUpdateClick(request.id)}
-                              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-                              disabled={updateOptimizedTimes.isPending}
-                            >
-                              {updateOptimizedTimes.isPending ? "Saving..." : "Save"}
-                            </button>
-                            <button
-                              onClick={handleCancelEdit}
-                              className="px-2 py-1 text-[24px] bg-gray-400 text-white border border-black rounded"
-                            >
-                              Cancel
-                            </button>
-                          </>
-                        ) : modifyReturnOpenId === request.id ? (
-                          <>
-                            <button
-                              className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-                              onClick={() => { setEditingId(request.id); setEditDate(request.date.split("T")[0]); setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : ""); setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : ""); setModifyReturnOpenId(null); }}
-                            >
-                              Modify
-                            </button>
-                            <button
-                              className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
-                              onClick={() => { handleRejectClick(request.id); setModifyReturnOpenId(null); }}
-                            >
-                              Return
-                            </button>
-                            <button
-                              className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
-                              onClick={() => setModifyReturnOpenId(null)}
-                            >
-                              Cancel
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-                              // onClick={
-                              //   () => {
-                              //       handleSendNonUrgentRequests([request]);
-                              //   }
-                              // }
-                              onClick={() => {
-                                setSelectedRequests([request]); // save clicked request
-                                setIsNonUrgentModalOpen(true);           // open popup
-                              }}
-                            >
-                              Sanction
-                            </button>
-                            <button
-                              className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
-                              onClick={() => setModifyReturnOpenId(request.id)}
-                            >
-                              Modify/Return
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td> */}
                                         <td className="border border-black p-2 text-[24px]">
   <div className="flex gap-2">
     {editingId === request.id ? (
@@ -2303,12 +1951,9 @@ const combinedRequestsFiltered = pendingRequests
           <>
             <button
               className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-              onClick={() => {
-                setSelectedRequests([request]);
-                setIsNonUrgentModalOpen(true);
-              }}
+             onClick={() => handleDraftClick(request)}
             >
-              Sanction
+              Draft
             </button>
             <button
               className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
@@ -2342,7 +1987,38 @@ const combinedRequestsFiltered = pendingRequests
 
 
 
-
+{/* Draft Modal */}
+{isDraftModalOpen && (
+  <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+      <h2 className="text-xl font-bold mb-4 text-black">Repurcussion</h2>
+      <textarea
+        className="w-full border p-2 rounded mb-4 text-black"
+        rows={4}
+        placeholder="Enter repurcussion remark..."
+        value={draftRemark}
+        onChange={(e) => setDraftRemark(e.target.value)}
+      />
+      <div className="flex justify-end gap-2">
+        <button
+          className="px-4 py-2 bg-gray-400 text-white rounded"
+          onClick={() => {
+            setIsDraftModalOpen(false);
+            setDraftRemark("");
+          }}
+        >
+          Cancel
+        </button>
+        <button
+          className="px-4 py-2 bg-green-600 text-white rounded"
+          onClick={() => handleSendNonUrgentRequests(selectedRequests, draftRemark)}
+        >
+          Submit
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
                <div className="mb-8">
           <h2 className="text-[24px] font-semibold mb-2 text-[#13529e]">Combined Requests (Multiple Line Selected)</h2>
@@ -2398,7 +2074,7 @@ const combinedRequestsFiltered = pendingRequests
                     </td>
                   </tr>
                 )}
-                {combinedRequestsFiltered.sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
+                {combinedRequestsFiltered.filter((request: UserRequest) => request.Draft === false).sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
                   <tr
                     key={`request-${request.id}-${request.date}`}
                       className={`hover:bg-blue-50 transition-colors ${
@@ -2489,74 +2165,6 @@ const combinedRequestsFiltered = pendingRequests
                     <td className="border border-black p-2 text-[24px]">
                       {request.activity}
                     </td>
-
-                    {/* <td className="border border-black p-2 text-[24px]">
-                      <div className="flex gap-2">
-                        {request.optimizeStatus === false ? (
-                          <span>Not Yet Optimized</span>
-                        ) : editingId === request.id ? (
-                          <>
-                            <button
-                              onClick={() => handleUpdateClick(request.id)}
-                              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-                              disabled={updateOptimizedTimes.isPending}
-                            >
-                              {updateOptimizedTimes.isPending ? "Saving..." : "Save"}
-                            </button>
-                            <button
-                              onClick={handleCancelEdit}
-                              className="px-2 py-1 text-[24px] bg-gray-400 text-white border border-black rounded"
-                            >
-                              Cancel
-                            </button>
-                          </>
-                        ) : modifyReturnOpenId === request.id ? (
-                          <>
-                            <button
-                              className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-                              onClick={() => { setEditingId(request.id); setEditDate(request.date.split("T")[0]); setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : ""); setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : ""); setModifyReturnOpenId(null); }}
-                            >
-                              Modify
-                            </button>
-                            <button
-                              className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
-                              onClick={() => { handleRejectClick(request.id); setModifyReturnOpenId(null); }}
-                            >
-                              Return
-                            </button>
-                            <button
-                              className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
-                              onClick={() => setModifyReturnOpenId(null)}
-                            >
-                              Cancel
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-                              // onClick={
-                              //   () => {
-                              //       handleSendNonUrgentRequests([request]);
-                              //   }
-                              // }
-                              onClick={() => {
-                                setSelectedRequests([request]); // save clicked request
-                                setIsNonUrgentModalOpen(true);           // open popup
-                              }}
-                            >
-                              Sanction
-                            </button>
-                            <button
-                              className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
-                              onClick={() => setModifyReturnOpenId(request.id)}
-                            >
-                              Modify/Return
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td> */}
                     <td className="border border-black p-2 text-[24px]">
   <div className="flex gap-2">
     {editingId === request.id ? (
@@ -2624,12 +2232,9 @@ const combinedRequestsFiltered = pendingRequests
           <>
             <button
               className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-              onClick={() => {
-                setSelectedRequests([request]);
-                setIsNonUrgentModalOpen(true);
-              }}
+              onClick={() => handleDraftClick(request)}
             >
-              Sanction
+              Draft
             </button>
             <button
               className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
@@ -2721,7 +2326,7 @@ const combinedRequestsFiltered = pendingRequests
                     </td>
                   </tr>
                 )}
-                {nonCorridorRequestsFiltered.sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
+                {nonCorridorRequestsFiltered.filter((request: UserRequest) => request.Draft === false).sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
                   <tr
                     key={`request-${request.id}-${request.date}`}
                      className={`hover:bg-blue-50 transition-colors ${
@@ -2812,74 +2417,6 @@ const combinedRequestsFiltered = pendingRequests
                     <td className="border border-black p-2 text-[24px]">
                       {request.activity}
                     </td>
-
-                    {/* <td className="border border-black p-2 text-[24px]">
-                      <div className="flex gap-2">
-                        {request.optimizeStatus === false ? (
-                          <span>Not Yet Optimized</span>
-                        ) : editingId === request.id ? (
-                          <>
-                            <button
-                              onClick={() => handleUpdateClick(request.id)}
-                              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-                              disabled={updateOptimizedTimes.isPending}
-                            >
-                              {updateOptimizedTimes.isPending ? "Saving..." : "Save"}
-                            </button>
-                            <button
-                              onClick={handleCancelEdit}
-                              className="px-2 py-1 text-[24px] bg-gray-400 text-white border border-black rounded"
-                            >
-                              Cancel
-                            </button>
-                          </>
-                        ) : modifyReturnOpenId === request.id ? (
-                          <>
-                            <button
-                              className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-                              onClick={() => { setEditingId(request.id); setEditDate(request.date.split("T")[0]); setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : ""); setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : ""); setModifyReturnOpenId(null); }}
-                            >
-                              Modify
-                            </button>
-                            <button
-                              className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
-                              onClick={() => { handleRejectClick(request.id); setModifyReturnOpenId(null); }}
-                            >
-                              Return
-                            </button>
-                            <button
-                              className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
-                              onClick={() => setModifyReturnOpenId(null)}
-                            >
-                              Cancel
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-                              // onClick={
-                              //   () => {
-                              //       handleSendNonUrgentRequests([request]);
-                              //   }
-                              // }
-                              onClick={() => {
-                                setSelectedRequests([request]); // save clicked request
-                                setIsNonUrgentModalOpen(true);           // open popup
-                              }}
-                            >
-                              Sanction
-                            </button>
-                            <button
-                              className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
-                              onClick={() => setModifyReturnOpenId(request.id)}
-                            >
-                              Modify/Return
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td> */}
                                         <td className="border border-black p-2 text-[24px]">
   <div className="flex gap-2">
     {editingId === request.id ? (
@@ -2947,12 +2484,9 @@ const combinedRequestsFiltered = pendingRequests
           <>
             <button
               className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-              onClick={() => {
-                setSelectedRequests([request]);
-                setIsNonUrgentModalOpen(true);
-              }}
+             onClick={() => handleDraftClick(request)}
             >
-              Sanction
+              Draft
             </button>
             <button
               className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
@@ -2991,70 +2525,8 @@ const combinedRequestsFiltered = pendingRequests
 
 
 
-        {isModalOpen && (
-          <div className="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-              <h2 className="text-xl font-bold mb-4" style={{ color: "black" }}>Repurcussion</h2>
-              <textarea
-                className="w-full border p-2 rounded mb-4 text-black"
-                rows={4}
-                placeholder="Enter reason..."
-                value={remark}
-                onChange={(e) => setRemark(e.target.value)}
-              />
-              <div className="flex justify-end gap-2">
-                <button
-                  className="px-4 py-2 bg-gray-400 text-white rounded"
-                  onClick={() => setIsModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="px-4 py-2 bg-green-600 text-white rounded"
-                  onClick={() => {
-                    handleSendUrgentRequests(selectedRequests, remark);
-                    setIsModalOpen(false);
-                    setRemark("");
-                  }}
-                >
-                  Submit
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-        {isNonUrgentModalOpen && (
-          <div className="fixed inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-              <h2 className="text-xl font-bold mb-4" style={{ color: "black" }}>Repurcussion</h2>
-              <textarea
-                className="w-full border p-2 rounded mb-4 text-black"
-                rows={4}
-                placeholder="Enter reason..."
-                value={remark}
-                onChange={(e) => setRemark(e.target.value)}
-              />
-              <div className="flex justify-end gap-2">
-                <button
-                  className="px-4 py-2 bg-gray-400 text-white rounded"
-                  onClick={() => setIsNonUrgentModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="px-4 py-2 bg-green-600 text-white rounded"
-                  onClick={() => {
-                    handleSendNonUrgentRequests(selectedRequests, remark);
-                    setIsNonUrgentModalOpen(false);
-                    setRemark("");
-                  }}
-                >
-                  Submit
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+       
+       
         {/* Optimization Dialog */}
         {showRejectionModal && (
           <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-20">
