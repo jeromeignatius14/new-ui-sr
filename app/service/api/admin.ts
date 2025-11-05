@@ -135,6 +135,17 @@ export const adminService = {
       throw error;
     }
   },
+    updateDraftStatus: async (requests: any) => {
+    try {
+      const response = await axiosInstance.post("/api/user-request/updateDraftStatus",
+        { requests } 
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error in updateSanctionStatus:', error);
+      throw error;
+    }
+  },
   // In your adminService.ts
   deleteRequest: async (requestId: string) => {
     return axiosInstance.delete(`/api/user-request/delet-optimiseData/${requestId}`);
@@ -179,6 +190,7 @@ export const adminService = {
     optimizeTimeFrom: string;
     optimizeTimeTo: string;
     newDate: string;
+    sanctionedRemark?:string;
   }) => {
     try {
       const response = await axiosInstance.post("/api/user-request/editRequest", {
@@ -186,7 +198,8 @@ export const adminService = {
         optimizeTimeFrom: data.optimizeTimeFrom,
         optimizeTimeTo: data.optimizeTimeTo,
         date: data.newDate, // <-- send 'date' field here
-        mobileView: true // Assuming you want to include this field
+        mobileView: true, // Assuming you want to include this field
+        sanctionedRemark: data.sanctionedRemark
       });
       return response.data;
     } catch (error: any) {
