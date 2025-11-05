@@ -28,7 +28,7 @@ export default function PendingRequestsPage() {
         tpcRemarks: "" 
     });
     const [isEditing, setIsEditing] = useState(false);
-    const [activeTab, setActiveTab] = useState<'urgent' | 'corridor' | 'non-corridor' | 'multi-line' | 'rejected'>('urgent');
+    const [activeTab, setActiveTab] = useState<'urgent' | 'corridor' | 'non-corridor'|"disconnections" | 'multi-line' | 'rejected'>('urgent');
     // CSS for flashing animation
     const flashingRowStyle = `
   @keyframes flashRed {
@@ -95,6 +95,19 @@ export default function PendingRequestsPage() {
         r.status === 'PENDING' && 
         r.managerAcceptance === false && 
         r.corridorType === "Outside Corridor"
+    )
+    .sort((a: UserRequest, b: UserRequest) => {
+        // Date sort (earliest first)
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return dateA - dateB;
+    });
+
+const pendingDisconnectionRequests = (Array.isArray(data?.data?.requests) ? data.data.requests : [])
+    .filter((r: UserRequest) => 
+        r.status === 'PENDING' && 
+        r.managerAcceptance === false && 
+        (r.powerBlockRequired===true||r.sntDisconnectionRequired===true||r.enggDisconnectionsRequired===true)
     )
     .sort((a: UserRequest, b: UserRequest) => {
         // Date sort (earliest first)
@@ -775,6 +788,15 @@ useEffect(() => {
             Non-Corridor ({pendingNonCorridorRequests.length})
         </button>
     
+
+         <button
+            onClick={() => setActiveTab('disconnections')}
+            className={`px-4 py-2 rounded-lg border-2 border-black font-bold ${
+                activeTab === 'non-corridor' ? 'bg-[#45B7D1] text-white' : 'bg-[#D6F3FF] text-black'
+            }`}
+        >
+            Job Pending With SSE ({pendingDisconnectionRequests.length})
+        </button>
         <button
             onClick={() => setActiveTab('multi-line')}
             className={`px-4 py-2 rounded-lg border-2 border-black font-bold ${
@@ -895,7 +917,70 @@ useEffect(() => {
         </div>
     </div>
 )}
+{activeTab === 'disconnections' && (
+    <div className="mx-4 mt-6 overflow-x-auto">
+        <div className={`rounded-xl overflow-hidden border-2 border-black bg-[#F5E7B2] min-w-[700px] ${showRejectModal || showSuccessModal ? 'invisible' : ''}`}>
+            <div className="bg-[#FF6B6B] text-white font-bold py-2 text-center">
+                Job Pending With SSE Requests
+            </div>
+            {pendingDisconnectionRequests.length > 0 ? (
+                <table className="w-full text-black text-base border-collapse">
+                    <thead>
+                        <tr className="bg-[#D6F3FF] text-black font-bold">
+                            <th className="border-2 border-black px-2 py-2 w-10 bg-[#D6F3FF]">
+                                <input
+                                    type="checkbox"
+                                    checked={selectedRequests.size ===pendingDisconnectionRequests.length && pendingDisconnectionRequests.length > 0}
+                                    onChange={handleSelectAll}
+                                    className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]"
+                                />
+                            </th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Date</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">ID</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Block Section</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Work type</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Demanded</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Activity</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Requested By</th>
 
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {pendingDisconnectionRequests.map((request: UserRequest) => (
+                            <tr key={request.id} className={`hover:bg-[#FFF86B] text-black ${request.corridorType === "Urgent Block" ? "urgent-block-row" : "bg-white"}`}>
+                                <td className="border border-black px-2 py-1 text-center align-middle">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedRequests.has(request.id)}
+                                        onChange={() => handleSelectRequest(request.id)}
+                                        className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]"
+                                    />
+                                </td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">{formatDate(request.date)}</td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">
+                                    <Link href={`/manage/view-request/${request.id}`} className="text-[#13529e] hover:underline font-semibold">
+                                        {request.divisionId || request.id}
+                                    </Link>
+                                </td>
+                                <td className="border border-black px-2 py-1 align-middle">{request.missionBlock}</td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">
+                                    {request.workType || 'N/A'}
+                                </td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
+                                <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
+                                <td className="border border-black px-2 py-1 align-middle">{request.user?.name || 'N/A'}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            ) : (
+                <div className="py-8 text-center text-gray-500 font-semibold">
+                    No data available
+                </div>
+            )}
+        </div>
+    </div>
+)}
 {activeTab === 'corridor' && (
     <div className="mx-4 mt-6 overflow-x-auto">
         <div className={`rounded-xl overflow-hidden border-2 border-black bg-[#F5E7B2] min-w-[700px] ${showRejectModal || showSuccessModal ? 'invisible' : ''}`}>
