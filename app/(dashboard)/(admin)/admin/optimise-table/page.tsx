@@ -295,6 +295,9 @@ useEffect(() => {
   const [isDraftModalOpen, setIsDraftModalOpen] = useState(false);
   const [draftRemark, setDraftRemark] = useState("");
   const [selectedRequests, setSelectedRequests] = useState<UserRequest[]>([]);
+  const [selectedRequestsForOptimization, setSelectedRequestsForOptimization] = useState<Set<string>>(new Set());
+  const [modifyModalOpen, setModifyModalOpen] = useState(false);
+const [currentModifyRequest, setCurrentModifyRequest] = useState<UserRequest | null>(null);
   // Update URL when deptFilter changes
   useEffect(() => {
     // Only update URL if dept filter changes to something other than ALL
@@ -325,12 +328,140 @@ useEffect(() => {
     const deptWorkTypes = workType[request.selectedDepartment as keyof typeof workType] || [];
     return deptWorkTypes.includes(workTypeFilter);
   };
+// Modify Modal Component
+const ModifyModal = () => {
+  if (!currentModifyRequest) return null;
 
+  return (
+    <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-96 max-h-[90vh] overflow-y-auto">
+        <h2 className="text-xl font-bold mb-4 text-black">Modify Request</h2>
+        
+        <div className="space-y-4">
+          {/* Date Field */}
+          <div>
+            <label className="block text-sm font-medium text-black mb-1">
+              Date
+            </label>
+            <input
+              type="date"
+              value={editDate}
+              onChange={(e) => setEditDate(e.target.value)}
+              className="w-full border border-gray-300 p-2 rounded text-black"
+            />
+          </div>
+
+          {/* Time Fields */}
+          <div>
+            <label className="block text-sm font-medium text-black mb-1">
+              Optimized Time
+            </label>
+            <div className="flex gap-2 items-center">
+              <input
+                type="time"
+                value={timeFrom}
+                onChange={(e) => setTimeFrom(e.target.value)}
+                className="w-full border border-gray-300 p-2 rounded text-black"
+              />
+              <span className="text-black">-</span>
+              <input
+                type="time"
+                value={timeTo}
+                onChange={(e) => setTimeTo(e.target.value)}
+                className="w-full border border-gray-300 p-2 rounded text-black"
+              />
+            </div>
+          </div>
+
+          {/* Request Details (Read-only) */}
+          <div className="border-t pt-3">
+            <h3 className="font-medium text-black mb-2">Request Details</h3>
+            <div className="text-sm text-gray-600 space-y-1">
+              <p><strong>Department:</strong> {currentModifyRequest.selectedDepartment}</p>
+              <p><strong>Section:</strong> {currentModifyRequest.selectedSection}</p>
+              <p><strong>Activity:</strong> {currentModifyRequest.activity}</p>
+              <p><strong>Demanded Time:</strong> {formatTime(currentModifyRequest.demandTimeFrom)} - {formatTime(currentModifyRequest.demandTimeTo)}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 mt-6">
+          <button
+            className="px-4 py-2 bg-gray-400 text-white rounded"
+            onClick={() => {
+              setModifyModalOpen(false);
+              setCurrentModifyRequest(null);
+              handleCancelEdit();
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            className="px-4 py-2 bg-green-600 text-white rounded"
+            onClick={() => {
+              handleUpdateClick(currentModifyRequest.id);
+              setModifyModalOpen(false);
+              setCurrentModifyRequest(null);
+            }}
+            disabled={updateOptimizedTimes.isPending}
+          >
+            {updateOptimizedTimes.isPending ? "Saving..." : "Save"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
   const matchesActivity = (request: UserRequest): boolean => {
     if (activityFilter === 'ALL') return true;
     if (!request.activity) return false;
     return request.activity.trim() === activityFilter.trim();
   };
+
+
+// Add these functions with your other handlers
+const handleSelectRequest = (requestId: string) => {
+  setSelectedRequestsForOptimization(prev => {
+    const newSet = new Set(prev);
+    if (newSet.has(requestId)) {
+      newSet.delete(requestId);
+    } else {
+      newSet.add(requestId);
+    }
+    return newSet;
+  });
+};
+
+const handleSelectAllUrgent = () => {
+  const urgentRequests = urgentRequestsFiltered.filter((request: UserRequest) => {
+    const requestDate = typeof request.date === "string" ? parseISO(request.date) : request.date;
+    return isSameDay(requestDate, selectedDate) && (request.Draft === false);
+  });
+  
+  if (selectedRequestsForOptimization.size === urgentRequests.length) {
+    // If all are selected, deselect all
+    setSelectedRequestsForOptimization(new Set());
+  } else {
+    // Select all urgent requests
+    setSelectedRequestsForOptimization(new Set(urgentRequests.map((req: { id: any; }) => req.id)));
+  }
+};
+
+const handleSelectAllCorridor = () => {
+  const corridorRequests = corridorRequestsFiltered.filter((request: UserRequest) => request.Draft === false);
+  
+  if (selectedRequestsForOptimization.size === corridorRequests.length) {
+    // If all are selected, deselect all
+    setSelectedRequestsForOptimization(new Set());
+  } else {
+    // Select all corridor requests
+    setSelectedRequestsForOptimization(new Set(corridorRequests.map((req: { id: any; }) => req.id)));
+  }
+};
+
+const isRequestSelected = (requestId: string) => {
+  return selectedRequestsForOptimization.has(requestId);
+};
 
 // Use the helper function for consistent week boundaries
 const getWeekBoundaries = (date: Date) => {
@@ -897,105 +1028,226 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
     });
   };
 
-  const handleOptimize = async () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const nextWeekStart = new Date(today);
-    nextWeekStart.setDate(today.getDate() + (7 - today.getDay()));
-    nextWeekStart.setHours(0, 0, 0, 0);
+  // const handleOptimize = async () => {
+  //   const today = new Date();
+  //   today.setHours(0, 0, 0, 0);
+  //   const nextWeekStart = new Date(today);
+  //   nextWeekStart.setDate(today.getDate() + (7 - today.getDay()));
+  //   nextWeekStart.setHours(0, 0, 0, 0);
 
-    const preData = isUrgentRequests ? urgentRequestsFiltered : [...corridorRequestsFiltered, ...  nonCorridorRequestsFiltered]
-    if (!preData) return;
+  //   const preData = isUrgentRequests ? urgentRequestsFiltered : [...corridorRequestsFiltered, ...  nonCorridorRequestsFiltered]
+  //   if (!preData) return;
 
-    // For non-urgent requests, check if trying to optimize for current week
-    if (!isUrgentRequests) {
-      const hasCurrentWeekDates = preData.some((request: UserRequest) => {
-        const requestDate = new Date(request.date);
-        requestDate.setHours(0, 0, 0, 0);
-        return requestDate < nextWeekStart;
-      });
+  //   // For non-urgent requests, check if trying to optimize for current week
+  //   if (!isUrgentRequests) {
+  //     const hasCurrentWeekDates = preData.some((request: UserRequest) => {
+  //       const requestDate = new Date(request.date);
+  //       requestDate.setHours(0, 0, 0, 0);
+  //       return requestDate < nextWeekStart;
+  //     });
 
-      if (hasCurrentWeekDates) {
-        setShowDateValidationAlert(true);
-        return;
-      }
-    } else {
-      // For urgent requests, check if any requests are for previous dates
-      const hasPreviousDates = preData.some((request: UserRequest) => {
-        const requestDate = new Date(request.date);
-        requestDate.setHours(0, 0, 0, 0);
-        return requestDate < today;
-      });
+  //     if (hasCurrentWeekDates) {
+  //       setShowDateValidationAlert(true);
+  //       return;
+  //     }
+  //   } else {
+  //     // For urgent requests, check if any requests are for previous dates
+  //     const hasPreviousDates = preData.some((request: UserRequest) => {
+  //       const requestDate = new Date(request.date);
+  //       requestDate.setHours(0, 0, 0, 0);
+  //       return requestDate < today;
+  //     });
 
-      if (hasPreviousDates) {
-        setShowDateValidationAlert(true);
-        return;
-      }
-    }
-    try {
-      // Preprocess the requests
-      //const preprocessedRequests = await flattenRecords(data.data.requests);
-      const requestsToOptimize = preData.filter(
-        (request: UserRequest) => {
-          const requestDate = format(parseISO(request.date), "yyyy-MM-dd");
-          const selected = format(selectedDate, "yyyy-MM-dd");
+  //     if (hasPreviousDates) {
+  //       setShowDateValidationAlert(true);
+  //       return;
+  //     }
+  //   }
+  //   try {
+  //     // Preprocess the requests
+  //     //const preprocessedRequests = await flattenRecords(data.data.requests);
+  //     const requestsToOptimize = preData.filter(
+  //       (request: UserRequest) => {
+  //         const requestDate = format(parseISO(request.date), "yyyy-MM-dd");
+  //         const selected = format(selectedDate, "yyyy-MM-dd");
 
-          return isUrgentRequests
-            ? request.corridorType === "Urgent Block" &&
-            requestDate === selected
-            : request.corridorType !== "Urgent Block";
-        }
-      );
+  //         return isUrgentRequests
+  //           ? request.corridorType === "Urgent Block" &&
+  //           requestDate === selected
+  //           : request.corridorType !== "Urgent Block";
+  //       }
+  //     );
 
-      // Then preprocess the filtered requests
-      const preprocessedRequests = await flattenRecords(requestsToOptimize);
-      // Call optimization API
-      const result = await optimizeMutation.mutateAsync(preprocessedRequests);
+  //     // Then preprocess the filtered requests
+  //     const preprocessedRequests = await flattenRecords(requestsToOptimize);
+  //     // Call optimization API
+  //     const result = await optimizeMutation.mutateAsync(preprocessedRequests);
 
-      if (result.optimizedData) {
-        // Process the optimized data to handle "WrongRequest" values by setting to "00:00"
-        const processedOptimizedData = result.optimizedData.map((request) => ({
-          ...request,
-          optimisedTimeFrom:
-            request.optimisedTimeFrom === "Wrong Request"
-              ? "00:00"
-              : request.optimisedTimeFrom,
-          optimisedTimeTo:
-            request.optimisedTimeTo === "Wrong Request"
-              ? "00:00"
-              : request.optimisedTimeTo,
-        })) as UserRequest[];
+  //     if (result.optimizedData) {
+  //       // Process the optimized data to handle "WrongRequest" values by setting to "00:00"
+  //       const processedOptimizedData = result.optimizedData.map((request) => ({
+  //         ...request,
+  //         optimisedTimeFrom:
+  //           request.optimisedTimeFrom === "Wrong Request"
+  //             ? "00:00"
+  //             : request.optimisedTimeFrom,
+  //         optimisedTimeTo:
+  //           request.optimisedTimeTo === "Wrong Request"
+  //             ? "00:00"
+  //             : request.optimisedTimeTo,
+  //       })) as UserRequest[];
 
-        // Save Functionality
-        const requestIds =
-          preprocessedRequests.map((request: any) => request.id) || [];
-        if (requestIds.length === 0) {
-          alert("No requests to optimize");
-          return;
-        }
-        // console.log("inputdata")
-        // console.dir({
-        //     "processedOptimizedData":processedOptimizedData,
-        //     "requestIds":requestIds
-        //   })
-        await adminService.saveOptimizedRequestsCombined({
-          processedOptimizedData: processedOptimizedData,
-          requestIds: requestIds,
-        });
-        setOptimizedData(processedOptimizedData);
-        setIsOptimizeDialogOpen(false);
-        await refetch();
+  //       // Save Functionality
+  //       const requestIds =
+  //         preprocessedRequests.map((request: any) => request.id) || [];
+  //       if (requestIds.length === 0) {
+  //         alert("No requests to optimize");
+  //         return;
+  //       }
+  //       await adminService.saveOptimizedRequestsCombined({
+  //         processedOptimizedData: processedOptimizedData,
+  //         requestIds: requestIds,
+  //       });
+  //       setOptimizedData(processedOptimizedData);
+  //       setIsOptimizeDialogOpen(false);
+  //       await refetch();
 
-      } else {
-        alert("Failed to optimize requests");
-      }
-    } catch (error) {
-      console.error("Optimization error:", error);
-      alert("Failed to optimize requests. Please try again.");
-    }
-  };
+  //     } else {
+  //       alert("Failed to optimize requests");
+  //     }
+  //   } catch (error) {
+  //     console.error("Optimization error:", error);
+  //     alert("Failed to optimize requests. Please try again.");
+  //   }
+  // };
 
   // Helper function to calculate hours between two dates
+
+  // Update the handleOptimize function
+const handleOptimize = async () => {
+  // Check if any requests are selected
+  if (selectedRequestsForOptimization.size === 0) {
+    alert("Please select at least one request to optimize.");
+    return;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const nextWeekStart = new Date(today);
+  nextWeekStart.setDate(today.getDate() + (7 - today.getDay()));
+  nextWeekStart.setHours(0, 0, 0, 0);
+
+  // Get the base data based on request type (urgent or corridor)
+  let preData;
+  if (isUrgentRequests) {
+    preData = urgentRequestsFiltered.filter((request: UserRequest) => {
+      const requestDate = typeof request.date === "string" ? parseISO(request.date) : request.date;
+      return isSameDay(requestDate, selectedDate) && (request.Draft === false);
+    });
+  } else {
+    preData = corridorRequestsFiltered.filter((request: UserRequest) => request.Draft === false);
+  }
+  
+  if (!preData || preData.length === 0) return;
+
+  // Filter to only selected requests
+  const selectedPreData = preData.filter((request: UserRequest) => 
+    selectedRequestsForOptimization.has(request.id)
+  );
+
+  if (selectedPreData.length === 0) {
+    alert("No selected requests found for optimization.");
+    return;
+  }
+
+  // For non-urgent requests, check if trying to optimize for current week
+  if (!isUrgentRequests) {
+    const hasCurrentWeekDates = selectedPreData.some((request: UserRequest) => {
+      const requestDate = new Date(request.date);
+      requestDate.setHours(0, 0, 0, 0);
+      return requestDate < nextWeekStart;
+    });
+
+    if (hasCurrentWeekDates) {
+      setShowDateValidationAlert(true);
+      return;
+    }
+  } else {
+    // For urgent requests, check if any requests are for previous dates
+    const hasPreviousDates = selectedPreData.some((request: UserRequest) => {
+      const requestDate = new Date(request.date);
+      requestDate.setHours(0, 0, 0, 0);
+      return requestDate < today;
+    });
+
+    if (hasPreviousDates) {
+      setShowDateValidationAlert(true);
+      return;
+    }
+  }
+
+  try {
+    // Filter requests to optimize based on selection and date
+    const requestsToOptimize = selectedPreData.filter(
+      (request: UserRequest) => {
+        const requestDate = format(parseISO(request.date), "yyyy-MM-dd");
+        const selected = format(selectedDate, "yyyy-MM-dd");
+        return isUrgentRequests
+          ? request.corridorType === "Urgent Block" && requestDate === selected
+          : request.corridorType !== "Urgent Block";
+      }
+    );
+
+    if (requestsToOptimize.length === 0) {
+      alert("No selected requests match the current criteria.");
+      return;
+    }
+
+    // Then preprocess the filtered requests
+    const preprocessedRequests = await flattenRecords(requestsToOptimize);
+    
+    // Call optimization API
+    const result = await optimizeMutation.mutateAsync(preprocessedRequests);
+
+    if (result.optimizedData) {
+      // Process the optimized data
+      const processedOptimizedData = result.optimizedData.map((request) => ({
+        ...request,
+        optimisedTimeFrom:
+          request.optimisedTimeFrom === "Wrong Request"
+            ? "00:00"
+            : request.optimisedTimeFrom,
+        optimisedTimeTo:
+          request.optimisedTimeTo === "Wrong Request"
+            ? "00:00"
+            : request.optimisedTimeTo,
+      })) as UserRequest[];
+
+      // Save Functionality - only for selected requests
+      const requestIds = preprocessedRequests.map((request: any) => request.id) || [];
+      
+      await adminService.saveOptimizedRequestsCombined({
+        processedOptimizedData: processedOptimizedData,
+        requestIds: requestIds,
+      });
+      
+      setOptimizedData(processedOptimizedData);
+      setIsOptimizeDialogOpen(false);
+      
+      // Clear selection after optimization
+      setSelectedRequestsForOptimization(new Set());
+      
+      await refetch();
+    } else {
+      alert("Failed to optimize requests");
+    }
+  } catch (error) {
+    console.error("Optimization error:", error);
+    alert("Failed to optimize requests. Please try again.");
+  }
+};
+
+
   const getHoursDifference = (dateFrom: string, dateTo: string): number => {
     const from = new Date(dateFrom);
     const to = new Date(dateTo);
@@ -1138,6 +1390,7 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
 
     <div className="min-h-screen w-screen flex flex-col justify-between bg-white p-3 border border-black">
       <style jsx global>{flashingRowStyle}</style>
+      {modifyModalOpen && <ModifyModal />}
       <div>
         {/* Overall Title */}
         <h1 className="text-2xl font-bold text-center mb-6 text-[#13529e]">Requests With Me</h1>
@@ -1363,7 +1616,7 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
     </div>
   </div>
         </div>
-{isOptimizeDialogOpen && (() => {
+{/* {isOptimizeDialogOpen && (() => {
   // Calculate the requests to be optimized for dialog preview
   const preData = isUrgentRequests ? urgentRequestsFiltered : [...corridorRequestsFiltered, ...nonCorridorRequestsFiltered];
   const requestsToOptimize = preData.filter(
@@ -1424,6 +1677,84 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
       </div>
     </div>
   );
+})()} */}
+{isOptimizeDialogOpen && (() => {
+  let preData;
+  if (isUrgentRequests) {
+    preData = urgentRequestsFiltered.filter((request: UserRequest) => {
+      const requestDate = typeof request.date === "string" ? parseISO(request.date) : request.date;
+      return isSameDay(requestDate, selectedDate) && (request.Draft === false);
+    });
+  } else {
+    preData = corridorRequestsFiltered.filter((request: UserRequest) => request.Draft === false);
+  }
+  
+  const selectedPreData = preData.filter((request: UserRequest) => 
+    selectedRequestsForOptimization.has(request.id)
+  );
+  
+  const requestsToOptimize = selectedPreData.filter(
+    (request: UserRequest) => {
+      const requestDate = format(parseISO(request.date), "yyyy-MM-dd");
+      const selected = format(selectedDate, "yyyy-MM-dd");
+      return isUrgentRequests
+        ? request.corridorType === "Urgent Block" && requestDate === selected
+        : request.corridorType !== "Urgent Block";
+    }
+  );
+  
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black">
+      <div className="bg-white p-6 w-full max-w-md border border-black">
+        <div className="border-b-2 border-[#13529e] pb-3 mb-4 flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <h2 className="text-lg font-bold text-[#13529e]">
+              Optimize Requests
+            </h2>
+            <span
+              className={`px-3 py-1 text-sm rounded-full ${
+                isUrgentMode
+                  ? "bg-red-100 text-red-800"
+                  : "bg-blue-100 text-blue-800"
+              } border border-black`}
+            >
+              {isUrgentMode ? "Urgent Mode" : "Normal Mode"}
+            </span>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setIsOptimizeDialogOpen(false)}
+              className="px-4 py-1 text-sm bg-white text-[#13529e] border border-black"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => handleOptimize()}
+              disabled={optimizeMutation.isPending}
+              className="px-4 py-1 text-sm bg-[#13529e] text-white border border-black disabled:opacity-50"
+            >
+              {optimizeMutation.isPending ? "Optimizing..." : "Optimize"}
+            </button>
+          </div>
+        </div>
+        <div className="mb-4 space-y-2">
+          <p>Are you sure you want to optimize the selected requests?</p>
+          <p className="font-medium">
+            Selected Requests: {requestsToOptimize.length}
+          </p>
+          <p className="font-medium">
+            {isUrgentRequests
+              ? `Urgent Block Requests: ${requestsToOptimize.length}`
+              : `Corridor Block Requests: ${requestsToOptimize.length}`}
+          </p>
+          <p className="font-medium">
+            Week: {format(weekStart, "dd MMM")} -{" "}
+            {format(weekEnd, "dd MMM yyyy")}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 })()}
         {/* Urgent Blocks Section - now at the top */}
         <div className="mt-4 mb-8">
@@ -1470,6 +1801,22 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
   <table className="w-full border-collapse text-black bg-white">
     <thead className={`sticky top-0 ${showRejectionModal ? "z-0" : "z-10"} bg-gray-100 shadow`}>
       <tr className="bg-gray-50">
+            <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+      <input
+        type="checkbox"
+        onChange={handleSelectAllUrgent}
+        checked={
+          urgentRequestsFiltered.filter((request: UserRequest) => {
+            const requestDate = typeof request.date === "string" ? parseISO(request.date) : request.date;
+            return isSameDay(requestDate, selectedDate) && (request.Draft === false);
+          }).length > 0 &&
+          selectedRequestsForOptimization.size === urgentRequestsFiltered.filter((request: UserRequest) => {
+            const requestDate = typeof request.date === "string" ? parseISO(request.date) : request.date;
+            return isSameDay(requestDate, selectedDate) && (request.Draft === false);
+          }).length
+        }
+      />
+    </th>
         <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10"><ColumnHeader icon="date" title="Date" /></th>
         <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
           <ColumnHeader icon="date" title="Dept" />
@@ -1547,7 +1894,14 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
             key={`request-${request.id}-${request.date}`} 
             className={`hover:bg-blue-50 transition-colors ${rowColor}`}
           >
-            <td className="border border-black p-2 text-[24px]">
+              <td className="border border-black p-2 text-[24px]">
+          <input
+            type="checkbox"
+            checked={isRequestSelected(request.id)}
+            onChange={() => handleSelectRequest(request.id)}
+          />
+        </td>
+            {/* <td className="border border-black p-2 text-[24px]">
               {editingId === request.id ? (
                 <input
                   type="date"
@@ -1558,14 +1912,17 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
               ) : (
                 dayjs(request.date).format("DD-MM-YY")
               )}
-            </td>
+            </td> */}
+            <td className="border border-black p-2 text-[24px]">
+  {dayjs(request.date).format("DD-MM-YY")}
+</td>
             <td className="border border-black p-2 text-[24px]">{request.selectedDepartment}</td>
             <td className="border border-black p-2 text-[24px]">{request.selectedSection}</td>
             <td className="border border-black p-2 text-[24px]">{request.selectedDepo}</td>
             <td className="border border-black p-2 text-[24px]">{request.missionBlock}</td>
             <td className="border border-black p-2 text-[24px]">{getLineOrRoad(request)}</td>
             <td className="border border-black p-2 text-[24px]">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
-            <td className="border border-black p-2 text-[24px]">
+            {/* <td className="border border-black p-2 text-[24px]">
               {editingId === request.id ? (
                 <div className="flex gap-1 items-center">
                   <input
@@ -1595,7 +1952,16 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
                     : "N/A"}
                 </>
               )}
-            </td>
+            </td> */}
+            <td className="border border-black p-2 text-[24px]">
+  {request.optimizeTimeFrom && request.optimizeTimeFrom !== "WrongRequest"
+    ? formatTime(request.optimizeTimeFrom)
+    : "N/A"}{" "}
+  -{" "}
+  {request.optimizeTimeTo && request.optimizeTimeTo !== "WrongRequest"
+    ? formatTime(request.optimizeTimeTo)
+    : "N/A"}
+</td>
             <td className="border border-black p-2 text-[24px]">{request.activity}</td>
             <td className="border border-black p-2 text-[24px]">
               <div className="flex gap-2">
@@ -1617,7 +1983,7 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
                   </>
                 ) : modifyReturnOpenId === request.id ? (
                   <>
-                    <button
+                    {/* <button
                       className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
                       onClick={() => {
                         setEditingId(request.id);
@@ -1628,7 +1994,23 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
                       }}
                     >
                       Modify
-                    </button>
+                    </button> */}
+                    <button
+  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+  onClick={() => {
+    setEditingId(request.id);
+    setEditDate(request.date.split("T")[0]);
+    setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
+    setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
+    
+    // Open modal instead of inline editing
+    setCurrentModifyRequest(request);
+    setModifyModalOpen(true);
+    setModifyReturnOpenId(null);
+  }}
+>
+  Modify
+</button>
                     <button
                       className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
                       onClick={() => {
@@ -1648,18 +2030,34 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
                 ) : (
                   <>
                     {request.optimizeStatus === false ? (
+                      // <button
+                      //   className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+                      //   onClick={() => {
+                      //     setEditingId(request.id);
+                      //     setEditDate(request.date.split("T")[0]);
+                      //     setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
+                      //     setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
+                      //     setModifyReturnOpenId(null);
+                      //   }}
+                      // >
+                      //   Modify
+                      // </button>
                       <button
-                        className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-                        onClick={() => {
-                          setEditingId(request.id);
-                          setEditDate(request.date.split("T")[0]);
-                          setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
-                          setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
-                          setModifyReturnOpenId(null);
-                        }}
-                      >
-                        Modify
-                      </button>
+  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+  onClick={() => {
+    setEditingId(request.id);
+    setEditDate(request.date.split("T")[0]);
+    setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
+    setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
+    
+    // Open modal instead of inline editing
+    setCurrentModifyRequest(request);
+    setModifyModalOpen(true);
+    setModifyReturnOpenId(null);
+  }}
+>
+  Modify
+</button>
                     ) : (
                       <>
                         <button
@@ -1735,6 +2133,16 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
             <table className="w-full border-collapse text-black bg-white">
               <thead className="sticky top-0 z-10 bg-gray-100 shadow">
                 <tr className="bg-gray-50">
+                    <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+      <input
+        type="checkbox"
+        onChange={handleSelectAllCorridor}
+        checked={
+          corridorRequestsFiltered.filter((request: UserRequest) => request.Draft === false).length > 0 &&
+          selectedRequestsForOptimization.size === corridorRequestsFiltered.filter((request: UserRequest) => request.Draft === false).length
+        }
+      />
+    </th>
                   <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
                     <ColumnHeader icon="date" title="Date" />
                   </th>
@@ -1818,7 +2226,14 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
           : "bg-gray-200"
   }`}
                   >
-                    <td className="border border-black p-2 text-[24px]">
+                       <td className="border border-black p-2 text-[24px]">
+        <input
+          type="checkbox"
+          checked={isRequestSelected(request.id)}
+          onChange={() => handleSelectRequest(request.id)}
+        />
+      </td>
+                    {/* <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (
                         <input
                           type="date"
@@ -1829,7 +2244,10 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
                       ) : (
                         dayjs(request.date).format("DD-MM-YY")
                       )}
-                    </td>
+                    </td> */}
+                    <td className="border border-black p-2 text-[24px]">
+  {dayjs(request.date).format("DD-MM-YY")}
+</td>
                     <td className="border border-black p-2 text-[24px]">
                       {request.selectedDepartment}
                     </td>
@@ -1849,7 +2267,7 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
                       {formatTime(request.demandTimeFrom)} -{" "}
                       {formatTime(request.demandTimeTo)}
                     </td>
-                    <td className="border border-black p-2 text-[24px]">
+                    {/* <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (
                         <div className="flex gap-1 items-center">
                           <input
@@ -1879,8 +2297,16 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
                             : "N/A"}
                         </>
                       )}
-                    </td>
-
+                    </td> */}
+                      <td className="border border-black p-2 text-[24px]">
+  {request.optimizeTimeFrom && request.optimizeTimeFrom !== "WrongRequest"
+    ? formatTime(request.optimizeTimeFrom)
+    : "N/A"}{" "}
+  -{" "}
+  {request.optimizeTimeTo && request.optimizeTimeTo !== "WrongRequest"
+    ? formatTime(request.optimizeTimeTo)
+    : "N/A"}
+</td>
                     <td className="border border-black p-2 text-[24px]">
                       {request.activity}
                     </td>
@@ -1904,7 +2330,7 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
       </>
     ) : modifyReturnOpenId === request.id ? (
       <>
-        <button
+        {/* <button
           className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
           onClick={() => {
             setEditingId(request.id);
@@ -1915,7 +2341,23 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
           }}
         >
           Modify
-        </button>
+        </button> */}
+        <button
+  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+  onClick={() => {
+    setEditingId(request.id);
+    setEditDate(request.date.split("T")[0]);
+    setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
+    setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
+    
+    // Open modal instead of inline editing
+    setCurrentModifyRequest(request);
+    setModifyModalOpen(true);
+    setModifyReturnOpenId(null);
+  }}
+>
+  Modify
+</button>
         <button
           className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
           onClick={() => {
@@ -1935,18 +2377,34 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
     ) : (
       <>
         {request.optimizeStatus === false ? (
+          // <button
+          //   className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+          //   onClick={() => {
+          //     setEditingId(request.id);
+          //     setEditDate(request.date.split("T")[0]);
+          //     setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
+          //     setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
+          //     setModifyReturnOpenId(null);
+          //   }}
+          // >
+          //   Modify
+          // </button>
           <button
-            className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-            onClick={() => {
-              setEditingId(request.id);
-              setEditDate(request.date.split("T")[0]);
-              setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
-              setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
-              setModifyReturnOpenId(null);
-            }}
-          >
-            Modify
-          </button>
+  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+  onClick={() => {
+    setEditingId(request.id);
+    setEditDate(request.date.split("T")[0]);
+    setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
+    setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
+    
+    // Open modal instead of inline editing
+    setCurrentModifyRequest(request);
+    setModifyModalOpen(true);
+    setModifyReturnOpenId(null);
+  }}
+>
+  Modify
+</button>
         ) : (
           <>
             <button
@@ -2099,7 +2557,7 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
           : "bg-gray-200"
   }`}
                   >
-                    <td className="border border-black p-2 text-[24px]">
+                    {/* <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (
                         <input
                           type="date"
@@ -2110,7 +2568,10 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
                       ) : (
                         dayjs(request.date).format("DD-MM-YY")
                       )}
-                    </td>
+                    </td> */}
+                    <td className="border border-black p-2 text-[24px]">
+  {dayjs(request.date).format("DD-MM-YY")}
+</td>
                     <td className="border border-black p-2 text-[24px]">
                       {request.selectedDepartment}
                     </td>
@@ -2130,7 +2591,7 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
                       {formatTime(request.demandTimeFrom)} -{" "}
                       {formatTime(request.demandTimeTo)}
                     </td>
-                    <td className="border border-black p-2 text-[24px]">
+                    {/* <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (
                         <div className="flex gap-1 items-center">
                           <input
@@ -2160,8 +2621,16 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
                             : "N/A"}
                         </>
                       )}
-                    </td>
-
+                    </td> */}
+                       <td className="border border-black p-2 text-[24px]">
+  {request.optimizeTimeFrom && request.optimizeTimeFrom !== "WrongRequest"
+    ? formatTime(request.optimizeTimeFrom)
+    : "N/A"}{" "}
+  -{" "}
+  {request.optimizeTimeTo && request.optimizeTimeTo !== "WrongRequest"
+    ? formatTime(request.optimizeTimeTo)
+    : "N/A"}
+</td>
                     <td className="border border-black p-2 text-[24px]">
                       {request.activity}
                     </td>
@@ -2185,7 +2654,7 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
       </>
     ) : modifyReturnOpenId === request.id ? (
       <>
-        <button
+        {/* <button
           className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
           onClick={() => {
             setEditingId(request.id);
@@ -2196,7 +2665,23 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
           }}
         >
           Modify
-        </button>
+        </button> */}
+        <button
+  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+  onClick={() => {
+    setEditingId(request.id);
+    setEditDate(request.date.split("T")[0]);
+    setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
+    setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
+    
+    // Open modal instead of inline editing
+    setCurrentModifyRequest(request);
+    setModifyModalOpen(true);
+    setModifyReturnOpenId(null);
+  }}
+>
+  Modify
+</button>
         <button
           className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
           onClick={() => {
@@ -2216,18 +2701,34 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
     ) : (
       <>
         {request.optimizeStatus === false ? (
+          // <button
+          //   className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+          //   onClick={() => {
+          //     setEditingId(request.id);
+          //     setEditDate(request.date.split("T")[0]);
+          //     setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
+          //     setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
+          //     setModifyReturnOpenId(null);
+          //   }}
+          // >
+          //   Modify
+          // </button>
           <button
-            className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-            onClick={() => {
-              setEditingId(request.id);
-              setEditDate(request.date.split("T")[0]);
-              setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
-              setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
-              setModifyReturnOpenId(null);
-            }}
-          >
-            Modify
-          </button>
+  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+  onClick={() => {
+    setEditingId(request.id);
+    setEditDate(request.date.split("T")[0]);
+    setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
+    setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
+    
+    // Open modal instead of inline editing
+    setCurrentModifyRequest(request);
+    setModifyModalOpen(true);
+    setModifyReturnOpenId(null);
+  }}
+>
+  Modify
+</button>
         ) : (
           <>
             <button
@@ -2351,7 +2852,7 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
           : "bg-gray-200"
   }`}
                   >
-                    <td className="border border-black p-2 text-[24px]">
+                    {/* <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (
                         <input
                           type="date"
@@ -2362,7 +2863,10 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
                       ) : (
                         dayjs(request.date).format("DD-MM-YY")
                       )}
-                    </td>
+                    </td> */}
+                    <td className="border border-black p-2 text-[24px]">
+  {dayjs(request.date).format("DD-MM-YY")}
+</td>
                     <td className="border border-black p-2 text-[24px]">
                       {request.selectedDepartment}
                     </td>
@@ -2382,7 +2886,7 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
                       {formatTime(request.demandTimeFrom)} -{" "}
                       {formatTime(request.demandTimeTo)}
                     </td>
-                    <td className="border border-black p-2 text-[24px]">
+                    {/* <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (
                         <div className="flex gap-1 items-center">
                           <input
@@ -2412,8 +2916,16 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
                             : "N/A"}
                         </>
                       )}
-                    </td>
-
+                    </td> */}
+<td className="border border-black p-2 text-[24px]">
+  {request.optimizeTimeFrom && request.optimizeTimeFrom !== "WrongRequest"
+    ? formatTime(request.optimizeTimeFrom)
+    : "N/A"}{" "}
+  -{" "}
+  {request.optimizeTimeTo && request.optimizeTimeTo !== "WrongRequest"
+    ? formatTime(request.optimizeTimeTo)
+    : "N/A"}
+</td>
                     <td className="border border-black p-2 text-[24px]">
                       {request.activity}
                     </td>
@@ -2437,7 +2949,7 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
       </>
     ) : modifyReturnOpenId === request.id ? (
       <>
-        <button
+        {/* <button
           className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
           onClick={() => {
             setEditingId(request.id);
@@ -2448,7 +2960,23 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
           }}
         >
           Modify
-        </button>
+        </button> */}
+        <button
+  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+  onClick={() => {
+    setEditingId(request.id);
+    setEditDate(request.date.split("T")[0]);
+    setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
+    setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
+    
+    // Open modal instead of inline editing
+    setCurrentModifyRequest(request);
+    setModifyModalOpen(true);
+    setModifyReturnOpenId(null);
+  }}
+>
+  Modify
+</button>
         <button
           className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
           onClick={() => {
@@ -2468,18 +2996,34 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
     ) : (
       <>
         {request.optimizeStatus === false ? (
+          // <button
+          //   className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+          //   onClick={() => {
+          //     setEditingId(request.id);
+          //     setEditDate(request.date.split("T")[0]);
+          //     setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
+          //     setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
+          //     setModifyReturnOpenId(null);
+          //   }}
+          // >
+          //   Modify
+          // </button>
           <button
-            className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-            onClick={() => {
-              setEditingId(request.id);
-              setEditDate(request.date.split("T")[0]);
-              setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
-              setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
-              setModifyReturnOpenId(null);
-            }}
-          >
-            Modify
-          </button>
+  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+  onClick={() => {
+    setEditingId(request.id);
+    setEditDate(request.date.split("T")[0]);
+    setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
+    setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
+    
+    // Open modal instead of inline editing
+    setCurrentModifyRequest(request);
+    setModifyModalOpen(true);
+    setModifyReturnOpenId(null);
+  }}
+>
+  Modify
+</button>
         ) : (
           <>
             <button
