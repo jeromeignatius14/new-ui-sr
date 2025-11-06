@@ -1468,6 +1468,9 @@ export default function GenerateReportPage() {
     majorSections: [] as string[],
     department: session?.user?.department ? [session.user.department] : [""],
     blockType: ["All"],
+    globalWorkType: "ALL",
+    globalActivity: "ALL", 
+    globalTimeSlot: "ALL",
   });
 
   useEffect(() => {
@@ -1618,6 +1621,9 @@ export default function GenerateReportPage() {
         majorSections: selectedMajorSections,
         department: session?.user?.department ? [session.user.department] : [""],
         blockType: selectedBlockTypes,
+        globalWorkType: "ALL",
+        globalActivity: "ALL", 
+        globalTimeSlot: "ALL",
       });
 
       // ✅ Push search params to URL (yyyy-MM-dd so inputs restore correctly)
