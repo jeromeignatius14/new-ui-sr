@@ -33,6 +33,8 @@ interface FormData {
 
 // Interfaces aligned with the API service
 interface PastBlockSummary {
+  NotAvailedCount?: number;
+  NotGrantedCount?: number;
   Applied?: number;
   AppliedCount?: number;
   GrantedCount?: number;
@@ -88,6 +90,36 @@ const departmentOptions: OptionType[] = [
   { value: "ST", label: "S & T" },
   { value: "TRD", label: "TRD" },
 ];
+// Add after your departmentOptions
+const globalFilterOptions = {
+  workType: [
+    { value: "ALL", label: "ALL" },
+    { value: "Gear", label: "Gear" },
+    { value: "Machine", label: "Machine" },
+    { value: "Non-Machine", label: "Non-Machine" },
+    { value: "Tw", label: "Tw" },
+    { value: "Lt", label: "Lt" },
+  ],
+  activity: {
+    'Gear': ['Point', 'EI', 'Signal', 'DC Track', 'AFTC', 'SSDAC', 'MSDAC', 'Panel', 'LC Gate Mechanical', 'LC Gate ELB', 'Emergency Sliding Boom', 'IPS', 'Conventional power supply equipment', 'System Integrity Test of each PI/EI/RRI stations', 'Cable Insulation testing (cable meggering) for one station.', 'DLBI- SGE', 'TLBI-FM Inst', 'UFSBI', 'Fuse', 'EKT'],
+    'Tw': ['AOH', 'POH', 'IOH', 'RE POH', 'RD WORK', 'TURN OUT CHECKING', 'CROSS OVER CHECKING', 'CROSS TRACK FEEDERS CHECKING', 'GANTRY MAINTENANCE', 'CONTACT WIRE RENEWAL WORK', 'CATENARY WIRE RENEWAL WORK', 'CANTILEVER ERECTION/REPLACEMENT(2x25KV WORK)', 'MAST ERECTION(2x25KV WORK)', 'FEEDERS ERECTION(2x25KV WORK)', 'OHE PROFILING', 'OHE/CN WORK', 'OTHER SPECIAL WORKS'],
+    'Lt': ['AOH', 'POH', 'IOH', 'RE POH', 'RD WORK', 'TURN OUT CHECKING', 'CROSS OVER CHECKING', 'CROSS TRACK FEEDERS CHECKING', 'GANTRY MAINTENANCE', 'CONTACT WIRE RENEWAL WORK', 'CATENARY WIRE RENEWAL WORK', 'CANTILEVER ERECTION/REPLACEMENT(2x25KV WORK)', 'MAST ERECTION(2x25KV WORK)', 'FEEDERS ERECTION(2x25KV WORK)', 'OHE PROFILING', 'OHE/CN WORK', 'OTHER SPECIAL WORKS'],
+    'Machine': ['BCM', 'DTE', 'CSM', 'DUOMAT', 'UNIMAT', 'MPT', 'BRM', 'TRT', 'UTV', 'DTS', 'T28', 'SQRS', 'RGM working', 'SBCM'],
+    'Non-Machine': ['Rail renewal', 'Welding work', 'Destressing work', 'Switch renewal', 'CMS Crossing renewal', 'SEJ Renewal', 'Glued Joint renewal', 'Dummy Glued Joint removal', 'TRR P 60 Kg', 'TRR S 60 Kg', 'TRR S 60 kg', 'TRR S 52 kg', 'Interchanging', 'Trucking out/Shifting materials', 'TWR with MFBW', 'TBTR (Br sleeper renewal)', 'TSR P 60 Kg', 'TSR S 60 Kg', 'TSR S 52 Kg', 'TTSR work', 'Jt Insp Notes Attn', 'Stretcherbar renewal', 'TFR Work', 'Ballast Unloading', 'Rail unloading', 'Lifting and packing', 'Gauge tie plate renewal', 'Sleeper renewal', 'Fish Plates O&E', 'Preliminary/Post works', 'Trucking out materials', 'Cutting Widening work', 'JCB working', 'Earth work/Muck removal', 'Crane Moving/Working', 'Attention to Track', 'Attention to Fittings', 'Attention to Bridge', 'Attention to Guard rail', 'Attention to Points & Xing', 'Attention to LC', 'Attention to Curve check rail', 'Sheet Piling work', 'Platform work', 'Platform Shelter work', 'ABSS work', 'Erection of Platform shelter purlins work', 'Erection of FOB Girders', 'Other FOB works', 'Other Track works', 'Other Bridge work'],
+  },
+  timeSlot: [
+    { value: "ALL", label: "ALL" },
+    { value: "Morning", label: "Morning (4:00-12:00)" },
+    { value: "Afternoon", label: "Afternoon (12:00-20:00)" },
+    { value: "Night", label: "Night (20:00-4:00)" },
+  ]
+};
+
+// Helper function to get activities based on work type
+const getActivitiesForWorkType = (workTypeSelected: string): string[] => {
+  if (workTypeSelected === 'ALL') return ['ALL'];
+  return ['ALL', ...(globalFilterOptions.activity[workTypeSelected as keyof typeof globalFilterOptions.activity] || [])];
+};
 
 export default function GenerateReportPage() {
   const [pastBlockSummary, setPastBlockSummary] = useState<PastBlockSummary[]>(
@@ -113,6 +145,20 @@ export default function GenerateReportPage() {
     const [upcomingDivisionIdSearch, setUpcomingDivisionIdSearch] = useState<string>("");
 const [sseFilter, setSseFilter] = useState("All");
 const [sseDropdownOpen, setSseDropdownOpen] = useState(false);
+// Add after your existing state variables
+const [globalWorkTypeFilter, setGlobalWorkTypeFilter] = useState<string>("ALL");
+const [globalActivityFilter, setGlobalActivityFilter] = useState<string>("ALL");
+const [globalTimeSlotFilter, setGlobalTimeSlotFilter] = useState<string>("ALL");
+
+// Dropdown visibility states
+const [showGlobalWorkTypeDropdown, setShowGlobalWorkTypeDropdown] = useState(false);
+const [showGlobalActivityDropdown, setShowGlobalActivityDropdown] = useState(false);
+const [showGlobalTimeSlotDropdown, setShowGlobalTimeSlotDropdown] = useState(false);
+
+// Refs for dropdowns
+const globalWorkTypeDropdownRef = useRef<HTMLDivElement>(null);
+const globalActivityDropdownRef = useRef<HTMLDivElement>(null);
+const globalTimeSlotDropdownRef = useRef<HTMLDivElement>(null);
 const sseDropdownRef = useRef<HTMLDivElement>(null);
   
   const router = useRouter();
@@ -132,6 +178,9 @@ const sseDropdownRef = useRef<HTMLDivElement>(null);
     majorSections: [] as string[],
     department: ["Engineering"],
     blockType: ["All"],
+    globalWorkType: "ALL",
+    globalActivity: "ALL", 
+    globalTimeSlot: "ALL",
   });
 
   // Get user's location and set up major section options
@@ -152,6 +201,24 @@ const sseDropdownRef = useRef<HTMLDivElement>(null);
       }
     }
   }, [session]);
+  // Add after your existing useEffects
+// Close dropdowns when clicking outside
+useEffect(() => {
+  const handleClickOutside = (event: MouseEvent) => {
+    if (globalWorkTypeDropdownRef.current && !globalWorkTypeDropdownRef.current.contains(event.target as Node)) {
+      setShowGlobalWorkTypeDropdown(false);
+    }
+    if (globalActivityDropdownRef.current && !globalActivityDropdownRef.current.contains(event.target as Node)) {
+      setShowGlobalActivityDropdown(false);
+    }
+    if (globalTimeSlotDropdownRef.current && !globalTimeSlotDropdownRef.current.contains(event.target as Node)) {
+      setShowGlobalTimeSlotDropdown(false);
+    }
+  };
+
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => document.removeEventListener('mousedown', handleClickOutside);
+}, []);
   // Use the react-query hook with enabled: false initially
   const {
     data: reportData,
@@ -248,38 +315,78 @@ const sseDropdownRef = useRef<HTMLDivElement>(null);
     }
   };
 
-  const onSubmit = async (data: FormData) => {
-    // Validate dates
-    if (!data.startDate || !data.endDate) {
-      toast.error("Please enter both start and end dates");
-      return;
-    }
+  // const onSubmit = async (data: FormData) => {
+  //   // Validate dates
+  //   if (!data.startDate || !data.endDate) {
+  //     toast.error("Please enter both start and end dates");
+  //     return;
+  //   }
 
-    try {
-      // Format dates to DD/MM/YY format for API
-      const startDate = new Date(data.startDate);
-      const endDate = new Date(data.endDate);
+  //   try {
+  //     // Format dates to DD/MM/YY format for API
+  //     const startDate = new Date(data.startDate);
+  //     const endDate = new Date(data.endDate);
 
-      const formattedStartDate = format(startDate, "dd/MM/yy");
-      const formattedEndDate = format(endDate, "dd/MM/yy");
+  //     const formattedStartDate = format(startDate, "dd/MM/yy");
+  //     const formattedEndDate = format(endDate, "dd/MM/yy");
 
-      // Update query parameters
-      setQueryParams({
-        startDate: formattedStartDate,
-        endDate: formattedEndDate,
-        majorSections: selectedMajorSections,
-        department: selectedDepartments,
-        blockType: selectedBlockTypes,
-      });
+  //     // Update query parameters
+  //     setQueryParams({
+  //       startDate: formattedStartDate,
+  //       endDate: formattedEndDate,
+  //       majorSections: selectedMajorSections,
+  //       department: selectedDepartments,
+  //       blockType: selectedBlockTypes,
+  //     });
 
-      // Trigger the query - react-query will handle the loading state
-      await refetch();
-    } catch (error) {
-      console.error("Error initiating report generation:", error);
-      toast.error("Failed to generate report");
-    }
-  };
+  //     // Trigger the query - react-query will handle the loading state
+  //     // await refetch();
+  //   } catch (error) {
+  //     console.error("Error initiating report generation:", error);
+  //     toast.error("Failed to generate report");
+  //   }
+  // };
 
+  // Replace your existing onSubmit with this:
+const onSubmit = async (data: FormData) => {
+  // Validate dates
+  if (!data.startDate || !data.endDate) {
+    toast.error("Please enter both start and end dates");
+    return;
+  }
+
+  try {
+    // Format dates to DD/MM/YY format for API
+    const startDate = new Date(data.startDate);
+    const endDate = new Date(data.endDate);
+
+    const formattedStartDate = format(startDate, "dd/MM/yy");
+    const formattedEndDate = format(endDate, "dd/MM/yy");
+
+    // Update query parameters with ALL filters
+    setQueryParams({
+      startDate: formattedStartDate,
+      endDate: formattedEndDate,
+      majorSections: selectedMajorSections,
+      department: selectedDepartments,
+      blockType: selectedBlockTypes,
+      // ADD THESE 3 NEW FILTERS:
+      globalWorkType: globalWorkTypeFilter,
+      globalActivity: globalActivityFilter,
+      globalTimeSlot: globalTimeSlotFilter,
+    });
+
+  } catch (error) {
+    console.error("Error initiating report generation:", error);
+    toast.error("Failed to generate report");
+  }
+};
+// Add this function after onSubmit
+const clearGlobalFilters = () => {
+  setGlobalWorkTypeFilter("ALL");
+  setGlobalActivityFilter("ALL");
+  setGlobalTimeSlotFilter("ALL");
+};
   const formatDateInput = (value: string) => {
     // Format as DD/MM/YY
     if (!value) return "";
@@ -966,6 +1073,99 @@ const handleDownloadDepartmentCount = () => {
           </button>
         ))}
       </div>
+            {/* === GLOBAL FILTERS SECTION - ADD AFTER SUBMIT BUTTON === */}
+<div className="w-full max-w-screen-lg flex flex-wrap justify-center gap-2 mb-4 px-2">
+  {/* Work Type Filter */}
+  <div className="relative" ref={globalWorkTypeDropdownRef}>
+    <button
+      onClick={() => setShowGlobalWorkTypeDropdown(!showGlobalWorkTypeDropdown)}
+      className="px-3 py-1 bg-white border border-black rounded flex items-center gap-2 text-black text-[12px] md:text-[14px]"
+    >
+      Work Type: {globalWorkTypeFilter}
+      <span>▼</span>
+    </button>
+    {showGlobalWorkTypeDropdown && (
+      <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[150px]">
+        {globalFilterOptions.workType.map((type) => (
+          <button
+            key={type.value}
+            onClick={() => {
+              setGlobalWorkTypeFilter(type.value);
+              setGlobalActivityFilter('ALL');
+              setShowGlobalWorkTypeDropdown(false);
+            }}
+            className={`block w-full text-left px-3 py-2 hover:bg-gray-100 text-black ${globalWorkTypeFilter === type.value ? 'bg-blue-100' : ''}`}
+          >
+            {type.label}
+          </button>
+        ))}
+      </div>
+    )}
+  </div>
+
+  {/* Activity Filter */}
+  <div className="relative" ref={globalActivityDropdownRef}>
+    <button
+      onClick={() => globalWorkTypeFilter !== 'ALL' && setShowGlobalActivityDropdown(!showGlobalActivityDropdown)}
+      className={`px-3 py-1 bg-white border border-black rounded flex items-center gap-2 text-black text-[12px] md:text-[14px] ${globalWorkTypeFilter === 'ALL' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+      disabled={globalWorkTypeFilter === 'ALL'}
+    >
+      Activity: {globalActivityFilter}
+      <span>▼</span>
+    </button>
+    {showGlobalActivityDropdown && globalWorkTypeFilter !== 'ALL' && (
+      <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[200px] max-h-60 overflow-y-auto">
+        {getActivitiesForWorkType(globalWorkTypeFilter).map((activity) => (
+          <button
+            key={activity}
+            onClick={() => {
+              setGlobalActivityFilter(activity);
+              setShowGlobalActivityDropdown(false);
+            }}
+            className={`block w-full text-left px-3 py-2 hover:bg-gray-100 text-black ${globalActivityFilter === activity ? 'bg-blue-100' : ''}`}
+          >
+            {activity}
+          </button>
+        ))}
+      </div>
+    )}
+  </div>
+
+  {/* Time Slot Filter */}
+  <div className="relative" ref={globalTimeSlotDropdownRef}>
+    <button
+      onClick={() => setShowGlobalTimeSlotDropdown(!showGlobalTimeSlotDropdown)}
+      className="px-3 py-1 bg-white border border-black rounded flex items-center gap-2 text-black text-[12px] md:text-[14px]"
+    >
+      Time: {globalTimeSlotFilter}
+      <span>▼</span>
+    </button>
+    {showGlobalTimeSlotDropdown && (
+      <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[180px]">
+        {globalFilterOptions.timeSlot.map((slot) => (
+          <button
+            key={slot.value}
+            onClick={() => {
+              setGlobalTimeSlotFilter(slot.value);
+              setShowGlobalTimeSlotDropdown(false);
+            }}
+            className={`block w-full text-left px-3 py-2 hover:bg-gray-100 text-black ${globalTimeSlotFilter === slot.value ? 'bg-blue-100' : ''}`}
+          >
+            {slot.label}
+          </button>
+        ))}
+      </div>
+    )}
+  </div>
+
+  {/* Clear Filters Button */}
+  <button
+    onClick={clearGlobalFilters}
+    className="px-3 py-1 bg-red-500 text-white border border-black rounded text-[12px] md:text-[14px]"
+  >
+    Clear Filters
+  </button>
+</div>
 
       {/* Submit Button */}
       <div className="w-full max-w-screen-lg flex justify-center mb-4">
@@ -977,6 +1177,7 @@ const handleDownloadDepartmentCount = () => {
           {loading ? "Loading..." : "Submit"}
         </button>
       </div>
+
 
       {/* === PAGE 1: (A) BLOCK SUMMARY TABLE - FULL WIDTH === */}
       <div className="w-full bg-white flex flex-col py-4">
@@ -1030,8 +1231,11 @@ const handleDownloadDepartmentCount = () => {
                   <th className="border-2 border-black px-1 md:px-2 py-2">Applied (Hrs)/Blocks</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Granted (Hrs)/Blocks</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">% Granted</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Not Granted</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Availed (Hrs)/Blocks</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">% Availed</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Not Availed</th>
+
                 </tr>
               </thead>
               <tbody>
@@ -1085,10 +1289,16 @@ const handleDownloadDepartmentCount = () => {
                       >
                         {summary.Granted.toFixed(2)} /{summary.GrantedCount}
                       </td>
+                    
                       <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                         {summary.PercentGranted !== undefined
                           ? summary.PercentGranted.toFixed(2) + "%"
                           : ""}
+                      </td>
+                        <td
+                        className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]"
+                      >
+                        {summary.NotGrantedCount}
                       </td>
                       <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
@@ -1103,6 +1313,11 @@ const handleDownloadDepartmentCount = () => {
                         {summary.PercentAvailed !== undefined
                           ? summary.PercentAvailed.toFixed(2) + "%"
                           : ""}
+                      </td>
+                       <td
+                        className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]"
+                      >
+                        {summary.NotAvailedCount}
                       </td>
                     </tr>
                   ))
@@ -1157,6 +1372,12 @@ const handleDownloadDepartmentCount = () => {
                         0
                       ).toFixed(2)}
                     </td>
+                     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.NotGrantedCount || 0),
+                        0
+                      ).toFixed(2)}
+                    </td>
                     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                       {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.Availed || 0),
@@ -1171,6 +1392,12 @@ const handleDownloadDepartmentCount = () => {
                     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                       {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.PercentAvailed || 0),
+                        0
+                      ).toFixed(2)}
+                    </td>
+                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.NotAvailedCount || 0),
                         0
                       ).toFixed(2)}
                     </td>

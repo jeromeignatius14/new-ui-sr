@@ -139,6 +139,7 @@ export interface UserRequestsResponse {
     status: boolean;
     message: string;
     data: {
+        specialDeptRequests: any;
         requests: UserRequest[];
         total: number;
         page: number;
