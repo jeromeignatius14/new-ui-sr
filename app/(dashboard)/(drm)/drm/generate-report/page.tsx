@@ -122,6 +122,9 @@ export default function GenerateReportPage() {
     majorSections: [] as string[],
     department: ["Engineering"],
     blockType: ["All"],
+    globalWorkType: "ALL",
+    globalActivity: "ALL", 
+    globalTimeSlot: "ALL",
   });
 
   // Get user's location and set up major section options
@@ -261,6 +264,9 @@ export default function GenerateReportPage() {
         majorSections: selectedMajorSections,
         department: selectedDepartments,
         blockType: selectedBlockTypes,
+        globalWorkType: "ALL",
+        globalActivity: "ALL",
+        globalTimeSlot: "ALL",
       });
 
       // Trigger the query - react-query will handle the loading state
