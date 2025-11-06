@@ -106,18 +106,37 @@ export default function PendingRequestsPage() {
         return dateA - dateB;
     });
 
-const pendingDisconnectionRequests = (Array.isArray(data?.data?.requests) ? data.data.requests : [])
-    .filter((r: UserRequest) => 
-        r.status === 'PENDING' && 
-        r.managerAcceptance === false && 
-        (r.powerBlockRequired===true||r.sntDisconnectionRequired===true||r.enggDisconnectionsRequired===true)
-    )
+
+const sessionDepartment = session?.user?.department; // ENGG | S&T | TRD | undefined
+
+const pendingDisconnectionRequests =
+  (Array.isArray(data?.data?.requests) ? data.data.specialDeptRequests : [])
+    .filter((r: UserRequest) => {
+      // Base filters
+      const isPending = r.status === 'PENDING';
+      const isManagerPending = r.managerAcceptance === false;
+      const hasDisconnection =
+        r.powerBlockRequired === true ||
+        r.sntDisconnectionRequired === true ||
+        r.enggDisconnectionsRequired === true;
+
+      // Department-based filtering from session
+      let deptMatch = true; // default — no department OR HQ users see all
+
+      if (sessionDepartment === "ENGG") {
+        deptMatch = r.enggDisconnectionsRequired === true;
+      } else if (sessionDepartment === "S&T") {
+        deptMatch = r.sntDisconnectionRequired === true;
+      } else if (sessionDepartment === "TRD") {
+        deptMatch = r.powerBlockRequired === true;
+      }
+
+      return isPending && isManagerPending && hasDisconnection && deptMatch;
+    })
     .sort((a: UserRequest, b: UserRequest) => {
-        // Date sort (earliest first)
-        const dateA = new Date(a.date).getTime();
-        const dateB = new Date(b.date).getTime();
-        return dateA - dateB;
+      return new Date(a.date).getTime() - new Date(b.date).getTime();
     });
+
     const pendingMultiLineRequests = (Array.isArray(data?.data?.requests) ? data.data.requests : [])
     .filter((r: UserRequest) => 
         r.status === 'PENDING' && 
@@ -803,7 +822,7 @@ useEffect(() => {
          <button
             onClick={() => setActiveTab('disconnections')}
             className={`px-4 py-2 rounded-lg border-2 border-black font-bold ${
-                activeTab === 'non-corridor' ? 'bg-[#45B7D1] text-white' : 'bg-[#D6F3FF] text-black'
+                activeTab === 'disconnections' ? 'bg-[#45B7D1] text-white' : 'bg-[#D6F3FF] text-black'
             }`}
         >
             Job Pending With SSE ({pendingDisconnectionRequests.length})
