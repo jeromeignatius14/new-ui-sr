@@ -117,6 +117,9 @@ export default function GenerateReportPage() {
     majorSections: [] as string[],
     department: session?.user?.department ? [session.user.department] : [""],
     blockType: ["All"],
+    globalWorkType: "ALL",
+    globalActivity: "ALL", 
+    globalTimeSlot: "ALL",
   });
 
   useEffect(() => {
@@ -255,6 +258,9 @@ export default function GenerateReportPage() {
           ? [session.user.department]
           : [""],
         blockType: selectedBlockTypes,
+        globalWorkType: "ALL",
+        globalActivity: "ALL",
+        globalTimeSlot: "ALL",
       });
 
       // Trigger the query - react-query will handle the loading state
