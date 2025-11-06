@@ -3,6 +3,9 @@ import axiosInstance from "@/app/utils/axiosInstance";
 import { MajorSection } from "@/app/lib/store";
 
 export interface GenerateReportParams {
+  globalTimeSlot: any;
+  globalActivity: any;
+  globalWorkType: any;
   startDate: string;
   endDate: string;
   majorSections: string[];
@@ -60,6 +63,25 @@ const BASE_URL = "api/hq";
 //   },
 // };
 
+// export const hqService = {
+//   generateReport: async (
+//     params: GenerateReportParams
+//   ): Promise<GenerateReportResponse> => {
+//     // Special handling for S&T department only
+//     const departments = params.department
+//       .map((dept) => (dept === "S&T" ? "S%26T" : dept))
+//       .join(",");
+
+//     const response = await axiosInstance.get<GenerateReportResponse>(
+//       `${BASE_URL}/generate-report?startDate=${params.startDate}` +
+//         `&endDate=${params.endDate}` +
+//         `&majorSections=${params.majorSections.join(",")}` +
+//         `&department=${departments}` +
+//         `&blockType=${params.blockType.join(",")}`
+//     );
+//     return response.data;
+//   },
+// };
 export const hqService = {
   generateReport: async (
     params: GenerateReportParams
@@ -74,7 +96,11 @@ export const hqService = {
         `&endDate=${params.endDate}` +
         `&majorSections=${params.majorSections.join(",")}` +
         `&department=${departments}` +
-        `&blockType=${params.blockType.join(",")}`
+        `&blockType=${params.blockType.join(",")}` +
+        // ADD THESE 3 NEW PARAMETERS:
+        `&globalWorkType=${params.globalWorkType}` +
+        `&globalActivity=${params.globalActivity}` +
+        `&globalTimeSlot=${params.globalTimeSlot}`
     );
     return response.data;
   },
