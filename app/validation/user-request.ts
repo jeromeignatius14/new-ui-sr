@@ -79,6 +79,10 @@ export const userRequestSchema = z.object({
     })).optional(),
      engDisconnectionAssignTo: z.string().optional(),
     engDisconnectionRemarks: z.string().optional(),
+      freshCautionFromDate: z.string().optional().nullable(),
+  freshCautionToDate: z.string().optional().nullable(),
+  freshCautionFromTime: z.string().optional().nullable(),
+  freshCautionToTime: z.string().optional().nullable(),
 });
 
 export type UserRequestInput = z.infer<typeof userRequestSchema>;
