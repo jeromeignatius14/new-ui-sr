@@ -645,15 +645,19 @@ if (activeSummaryFilters.searchId) {
             ))}
           </div>
 
-    <Link
-      href="/admin/optimise-table"
-      className="mx-auto w-fit flex items-center gap-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF8989] text-white font-bold px-8 py-3 mb-6 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-[22px]"
-    >
-      Click To View
-    </Link>
-  </div>
-</div>
-
+          <Link
+            href="/admin/optimise-table"
+            className="mx-auto w-fit flex items-center gap-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF8989] text-white font-bold px-8 py-3 mb-6 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-[22px]"
+          >
+            Click To View
+          </Link>
+        </div>
+      </div>
+<Link href="/admin/draft-table-data" className="mb-8">
+  <button className="w-full max-w-md px-12 rounded-lg bg-[#7be09b] border-2 border-[#00b347] py-6 text-2xl font-extrabold text-white text-center shadow-lg hover:scale-105 transition duration-300 hover:bg-[#5bc07b]">
+    View Draft Requests
+  </button>
+</Link>
 
       {/* View Summary of Upcoming Blocks CTA */}
       <div className="flex justify-center mb-8 w-full">
@@ -963,11 +967,7 @@ if (activeSummaryFilters.searchId) {
         </button>
       </Link>
 
-       <Link href="/admin/draft-table-data" className="mb-8">
-        <button className="w-fit px-10 rounded-full bg-[#c7c7f7] border border-black py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
-          Draft Table
-        </button>
-      </Link>
+       
 
       {/* Sticky Action Bar at Bottom */}
       <div className=" w-full bg-white border-t-2 border-[#A084E8] py-4 flex flex-col justify-center items-center gap-8 z-50 ">

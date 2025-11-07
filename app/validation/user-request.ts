@@ -67,6 +67,23 @@ export const userRequestSchema = z.object({
     road: z.string().optional(),
     lineType: z.enum(['UP', 'DN', 'SL']).optional(),
     cautionDays: z.number().optional(),
+    sntApprovals: z.array(z.object({
+        depot: z.string(),
+        status: z.enum(['PENDING', 'ACCEPTED', 'REJECTED']),
+        approvedAt: z.string().nullable().optional(),
+        remarks: z.string().optional(),
+    })).optional(),
+    trdApprovals: z.array(z.object({
+        depot: z.string(),
+        status: z.enum(['PENDING', 'ACCEPTED', 'REJECTED']),
+        approvedAt: z.string().nullable().optional(),
+        remarks: z.string().optional(),
+    })).optional(),
+
+      freshCautionFromDate: z.string().optional().nullable(),
+  freshCautionToDate: z.string().optional().nullable(),
+  freshCautionFromTime: z.string().optional().nullable(),
+  freshCautionToTime: z.string().optional().nullable(),
 });
 
 export type UserRequestInput = z.infer<typeof userRequestSchema>;
