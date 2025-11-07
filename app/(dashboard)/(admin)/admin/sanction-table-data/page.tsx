@@ -56,6 +56,9 @@ interface PastBlockSummary {
 }
 
 interface DetailedData {
+  userResponse?: string;
+  useAcceptanceForSanction?: boolean;
+  AvailedTimeTo?: any;
   DemandedTimeFrom?: any;
   isApplied?: boolean;
   AvailedTimeFrom?: any;
@@ -92,14 +95,25 @@ const departmentOptions: OptionType[] = [
 ];
 // Add after your departmentOptions
 const globalFilterOptions = {
-  workType: [
-    { value: "ALL", label: "ALL" },
-    { value: "Gear", label: "Gear" },
-    { value: "Machine", label: "Machine" },
-    { value: "Non-Machine", label: "Non-Machine" },
-    { value: "Tw", label: "Tw" },
-    { value: "Lt", label: "Lt" },
-  ],
+    workType: {
+    'Engineering': [
+      { value: "ALL", label: "ALL" },
+      { value: "Gear", label: "Gear" },
+      { value: "Machine", label: "Machine" },
+      { value: "Non-Machine", label: "Non-Machine" },
+    ],
+    'ST': [
+      { value: "ALL", label: "ALL" },
+      { value: "Gear", label: "Gear" },
+      { value: "Tw", label: "Tw" },
+      { value: "Lt", label: "Lt" },
+    ],
+    'TRD': [
+      { value: "ALL", label: "ALL" },
+      { value: "Gear", label: "Gear" },
+      { value: "Machine", label: "Machine" },
+    ]
+  },
   activity: {
     'Gear': ['Point', 'EI', 'Signal', 'DC Track', 'AFTC', 'SSDAC', 'MSDAC', 'Panel', 'LC Gate Mechanical', 'LC Gate ELB', 'Emergency Sliding Boom', 'IPS', 'Conventional power supply equipment', 'System Integrity Test of each PI/EI/RRI stations', 'Cable Insulation testing (cable meggering) for one station.', 'DLBI- SGE', 'TLBI-FM Inst', 'UFSBI', 'Fuse', 'EKT'],
     'Tw': ['AOH', 'POH', 'IOH', 'RE POH', 'RD WORK', 'TURN OUT CHECKING', 'CROSS OVER CHECKING', 'CROSS TRACK FEEDERS CHECKING', 'GANTRY MAINTENANCE', 'CONTACT WIRE RENEWAL WORK', 'CATENARY WIRE RENEWAL WORK', 'CANTILEVER ERECTION/REPLACEMENT(2x25KV WORK)', 'MAST ERECTION(2x25KV WORK)', 'FEEDERS ERECTION(2x25KV WORK)', 'OHE PROFILING', 'OHE/CN WORK', 'OTHER SPECIAL WORKS'],
@@ -115,6 +129,25 @@ const globalFilterOptions = {
   ]
 };
 
+// Helper function to get work types based on selected departments
+const getWorkTypesForDepartments = (departments: string[]): OptionType[] => {
+  if (departments.length === 0) return [{ value: "ALL", label: "ALL" }];
+  
+  // If multiple departments selected, combine and deduplicate work types
+  const allWorkTypes = new Map();
+  
+  departments.forEach(dept => {
+    const deptWorkTypes = globalFilterOptions.workType[dept as keyof typeof globalFilterOptions.workType] || [];
+    deptWorkTypes.forEach(workType => {
+      if (!allWorkTypes.has(workType.value)) {
+        allWorkTypes.set(workType.value, workType);
+      }
+    });
+  });
+  
+  return Array.from(allWorkTypes.values());
+};
+
 // Helper function to get activities based on work type
 const getActivitiesForWorkType = (workTypeSelected: string): string[] => {
   if (workTypeSelected === 'ALL') return ['ALL'];
@@ -125,7 +158,7 @@ export default function GenerateReportPage() {
   const [pastBlockSummary, setPastBlockSummary] = useState<PastBlockSummary[]>(
     []
   );
-  const [activeFilter, setActiveFilter] = useState<"approved" | "granted" | "availed" |"applied" |"demanded"|"all">("all");
+  const [activeFilter, setActiveFilter] = useState<"approved" | "granted" | "availed" |"applied" |"demanded"|"notGranted" | "notAvailed" |"all">("all");
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [reportGenerated, setReportGenerated] = useState(false);
@@ -201,6 +234,16 @@ const sseDropdownRef = useRef<HTMLDivElement>(null);
       }
     }
   }, [session]);
+  // Reset work type filter when departments change
+useEffect(() => {
+  const availableWorkTypes = getWorkTypesForDepartments(selectedDepartments);
+  const currentWorkTypeExists = availableWorkTypes.some(wt => wt.value === globalWorkTypeFilter);
+  
+  if (!currentWorkTypeExists) {
+    setGlobalWorkTypeFilter("ALL");
+    setGlobalActivityFilter("ALL");
+  }
+}, [selectedDepartments]);
   // Add after your existing useEffects
 // Close dropdowns when clicking outside
 useEffect(() => {
@@ -501,7 +544,14 @@ const filteredBlocks = filteredUpcomingBlocks.filter((block) => {
 
   if( activeFilter === "availed" && block.AvailedTimeFrom===null) return false;
 if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false;
-
+  if (activeFilter === "notGranted" && block.isGranted !== false) return false;
+  if (activeFilter === "notAvailed" && !(
+    (!block.AvailedTimeFrom) ||
+    (!block.AvailedTimeTo) ||
+    (block.isApplied === null&&block.isGranted===true) ||
+    (block.isApplied === false) ||
+    (block.userResponse !== "ACCEPTED" && block.useAcceptanceForSanction === false && block.isSanctioned === true)
+  )) return false;
   // Filter by selected section
   if (activeSection && block.Section !== activeSection) return false;
   return true;
@@ -1073,20 +1123,21 @@ const handleDownloadDepartmentCount = () => {
           </button>
         ))}
       </div>
-            {/* === GLOBAL FILTERS SECTION - ADD AFTER SUBMIT BUTTON === */}
+{/* === GLOBAL FILTERS SECTION === */}
 <div className="w-full max-w-screen-lg flex flex-wrap justify-center gap-2 mb-4 px-2">
   {/* Work Type Filter */}
   <div className="relative" ref={globalWorkTypeDropdownRef}>
     <button
       onClick={() => setShowGlobalWorkTypeDropdown(!showGlobalWorkTypeDropdown)}
       className="px-3 py-1 bg-white border border-black rounded flex items-center gap-2 text-black text-[12px] md:text-[14px]"
+      disabled={selectedDepartments.length === 0}
     >
       Work Type: {globalWorkTypeFilter}
       <span>▼</span>
     </button>
-    {showGlobalWorkTypeDropdown && (
+    {showGlobalWorkTypeDropdown && selectedDepartments.length > 0 && (
       <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[150px]">
-        {globalFilterOptions.workType.map((type) => (
+        {getWorkTypesForDepartments(selectedDepartments).map((type) => (
           <button
             key={type.value}
             onClick={() => {
@@ -1107,13 +1158,15 @@ const handleDownloadDepartmentCount = () => {
   <div className="relative" ref={globalActivityDropdownRef}>
     <button
       onClick={() => globalWorkTypeFilter !== 'ALL' && setShowGlobalActivityDropdown(!showGlobalActivityDropdown)}
-      className={`px-3 py-1 bg-white border border-black rounded flex items-center gap-2 text-black text-[12px] md:text-[14px] ${globalWorkTypeFilter === 'ALL' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-      disabled={globalWorkTypeFilter === 'ALL'}
+      className={`px-3 py-1 bg-white border border-black rounded flex items-center gap-2 text-black text-[12px] md:text-[14px] ${
+        globalWorkTypeFilter === 'ALL' || selectedDepartments.length === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+      }`}
+      disabled={globalWorkTypeFilter === 'ALL' || selectedDepartments.length === 0}
     >
       Activity: {globalActivityFilter}
       <span>▼</span>
     </button>
-    {showGlobalActivityDropdown && globalWorkTypeFilter !== 'ALL' && (
+    {showGlobalActivityDropdown && globalWorkTypeFilter !== 'ALL' && selectedDepartments.length > 0 && (
       <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[200px] max-h-60 overflow-y-auto">
         {getActivitiesForWorkType(globalWorkTypeFilter).map((activity) => (
           <button
@@ -1231,9 +1284,9 @@ const handleDownloadDepartmentCount = () => {
                   <th className="border-2 border-black px-1 md:px-2 py-2">Applied (Hrs)/Blocks</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Granted (Hrs)/Blocks</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">% Granted</th>
-                  <th className="border-2 border-black px-1 md:px-2 py-2">Not Granted</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Availed (Hrs)/Blocks</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">% Availed</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Not Granted</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Not Availed</th>
 
                 </tr>
@@ -1295,11 +1348,6 @@ const handleDownloadDepartmentCount = () => {
                           ? summary.PercentGranted.toFixed(2) + "%"
                           : ""}
                       </td>
-                        <td
-                        className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]"
-                      >
-                        {summary.NotGrantedCount}
-                      </td>
                       <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
                         onClick={() => {
@@ -1314,11 +1362,30 @@ const handleDownloadDepartmentCount = () => {
                           ? summary.PercentAvailed.toFixed(2) + "%"
                           : ""}
                       </td>
-                       <td
-                        className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]"
-                      >
-                        {summary.NotAvailedCount}
-                      </td>
+<td
+  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+  onClick={() => {
+    // You can define what happens when Not Granted is clicked
+    // For example, filter the upcoming blocks to show only not granted requests
+    setActiveFilter("notGranted");
+    setActiveSection(summary.Department || summary.Section);
+    toast.success(`Viewing Not Granted for: ${summary.Department || summary.Section}`);
+  }}
+>
+  {summary.NotGrantedCount}
+</td>
+<td
+  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+  onClick={() => {
+    // You can define what happens when Not Availed is clicked
+    setActiveFilter("notAvailed");
+    setActiveSection(summary.Department || summary.Section);
+    toast.success(`Viewing Not Availed for: ${summary.Department || summary.Section}`);
+  }}
+>
+  {summary.NotAvailedCount}
+</td>
+                    
                     </tr>
                   ))
                 )}
@@ -1372,12 +1439,7 @@ const handleDownloadDepartmentCount = () => {
                         0
                       ).toFixed(2)}
                     </td>
-                     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                      {pastBlockSummary.reduce(
-                        (sum, item) => sum + (item.NotGrantedCount || 0),
-                        0
-                      ).toFixed(2)}
-                    </td>
+                    
                     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                       {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.Availed || 0),
@@ -1395,12 +1457,32 @@ const handleDownloadDepartmentCount = () => {
                         0
                       ).toFixed(2)}
                     </td>
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                      {pastBlockSummary.reduce(
-                        (sum, item) => sum + (item.NotAvailedCount || 0),
-                        0
-                      ).toFixed(2)}
-                    </td>
+                  <td
+  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+  onClick={() => {
+    setActiveFilter("notGranted");
+    setActiveSection(null); // Show all sections for total
+    toast.success("Viewing all Not Granted requests");
+  }}
+>
+  {pastBlockSummary.reduce(
+    (sum, item) => sum + (item.NotGrantedCount || 0),
+    0
+  )}
+</td>
+<td
+  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+  onClick={() => {
+    setActiveFilter("notAvailed");
+    setActiveSection(null); // Show all sections for total
+    toast.success("Viewing all Not Availed requests");
+  }}
+>
+  {pastBlockSummary.reduce(
+    (sum, item) => sum + (item.NotAvailedCount || 0),
+    0
+  )}
+</td>
                   </tr>
                 )}
               </tbody>
