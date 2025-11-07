@@ -623,7 +623,11 @@ interface FormData {
     adjacentLinesAffected: string;
     freshCautionLocationFrom: string;
     freshCautionLocationTo: string;
-    freshCautionSpeed: string; // or number if you prefer
+    freshCautionSpeed: string;
+    freshCautionFromDate: string;        
+    freshCautionToDate: string;          
+    freshCautionFromTime: string;        
+    freshCautionToTime: string;
   }[];
   powerBlockDisconnectionAssignTo: string;
   sntDisconnectionAssignTo: string;
@@ -773,6 +777,10 @@ export default function CreateBlockRequestPage() {
         freshCautionLocationFrom: "",
         freshCautionLocationTo: "",
         freshCautionSpeed: "",
+        freshCautionFromDate: "",        
+      freshCautionToDate: "",          
+      freshCautionFromTime: "",       
+      freshCautionToTime: "",
       },
     ],
     // duration: "",
@@ -1393,6 +1401,18 @@ const activityOptions = getActivityOptions();
         engDisconnectionRemarks: formData.engDisconnectionRemarks || "",
         engDisconnectionAssignTo: formData.engDisconnectionAssignTo || "",
         freshCautionRequired: formData.freshCautionRequired ?? false,
+        freshCautionFromDate: formData.freshCautions[0]?.freshCautionFromDate 
+    ? formatDateToISO(formData.freshCautions[0].freshCautionFromDate)
+    : null,
+  freshCautionToDate: formData.freshCautions[0]?.freshCautionToDate 
+    ? formatDateToISO(formData.freshCautions[0].freshCautionToDate)
+    : null,
+  freshCautionFromTime: formData.freshCautions[0]?.freshCautionFromTime 
+    ? formatTimeToDatetime(formData.date || "", formData.freshCautions[0].freshCautionFromTime)
+    : null,
+  freshCautionToTime: formData.freshCautions[0]?.freshCautionToTime 
+    ? formatTimeToDatetime(formData.date || "", formData.freshCautions[0].freshCautionToTime)
+    : null,
         sntDisconnectionRequirements: formData.sntDisconnectionRequired
           ? [
             formData.sntDisconnectionPointNo.toString(),
@@ -1623,6 +1643,10 @@ const activityOptions = getActivityOptions();
           freshCautionLocationFrom: "",
           freshCautionLocationTo: "",
           freshCautionSpeed: "",
+          freshCautionFromDate: "",  
+        freshCautionToDate: "",    
+        freshCautionFromTime: "", 
+        freshCautionToTime: "",
         },
       ],
     }));
@@ -4077,8 +4101,7 @@ const getDisplayInfo = (block: string) => {
 
           {userDepartment !== "TRD" && (
             <div className="flex flex-col gap-2 border-2 border-[#b6e6c6] shadow rounded-2xl px-4 py-2 bg-white">
-              {/* Fresh Caution Section */}
-              <div className="w-full mt-2 bg-fuchsia-100 rounded-2xl ">
+              {/* <div className="w-full mt-2 bg-fuchsia-100 rounded-2xl ">
                 <div className="flex justify-between items-center mb-1 bg-fuchsia-300  rounded-2xl  px-2">
                   <span className="text-black font-bold text-[24px] ">
                     Fresh Caution Needed?
@@ -4109,8 +4132,7 @@ const getDisplayInfo = (block: string) => {
                   </select>
                   {renderError("freshCautionRequired")}
                 </div>
-                {/* ───── Fresh Caution ───── */}
-                {/* {false && ( */}
+            
 
                 {formData.freshCautionRequired && (
                   <div className="flex flex-col gap-2 mt-2 pb-2">
@@ -4120,7 +4142,6 @@ const getDisplayInfo = (block: string) => {
                         className="flex flex-row flex-wrap gap-1 bg-[#fffbe9] border-2 border-[#b71c1c] rounded items-center p-1"
                         style={{ fontSize: "24px", fontWeight: "bold" }}
                       >
-                        {/* ◼︎ Direction / Road */}
                         <input
                           list={`adjacentLinesList-${idx}`}
                           value={caution.adjacentLinesAffected}
@@ -4148,7 +4169,6 @@ const getDisplayInfo = (block: string) => {
                           })}
                         </datalist>
 
-                        {/* ◼︎ KM From / To */}
                         <input
                           value={caution.freshCautionLocationFrom}
                           onChange={(e) =>
@@ -4177,7 +4197,6 @@ const getDisplayInfo = (block: string) => {
                           className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black placeholder-black px-1 w-12 text-2xl"
                         />
 
-                        {/* ◼︎ Speed */}
                         <input
                           type="number"
                           value={caution.freshCautionSpeed}
@@ -4193,7 +4212,6 @@ const getDisplayInfo = (block: string) => {
                           className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black placeholder-black px-1 w-12 flex-1 text-2xl"
                         />
 
-                        {/* ◼︎ Remove */}
                         {formData.freshCautions.length > 1 && (
                           <button
                             type="button"
@@ -4206,7 +4224,6 @@ const getDisplayInfo = (block: string) => {
                       </div>
                     ))}
 
-                    {/* ➕ Add Button */}
                     <button
                       type="button"
                       onClick={addFreshCaution}
@@ -4216,7 +4233,201 @@ const getDisplayInfo = (block: string) => {
                     </button>
                   </div>
                 )}
-              </div>
+              </div> */}
+
+<div className="w-full mt-2 bg-fuchsia-100 rounded-2xl ">
+  <div className="flex justify-between items-center mb-1 bg-fuchsia-300  rounded-2xl  px-2">
+    <span className="text-black font-bold text-[24px] ">
+      Fresh Caution Needed?
+    </span>
+    <select
+      name="freshCautionRequired"
+      value={formData.freshCautionRequired ? "Y" : "N"}
+      onChange={(e) => {
+        const value = e.target.value === "Y";
+        console.log("Setting freshCautionRequired to:", value);
+        setFormData({
+          ...formData,
+          freshCautionRequired: value,
+        });
+      }}
+      className="ml-2 pr-8 border-2  border-black rounded 
+      px-1 my-3 text-2xl font-bold bg-white text-black placeholder-black"
+      style={{
+        appearance: "none",
+        backgroundImage: `url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9L12 15L18 9' stroke='%23000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "right 0.5rem center",
+        backgroundSize: "1.2rem",
+      }}
+    >
+      <option value="N">N</option>
+      <option value="Y">Y</option>
+    </select>
+    {renderError("freshCautionRequired")}
+  </div>
+
+  {formData.freshCautionRequired && (
+    <div className="flex flex-col gap-2 mt-2 pb-2">
+      {formData.freshCautions.map((caution, idx) => (
+        <div
+          key={idx}
+          className="flex flex-col gap-1 bg-[#fffbe9] border-2 border-[#b71c1c] rounded p-1"
+          style={{ fontSize: "24px", fontWeight: "bold" }}
+        >
+          {/* First Row: Direction, KM From/To, Speed */}
+          <div className="flex flex-row flex-wrap gap-1 items-center">
+            <input
+              list={`adjacentLinesList-${idx}`}
+              value={caution.adjacentLinesAffected}
+              onChange={(e) =>
+                handleFreshCautionChange(
+                  idx,
+                  "adjacentLinesAffected",
+                  e.target.value
+                )
+              }
+              placeholder="UP/DN/SL/Road No."
+              required
+              className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black placeholder-black px-1 w-28 text-2xl"
+            />
+            <datalist id={`adjacentLinesList-${idx}`}>
+              {blockSectionValue.flatMap((block) => {
+                const isYard = block.includes("-YD");
+                return isYard
+                  ? getAllRoadsForYard(block).map((r) => (
+                    <option key={r} value={r} />
+                  ))
+                  : (
+                    lineData[block as keyof typeof lineData] || []
+                  ).map((l) => <option key={l} value={l} />);
+              })}
+            </datalist>
+
+            <input
+              value={caution.freshCautionLocationFrom}
+              onChange={(e) =>
+                handleFreshCautionChange(
+                  idx,
+                  "freshCautionLocationFrom",
+                  e.target.value
+                )
+              }
+              placeholder="KM"
+              required
+              className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black placeholder-black px-1 w-12 text-2xl"
+            />
+            <span className="px-1 text-2xl text-black">to</span>
+            <input
+              value={caution.freshCautionLocationTo}
+              onChange={(e) =>
+                handleFreshCautionChange(
+                  idx,
+                  "freshCautionLocationTo",
+                  e.target.value
+                )
+              }
+              placeholder="KM"
+              required
+              className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black placeholder-black px-1 w-12 text-2xl"
+            />
+
+            <input
+              type="number"
+              value={caution.freshCautionSpeed}
+              onChange={(e) =>
+                handleFreshCautionChange(
+                  idx,
+                  "freshCautionSpeed",
+                  e.target.value
+                )
+              }
+              placeholder="Speed"
+              required
+              className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black placeholder-black px-1 w-12 flex-1 text-2xl"
+            />
+
+            {formData.freshCautions.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeFreshCaution(idx)}
+                className="px-2 py-1 text-2xl bg-red-600 text-white rounded"
+              >
+                Remove
+              </button>
+            )}
+          </div>
+
+          {/* Second Row: Dates */}
+          <div className="flex flex-row flex-wrap gap-1 items-center">
+            <input
+              type="date"
+              value={caution.freshCautionFromDate || ""}
+              onChange={(e) =>
+                handleFreshCautionChange(
+                  idx,
+                  "freshCautionFromDate",
+                  e.target.value
+                )
+              }
+              className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black px-1 text-2xl"
+            />
+            
+            <input
+              type="date"
+              value={caution.freshCautionToDate || ""}
+              onChange={(e) =>
+                handleFreshCautionChange(
+                  idx,
+                  "freshCautionToDate",
+                  e.target.value
+                )
+              }
+              className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black px-1 text-2xl"
+            />
+          </div>
+
+          {/* Third Row: Times */}
+          <div className="flex flex-row flex-wrap gap-1 items-center">
+            <input
+              type="time"
+              value={caution.freshCautionFromTime || ""}
+              onChange={(e) =>
+                handleFreshCautionChange(
+                  idx,
+                  "freshCautionFromTime",
+                  e.target.value
+                )
+              }
+              className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black px-1 text-2xl"
+            />
+            
+            <input
+              type="time"
+              value={caution.freshCautionToTime || ""}
+              onChange={(e) =>
+                handleFreshCautionChange(
+                  idx,
+                  "freshCautionToTime",
+                  e.target.value
+                )
+              }
+              className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black px-1 text-2xl"
+            />
+          </div>
+        </div>
+      ))}
+
+      <button
+        type="button"
+        onClick={addFreshCaution}
+        className="self-center px-2 py-1  bg-green-600 text-white rounded text-2xl font-semibold"
+      >
+        + Add Fresh Caution
+      </button>
+    </div>
+  )}
+</div>
 
               {/* Power Block Section */}
               <div className="w-full mt-2 bg-indigo-200 rounded-2xl">
