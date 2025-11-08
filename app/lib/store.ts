@@ -2972,7 +2972,7 @@ export let MajorSection = {
 export let blockSection = {
   'TPJ-VM': [
     "TPJ-GOC", "GOC-TPTN", "TPTN-SRGM", "SRGM-VLDE", "VLDE-LLI", "LLI-PMB", "PMB-KKPM", "KKPM-KLGM", "KLGM-SLT", "SLT-ALU",
-    "ALU-OTK", "OTK-SNDI", "SNDI-MTUR", "MTUR-ICG ",
+    "ALU-OTK", "OTK-SNDI", "SNDI-MTUR", "MTUR-ICG",
     "ICG-TLNR", "TLNR-VRI", "VRI-PVN",
     "PVN-ULU", "ULU-PRKL", "PRKL-TVNL", "TVNL-KDMD", "KDMD-VM",
 
