@@ -5334,7 +5334,7 @@ export const depotOnLocation = {
   ],
   TPJ: [
     "AMM", "ADT", "AGM", "AGX", "ALK", "ALP", "ANP", "ATQ", "ALU", "ARV",
-     "AYI", "BAL", "CDM", "CBU", "CUPJ", "ICG", "KLGM", "KLGM", "KDMD", "KNB", 
+     "AYI", "BAL", "CDM", "CBU", "CUPJ", "ICG", "KLGM", "KKPM", "KDMD", "KNB", 
      "KMM", "KIK", "KII", "KVL", "CLN", "KDE", "KU", "KMU", "KJPD", "KTM","KIKP NO", "LLI",
       "MMP", "MQ", "MTUR", "MV", "MBU", "NGT", "NCR", "NNM", "NPM", "NVL", "NMJ", 
       "OTK", "PDV","PVI", "PRT", "PRKL", "PKT", "PEM", "PVN", "PYK", "PRL", "GOC", "PUC", 
