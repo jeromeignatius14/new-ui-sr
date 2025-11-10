@@ -98,20 +98,18 @@ const globalFilterOptions = {
     workType: {
     'Engineering': [
       { value: "ALL", label: "ALL" },
-      { value: "Gear", label: "Gear" },
       { value: "Machine", label: "Machine" },
       { value: "Non-Machine", label: "Non-Machine" },
     ],
     'ST': [
       { value: "ALL", label: "ALL" },
       { value: "Gear", label: "Gear" },
-      { value: "Tw", label: "Tw" },
-      { value: "Lt", label: "Lt" },
+    
     ],
     'TRD': [
       { value: "ALL", label: "ALL" },
-      { value: "Gear", label: "Gear" },
-      { value: "Machine", label: "Machine" },
+     { value: "Tw", label: "Tw" },
+      { value: "Lt", label: "Lt" },
     ]
   },
   activity: {
@@ -546,8 +544,8 @@ const filteredBlocks = filteredUpcomingBlocks.filter((block) => {
 if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false;
   if (activeFilter === "notGranted" && block.isGranted !== false) return false;
   if (activeFilter === "notAvailed" && !(
-    (!block.AvailedTimeFrom) ||
-    (!block.AvailedTimeTo) ||
+    (!block.AvailedTimeFrom&&block.isSanctioned) ||
+    (!block.AvailedTimeTo&&block.isSanctioned) ||
     (block.isApplied === null&&block.isGranted===true) ||
     (block.isApplied === false) ||
     (block.userResponse !== "ACCEPTED" && block.useAcceptanceForSanction === false && block.isSanctioned === true)

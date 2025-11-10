@@ -686,11 +686,13 @@ if (activeSummaryFilters.searchId) {
           </Link>
         </div>
       </div>
-<Link href="/admin/draft-table-data" className="mb-8">
-  <button className="w-full max-w-md px-12 rounded-lg bg-[#7be09b] border-2 border-[#00b347] py-6 text-2xl font-extrabold text-white text-center shadow-lg hover:scale-105 transition duration-300 hover:bg-[#5bc07b]">
-    View Draft Requests
-  </button>
-</Link>
+
+
+ <Link href="/admin/draft-table-data" className="mb-8">
+        <button className="w-fit px-10 rounded-full bg-[#c7c7f7] border border-black py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
+          View Draft Requests
+        </button>
+      </Link>
 
       {/* View Summary of Upcoming Blocks CTA */}
       <div className="flex justify-center mb-8 w-full">

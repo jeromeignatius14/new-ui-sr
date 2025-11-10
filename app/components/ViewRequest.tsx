@@ -528,6 +528,8 @@ export default function ViewRequest() {
                       </td>
                     </tr>
                   )}
+                     {request.sntDisconnectionRequired &&
+                  request.sntDisconnectionRequirements && (
                 <tr>
                   <td className="py-1 font-medium">
                     Selected Depot For S&T Disconnection:
@@ -536,6 +538,7 @@ export default function ViewRequest() {
                     {request.sntDisconnectionAssignTo || "N/A"}
                   </td>
                 </tr>
+                 )}
                 {request.sntDisconnectionLineFrom &&
                   request.sntDisconnectionLineTo && (
                     <tr>
