@@ -1589,7 +1589,7 @@ const handleBulkAccept = async () => {
                         </div>
  <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                    TPC Remarks
+                    Department Controller Remarks
                 </label>
                 <textarea
                     name="tpcRemarks"
@@ -1597,7 +1597,7 @@ const handleBulkAccept = async () => {
                     onChange={handleEditFormChange}
                     className="w-full p-2 border border-gray-300 rounded text-black"
                     rows={3}
-                    placeholder="Enter TPC remarks..."
+                    placeholder="Enter Department Controller remarks..."
                 />
             </div>
                         <div className="flex justify-end gap-2">
