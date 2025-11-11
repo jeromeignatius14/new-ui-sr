@@ -1234,7 +1234,7 @@ export default function RequestTablePage() {
         </div>
       </div>
 
-     
+     {session?.user?.department !== "ENGG" && (
         <div className="flex justify-center mt-3 mb-6">
           <div className="w-full rounded-2xl border-2 border-[#B5B5B5] bg-[#F5E7B2] shadow p-0">
             <div className="text-[24px] font-bold text-black text-center py-2">
@@ -1470,7 +1470,7 @@ export default function RequestTablePage() {
               </table>
             </div>
           </div>
-        </div>
+        </div>)}
       
 
 
@@ -1479,7 +1479,7 @@ export default function RequestTablePage() {
         <div className="flex justify-center mt-3 mb-6">
           <div className="w-full rounded-2xl border-2 border-[#B5B5B5] bg-[#F5E7B2] shadow p-0">
             <div className="text-[24px] font-bold text-black text-center py-2">
-              SUMMARY OF ENGG REQUEST FOR NEXT 10 DAYS
+              SUMMARY OF OTHER REQUEST FOR NEXT 10 DAYS
             </div>
             <div className="italic text-center text-[24px] text-black pb-2">
               (Click ID to see full details or to Edit)
