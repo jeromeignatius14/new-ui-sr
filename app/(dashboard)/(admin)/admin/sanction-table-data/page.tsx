@@ -117,13 +117,8 @@ const globalFilterOptions = {
     'Machine': ['BCM', 'DTE', 'CSM', 'DUOMAT', 'UNIMAT', 'MPT', 'BRM', 'TRT', 'UTV', 'DTS', 'T28', 'SQRS', 'RGM working', 'SBCM'],
     'Non-Machine': ['Rail renewal', 'Welding work', 'Destressing work', 'Switch renewal', 'CMS Crossing renewal', 'SEJ Renewal', 'Glued Joint renewal', 'Dummy Glued Joint removal', 'TRR P 60 Kg', 'TRR S 60 Kg', 'TRR S 60 kg', 'TRR S 52 kg', 'Interchanging', 'Trucking out/Shifting materials', 'TWR with MFBW', 'TBTR (Br sleeper renewal)', 'TSR P 60 Kg', 'TSR S 60 Kg', 'TSR S 52 Kg', 'TTSR work', 'Jt Insp Notes Attn', 'Stretcherbar renewal', 'TFR Work', 'Ballast Unloading', 'Rail unloading', 'Lifting and packing', 'Gauge tie plate renewal', 'Sleeper renewal', 'Fish Plates O&E', 'Preliminary/Post works', 'Trucking out materials', 'Cutting Widening work', 'JCB working', 'Earth work/Muck removal', 'Crane Moving/Working', 'Attention to Track', 'Attention to Fittings', 'Attention to Bridge', 'Attention to Guard rail', 'Attention to Points & Xing', 'Attention to LC', 'Attention to Curve check rail', 'Sheet Piling work', 'Platform work', 'Platform Shelter work', 'ABSS work', 'Erection of Platform shelter purlins work', 'Erection of FOB Girders', 'Other FOB works', 'Other Track works', 'Other Bridge work'],
   },
-  timeSlot: [
-    { value: "ALL", label: "ALL" },
-    { value: "Morning", label: "Morning (4:00-12:00)" },
-    { value: "Afternoon", label: "Afternoon (12:00-20:00)" },
-    { value: "Night", label: "Night (20:00-4:00)" },
-  ]
 };
+
 
 // Helper function to get work types based on selected departments
 const getWorkTypesForDepartments = (departments: string[]): OptionType[] => {
@@ -149,8 +144,24 @@ const getActivitiesForWorkType = (workTypeSelected: string): string[] => {
   if (workTypeSelected === 'ALL') return ['ALL'];
   return ['ALL', ...(globalFilterOptions.activity[workTypeSelected as keyof typeof globalFilterOptions.activity] || [])];
 };
+// Helper function to get operator symbol for display
+const getOperatorSymbol = (operator: string): string => {
+  const operatorMap: { [key: string]: string } = {
+    ">": ">",
+    ">=": "≥", 
+    "=": "=",
+    "<=": "≤",
+    "<": "<",
+    "ALL": "ALL"
+  };
+  return operatorMap[operator] || operator;
+};
 
 export default function GenerateReportPage() {
+  const [durationFilter, setDurationFilter] = useState({
+  operator: "ALL", // "ALL", ">", ">=", "=", "<", "<="
+  value: ""
+  });
   const [pastBlockSummary, setPastBlockSummary] = useState<PastBlockSummary[]>(
     []
   );
@@ -177,17 +188,16 @@ const [sseDropdownOpen, setSseDropdownOpen] = useState(false);
 // Add after your existing state variables
 const [globalWorkTypeFilter, setGlobalWorkTypeFilter] = useState<string>("ALL");
 const [globalActivityFilter, setGlobalActivityFilter] = useState<string>("ALL");
-const [globalTimeSlotFilter, setGlobalTimeSlotFilter] = useState<string>("ALL");
 
 // Dropdown visibility states
 const [showGlobalWorkTypeDropdown, setShowGlobalWorkTypeDropdown] = useState(false);
 const [showGlobalActivityDropdown, setShowGlobalActivityDropdown] = useState(false);
-const [showGlobalTimeSlotDropdown, setShowGlobalTimeSlotDropdown] = useState(false);
+const [showDurationDropdown, setShowDurationDropdown] = useState(false);
+const durationDropdownRef = useRef<HTMLDivElement>(null);
 
 // Refs for dropdowns
 const globalWorkTypeDropdownRef = useRef<HTMLDivElement>(null);
 const globalActivityDropdownRef = useRef<HTMLDivElement>(null);
-const globalTimeSlotDropdownRef = useRef<HTMLDivElement>(null);
 const sseDropdownRef = useRef<HTMLDivElement>(null);
   
   const router = useRouter();
@@ -209,7 +219,8 @@ const sseDropdownRef = useRef<HTMLDivElement>(null);
     blockType: ["All"],
     globalWorkType: "ALL",
     globalActivity: "ALL", 
-    globalTimeSlot: "ALL",
+    durationOperator: "ALL",
+  durationValue: "",
   });
 
   // Get user's location and set up major section options
@@ -250,8 +261,8 @@ useEffect(() => {
     if (globalActivityDropdownRef.current && !globalActivityDropdownRef.current.contains(event.target as Node)) {
       setShowGlobalActivityDropdown(false);
     }
-    if (globalTimeSlotDropdownRef.current && !globalTimeSlotDropdownRef.current.contains(event.target as Node)) {
-      setShowGlobalTimeSlotDropdown(false);
+    if (durationDropdownRef.current && !durationDropdownRef.current.contains(event.target as Node)) {
+      setShowDurationDropdown(false);
     }
   };
 
@@ -409,10 +420,11 @@ const onSubmit = async (data: FormData) => {
       majorSections: selectedMajorSections,
       department: selectedDepartments,
       blockType: selectedBlockTypes,
-      // ADD THESE 3 NEW FILTERS:
       globalWorkType: globalWorkTypeFilter,
       globalActivity: globalActivityFilter,
-      globalTimeSlot: globalTimeSlotFilter,
+   
+      durationOperator: durationFilter.operator,
+      durationValue: durationFilter.value,
     });
 
   } catch (error) {
@@ -424,7 +436,7 @@ const onSubmit = async (data: FormData) => {
 const clearGlobalFilters = () => {
   setGlobalWorkTypeFilter("ALL");
   setGlobalActivityFilter("ALL");
-  setGlobalTimeSlotFilter("ALL");
+  setDurationFilter({ operator: "ALL", value: "" });
 };
   const formatDateInput = (value: string) => {
     // Format as DD/MM/YY
@@ -1181,31 +1193,108 @@ const handleDownloadDepartmentCount = () => {
   </div>
 
   {/* Time Slot Filter */}
-  <div className="relative" ref={globalTimeSlotDropdownRef}>
-    <button
-      onClick={() => setShowGlobalTimeSlotDropdown(!showGlobalTimeSlotDropdown)}
-      className="px-3 py-1 bg-white border border-black rounded flex items-center gap-2 text-black text-[12px] md:text-[14px]"
-    >
-      Time: {globalTimeSlotFilter}
-      <span>▼</span>
-    </button>
-    {showGlobalTimeSlotDropdown && (
-      <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[180px]">
-        {globalFilterOptions.timeSlot.map((slot) => (
-          <button
-            key={slot.value}
-            onClick={() => {
-              setGlobalTimeSlotFilter(slot.value);
-              setShowGlobalTimeSlotDropdown(false);
-            }}
-            className={`block w-full text-left px-3 py-2 hover:bg-gray-100 text-black ${globalTimeSlotFilter === slot.value ? 'bg-blue-100' : ''}`}
-          >
-            {slot.label}
-          </button>
-        ))}
+{/* Duration Filter */}
+<div className="relative" ref={durationDropdownRef}>
+  <button
+    onClick={() => setShowDurationDropdown(!showDurationDropdown)}
+    className="px-3 py-1 bg-white border border-black rounded flex items-center gap-2 text-black text-[12px] md:text-[14px]"
+  >
+    Duration: {durationFilter.operator === "ALL" 
+      ? "ALL" 
+      : `${getOperatorSymbol(durationFilter.operator)} ${durationFilter.value}h`
+    }
+    <span>▼</span>
+  </button>
+  
+  {showDurationDropdown && (
+    <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[200px] p-3">
+      {/* Operator Selection */}
+      <div className="mb-3">
+        <label className="block text-sm font-medium text-black mb-1">Operator:</label>
+        <div className="grid grid-cols-3 gap-1">
+          {[
+            { value: "ALL", label: "ALL", symbol: "ALL" },
+            { value: ">", label: ">", symbol: "Greater than" },
+            { value: ">=", label: "≥", symbol: "Greater than or equal" },
+            { value: "=", label: "=", symbol: "Equal to" },
+            { value: "<=", label: "≤", symbol: "Less than or equal" },
+            { value: "<", label: "<", symbol: "Less than" }
+          ].map((op) => (
+            <button
+              key={op.value}
+              onClick={() => setDurationFilter(prev => ({ ...prev, operator: op.value }))}
+              className={`p-2 border rounded text-sm ${
+                durationFilter.operator === op.value 
+                  ? 'bg-blue-500 text-white border-blue-500' 
+                  : 'bg-gray-100 text-black border-gray-300'
+              }`}
+              title={op.symbol}
+            >
+              {op.label}
+            </button>
+          ))}
+        </div>
       </div>
-    )}
-  </div>
+
+      {/* Duration Input */}
+      {durationFilter.operator !== "ALL" && (
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-black mb-1">
+            Duration (hours):
+          </label>
+          <input
+            type="number"
+            min="0"
+            max="24"
+            step="0.5"
+            value={durationFilter.value}
+            onChange={(e) => setDurationFilter(prev => ({ 
+              ...prev, 
+              value: e.target.value 
+            }))}
+            className="w-full px-2 py-1 border border-gray-300 rounded text-black"
+            placeholder="Enter hours"
+          />
+          <div className="flex gap-1 mt-1">
+            {[1, 2, 4, 6, 8].map((hours) => (
+              <button
+                key={hours}
+                onClick={() => setDurationFilter(prev => ({ 
+                  ...prev, 
+                  value: hours.toString() 
+                }))}
+                className="flex-1 px-2 py-1 bg-gray-200 text-black rounded text-xs hover:bg-gray-300"
+              >
+                {hours}h
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Action Buttons */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => {
+            setShowDurationDropdown(false);
+          }}
+          className="flex-1 bg-green-500 text-white py-1 rounded text-sm hover:bg-green-600"
+        >
+          Apply
+        </button>
+        <button
+          onClick={() => {
+            setDurationFilter({ operator: "ALL", value: "" });
+            setShowDurationDropdown(false);
+          }}
+          className="flex-1 bg-red-500 text-white py-1 rounded text-sm hover:bg-red-600"
+        >
+          Clear
+        </button>
+      </div>
+    </div>
+  )}
+</div>
 
   {/* Clear Filters Button */}
   <button
