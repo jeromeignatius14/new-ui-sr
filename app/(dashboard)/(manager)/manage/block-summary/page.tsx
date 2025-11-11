@@ -1470,7 +1470,8 @@ export default function GenerateReportPage() {
     blockType: ["All"],
     globalWorkType: "ALL",
     globalActivity: "ALL", 
-    globalTimeSlot: "ALL",
+    durationOperator: "ALL",
+  durationValue: "",
   });
 
   useEffect(() => {
@@ -1623,7 +1624,8 @@ export default function GenerateReportPage() {
         blockType: selectedBlockTypes,
         globalWorkType: "ALL",
         globalActivity: "ALL", 
-        globalTimeSlot: "ALL",
+        durationOperator: "ALL",
+      durationValue:"" ,
       });
 
       // ✅ Push search params to URL (yyyy-MM-dd so inputs restore correctly)
