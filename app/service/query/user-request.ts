@@ -17,6 +17,7 @@ export interface RequestResponse {
 }
 
 export interface RequestItem {
+  freshCautions?: any;
   tpcRemarks?: string;
   AppliedTimeTo?: any;
   AppliedTimeFrom?: any;
