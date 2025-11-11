@@ -339,6 +339,174 @@ const getAdjacentLinesAffected = (request: UserRequest): string => {
 
   return "N/A";
 };
+// Add this Edit Modal Component after your imports and before the main component
+const EditModal = ({
+  request,
+  isOpen,
+  onClose,
+  onSave,
+  isSaving,
+}: {
+  request: UserRequest | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (data: {
+    requestId: string;
+    newDate: string;
+    optimizeTimeFrom: string;
+    optimizeTimeTo: string;
+    sanctionedRemark?: string;
+  }) => void;
+  isSaving: boolean;
+}) => {
+  const [editDate, setEditDate] = useState("");
+  const [timeFrom, setTimeFrom] = useState("");
+  const [timeTo, setTimeTo] = useState("");
+  const [editRemark, setEditRemark] = useState("");
+
+  // Initialize form when request changes
+  useEffect(() => {
+    if (request) {
+      setEditDate(request.date.split("T")[0]);
+      setTimeFrom(
+        request.optimizeTimeFrom ? formatTimeForInput(request.optimizeTimeFrom) : ""
+      );
+      setTimeTo(
+        request.optimizeTimeTo ? formatTimeForInput(request.optimizeTimeTo) : ""
+      );
+      setEditRemark(request.sanctionedRemarks || "");
+    }
+  }, [request]);
+
+  const formatTimeForInput = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "";
+      const hours = date.getUTCHours().toString().padStart(2, "0");
+      const minutes = date.getUTCMinutes().toString().padStart(2, "0");
+      return `${hours}:${minutes}`;
+    } catch {
+      return "";
+    }
+  };
+
+  const formatForBackend = (date: Date) => {
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+      date.getDate()
+    )}T${pad(date.getHours())}:${pad(date.getMinutes())}:00.000Z`;
+  };
+
+  const formatDateForBackend = (date: Date) => {
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+      date.getDate()
+    )}T00:00:00.000Z`;
+  };
+
+  const pad = (num: number) => num.toString().padStart(2, "0");
+
+  const handleSave = () => {
+    if (!request || !editDate || !timeFrom || !timeTo) {
+      alert("Please fill all fields: Date, Start Time, and End Time");
+      return;
+    }
+
+    try {
+      const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+      if (!timeRegex.test(timeFrom) || !timeRegex.test(timeTo)) {
+        throw new Error("Time must be in HH:mm format (e.g., 14:30)");
+      }
+
+      // Create Date objects in local time
+      const localFrom = new Date(`${editDate}T${timeFrom}`);
+      const localTo = new Date(`${editDate}T${timeTo}`);
+      const localDate = new Date(editDate);
+
+      // Convert to ISO strings without timezone adjustment
+      const optimizeTimeFromISO = formatForBackend(localFrom);
+      const optimizeTimeToISO = formatForBackend(localTo);
+      const dateISO = formatDateForBackend(localDate);
+
+      onSave({
+        requestId: request.id,
+        newDate: dateISO,
+        optimizeTimeFrom: optimizeTimeFromISO,
+        optimizeTimeTo: optimizeTimeToISO,
+        sanctionedRemark: editRemark,
+      });
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Invalid input");
+    }
+  };
+
+  if (!isOpen || !request) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg w-full max-w-md mx-4 border border-black">
+        <h2 className="text-xl font-bold mb-4 text-[#13529e]">Edit Request</h2>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Date</label>
+            <input
+              type="date"
+              value={editDate}
+              onChange={(e) => setEditDate(e.target.value)}
+              className="w-full border border-gray-300 p-2 rounded text-black"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Optimized Time</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="time"
+                value={timeFrom}
+                onChange={(e) => setTimeFrom(e.target.value)}
+                className="flex-1 border border-gray-300 p-2 rounded text-black"
+              />
+              <span>-</span>
+              <input
+                type="time"
+                value={timeTo}
+                onChange={(e) => setTimeTo(e.target.value)}
+                className="flex-1 border border-gray-300 p-2 rounded text-black"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Remarks</label>
+            <textarea
+              value={editRemark}
+              onChange={(e) => setEditRemark(e.target.value)}
+              className="w-full border border-gray-300 p-2 rounded text-black"
+              rows={3}
+              placeholder="Enter remark..."
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-3 mt-6">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-400 text-white border border-black rounded"
+            disabled={isSaving}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            className="px-4 py-2 bg-green-600 text-white border border-black rounded"
+            disabled={isSaving}
+          >
+            {isSaving ? "Saving..." : "Save"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // amazonq-ignore-next-line
 export default function OptimiseTablePage() {
@@ -384,11 +552,9 @@ export default function OptimiseTablePage() {
   }, [currentWeekStart, router]);
 
   // Edit state
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editDate, setEditDate] = useState("");
-  const [timeFrom, setTimeFrom] = useState("");
-  const [timeTo, setTimeTo] = useState("");
-  const [editRemark, setEditRemark] = useState("");
+  // Edit state
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingRequest, setEditingRequest] = useState<UserRequest | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectionModal, setShowRejectionModal] = useState(false);
@@ -838,23 +1004,15 @@ export default function OptimiseTablePage() {
   );
   const optimizeMutation = useOptimizeRequests();
 
-  // Edit functionality
+   // Edit functionality with modal
   const handleEditClick = (request: UserRequest) => {
-    setEditingId(request.id);
-    setEditDate(request.date.split("T")[0]);
-    setTimeFrom(
-      request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : ""
-    );
-    setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
-    setEditRemark(request.sanctionedRemarks || "");
+    setEditingRequest(request);
+    setEditModalOpen(true);
   };
 
-  const handleCancelEdit = () => {
-    setEditingId(null);
-    setEditDate("");
-    setTimeFrom("");
-    setTimeTo("");
-    setEditRemark("");
+  const handleCloseEditModal = () => {
+    setEditModalOpen(false);
+    setEditingRequest(null);
   };
 
   // Update mutation
@@ -866,14 +1024,13 @@ export default function OptimiseTablePage() {
       optimizeTimeTo: string;
       sanctionedRemark?: string;
     }) => adminService.updateRequest(data),
-    onSuccess: () => {
+     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["approved-requests", currentWeekStart],
       });
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
-      setEditingId(null);
-      setEditRemark("");
+      handleCloseEditModal();
     },
     onError: (error) => {
       // amazonq-ignore-next-line
@@ -899,39 +1056,7 @@ export default function OptimiseTablePage() {
   // Helper function to pad numbers with leading zero
   const pad = (num: number) => num.toString().padStart(2, "0");
 
-  const handleUpdateClick = (requestId: string) => {
-    if (!editDate || !timeFrom || !timeTo) {
-      alert("Please fill all fields: Date, Start Time, and End Time");
-      return;
-    }
 
-    try {
-      const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
-      if (!timeRegex.test(timeFrom) || !timeRegex.test(timeTo)) {
-        throw new Error("Time must be in HH:mm format (e.g., 14:30)");
-      }
-
-      // Create Date objects in local time
-      const localFrom = new Date(`${editDate}T${timeFrom}`);
-      const localTo = new Date(`${editDate}T${timeTo}`);
-      const localDate = new Date(editDate);
-
-      // Convert to ISO strings without timezone adjustment
-      const optimizeTimeFromISO = formatForBackend(localFrom);
-      const optimizeTimeToISO = formatForBackend(localTo);
-      const dateISO = formatDateForBackend(localDate);
-
-      updateOptimizedTimes.mutate({
-        requestId,
-        newDate: dateISO,
-        optimizeTimeFrom: optimizeTimeFromISO,
-        optimizeTimeTo: optimizeTimeToISO,
-        sanctionedRemark: editRemark,
-      });
-    } catch (error) {
-      alert(error instanceof Error ? error.message : "Invalid input");
-    }
-  };
 
   const handleSendOptimizedRequests = async () => {
     try {
@@ -1785,17 +1910,8 @@ export default function OptimiseTablePage() {
                       className={`hover:bg-blue-50 transition-colors ${rowColor}`}
                     >
                       <td className="border border-black p-2 text-[24px]">
-                        {editingId === request.id ? (
-                          <input
-                            type="date"
-                            value={editDate}
-                            onChange={(e) => setEditDate(e.target.value)}
-                            className="w-28 border p-1 text-sm rounded"
-                          />
-                        ) : (
-                          dayjs(request.date).format("DD-MM-YY")
-                        )}
-                      </td>
+  {dayjs(request.date).format("DD-MM-YY")}
+</td>
                       <td className="border border-black p-2 text-[24px]">
                         {request.selectedDepartment}
                       </td>
@@ -1815,95 +1931,34 @@ export default function OptimiseTablePage() {
                         {formatTime(request.demandTimeFrom)} -{" "}
                         {formatTime(request.demandTimeTo)}
                       </td>
-                      <td className="border border-black p-2 text-[24px]">
-                        {editingId === request.id ? (
-                          <div className="flex gap-1 items-center">
-                            <input
-                              type="time"
-                              value={timeFrom}
-                              onChange={(e) => setTimeFrom(e.target.value)}
-                              className="w-20 border p-1 text-sm rounded"
-                            />
-                            <span>-</span>
-                            <input
-                              type="time"
-                              value={timeTo}
-                              onChange={(e) => setTimeTo(e.target.value)}
-                              className="w-20 border p-1 text-sm rounded"
-                            />
-                          </div>
-                        ) : (
-                          <>
-                            {request.optimizeTimeFrom &&
-                            request.optimizeTimeFrom !== "WrongRequest"
-                              ? formatTime(request.optimizeTimeFrom)
-                              : "N/A"}{" "}
-                            -{" "}
-                            {request.optimizeTimeTo &&
-                            request.optimizeTimeTo !== "WrongRequest"
-                              ? formatTime(request.optimizeTimeTo)
-                              : "N/A"}
-                          </>
-                        )}
-                      </td>
+                   <td className="border border-black p-2 text-[24px]">
+  {request.optimizeTimeFrom && request.optimizeTimeFrom !== "WrongRequest"
+    ? formatTime(request.optimizeTimeFrom)
+    : "N/A"}{" "}
+  -{" "}
+  {request.optimizeTimeTo && request.optimizeTimeTo !== "WrongRequest"
+    ? formatTime(request.optimizeTimeTo)
+    : "N/A"}
+</td>
                       <td className="border border-black p-2 text-[24px]">
                         {request.activity}
                       </td>
-                         <td className="border border-black p-2 text-[24px]">
-              {editingId === request.id ? (
-                <textarea
-                  value={editRemark}
-                  onChange={(e) => setEditRemark(e.target.value)}
-                  className="w-full border p-1 text-sm rounded"
-                  rows={2}
-                  placeholder="Enter remark..."
-                />
-              ) : (
-                request.sanctionedRemarks || "N/A"
-              )}
-            </td>
+           <td className="border border-black p-2 text-[24px]">
+  {request.sanctionedRemarks || "N/A"}
+</td>
                       <td className="border border-black p-2 text-[24px]">
                         <div className="flex gap-2">
-                          {editingId === request.id ? (
+                         {modifyReturnOpenId === request.id ? (
                             <>
-                              <button
-                                onClick={() => handleUpdateClick(request.id)}
-                                className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-                                disabled={updateOptimizedTimes.isPending}
-                              >
-                                {updateOptimizedTimes.isPending
-                                  ? "Saving..."
-                                  : "Save"}
-                              </button>
-                              <button
-                                onClick={handleCancelEdit}
-                                className="px-2 py-1 text-[24px] bg-gray-400 text-white border border-black rounded"
-                              >
-                                Cancel
-                              </button>
-                            </>
-                          ) : modifyReturnOpenId === request.id ? (
-                            <>
-                              <button
-                                className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-                                onClick={() => {
-                                  setEditingId(request.id);
-                                  setEditDate(request.date.split("T")[0]);
-                                  setTimeFrom(
-                                    request.optimizeTimeFrom
-                                      ? formatTime(request.optimizeTimeFrom)
-                                      : ""
-                                  );
-                                  setTimeTo(
-                                    request.optimizeTimeTo
-                                      ? formatTime(request.optimizeTimeTo)
-                                      : ""
-                                  );
-                                  setModifyReturnOpenId(null);
-                                }}
-                              >
-                                Modify
-                              </button>
+                             <button
+  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+  onClick={() => {
+    handleEditClick(request);
+    setModifyReturnOpenId(null);
+  }}
+>
+  Modify
+</button>
                               <button
                                 className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
                                 onClick={() => {
@@ -1923,26 +1978,15 @@ export default function OptimiseTablePage() {
                           ) : (
                             <>
                               {request.optimizeStatus === false ? (
-                                <button
-                                  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-                                  onClick={() => {
-                                    setEditingId(request.id);
-                                    setEditDate(request.date.split("T")[0]);
-                                    setTimeFrom(
-                                      request.optimizeTimeFrom
-                                        ? formatTime(request.optimizeTimeFrom)
-                                        : ""
-                                    );
-                                    setTimeTo(
-                                      request.optimizeTimeTo
-                                        ? formatTime(request.optimizeTimeTo)
-                                        : ""
-                                    );
-                                    setModifyReturnOpenId(null);
-                                  }}
-                                >
-                                  Modify
-                                </button>
+                               <button
+  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+  onClick={() => {
+    handleEditClick(request);
+    setModifyReturnOpenId(null);
+  }}
+>
+  Modify
+</button>
                               ) : (
                                 <>
                                   <button
@@ -2092,17 +2136,8 @@ export default function OptimiseTablePage() {
                     }`}
                   >
                     <td className="border border-black p-2 text-[24px]">
-                      {editingId === request.id ? (
-                        <input
-                          type="date"
-                          value={editDate}
-                          onChange={(e) => setEditDate(e.target.value)}
-                          className="w-28 border p-1 text-sm rounded"
-                        />
-                      ) : (
-                        dayjs(request.date).format("DD-MM-YY")
-                      )}
-                    </td>
+  {dayjs(request.date).format("DD-MM-YY")}
+</td>
                     <td className="border border-black p-2 text-[24px]">
                       {request.selectedDepartment}
                     </td>
@@ -2123,95 +2158,34 @@ export default function OptimiseTablePage() {
                       {formatTime(request.demandTimeTo)}
                     </td>
                     <td className="border border-black p-2 text-[24px]">
-                      {editingId === request.id ? (
-                        <div className="flex gap-1 items-center">
-                          <input
-                            type="time"
-                            value={timeFrom}
-                            onChange={(e) => setTimeFrom(e.target.value)}
-                            className="w-20 border p-1 text-sm rounded"
-                          />
-                          <span>-</span>
-                          <input
-                            type="time"
-                            value={timeTo}
-                            onChange={(e) => setTimeTo(e.target.value)}
-                            className="w-20 border p-1 text-sm rounded"
-                          />
-                        </div>
-                      ) : (
-                        <>
-                          {request.optimizeTimeFrom &&
-                          request.optimizeTimeFrom !== "WrongRequest"
-                            ? formatTime(request.optimizeTimeFrom)
-                            : "N/A"}{" "}
-                          -{" "}
-                          {request.optimizeTimeTo &&
-                          request.optimizeTimeTo !== "WrongRequest"
-                            ? formatTime(request.optimizeTimeTo)
-                            : "N/A"}
-                        </>
-                      )}
-                    </td>
+  {request.optimizeTimeFrom && request.optimizeTimeFrom !== "WrongRequest"
+    ? formatTime(request.optimizeTimeFrom)
+    : "N/A"}{" "}
+  -{" "}
+  {request.optimizeTimeTo && request.optimizeTimeTo !== "WrongRequest"
+    ? formatTime(request.optimizeTimeTo)
+    : "N/A"}
+</td>
 
                     <td className="border border-black p-2 text-[24px]">
                       {request.activity}
                     </td>
-                       <td className="border border-black p-2 text-[24px]">
-              {editingId === request.id ? (
-                <textarea
-                  value={editRemark}
-                  onChange={(e) => setEditRemark(e.target.value)}
-                  className="w-full border p-1 text-sm rounded"
-                  rows={2}
-                  placeholder="Enter remark..."
-                />
-              ) : (
-                request.sanctionedRemarks || "N/A"
-              )}
-            </td>
+ <td className="border border-black p-2 text-[24px]">
+  {request.sanctionedRemarks || "N/A"}
+</td>
                     <td className="border border-black p-2 text-[24px]">
                       <div className="flex gap-2">
-                        {editingId === request.id ? (
+                      {modifyReturnOpenId === request.id ? (
                           <>
-                            <button
-                              onClick={() => handleUpdateClick(request.id)}
-                              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-                              disabled={updateOptimizedTimes.isPending}
-                            >
-                              {updateOptimizedTimes.isPending
-                                ? "Saving..."
-                                : "Save"}
-                            </button>
-                            <button
-                              onClick={handleCancelEdit}
-                              className="px-2 py-1 text-[24px] bg-gray-400 text-white border border-black rounded"
-                            >
-                              Cancel
-                            </button>
-                          </>
-                        ) : modifyReturnOpenId === request.id ? (
-                          <>
-                            <button
-                              className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-                              onClick={() => {
-                                setEditingId(request.id);
-                                setEditDate(request.date.split("T")[0]);
-                                setTimeFrom(
-                                  request.optimizeTimeFrom
-                                    ? formatTime(request.optimizeTimeFrom)
-                                    : ""
-                                );
-                                setTimeTo(
-                                  request.optimizeTimeTo
-                                    ? formatTime(request.optimizeTimeTo)
-                                    : ""
-                                );
-                                setModifyReturnOpenId(null);
-                              }}
-                            >
-                              Modify
-                            </button>
+                           <button
+  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+  onClick={() => {
+    handleEditClick(request);
+    setModifyReturnOpenId(null);
+  }}
+>
+  Modify
+</button>
                             <button
                               className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
                               onClick={() => {
@@ -2231,26 +2205,15 @@ export default function OptimiseTablePage() {
                         ) : (
                           <>
                             {request.optimizeStatus === false ? (
-                              <button
-                                className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-                                onClick={() => {
-                                  setEditingId(request.id);
-                                  setEditDate(request.date.split("T")[0]);
-                                  setTimeFrom(
-                                    request.optimizeTimeFrom
-                                      ? formatTime(request.optimizeTimeFrom)
-                                      : ""
-                                  );
-                                  setTimeTo(
-                                    request.optimizeTimeTo
-                                      ? formatTime(request.optimizeTimeTo)
-                                      : ""
-                                  );
-                                  setModifyReturnOpenId(null);
-                                }}
-                              >
-                                Modify
-                              </button>
+                         <button
+  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+  onClick={() => {
+    handleEditClick(request);
+    setModifyReturnOpenId(null);
+  }}
+>
+  Modify
+</button>
                             ) : (
                               <>
                                 <button
@@ -2386,17 +2349,8 @@ export default function OptimiseTablePage() {
                     }`}
                   >
                     <td className="border border-black p-2 text-[24px]">
-                      {editingId === request.id ? (
-                        <input
-                          type="date"
-                          value={editDate}
-                          onChange={(e) => setEditDate(e.target.value)}
-                          className="w-28 border p-1 text-sm rounded"
-                        />
-                      ) : (
-                        dayjs(request.date).format("DD-MM-YY")
-                      )}
-                    </td>
+  {dayjs(request.date).format("DD-MM-YY")}
+</td>
                     <td className="border border-black p-2 text-[24px]">
                       {request.selectedDepartment}
                     </td>
@@ -2417,95 +2371,34 @@ export default function OptimiseTablePage() {
                       {formatTime(request.demandTimeTo)}
                     </td>
                     <td className="border border-black p-2 text-[24px]">
-                      {editingId === request.id ? (
-                        <div className="flex gap-1 items-center">
-                          <input
-                            type="time"
-                            value={timeFrom}
-                            onChange={(e) => setTimeFrom(e.target.value)}
-                            className="w-20 border p-1 text-sm rounded"
-                          />
-                          <span>-</span>
-                          <input
-                            type="time"
-                            value={timeTo}
-                            onChange={(e) => setTimeTo(e.target.value)}
-                            className="w-20 border p-1 text-sm rounded"
-                          />
-                        </div>
-                      ) : (
-                        <>
-                          {request.optimizeTimeFrom &&
-                          request.optimizeTimeFrom !== "WrongRequest"
-                            ? formatTime(request.optimizeTimeFrom)
-                            : "N/A"}{" "}
-                          -{" "}
-                          {request.optimizeTimeTo &&
-                          request.optimizeTimeTo !== "WrongRequest"
-                            ? formatTime(request.optimizeTimeTo)
-                            : "N/A"}
-                        </>
-                      )}
-                    </td>
+  {request.optimizeTimeFrom && request.optimizeTimeFrom !== "WrongRequest"
+    ? formatTime(request.optimizeTimeFrom)
+    : "N/A"}{" "}
+  -{" "}
+  {request.optimizeTimeTo && request.optimizeTimeTo !== "WrongRequest"
+    ? formatTime(request.optimizeTimeTo)
+    : "N/A"}
+</td>
 
                     <td className="border border-black p-2 text-[24px]">
                       {request.activity}
                     </td>
-                      <td className="border border-black p-2 text-[24px]">
-              {editingId === request.id ? (
-                <textarea
-                  value={editRemark}
-                  onChange={(e) => setEditRemark(e.target.value)}
-                  className="w-full border p-1 text-sm rounded"
-                  rows={2}
-                  placeholder="Enter remark..."
-                />
-              ) : (
-                request.sanctionedRemarks || "N/A"
-              )}
-            </td>
+     <td className="border border-black p-2 text-[24px]">
+  {request.sanctionedRemarks || "N/A"}
+</td>
                     <td className="border border-black p-2 text-[24px]">
                       <div className="flex gap-2">
-                        {editingId === request.id ? (
+                    {modifyReturnOpenId === request.id ? (
                           <>
-                            <button
-                              onClick={() => handleUpdateClick(request.id)}
-                              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-                              disabled={updateOptimizedTimes.isPending}
-                            >
-                              {updateOptimizedTimes.isPending
-                                ? "Saving..."
-                                : "Save"}
-                            </button>
-                            <button
-                              onClick={handleCancelEdit}
-                              className="px-2 py-1 text-[24px] bg-gray-400 text-white border border-black rounded"
-                            >
-                              Cancel
-                            </button>
-                          </>
-                        ) : modifyReturnOpenId === request.id ? (
-                          <>
-                            <button
-                              className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-                              onClick={() => {
-                                setEditingId(request.id);
-                                setEditDate(request.date.split("T")[0]);
-                                setTimeFrom(
-                                  request.optimizeTimeFrom
-                                    ? formatTime(request.optimizeTimeFrom)
-                                    : ""
-                                );
-                                setTimeTo(
-                                  request.optimizeTimeTo
-                                    ? formatTime(request.optimizeTimeTo)
-                                    : ""
-                                );
-                                setModifyReturnOpenId(null);
-                              }}
-                            >
-                              Modify
-                            </button>
+                       <button
+  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+  onClick={() => {
+    handleEditClick(request);
+    setModifyReturnOpenId(null);
+  }}
+>
+  Modify
+</button>
                             <button
                               className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
                               onClick={() => {
@@ -2525,26 +2418,15 @@ export default function OptimiseTablePage() {
                         ) : (
                           <>
                             {request.optimizeStatus === false ? (
-                              <button
-                                className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-                                onClick={() => {
-                                  setEditingId(request.id);
-                                  setEditDate(request.date.split("T")[0]);
-                                  setTimeFrom(
-                                    request.optimizeTimeFrom
-                                      ? formatTime(request.optimizeTimeFrom)
-                                      : ""
-                                  );
-                                  setTimeTo(
-                                    request.optimizeTimeTo
-                                      ? formatTime(request.optimizeTimeTo)
-                                      : ""
-                                  );
-                                  setModifyReturnOpenId(null);
-                                }}
-                              >
-                                Modify
-                              </button>
+                          <button
+  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+  onClick={() => {
+    handleEditClick(request);
+    setModifyReturnOpenId(null);
+  }}
+>
+  Modify
+</button>
                             ) : (
                               <>
                                 <button
@@ -2681,18 +2563,9 @@ export default function OptimiseTablePage() {
                         : "bg-gray-200"
                     }`}
                   >
-                    <td className="border border-black p-2 text-[24px]">
-                      {editingId === request.id ? (
-                        <input
-                          type="date"
-                          value={editDate}
-                          onChange={(e) => setEditDate(e.target.value)}
-                          className="w-28 border p-1 text-sm rounded"
-                        />
-                      ) : (
-                        dayjs(request.date).format("DD-MM-YY")
-                      )}
-                    </td>
+                   <td className="border border-black p-2 text-[24px]">
+  {dayjs(request.date).format("DD-MM-YY")}
+</td>
                     <td className="border border-black p-2 text-[24px]">
                       {request.selectedDepartment}
                     </td>
@@ -2712,96 +2585,35 @@ export default function OptimiseTablePage() {
                       {formatTime(request.demandTimeFrom)} -{" "}
                       {formatTime(request.demandTimeTo)}
                     </td>
-                    <td className="border border-black p-2 text-[24px]">
-                      {editingId === request.id ? (
-                        <div className="flex gap-1 items-center">
-                          <input
-                            type="time"
-                            value={timeFrom}
-                            onChange={(e) => setTimeFrom(e.target.value)}
-                            className="w-20 border p-1 text-sm rounded"
-                          />
-                          <span>-</span>
-                          <input
-                            type="time"
-                            value={timeTo}
-                            onChange={(e) => setTimeTo(e.target.value)}
-                            className="w-20 border p-1 text-sm rounded"
-                          />
-                        </div>
-                      ) : (
-                        <>
-                          {request.optimizeTimeFrom &&
-                          request.optimizeTimeFrom !== "WrongRequest"
-                            ? formatTime(request.optimizeTimeFrom)
-                            : "N/A"}{" "}
-                          -{" "}
-                          {request.optimizeTimeTo &&
-                          request.optimizeTimeTo !== "WrongRequest"
-                            ? formatTime(request.optimizeTimeTo)
-                            : "N/A"}
-                        </>
-                      )}
-                    </td>
+                   <td className="border border-black p-2 text-[24px]">
+  {request.optimizeTimeFrom && request.optimizeTimeFrom !== "WrongRequest"
+    ? formatTime(request.optimizeTimeFrom)
+    : "N/A"}{" "}
+  -{" "}
+  {request.optimizeTimeTo && request.optimizeTimeTo !== "WrongRequest"
+    ? formatTime(request.optimizeTimeTo)
+    : "N/A"}
+</td>
 
                     <td className="border border-black p-2 text-[24px]">
                       {request.activity}
                     </td>
-                       <td className="border border-black p-2 text-[24px]">
-              {editingId === request.id ? (
-                <textarea
-                  value={editRemark}
-                  onChange={(e) => setEditRemark(e.target.value)}
-                  className="w-full border p-1 text-sm rounded"
-                  rows={2}
-                  placeholder="Enter remark..."
-                />
-              ) : (
-                request.sanctionedRemarks || "N/A"
-              )}
-            </td>
+      <td className="border border-black p-2 text-[24px]">
+  {request.sanctionedRemarks || "N/A"}
+</td>
                     <td className="border border-black p-2 text-[24px]">
                       <div className="flex gap-2">
-                        {editingId === request.id ? (
+                      {modifyReturnOpenId === request.id ? (
                           <>
-                            <button
-                              onClick={() => handleUpdateClick(request.id)}
-                              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-                              disabled={updateOptimizedTimes.isPending}
-                            >
-                              {updateOptimizedTimes.isPending
-                                ? "Saving..."
-                                : "Save"}
-                            </button>
-                            <button
-                              onClick={handleCancelEdit}
-                              className="px-2 py-1 text-[24px] bg-gray-400 text-white border border-black rounded"
-                            >
-                              Cancel
-                            </button>
-                          </>
-                        ) : modifyReturnOpenId === request.id ? (
-                          <>
-                            <button
-                              className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-                              onClick={() => {
-                                setEditingId(request.id);
-                                setEditDate(request.date.split("T")[0]);
-                                setTimeFrom(
-                                  request.optimizeTimeFrom
-                                    ? formatTime(request.optimizeTimeFrom)
-                                    : ""
-                                );
-                                setTimeTo(
-                                  request.optimizeTimeTo
-                                    ? formatTime(request.optimizeTimeTo)
-                                    : ""
-                                );
-                                setModifyReturnOpenId(null);
-                              }}
-                            >
-                              Modify
-                            </button>
+                           <button
+  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+  onClick={() => {
+    handleEditClick(request);
+    setModifyReturnOpenId(null);
+  }}
+>
+  Modify
+</button>
                             <button
                               className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
                               onClick={() => {
@@ -2821,26 +2633,15 @@ export default function OptimiseTablePage() {
                         ) : (
                           <>
                             {request.optimizeStatus === false ? (
-                              <button
-                                className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-                                onClick={() => {
-                                  setEditingId(request.id);
-                                  setEditDate(request.date.split("T")[0]);
-                                  setTimeFrom(
-                                    request.optimizeTimeFrom
-                                      ? formatTime(request.optimizeTimeFrom)
-                                      : ""
-                                  );
-                                  setTimeTo(
-                                    request.optimizeTimeTo
-                                      ? formatTime(request.optimizeTimeTo)
-                                      : ""
-                                  );
-                                  setModifyReturnOpenId(null);
-                                }}
-                              >
-                                Modify
-                              </button>
+                           <button
+  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+  onClick={() => {
+    handleEditClick(request);
+    setModifyReturnOpenId(null);
+  }}
+>
+  Modify
+</button>
                             ) : (
                               <>
                                 <button
@@ -2881,7 +2682,13 @@ export default function OptimiseTablePage() {
           </table>
         </div>
       </div>
-
+ <EditModal
+        request={editingRequest}
+        isOpen={editModalOpen}
+        onClose={handleCloseEditModal}
+        onSave={updateOptimizedTimes.mutate}
+        isSaving={updateOptimizedTimes.isPending}
+      />
       {/* Optimization Dialog */}
       {showRejectionModal && (
         <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-20">
@@ -2922,6 +2729,7 @@ export default function OptimiseTablePage() {
           </div>
         </div>
       )}
+      
       <div className="flex justify-center gap-3 mb-2 mt-8">
         <a
           href="/admin/request-table"
@@ -2935,6 +2743,7 @@ export default function OptimiseTablePage() {
       <div className="text-[10px] text-gray-600 mt-2 border-t border-black pt-1 text-right">
         © {new Date().getFullYear()} Indian Railways
       </div>
+      
     </div>
   );
 }
