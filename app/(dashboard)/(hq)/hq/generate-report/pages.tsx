@@ -97,7 +97,8 @@ export default function GenerateReportPage() {
     blockType: ['All'],
     globalWorkType: "ALL",
     globalActivity: "ALL", 
-    globalTimeSlot: "ALL",
+    durationOperator: "ALL",
+  durationValue: "",
   });
 
   // Get user's location and set up major section options
@@ -218,7 +219,8 @@ export default function GenerateReportPage() {
         blockType: selectedBlockTypes,
         globalWorkType: "ALL",
         globalActivity: "ALL", 
-        globalTimeSlot: "ALL",
+        durationOperator: "ALL",
+  durationValue: "",
       });
 
       // Trigger the query - react-query will handle the loading state
