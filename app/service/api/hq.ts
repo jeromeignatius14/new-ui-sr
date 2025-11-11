@@ -3,7 +3,8 @@ import axiosInstance from "@/app/utils/axiosInstance";
 import { MajorSection } from "@/app/lib/store";
 
 export interface GenerateReportParams {
-  globalTimeSlot: any;
+  durationOperator: string;
+  durationValue: string;
   globalActivity: any;
   globalWorkType: any;
   startDate: string;
@@ -100,7 +101,8 @@ export const hqService = {
         // ADD THESE 3 NEW PARAMETERS:
         `&globalWorkType=${params.globalWorkType}` +
         `&globalActivity=${params.globalActivity}` +
-        `&globalTimeSlot=${params.globalTimeSlot}`
+       `&durationOperator=${params.durationOperator}` +
+        `&durationValue=${params.durationValue}`
     );
     return response.data;
   },
