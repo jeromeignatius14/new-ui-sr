@@ -375,7 +375,7 @@ export default function RequestTablePage() {
   const userName = session?.user?.name || "User";
   const userRole = session?.user?.role || "USER";
   const selectedDepo = session?.user?.depot || "";
-  const userDepartement = session?.user?.department || ""
+  const userDepartment = session?.user?.department || ""
 
   const [rejectRemarkPopup, setRejectRemarkPopup] = useState(false);
   const [rejectRemarks, setRejectRemarks] = useState("");
@@ -404,7 +404,7 @@ export default function RequestTablePage() {
     pageSize,
     formattedStartDate,
     formattedEndDate,
-    userDepartement,
+    userDepartment,
   );
 
   // Helper function to map user's depot to a major section
@@ -438,7 +438,7 @@ export default function RequestTablePage() {
   };
 
   // Get the major section for the current user's depot using the user's department
-  const userMajorSection = mapDepotToMajorSection(selectedDepo, userDepartement);
+  const userMajorSection = mapDepotToMajorSection(selectedDepo, userDepartment);
   console.log(`Session depot: "${session?.user?.depot}", department: "${session?.user?.department}", Mapped section: "${userMajorSection}"`);
 
   // Fetch sanctioned blocks data
@@ -1624,14 +1624,14 @@ export default function RequestTablePage() {
                           ) :
                             // For USER role, check conditions for showing buttons
                             
-                              (userDepartement === "ENGG" && request.enggDisconnectionsRequired && request.enggDisconnections?.[0]?.status === "PENDING") ? (
+                              (userDepartment === "ENGG" && request.enggDisconnectionsRequired && request.enggDisconnections?.[0]?.status === "PENDING") ? (
                               <div className="flex gap-2 justify-center">
                                 <button
                                   onClick={() =>
                                     handleStatusUpdate(
                                       request.id,
                                       true,
-                                      userDepartement,
+                                      userDepartment,
                                       "mobileView",
                                       request.date,
                                       request.corridorType
@@ -1658,7 +1658,7 @@ export default function RequestTablePage() {
                                     handleStatusUpdate(
                                       request.id,
                                       false,
-                                      userDepartement,
+                                      userDepartment,
                                       "mobileView",
                                       request.date,
                                       request.corridorType
