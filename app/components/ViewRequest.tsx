@@ -358,51 +358,6 @@ export default function ViewRequest() {
             <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
               Block Sections Detail
             </h2>
-            {/* <div className="space-y-3">
-              {request.processedLineSections.map((section, index) => (
-                <div key={index} className="border border-gray-200 p-2">
-                  <h3 className="font-medium text-[#13529e]">
-                    {section.block}
-                  </h3>
-                  {section.type === "regular" ? (
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <span className="text-xs font-medium">Line:</span>
-                        <div className="py-1">{section.lineName || "N/A"}</div>
-                      </div>
-                      {section.otherLines && (
-                        <div>
-                          <span className="text-xs font-medium">
-                            Other Lines Affected:
-                          </span>
-                          <div className="py-1">{section.otherLines}</div>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-2">
-                      {section.stream && (<div>
-                        <span className="text-xs font-medium">Stream:</span>
-                        <div className="py-1">{section.stream || "N/A"}</div>
-                      </div>)}
-                      {section.road && (<div>
-                        <span className="text-xs font-medium">Road:</span>
-                        <div className="py-1">{section.road || "N/A"}</div>
-                      </div>)}
-
-                      {section.otherRoads && (
-                        <div className="col-span-2">
-                          <span className="text-xs font-medium">
-                            Other Roads Affected:
-                          </span>
-                          <div className="py-1">{section.otherRoads}</div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div> */}
             <div className="space-y-3">
               {request.processedLineSections.map((section, index) => (
                 <div key={index} className="border border-gray-200 p-2">
