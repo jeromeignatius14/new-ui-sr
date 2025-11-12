@@ -17,6 +17,32 @@ export interface RequestResponse {
 }
 
 export interface RequestItem {
+  userResponse: string | null;
+ rejectedBy: User | null;
+   trdDisconnections:
+    | {
+        depot: string;
+        status: "PENDING" | "ACCEPTED" | "REJECTED";
+        approvedAt: string | null;
+        remarks: string | null;
+      }[]
+    | null;
+  sntDisconnections:
+    | {
+        depot: string;
+        status: "PENDING" | "ACCEPTED" | "REJECTED";
+        approvedAt: string | null;
+        remarks: string | null;
+      }[]
+    | null;
+    enggDisconnections:
+    | {
+        depot: string;
+        status: "PENDING" | "ACCEPTED" | "REJECTED";
+        approvedAt: string | null;
+        remarks: string | null;
+      }[]
+    | null;
   AvailedTimeTo?: any;
   AvailedTimeFrom?: any;
   freshCautions?: any;
@@ -119,7 +145,12 @@ export interface RequestItem {
         role: string;
     };
 }
-
+export type User = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+};
 export type DateRangeFilter = {
     startDate: string;
     endDate: string;
