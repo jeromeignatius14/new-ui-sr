@@ -54,6 +54,10 @@ interface PastBlockSummary {
 }
 
 interface DetailedData {
+  sntDisconnectionRequired?: boolean;
+  powerBlockRequired?: boolean;
+  enggDisconnectionsRequired?: boolean;
+  selectedDepartment?: string;
   userResponse?: string;
   useAcceptanceForSanction?: boolean;
   AvailedTimeTo?: any;
@@ -479,6 +483,8 @@ const clearGlobalFilters = () => {
 //   const divisionId = block.DivisionId || "";
 //   return divisionId.toLowerCase().includes(upcomingDivisionIdSearch.toLowerCase());
 // });
+
+
 const filterBlocksByDepartmentCount = (block: any): boolean => {
   if (!departmentCountFilter) return true;
   
@@ -487,34 +493,42 @@ const filterBlocksByDepartmentCount = (block: any): boolean => {
   // Base department filter
   if (block.selectedDepartment !== department) return false;
   
-  // Supporting department filters
+  // Supporting department filters - MATCHING YOUR COUNTING LOGIC EXACTLY
   if (supportingDepartment === "-") {
-    // No supporting department - filter out blocks that require support
+    // No supporting department - only blocks that don't require any support
     if (department === "ENGG" && (block.sntDisconnectionRequired || block.powerBlockRequired)) return false;
     if (department === "S&T" && (block.enggDisconnectionsRequired || block.powerBlockRequired)) return false;
-    if (department === "TRD") {
-      // TRD typically doesn't have supporting departments in the same way
-      return true;
-    }
+    // TRD doesn't have supporting departments, so all TRD blocks pass
   } else if (supportingDepartment === "S&T") {
+    // ENGG + S&T - matches your enggWithSnt counting
     if (!block.sntDisconnectionRequired) return false;
-    if (department === "ENGG" && block.powerBlockRequired) return false;
+    if (block.powerBlockRequired) return false; // Matches: enggWithSnt excludes powerBlockRequired
   } else if (supportingDepartment === "TRD") {
-    if (!block.powerBlockRequired) return false;
-    if (department === "ENGG" && block.sntDisconnectionRequired) return false;
+    if (department === "ENGG") {
+      // ENGG + TRD - matches your enggWithPower counting
+      if (!block.powerBlockRequired) return false;
+      if (block.sntDisconnectionRequired) return false; // Matches: enggWithPower excludes sntDisconnectionRequired
+    } else if (department === "S&T") {
+      // S&T + TRD - matches your sntWithPower counting
+      if (!block.powerBlockRequired) return false;
+      if (block.enggDisconnectionsRequired) return false; // Matches: sntWithPower excludes enggDisconnectionsRequired
+    }
   } else if (supportingDepartment === "ENGG") {
+    // S&T + ENGG - matches your sntWithEngg counting
     if (!block.enggDisconnectionsRequired) return false;
-    if (department === "S&T" && block.powerBlockRequired) return false;
+    if (block.powerBlockRequired) return false; // Matches: sntWithEngg excludes powerBlockRequired
   } else if (supportingDepartment === "S&T and TRD") {
+    // ENGG + S&T + TRD - matches your enggWithSntAndPower counting
     if (!block.sntDisconnectionRequired || !block.powerBlockRequired) return false;
   } else if (supportingDepartment === "ENGG and TRD") {
+    // S&T + ENGG + TRD - matches your sntWithEnggAndPower counting
     if (!block.enggDisconnectionsRequired || !block.powerBlockRequired) return false;
   }
   
   // Filter type conditions
   switch (filterType) {
     case 'requested':
-      return true; // All blocks for this department are included
+      return true;
     case 'sanctioned':
       return block.isSanctioned === true;
     case 'availed':
@@ -523,6 +537,10 @@ const filterBlocksByDepartmentCount = (block: any): boolean => {
       return true;
   }
 };
+
+
+
+
 
 const filteredUpcomingBlocks: DetailedData[] = (
   upcomingSectionFilter === "All"
@@ -551,47 +569,47 @@ const filteredUpcomingBlocks: DetailedData[] = (
   return true;
 });
 
-const countBlock: DetailedData[] = reportData?.data?.detailedData || [];
-
-const getCount = (criteria: (block: any) => boolean) => {
-  return countBlock.filter(criteria).length;
-};
+// Use the same data source for both tables
+const detailedData: DetailedData[] = reportData?.data?.detailedData || [];
 
 // ENGG counts
-const enggTotal = getCount(block => block.selectedDepartment === "ENGG"&&block.sntDisconnectionRequired === false && block.powerBlockRequired === false);
-const enggWithSnt = getCount(block => 
-  block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true
-);
-const enggWithPower = getCount(block => 
-  block.selectedDepartment === "ENGG" && block.powerBlockRequired === true
-);
-const enggWithSntAndPower = getCount(block => 
+const enggTotal = detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === false && block.powerBlockRequired === false).length;
+const enggWithSnt = detailedData.filter(block => 
+  block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true&&block.powerBlockRequired === false
+).length;
+const enggWithPower = detailedData.filter(block => 
+  block.selectedDepartment === "ENGG" && block.powerBlockRequired === true&& block.sntDisconnectionRequired === false
+).length;
+const enggWithSntAndPower = detailedData.filter(block => 
   block.selectedDepartment === "ENGG" && 
   block.sntDisconnectionRequired === true && 
   block.powerBlockRequired === true
-);
+).length;
 
 // S&T counts
-const sntTotal = getCount(block => block.selectedDepartment === "S&T"&&block.enggDisconnectionsRequired === false && block.powerBlockRequired === false);
-const sntWithPower = getCount(block => 
-  block.selectedDepartment === "S&T" && block.powerBlockRequired === true
-);
-const sntWithEngg = getCount(block => 
-  block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true
-);
-const sntWithEnggAndPower = getCount(block => 
+const sntTotal = detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === false && block.powerBlockRequired === false).length;
+const sntWithPower = detailedData.filter(block => 
+  block.selectedDepartment === "S&T" && block.powerBlockRequired === true&&block.enggDisconnectionsRequired === false
+).length;
+const sntWithEngg = detailedData.filter(block => 
+  block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true&&block.powerBlockRequired === false
+).length;
+const sntWithEnggAndPower = detailedData.filter(block => 
   block.selectedDepartment === "S&T" && 
   block.enggDisconnectionsRequired === true && 
   block.powerBlockRequired === true
-);
+).length;
 
 // TRD counts
-const trdTotal = getCount(block => block.selectedDepartment === "TRD");
+const trdTotal = detailedData.filter(block => block.selectedDepartment === "TRD").length;
 
 // Total counts for the bottom row
-const totalRequested = countBlock.length;
-const totalSanctioned = getCount(block => block.isSanctioned === true);
-const totalAvailed = getCount(block => block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null);
+const totalRequested = detailedData.length;
+const totalSanctioned = detailedData.filter(block => block.isSanctioned === true).length;
+const totalAvailed = detailedData.filter(block => block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length;
+
+// Remove this line since we're not using countBlock anymore
+// const countBlock: DetailedData[] = reportData?.data?.detailedData || [];
 // ===== END COUNTING LOGIC =====
 
 const filteredBlocks = filteredUpcomingBlocks.filter((block) => {
@@ -845,7 +863,7 @@ const sseOptions = [...new Set(
 )].sort();
 const handleDownloadDepartmentCount = () => {
   try {
-    if (countBlock.length === 0) {
+    if (detailedData.length === 0) { // Changed from countBlock to detailedData
       toast.error("No data available to download");
       return;
     }
@@ -858,32 +876,32 @@ const handleDownloadDepartmentCount = () => {
         "Department": "ENGG",
         "Supporting Department": "-",
         "Total Block Requested": enggTotal,
-        "Total Block Sanctioned": getCount(block => block.selectedDepartment === "ENGG" && block.isSanctioned),
-        "Total Block Availed": getCount(block => block.selectedDepartment === "ENGG" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.isSanctioned).length,
+        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
       },
       {
         "Location": "MAS",
         "Department": "ENGG",
         "Supporting Department": "S&T",
         "Total Block Requested": enggWithSnt,
-        "Total Block Sanctioned": getCount(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.isSanctioned),
-        "Total Block Availed": getCount(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.isSanctioned),
+        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
       },
       {
         "Location": "MAS",
         "Department": "ENGG",
         "Supporting Department": "TRD",
         "Total Block Requested": enggWithPower,
-        "Total Block Sanctioned": getCount(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.isSanctioned),
-        "Total Block Availed": getCount(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.isSanctioned),
+        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
       },
       {
         "Location": "MAS",
         "Department": "ENGG",
         "Supporting Department": "S&T and TRD",
         "Total Block Requested": enggWithSntAndPower,
-        "Total Block Sanctioned": getCount(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.powerBlockRequired === true && block.isSanctioned),
-        "Total Block Availed": getCount(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.powerBlockRequired === true && block.isSanctioned),
+        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
       },
       
       // TRD Rows
@@ -892,8 +910,8 @@ const handleDownloadDepartmentCount = () => {
         "Department": "TRD",
         "Supporting Department": "-",
         "Total Block Requested": trdTotal,
-        "Total Block Sanctioned": getCount(block => block.selectedDepartment === "TRD" && block.isSanctioned),
-        "Total Block Availed": getCount(block => block.selectedDepartment === "TRD" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "TRD" && block.isSanctioned),
+        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "TRD" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
       },
       
       // S&T Rows
@@ -902,32 +920,32 @@ const handleDownloadDepartmentCount = () => {
         "Department": "S&T",
         "Supporting Department": "-",
         "Total Block Requested": sntTotal,
-        "Total Block Sanctioned": getCount(block => block.selectedDepartment === "S&T" && block.isSanctioned),
-        "Total Block Availed": getCount(block => block.selectedDepartment === "S&T" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "S&T" && block.isSanctioned),
+        "Total Block Availed":detailedData.filter(block => block.selectedDepartment === "S&T" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
       },
       {
         "Location": "MAS",
         "Department": "S&T",
         "Supporting Department": "ENGG",
         "Total Block Requested": sntWithEngg,
-        "Total Block Sanctioned": getCount(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.isSanctioned),
-        "Total Block Availed": getCount(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.isSanctioned),
+        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
       },
       {
         "Location": "MAS",
         "Department": "S&T",
         "Supporting Department": "TRD",
         "Total Block Requested": sntWithPower,
-        "Total Block Sanctioned": getCount(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.isSanctioned),
-        "Total Block Availed": getCount(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.isSanctioned),
+        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
       },
       {
         "Location": "MAS",
         "Department": "S&T",
         "Supporting Department": "ENGG and TRD",
         "Total Block Requested": sntWithEnggAndPower,
-        "Total Block Sanctioned": getCount(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.powerBlockRequired === true && block.isSanctioned),
-        "Total Block Availed": getCount(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.powerBlockRequired === true && block.isSanctioned),
+        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
       },
       
       // Total Row
@@ -1631,7 +1649,7 @@ const handleDownloadDepartmentCount = () => {
   <button
     onClick={handleDownloadDepartmentCount}
     className="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1 shadow border border-green-800 text-[12px] md:text-base flex items-center"
-    disabled={countBlock.length === 0}
+    disabled={detailedData.length === 0}
   >
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -1686,7 +1704,7 @@ const handleDownloadDepartmentCount = () => {
         <th className="border-2 border-black px-1 md:px-2 py-2">Total Block Availed</th>
       </tr>
     </thead>
-   <tbody>
+<tbody>
   {/* ENGG Rows */}
   <tr className="bg-white font-bold">
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
@@ -1716,7 +1734,7 @@ const handleDownloadDepartmentCount = () => {
         toast.success("Showing sanctioned ENGG blocks (no supporting departments)");
       }}
     >
-      {getCount(block => block.selectedDepartment === "ENGG" && block.isSanctioned&&block.powerBlockRequired===false&&block.sntDisconnectionRequired===false)}
+      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.isSanctioned && block.powerBlockRequired === false && block.sntDisconnectionRequired === false).length}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
@@ -1729,7 +1747,7 @@ const handleDownloadDepartmentCount = () => {
         toast.success("Showing availed ENGG blocks (no supporting departments)");
       }}
     >
-      {getCount(block => block.selectedDepartment === "ENGG" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null&&block.powerBlockRequired===false&&block.sntDisconnectionRequired===false)}
+      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null && block.powerBlockRequired === false && block.sntDisconnectionRequired === false).length}
     </td>
   </tr>
   
@@ -1761,7 +1779,7 @@ const handleDownloadDepartmentCount = () => {
         toast.success("Showing sanctioned ENGG blocks with S&T support");
       }}
     >
-      {getCount(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.isSanctioned&&block.powerBlockRequired===false&&block.enggDisconnectionsRequired===false)}
+      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.isSanctioned && block.powerBlockRequired === false && block.enggDisconnectionsRequired === false).length}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
@@ -1774,7 +1792,7 @@ const handleDownloadDepartmentCount = () => {
         toast.success("Showing availed ENGG blocks with S&T support");
       }}
     >
-      {getCount(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null&&block.powerBlockRequired===false&&block.enggDisconnectionsRequired===false)}
+      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null && block.powerBlockRequired === false && block.enggDisconnectionsRequired === false).length}
     </td>
   </tr>
   
@@ -1806,7 +1824,7 @@ const handleDownloadDepartmentCount = () => {
         toast.success("Showing sanctioned ENGG blocks with TRD support");
       }}
     >
-      {getCount(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.isSanctioned)}
+      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.isSanctioned).length}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
@@ -1819,7 +1837,7 @@ const handleDownloadDepartmentCount = () => {
         toast.success("Showing availed ENGG blocks with TRD support");
       }}
     >
-      {getCount(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)}
+      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
     </td>
   </tr>
   
@@ -1851,7 +1869,7 @@ const handleDownloadDepartmentCount = () => {
         toast.success("Showing sanctioned ENGG blocks with S&T and TRD support");
       }}
     >
-      {getCount(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.powerBlockRequired === true && block.isSanctioned)}
+      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.powerBlockRequired === true && block.isSanctioned).length}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
@@ -1864,7 +1882,7 @@ const handleDownloadDepartmentCount = () => {
         toast.success("Showing availed ENGG blocks with S&T and TRD support");
       }}
     >
-      {getCount(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)}
+      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
     </td>
   </tr>
 
@@ -1897,7 +1915,7 @@ const handleDownloadDepartmentCount = () => {
         toast.success("Showing sanctioned TRD blocks");
       }}
     >
-      {getCount(block => block.selectedDepartment === "TRD" && block.isSanctioned)}
+      {detailedData.filter(block => block.selectedDepartment === "TRD" && block.isSanctioned).length}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
@@ -1910,7 +1928,7 @@ const handleDownloadDepartmentCount = () => {
         toast.success("Showing availed TRD blocks");
       }}
     >
-      {getCount(block => block.selectedDepartment === "TRD" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)}
+      {detailedData.filter(block => block.selectedDepartment === "TRD" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
     </td>
   </tr>
 
@@ -1943,7 +1961,7 @@ const handleDownloadDepartmentCount = () => {
         toast.success("Showing sanctioned S&T blocks (no supporting departments)");
       }}
     >
-      {getCount(block => block.selectedDepartment === "S&T" && block.isSanctioned)}
+      {detailedData.filter(block => block.selectedDepartment === "S&T" && block.isSanctioned).length}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
@@ -1956,7 +1974,7 @@ const handleDownloadDepartmentCount = () => {
         toast.success("Showing availed S&T blocks (no supporting departments)");
       }}
     >
-      {getCount(block => block.selectedDepartment === "S&T" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)}
+      {detailedData.filter(block => block.selectedDepartment === "S&T" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
     </td>
   </tr>
   
@@ -1988,7 +2006,7 @@ const handleDownloadDepartmentCount = () => {
         toast.success("Showing sanctioned S&T blocks with ENGG support");
       }}
     >
-      {getCount(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.isSanctioned)}
+      {detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.isSanctioned).length}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
@@ -2001,7 +2019,7 @@ const handleDownloadDepartmentCount = () => {
         toast.success("Showing availed S&T blocks with ENGG support");
       }}
     >
-      {getCount(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)}
+      {detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
     </td>
   </tr>
   
@@ -2033,7 +2051,7 @@ const handleDownloadDepartmentCount = () => {
         toast.success("Showing sanctioned S&T blocks with TRD support");
       }}
     >
-      {getCount(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.isSanctioned)}
+      {detailedData.filter(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.isSanctioned).length}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
@@ -2046,7 +2064,7 @@ const handleDownloadDepartmentCount = () => {
         toast.success("Showing availed S&T blocks with TRD support");
       }}
     >
-      {getCount(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)}
+      {detailedData.filter(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
     </td>
   </tr>
   
@@ -2078,7 +2096,7 @@ const handleDownloadDepartmentCount = () => {
         toast.success("Showing sanctioned S&T blocks with ENGG and TRD support");
       }}
     >
-      {getCount(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.powerBlockRequired === true && block.isSanctioned)}
+      {detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.powerBlockRequired === true && block.isSanctioned).length}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
@@ -2091,7 +2109,7 @@ const handleDownloadDepartmentCount = () => {
         toast.success("Showing availed S&T blocks with ENGG and TRD support");
       }}
     >
-      {getCount(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)}
+      {detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
     </td>
   </tr>
 
