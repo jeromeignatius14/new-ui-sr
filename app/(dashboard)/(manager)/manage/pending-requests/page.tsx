@@ -136,26 +136,21 @@ const pendingDisconnectionRequests =
     .sort((a: UserRequest, b: UserRequest) => {
       return new Date(a.date).getTime() - new Date(b.date).getTime();
     });
-
-    const pendingMultiLineRequests = (Array.isArray(data?.data?.requests) ? data.data.requests : [])
-    .filter((r: UserRequest) => 
-        r.status === 'PENDING' && 
-        r.managerAcceptance === false &&
-        r.processedLineSections?.some((section: any) => 
-            section.otherLines && section.otherLines.trim() !== ''
-        )
+const pendingMultiLineRequests = (Array.isArray(data?.data?.requests) ? data.data.requests : [])
+  .filter((r: UserRequest) => 
+    r.status === 'PENDING' && 
+    r.managerAcceptance === false &&
+    r.corridorType !== 'Urgent Block' && 
+    r.processedLineSections?.some((section: any) => 
+      section.otherLines && section.otherLines.trim() !== ''
     )
-    .sort((a: UserRequest, b: UserRequest) => {
-        // Priority sort: urgent blocks first
-        const urgentA = a.corridorType === 'Urgent Block' ? 0 : 1;
-        const urgentB = b.corridorType === 'Urgent Block' ? 0 : 1;
-        if (urgentA !== urgentB) return urgentA - urgentB;
-
-        // Date sort (earliest first)
-        const dateA = new Date(a.date).getTime();
-        const dateB = new Date(b.date).getTime();
-        return dateA - dateB;
-    });
+  )
+  .sort((a: UserRequest, b: UserRequest) => {
+    // Sort by date (earliest first)
+    const dateA = new Date(a.date).getTime();
+    const dateB = new Date(b.date).getTime();
+    return dateA - dateB;
+  });
     const rejectedRequest = (Array.isArray(data?.data?.requests) ? data.data.requests : [])
         .filter((r: UserRequest) => (r.trdActionsNeeded === false && r.oheResponse !== "") || (r.sigActionsNeeded === false && r.sigResponse !== "") || (r.overAllStatus === "return to applicant by optg") || (r.overAllStatus === "return to applicant by trd.") || (r.overAllStatus === "return to applicant by s&t and trd.") || (r.overAllStatus === "return to applicant by s&t."))
         .sort((a: UserRequest, b: UserRequest) => {
@@ -793,15 +788,27 @@ const handleBulkAccept = async () => {
             )}
 
 <div className="mx-4 mt-6 flex flex-wrap gap-2 justify-center">
-        <button
+        {/* <button
             onClick={() => setActiveTab('urgent')}
             className={`px-4 py-2 rounded-lg border-2 border-black font-bold ${
                 activeTab === 'urgent' ? 'bg-[#FF6B6B] text-white' : 'bg-[#D6F3FF] text-black'
             }`}
         >
             Urgent Block ({pendingRequests.filter(r => r.corridorType === "Urgent Block").length})
-        </button>
-    
+        </button> */}
+    <button
+  onClick={() => setActiveTab('urgent')}
+  className={`
+    px-4 py-2 rounded-lg border-2 border-black font-bold
+    ${activeTab === 'urgent'
+      ? 'bg-[#FF6B6B] text-white'
+      : 'bg-[#D6F3FF] text-black'}
+    ${pendingRequests.filter(r => r.corridorType === "Urgent Block").length > 0 ? 'animate-pulse bg-[#FF6B6B] text-white' : ''}
+  `}
+>
+  Urgent Block ({pendingRequests.filter(r => r.corridorType === "Urgent Block").length})
+</button>
+
         <button
             onClick={() => setActiveTab('corridor')}
             className={`px-4 py-2 rounded-lg border-2 border-black font-bold ${
@@ -821,14 +828,7 @@ const handleBulkAccept = async () => {
         </button>
     
 
-         <button
-            onClick={() => setActiveTab('disconnections')}
-            className={`px-4 py-2 rounded-lg border-2 border-black font-bold ${
-                activeTab === 'disconnections' ? 'bg-[#45B7D1] text-white' : 'bg-[#D6F3FF] text-black'
-            }`}
-        >
-            Job Pending With SSE ({pendingDisconnectionRequests.length})
-        </button>
+       
         <button
             onClick={() => setActiveTab('multi-line')}
             className={`px-4 py-2 rounded-lg border-2 border-black font-bold ${
@@ -837,7 +837,14 @@ const handleBulkAccept = async () => {
         >
             Combined line(Multiple Line) ({pendingMultiLineRequests.length})
         </button>
-    
+      <button
+            onClick={() => setActiveTab('disconnections')}
+            className={`px-4 py-2 rounded-lg border-2 border-black font-bold ${
+                activeTab === 'disconnections' ? 'bg-[#45B7D1] text-white' : 'bg-[#D6F3FF] text-black'
+            }`}
+        >
+            Job Pending With SSE ({pendingDisconnectionRequests.length})
+        </button>
         <button
             onClick={() => setActiveTab('rejected')}
             className={`px-4 py-2 rounded-lg border-2 border-black font-bold ${
@@ -877,7 +884,7 @@ const handleBulkAccept = async () => {
                     </thead>
                     <tbody>
                         {pendingRequests.filter((request: UserRequest) => request.corridorType === "Urgent Block").map((request: UserRequest) => (
-                            <tr key={request.id} className={`hover:bg-[#FFF86B] text-black ${request.corridorType === "Urgent Block" ? "urgent-block-row" : "bg-white"}`}>
+                            <tr key={request.id} className="hover:bg-[#FFF86B] text-black bg-white">
                                 <td className="border border-black px-2 py-1 text-center align-middle">
                                     <input
                                         type="checkbox"
