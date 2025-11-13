@@ -37,11 +37,11 @@ jobs:
           command: c
           cwd: "./"
           files: |
-            backend/
             .next/standalone/
             .next/static/
             public/
             captain-definition
+            DockerFile
           outPath: deploy.tar
 
       - name: Deploy App to CapRover
