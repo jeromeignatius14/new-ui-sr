@@ -271,12 +271,6 @@ export default function ViewRequest() {
                   )}
                 </td>
               </tr>
-               <tr>
-                <td className="py-1 font-medium">Sanctioned Remark:</td>
-                <td className="py-1">
-                     {request.sanctionedRemarks||"N/A"}
-                </td>
-              </tr>
                  <tr>
                 <td className="py-1 font-medium">Availed Time:</td>
                 <td className="py-1">
@@ -914,7 +908,7 @@ export default function ViewRequest() {
         </div>
       )}
       
-      {request.isSanctioned && request.sanctionedRemarks && (
+      {request.isSanctioned &&request.sanctionedRemarks && (
         <div className="border border-black p-3 mb-4">
           <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
             Sanction Remarks
