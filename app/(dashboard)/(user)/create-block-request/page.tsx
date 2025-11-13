@@ -172,359 +172,6 @@ interface ReviewModalProps {
   readOnly?: boolean;
 }
 
-// function ReviewBlockRequestModal({
-//   isOpen,
-//   onClose,
-//   onConfirm,
-//   formData,
-//   blockSectionValue,
-//   processedLineSections,
-//   selectedActivities,
-//   customActivity,
-//   formSubmitting,
-//   readOnly,
-// }: ReviewModalProps) {
-//   if (!isOpen) return null;
-
-//   // Debug log to see what's being passed
-//   console.log("ReviewModal Safety Info:", formData);
-
-//   // Helper function to render safety information based on department
-//   const renderSafetyInfo = () => {
-//     const department = formData.selectedDepartment;
-
-//     // TRD department: Don't show any safety information
-//     if (department === "TRD") {
-//       return null;
-//     }
-
-//     // Helper function to check if a safety requirement is enabled
-//     const isEnabled = (value: any): boolean => {
-//       return value === true || value === "Y" || value === "true" || value === "yes" || value === "Yes";
-//     };
-
-//     // For other departments (ENGG and S&T)
-//     return (
-//       <div className="space-y-2 mt-5">
-//         <h2 className="font-bold">Safety Information</h2>
-
-//         {/* Fresh Caution - Show for both ENGG and S&T */}
-//         <div className="text-[14px]">
-//           <div className="font-semibold">Fresh Caution Imposed:</div>
-//           <div>{isEnabled(formData.freshCautionRequired) ? "" : "No"}</div>
-
-//           {/* Show fresh caution details only if it's enabled */}
-//           {isEnabled(formData.freshCautionRequired) && (
-//             <div className="ml-4 mt-2 space-y-1 text-sm">
-//               {formData.freshCautions && formData.freshCautions.map((caution: any, index: number) => (
-//                 <div key={index} className="">
-//                   {caution.freshCautionLocationFrom && (
-//                     <div><span className="font-semibold">Location From:</span> {caution.freshCautionLocationFrom}</div>
-//                   )}
-//                   {caution.freshCautionLocationTo && (
-//                     <div><span className="font-semibold">Location To:</span> {caution.freshCautionLocationTo}</div>
-//                   )}
-//                   {caution.freshCautionSpeed && (
-//                     <div><span className="font-semibold">Speed (km/hr):</span> {caution.freshCautionSpeed}</div>
-//                   )}
-//                   {caution.adjacentLinesAffected && (
-//                     <div><span className="font-semibold">Adjacent Lines Affected:</span> {caution.adjacentLinesAffected}</div>
-//                   )}
-//                    {caution.freshCautionFromDate && (
-//                     <div><span className="font-semibold">From Date:</span> {caution.freshCautionFromDate}</div>
-//                   )}
-//                     {caution.freshCautionToDate && (
-//                     <div><span className="font-semibold">To Date:</span> {caution.freshCautionToDate}</div>
-//                   )}
-//  {caution.freshCautionFromTime && (
-//                     <div><span className="font-semibold">From Time:</span> {caution.freshCautionFromTime}</div>
-//                   )}
-                     
-//         {caution.freshCautionToTime && (
-//                     <div><span className="font-semibold">From Time:</span> {caution.freshCautionToTime}</div>
-//                   )}
-//                 </div>
-//               ))}
-//             </div>
-//           )}
-//         </div>
-
-//         {/* Power Block - Show for both ENGG and S&T */}
-//         <div>
-//           <div className="font-semibold text-[14px]">Power Block:</div>
-//           <div>{isEnabled(formData.powerBlockRequired) ? "" : "No"}</div>
-
-//           {/* Show power block details only if it's enabled */}
-//           {isEnabled(formData.powerBlockRequired) && (
-//             <div className="ml-4 mt-2 space-y-1 text-sm">
-//               {formData.elementarySection && (
-//                 <div><span className="font-semibold">Elementary Section:</span> {formData.elementarySection}</div>
-//               )}
-//               {formData.powerBlockKmFrom && (
-//                 <div><span className="font-semibold">KM From:</span> {formData.powerBlockKmFrom}</div>
-//               )}
-//               {formData.powerBlockKmTo && (
-//                 <div><span className="font-semibold">KM To:</span> {formData.powerBlockKmTo}</div>
-//               )}
-//               {formData.powerBlockRoad && (
-//                 <div><span className="font-semibold">Road:</span> {formData.powerBlockRoad}</div>
-//               )}
-//               {formData.powerBlockDisconnectionAssignTo && (
-//                 <div><span className="font-semibold">Assign To:</span> {formData.powerBlockDisconnectionAssignTo}</div>
-//               )}
-//               {formData.powerBlockRequirements && formData.powerBlockRequirements.length > 0 && (
-//                 <div>
-//                   <span className="font-semibold">Requirements:</span>{" "}
-//                   {formData.powerBlockRequirements.join(", ")}
-//                 </div>
-//               )}
-//             </div>
-//           )}
-//         </div>
-
-//         {/* S&T Disconnection - Show only for ENGG */}
-//         {department === "ENGG" && (
-//           <div>
-//             <div className="font-semibold text-[14px]">S&T Disconnection:</div>
-//             <div>{isEnabled(formData.sntDisconnectionRequired) ? "" : "No"}</div>
-
-//             {/* Show S&T disconnection details only if it's enabled */}
-//             {isEnabled(formData.sntDisconnectionRequired) && (
-//               <div className="ml-4 mt-2 space-y-1 text-sm">
-//                 {formData.sntDisconnectionLineFrom && (
-//                   <div><span className="font-semibold">Line From:</span> {formData.sntDisconnectionLineFrom}</div>
-//                 )}
-//                 {formData.sntDisconnectionLineTo && (
-//                   <div><span className="font-semibold">Line To:</span> {formData.sntDisconnectionLineTo}</div>
-//                 )}
-//                 {formData.sntDisconnectionPointNo && (
-//                   <div><span className="font-semibold">Point No:</span> {formData.sntDisconnectionPointNo}</div>
-//                 )}
-//                 {formData.sntDisconnectionSignalNo && (
-//                   <div><span className="font-semibold">Signal No:</span> {formData.sntDisconnectionSignalNo}</div>
-//                 )}
-//                 {formData.sntDisconnectionRequirements && formData.sntDisconnectionRequirements.length > 0 && (
-//                   <div>
-//                     <span className="font-semibold">Requirements:</span>{" "}
-//                     {formData.sntDisconnectionRequirements.join(", ")}
-//                   </div>
-//                 )}
-//                 {formData.sntDisconnectionAssignTo && (
-//                   <div><span className="font-semibold">Assign To:</span> {formData.sntDisconnectionAssignTo}</div>
-//                 )}
-//               </div>
-//             )}
-//           </div>
-//         )}
-//       </div>
-//     );
-//   };
-
-//   return (
-//     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-//       <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full p-6 relative overflow-y-auto max-h-[90vh] text-gray-600">
-//         <h2 className="text-xl font-bold mb-6 text-center">Confirm Your Request</h2>
-
-//         <div className="bg-blue-50 p-4 rounded-lg mb-6">
-//           <p className="mb-2 font-bold">Your request for traffic block in {blockSectionValue.join(", ")} Block Section on {formData.date} from {formData.demandTimeFrom} hrs to {formData.demandTimeTo} hrs and is ready to be submitted.</p>
-//           <p className="text-sm text-gray-600">Please review all details below before final submission.</p>
-//         </div>
-
-//         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-//           <div>
-//             <h3 className="font-bold mb-2">Basic Information</h3>
-//             <div className="grid grid-cols-2 gap-2 text-[14px]">
-//               <div className="text-gray-600 font-bold">Date:</div>
-//               <div>{formData.date}</div>
-
-//               <div className="text-gray-600 font-bold">Department:</div>
-//               <div>{formData.selectedDepartment}</div>
-
-//               <div className="text-gray-600 font-bold">Major Section:</div>
-//               <div>{formData.selectedSection}</div>
-
-//               <div className="text-gray-600 font-bold">Depot/SSE:</div>
-//               <div>{formData.selectedDepo}</div>
-
-//               <div className="text-gray-600 font-bold">Work Type:</div>
-//               <div>{formData.workType}</div>
-
-//               {(formData.activity || customActivity) && (
-//                 <>
-//                   <div className="text-gray-600 font-bold">Work Description:</div>
-//                   <div>{formData.activity || customActivity}</div>
-//                 </>
-//               )}
-
-//               <div className="text-gray-600 font-bold">Demanded Time:</div>
-//               <div>{formData.demandTimeFrom} to {formData.demandTimeTo}</div>
-//             </div>
-
-//             {/* Moved safety info here for ENGG and S&T departments */}
-//             {formData.selectedDepartment !== "TRD" && renderSafetyInfo()}
-
-//             {formData.requestremarks && formData.requestremarks.trim() !== "" && (
-//               <div className="mt-4">
-//                 <h3 className="font-bold">Remarks</h3>
-//                 <div>{formData.requestremarks}</div>
-//               </div>
-//             )}
-//             {formData.remarks && (
-//               <div className="mb-2">
-//                 <b>Remarks:</b> {formData.remarks}
-//               </div>
-//             )}
-//             {/* <div className="mt-4 mb-2 p-3 rounded-xl border-2 border-[#f7d6f7] bg-[#f7d6f7]">
-//               <div className="text-lg font-extrabold text-[#13529e] mb-2">
-//                 Caution Requirements
-//               </div>
-//               <div>
-//                 <b>Fresh Caution Imposed:</b>{" "}
-//                 {formData.freshCautionRequired === "Y" ? "Yes" : "No"}
-//               </div>
-//               {formData.freshCautionRequired === "Y" && (
-//                 <div className="space-y-1 mt-2">
-//                   <div>
-//                     <b>Location From:</b>{" "}
-//                     {formData.freshCautionLocationFrom || "-"}
-//                   </div>
-//                   <div>
-//                     <b>Location To:</b> {formData.freshCautionLocationTo || "-"}
-//                   </div>
-//                   <div>
-//                     <b>Speed (km/hr):</b> {formData.freshCautionSpeed || "-"}
-//                   </div>
-//                   <div>
-//                     <b>Adjacent Lines Affected:</b>{" "}
-//                     {formData.adjacentLinesAffected || "-"}
-//                   </div>
-//                 </div>
-//               )}
-//             </div> */}
-
-//             {/* Always show Other Affected Lines/Roads section */}
-//             <div className="mt-4">
-//               <h3 className="font-bold mb-2">Other Affected Lines/Roads:</h3>
-//               {formData.processedLineSections && formData.processedLineSections.some((s: any) => s.otherLines?.trim() || s.otherRoads?.trim()) ? (
-//                 <div className="">
-//                   {formData.processedLineSections.map((s: any, index: any) => (
-//                     <React.Fragment key={`other-${index}`}>
-//                       {s.otherLines?.trim() && (
-//                         <div className="mb-2">
-//                           <div className="font-medium mb-1">{s.block} - Other Lines:</div>
-//                           <div className="ml-2">
-//                             {s.otherLines.split(',').map((line: string, idx: number) => {
-//                               const trimmedLine = line.trim();
-//                               if (trimmedLine.toLowerCase().includes('up')) {
-//                                 return (
-//                                   <div key={`line-${idx}`} className="flex items-center mb-1">
-//                                     <span className="font-medium bg-green-100 text-green-800 px-2 rounded mr-2">Up {trimmedLine.replace(/up\s*/i, '').trim()}</span>
-//                                   </div>
-//                                 );
-//                               } else if (trimmedLine.toLowerCase().includes('down')) {
-//                                 return (
-//                                   <div key={`line-${idx}`} className="flex items-center mb-1">
-//                                     <span className="font-medium bg-red-100 text-red-800 px-2 rounded mr-2">Down {trimmedLine.replace(/down\s*/i, '').trim()}</span>
-//                                   </div>
-//                                 );
-//                               } else {
-//                                 return (
-//                                   <div key={`line-${idx}`} className="mb-1">
-//                                     {trimmedLine}
-//                                   </div>
-//                                 );
-//                               }
-//                             })}
-//                           </div>
-//                         </div>
-//                       )}
-
-//                       {s.otherRoads?.trim() && (
-//                         <div className="mb-2">
-//                           <div className="font-medium mb-1">{s.block} - Other Roads:</div>
-//                           <div className="ml-2">
-//                             {s.otherRoads.split(',').map((road: string, idx: number) => {
-//                               const trimmedRoad = road.trim();
-//                               const roadMatch = trimmedRoad.match(/rd\s*\d+/i);
-
-//                               if (roadMatch) {
-//                                 return (
-//                                   <div key={`road-${idx}`} className="flex items-center mb-1">
-//                                     <span className="font-medium bg-blue-100 text-blue-800 px-2 rounded mr-2">
-//                                       {roadMatch[0].toUpperCase()}
-//                                     </span>
-//                                     <span>{trimmedRoad.replace(/rd\s*\d+/i, '').trim()}</span>
-//                                   </div>
-//                                 );
-//                               } else {
-//                                 return (
-//                                   <div key={`road-${idx}`} className="mb-1">
-//                                     {trimmedRoad}
-//                                   </div>
-//                                 );
-//                               }
-//                             })}
-//                           </div>
-//                         </div>
-//                       )}
-//                     </React.Fragment>
-//                   ))}
-//                 </div>
-//               ) : (
-//                 <div className="text-[14px] text-gray-600">None</div>
-//               )}
-//             </div>
-
-//             {(formData.workLocationFrom?.trim() || formData.trdWorkLocation?.trim()) && (
-//               <div className="mt-4">
-//                 <h3 className="font-bold">Work Location</h3>
-//                 <div className="text-[14px] text-gray-600">
-//                   {formData.workLocationFrom || formData.trdWorkLocation}
-//                 </div>
-//               </div>
-//             )}
-//           </div>
-//         </div>
-
-//         <div className="text-center mt-4">
-//           <div className="flex justify-center gap-6">
-//             <button
-//               onClick={onClose}
-//               className="px-6 py-2 bg-gray-200 rounded-md text-gray-800 font-medium hover:bg-gray-300"
-//             >
-//               Go Back to Editing
-//             </button>
-
-//             <button
-//               onClick={onConfirm}
-//               className="px-6 py-2 bg-blue-500 text-white font-medium rounded-md hover:bg-blue-600 disabled:opacity-60 disabled:cursor-not-allowed"
-//               disabled={formSubmitting}
-//             >
-//               Submit Request
-//             </button>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-
-
-// Helper to determine if Type of Block should be locked to Urgent Block
-// export function isUrgentBlockDate(dateString: string): boolean {
-//   if (!dateString) return false;
-//   const today = new Date();
-//   today.setHours(0, 0, 0, 0);
-//   const targetDate = new Date(dateString);
-//   targetDate.setHours(0, 0, 0, 0);
-//   const dayDiff = Math.floor((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-//   return dayDiff === 0 || dayDiff === 1 || dayDiff === 2;
-// }
-
-// Add a new style object for better contrast in 'Other affected Lines/Roads' dropdowns
-
-
 function ReviewBlockRequestModal({
   isOpen,
   onClose,
@@ -671,7 +318,35 @@ function ReviewBlockRequestModal({
       )}
     </div>
   )}
-</div>
+          {/* ENG Disconnection - Show for both ENGG and S&T */}
+          {department==="S&T"&&(
+               <div>
+          <div className="font-semibold text-[14px]">ENG Disconnection:</div>
+          <div>{isEnabled(formData.enggDisconnectionsRequired) ? "" : "No"}</div>
+
+          {/* Show ENG disconnection details only if it's enabled */}
+          {isEnabled(formData.enggDisconnectionsRequired) && (
+            <div className="ml-4 mt-2 space-y-1 text-sm">
+              {formData.engDisconnectionRemarks && (
+                <div><span className="font-semibold">Remarks:</span> {formData.engDisconnectionRemarks}</div>
+              )}
+              {formData.engDisconnectionAssignTo && (
+                <div><span className="font-semibold">Assign To:</span> {formData.engDisconnectionAssignTo}</div>
+              )}
+              {formData.selectedENGDepots && formData.selectedENGDepots.length > 0 && (
+                <div>
+                  <span className="font-semibold">Assigned Depots:</span>{" "}
+                  {Array.isArray(formData.selectedENGDepots) 
+                    ? formData.selectedENGDepots.join(", ")
+                    : formData.selectedENGDepots}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+          )}
+     
+      </div>
     );
   };
 
@@ -705,12 +380,24 @@ function ReviewBlockRequestModal({
               <div className="text-gray-600 font-bold">Work Type:</div>
               <div>{formData.workType}</div>
 
-              {(formData.activity || customActivity) && (
-                <>
-                  <div className="text-gray-600 font-bold">Work Description:</div>
-                  <div>{formData.activity || customActivity}</div>
-                </>
-              )}
+             <div className="text-gray-600 font-bold">Work Description:</div>
+<div className="max-w-full break-words bg-blue-50 p-2 rounded text-sm max-h-32 overflow-y-auto">
+  {selectedActivities && selectedActivities.length > 0 ? (
+    <div className="flex flex-wrap gap-1">
+      {selectedActivities.map((activity: string, index: number) => (
+        <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
+          {activity}
+        </span>
+      ))}
+    </div>
+  ) : customActivity ? (
+    <div className="break-words whitespace-pre-wrap">
+      {customActivity}
+    </div>
+  ) : (
+    <span className="text-gray-400">No activity specified</span>
+  )}
+</div>
 
               <div className="text-gray-600 font-bold">Demanded Time:</div>
               <div>{formData.demandTimeFrom} to {formData.demandTimeTo}</div>
