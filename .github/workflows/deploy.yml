@@ -2,10 +2,10 @@ name: Build & Deploy
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "new-ui" ]
 
   pull_request:
-    branches: [ "main" ]
+    branches: [ "new-ui" ]
 
 jobs:
   build-and-deploy:
