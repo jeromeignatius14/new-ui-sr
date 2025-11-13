@@ -170,6 +170,7 @@ interface ReviewModalProps {
   customActivity: string;
   formSubmitting?: boolean;
   readOnly?: boolean;
+  userDepot?:string;
 }
 
 function ReviewBlockRequestModal({
@@ -183,6 +184,7 @@ function ReviewBlockRequestModal({
   customActivity,
   formSubmitting,
   readOnly,
+  userDepot
 }: ReviewModalProps) {
   if (!isOpen) return null;
 
@@ -375,7 +377,7 @@ function ReviewBlockRequestModal({
               <div>{formData.selectedSection}</div>
 
               <div className="text-gray-600 font-bold">Depot/SSE:</div>
-              <div>{formData.selectedDepo}</div>
+              <div><div>{userDepot || formData.selectedDepo || "Not assigned"}</div></div>
 
               <div className="text-gray-600 font-bold">Work Type:</div>
               <div>{formData.workType}</div>
@@ -972,6 +974,7 @@ export default function CreateBlockRequestPage() {
   };
 
   const [formData, setFormData] = useState<FormData>(initialFormData);
+const [userDepots, setUserDepots] = useState<string>("");
 
   // State for multi-select depots
   const [selectedSTDepots, setSelectedSTDepots] = React.useState<string[]>([]);
@@ -1013,6 +1016,7 @@ const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
   // Initialize the depot from session when the session loads
   useEffect(() => {
     if (session?.user?.depot) {
+      setUserDepots(session.user.depot || "");
       setFormData(prev => ({
         ...prev,
         selectedDepo: session.user.depot
@@ -5038,7 +5042,7 @@ const activityOptions = getActivityOptions();
                   <div className="flex flex-col gap-2 mt-2 pb-2">
                     <div className="flex flex-row flex-wrap gap-1">
                       <input
-                        type="number"
+                        type="text"
                         name="powerBlockKmFrom"
                         value={formData.powerBlockKmFrom || ""}
                         onChange={handleInputChange}
@@ -5048,7 +5052,7 @@ const activityOptions = getActivityOptions();
                       />
                       <span className="text-black font-bold text-2xl">to</span>
                       <input
-                        type="number"
+                        type="text"
                         name="powerBlockKmTo"
                         value={formData.powerBlockKmTo || ""}
                         onChange={handleInputChange}
@@ -5557,6 +5561,7 @@ const activityOptions = getActivityOptions();
               selectedActivities={selectedActivities}
               customActivity={customActivity}
               formSubmitting={formSubmitting}
+              userDepot={userDepots}
             />
             <button
               type="submit"
