@@ -1095,7 +1095,7 @@ export default function OptimiseTablePage() {
             id: request.id,
             optimizeTimeFrom: request.optimizeTimeFrom,
             optimizeTimeTo: request.optimizeTimeTo,
-            sanctionedRemark: remark,
+            sanctionedRemark: remark||request.sanctionedRemarks,
           })) || [];
 
       if (UrgentRequestsData.length === 0) {
@@ -1135,7 +1135,7 @@ export default function OptimiseTablePage() {
             id: request.id,
             optimizeTimeFrom: request.optimizeTimeFrom,
             optimizeTimeTo: request.optimizeTimeTo,
-            sanctionedRemark: remark,
+            sanctionedRemark: remark||request.sanctionedRemarks,
           })) || [];
 
       if (nonUrgentRequestsData.length === 0) {
