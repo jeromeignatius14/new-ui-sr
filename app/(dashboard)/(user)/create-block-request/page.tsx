@@ -9,8 +9,8 @@ import {
   workType,
   Activity,
   lineData,
-  depot,
   streamData,
+  depot
 } from "@/app/lib/store";
 import Select from "react-select";
 import { z } from "zod";
@@ -29,6 +29,8 @@ import Papa from "papaparse";
 import { useQuery } from "@tanstack/react-query";
 import { userRequestService } from "@/app/service/api/user-request";
 import roadData from "../../../../public/roadData.json";
+import { createSiteLocationChangeHandler, getAutoAssignedDepots } from './features/siteLocation';
+
 
 type Department = "TRD" | "S&T" | "ENGG";
 
@@ -168,6 +170,7 @@ interface ReviewModalProps {
   customActivity: string;
   formSubmitting?: boolean;
   readOnly?: boolean;
+  userDepot?:string;
 }
 
 function ReviewBlockRequestModal({
@@ -181,6 +184,7 @@ function ReviewBlockRequestModal({
   customActivity,
   formSubmitting,
   readOnly,
+  userDepot
 }: ReviewModalProps) {
   if (!isOpen) return null;
 
@@ -203,101 +207,147 @@ function ReviewBlockRequestModal({
 
     // For other departments (ENGG and S&T)
     return (
-      <div className="space-y-2 mt-5">
-        <h2 className="font-bold">Safety Information</h2>
+     <div className="space-y-2 mt-5">
+  <h2 className="font-bold">Safety Information</h2>
 
-        {/* Fresh Caution - Show for both ENGG and S&T */}
-        <div className="text-[14px]">
-          <div className="font-semibold">Fresh Caution Imposed:</div>
-          <div>{isEnabled(formData.freshCautionRequired) ? "" : "No"}</div>
+  {/* Fresh Caution - Show for both ENGG and S&T */}
+  <div className="text-[14px]">
+    <div className="font-semibold">Fresh Caution Imposed:</div>
+    <div>{isEnabled(formData.freshCautionRequired) ? "" : "No"}</div>
 
-          {/* Show fresh caution details only if it's enabled */}
-          {isEnabled(formData.freshCautionRequired) && (
-            <div className="ml-4 mt-2 space-y-1 text-sm">
-              {formData.freshCautions && formData.freshCautions.map((caution: any, index: number) => (
-                <div key={index} className="">
-                  {caution.freshCautionLocationFrom && (
-                    <div><span className="font-semibold">Location From:</span> {caution.freshCautionLocationFrom}</div>
-                  )}
-                  {caution.freshCautionLocationTo && (
-                    <div><span className="font-semibold">Location To:</span> {caution.freshCautionLocationTo}</div>
-                  )}
-                  {caution.freshCautionSpeed && (
-                    <div><span className="font-semibold">Speed (km/hr):</span> {caution.freshCautionSpeed}</div>
-                  )}
-                  {caution.adjacentLinesAffected && (
-                    <div><span className="font-semibold">Adjacent Lines Affected:</span> {caution.adjacentLinesAffected}</div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Power Block - Show for both ENGG and S&T */}
-        <div>
-          <div className="font-semibold text-[14px]">Power Block:</div>
-          <div>{isEnabled(formData.powerBlockRequired) ? "" : "No"}</div>
-
-          {/* Show power block details only if it's enabled */}
-          {isEnabled(formData.powerBlockRequired) && (
-            <div className="ml-4 mt-2 space-y-1 text-sm">
-              {formData.elementarySection && (
-                <div><span className="font-semibold">Elementary Section:</span> {formData.elementarySection}</div>
+    {/* Show fresh caution details only if it's enabled */}
+    {isEnabled(formData.freshCautionRequired) && (
+      <div className="ml-4 mt-2 space-y-4 text-sm">
+        {formData.freshCautions && formData.freshCautions.map((caution: any, index: number) => (
+          <div key={index} className="border-l-2 border-blue-300 pl-3 bg-blue-50 p-2 rounded">
+            <div className="font-medium text-blue-800 mb-2">Fresh Caution #{index + 1}</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1">
+              {caution.freshCautionLocationFrom && (
+                <div><span className="font-semibold">Location From:</span> {caution.freshCautionLocationFrom}</div>
               )}
-              {formData.powerBlockKmFrom && (
-                <div><span className="font-semibold">KM From:</span> {formData.powerBlockKmFrom}</div>
+              {caution.freshCautionLocationTo && (
+                <div><span className="font-semibold">Location To:</span> {caution.freshCautionLocationTo}</div>
               )}
-              {formData.powerBlockKmTo && (
-                <div><span className="font-semibold">KM To:</span> {formData.powerBlockKmTo}</div>
+              {caution.freshCautionSpeed && (
+                <div><span className="font-semibold">Speed (km/hr):</span> {caution.freshCautionSpeed}</div>
               )}
-              {formData.powerBlockRoad && (
-                <div><span className="font-semibold">Road:</span> {formData.powerBlockRoad}</div>
+              {caution.adjacentLinesAffected && (
+                <div><span className="font-semibold">Adjacent Lines Affected:</span> {caution.adjacentLinesAffected}</div>
               )}
-              {formData.powerBlockRequirements && formData.powerBlockRequirements.length > 0 && (
-                <div>
-                  <span className="font-semibold">Requirements:</span>{" "}
-                  {formData.powerBlockRequirements.join(", ")}
-                </div>
+              {caution.freshCautionFromDate && (
+                <div><span className="font-semibold">From Date:</span> {caution.freshCautionFromDate}</div>
+              )}
+              {caution.freshCautionToDate && (
+                <div><span className="font-semibold">To Date:</span> {caution.freshCautionToDate}</div>
+              )}
+              {caution.freshCautionFromTime && (
+                <div><span className="font-semibold">From Time:</span> {caution.freshCautionFromTime}</div>
+              )}
+              {caution.freshCautionToTime && (
+                <div><span className="font-semibold">To Time:</span> {caution.freshCautionToTime}</div>
               )}
             </div>
-          )}
-        </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
 
-        {/* S&T Disconnection - Show only for ENGG */}
-        {department === "ENGG" && (
+  {/* Power Block - Show for both ENGG and S&T */}
+  <div>
+    <div className="font-semibold text-[14px]">Power Block:</div>
+    <div>{isEnabled(formData.powerBlockRequired) ? "" : "No"}</div>
+
+    {/* Show power block details only if it's enabled */}
+    {isEnabled(formData.powerBlockRequired) && (
+      <div className="ml-4 mt-2 space-y-1 text-sm">
+        {formData.elementarySection && (
+          <div><span className="font-semibold">Elementary Section:</span> {formData.elementarySection}</div>
+        )}
+        {formData.powerBlockKmFrom && (
+          <div><span className="font-semibold">KM From:</span> {formData.powerBlockKmFrom}</div>
+        )}
+        {formData.powerBlockKmTo && (
+          <div><span className="font-semibold">KM To:</span> {formData.powerBlockKmTo}</div>
+        )}
+        {formData.powerBlockRoad && (
+          <div><span className="font-semibold">Road:</span> {formData.powerBlockRoad}</div>
+        )}
+        {formData.powerBlockDisconnectionAssignTo && (
+          <div><span className="font-semibold">Assign To:</span> {formData.powerBlockDisconnectionAssignTo}</div>
+        )}
+        {formData.powerBlockRequirements && formData.powerBlockRequirements.length > 0 && (
           <div>
-            <div className="font-semibold text-[14px]">S&T Disconnection:</div>
-            <div>{isEnabled(formData.sntDisconnectionRequired) ? "" : "No"}</div>
-
-            {/* Show S&T disconnection details only if it's enabled */}
-            {isEnabled(formData.sntDisconnectionRequired) && (
-              <div className="ml-4 mt-2 space-y-1 text-sm">
-                {formData.sntDisconnectionLineFrom && (
-                  <div><span className="font-semibold">Line From:</span> {formData.sntDisconnectionLineFrom}</div>
-                )}
-                {formData.sntDisconnectionLineTo && (
-                  <div><span className="font-semibold">Line To:</span> {formData.sntDisconnectionLineTo}</div>
-                )}
-                {formData.sntDisconnectionPointNo && (
-                  <div><span className="font-semibold">Point No:</span> {formData.sntDisconnectionPointNo}</div>
-                )}
-                {formData.sntDisconnectionSignalNo && (
-                  <div><span className="font-semibold">Signal No:</span> {formData.sntDisconnectionSignalNo}</div>
-                )}
-                {formData.sntDisconnectionRequirements && formData.sntDisconnectionRequirements.length > 0 && (
-                  <div>
-                    <span className="font-semibold">Requirements:</span>{" "}
-                    {formData.sntDisconnectionRequirements.join(", ")}
-                  </div>
-                )}
-                {formData.sntDisconnectionAssignTo && (
-                  <div><span className="font-semibold">Assign To:</span> {formData.sntDisconnectionAssignTo}</div>
-                )}
-              </div>
-            )}
+            <span className="font-semibold">Requirements:</span>{" "}
+            {formData.powerBlockRequirements.join(", ")}
           </div>
         )}
+      </div>
+    )}
+  </div>
+
+  {/* S&T Disconnection - Show only for ENGG */}
+  {department === "ENGG" && (
+    <div>
+      <div className="font-semibold text-[14px]">S&T Disconnection:</div>
+      <div>{isEnabled(formData.sntDisconnectionRequired) ? "" : "No"}</div>
+
+      {/* Show S&T disconnection details only if it's enabled */}
+      {isEnabled(formData.sntDisconnectionRequired) && (
+        <div className="ml-4 mt-2 space-y-1 text-sm">
+          {formData.sntDisconnectionLineFrom && (
+            <div><span className="font-semibold">Line From:</span> {formData.sntDisconnectionLineFrom}</div>
+          )}
+          {formData.sntDisconnectionLineTo && (
+            <div><span className="font-semibold">Line To:</span> {formData.sntDisconnectionLineTo}</div>
+          )}
+          {formData.sntDisconnectionPointNo && (
+            <div><span className="font-semibold">Point No:</span> {formData.sntDisconnectionPointNo}</div>
+          )}
+          {formData.sntDisconnectionSignalNo && (
+            <div><span className="font-semibold">Signal No:</span> {formData.sntDisconnectionSignalNo}</div>
+          )}
+          {formData.sntDisconnectionRequirements && formData.sntDisconnectionRequirements.length > 0 && (
+            <div>
+              <span className="font-semibold">Requirements:</span>{" "}
+              {formData.sntDisconnectionRequirements.join(", ")}
+            </div>
+          )}
+          {formData.sntDisconnectionAssignTo && (
+            <div><span className="font-semibold">Assign To:</span> {formData.sntDisconnectionAssignTo}</div>
+          )}
+        </div>
+      )}
+    </div>
+  )}
+          {/* ENG Disconnection - Show for both ENGG and S&T */}
+          {department==="S&T"&&(
+               <div>
+          <div className="font-semibold text-[14px]">ENG Disconnection:</div>
+          <div>{isEnabled(formData.enggDisconnectionsRequired) ? "" : "No"}</div>
+
+          {/* Show ENG disconnection details only if it's enabled */}
+          {isEnabled(formData.enggDisconnectionsRequired) && (
+            <div className="ml-4 mt-2 space-y-1 text-sm">
+              {formData.engDisconnectionRemarks && (
+                <div><span className="font-semibold">Remarks:</span> {formData.engDisconnectionRemarks}</div>
+              )}
+              {formData.engDisconnectionAssignTo && (
+                <div><span className="font-semibold">Assign To:</span> {formData.engDisconnectionAssignTo}</div>
+              )}
+              {formData.selectedENGDepots && formData.selectedENGDepots.length > 0 && (
+                <div>
+                  <span className="font-semibold">Assigned Depots:</span>{" "}
+                  {Array.isArray(formData.selectedENGDepots) 
+                    ? formData.selectedENGDepots.join(", ")
+                    : formData.selectedENGDepots}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+          )}
+     
       </div>
     );
   };
@@ -313,6 +363,7 @@ function ReviewBlockRequestModal({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          {/* Left Column - Basic Information & Safety Info */}
           <div>
             <h3 className="font-bold mb-2">Basic Information</h3>
             <div className="grid grid-cols-2 gap-2 text-[14px]">
@@ -326,17 +377,29 @@ function ReviewBlockRequestModal({
               <div>{formData.selectedSection}</div>
 
               <div className="text-gray-600 font-bold">Depot/SSE:</div>
-              <div>{formData.selectedDepo}</div>
+              <div><div>{userDepot || formData.selectedDepo || "Not assigned"}</div></div>
 
               <div className="text-gray-600 font-bold">Work Type:</div>
               <div>{formData.workType}</div>
 
-              {(formData.activity || customActivity) && (
-                <>
-                  <div className="text-gray-600 font-bold">Work Description:</div>
-                  <div>{formData.activity || customActivity}</div>
-                </>
-              )}
+             <div className="text-gray-600 font-bold">Work Description:</div>
+<div className="max-w-full break-words bg-blue-50 p-2 rounded text-sm max-h-32 overflow-y-auto">
+  {selectedActivities && selectedActivities.length > 0 ? (
+    <div className="flex flex-wrap gap-1">
+      {selectedActivities.map((activity: string, index: number) => (
+        <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
+          {activity}
+        </span>
+      ))}
+    </div>
+  ) : customActivity ? (
+    <div className="break-words whitespace-pre-wrap">
+      {customActivity}
+    </div>
+  ) : (
+    <span className="text-gray-400">No activity specified</span>
+  )}
+</div>
 
               <div className="text-gray-600 font-bold">Demanded Time:</div>
               <div>{formData.demandTimeFrom} to {formData.demandTimeTo}</div>
@@ -351,8 +414,14 @@ function ReviewBlockRequestModal({
                 <div>{formData.requestremarks}</div>
               </div>
             )}
+            {formData.remarks && (
+              <div className="mb-2">
+                <b>Remarks:</b> {formData.remarks}
+              </div>
+            )}
           </div>
 
+          {/* Right Column - Block Section & Other Affected Lines/Roads */}
           <div>
             <h3 className="font-bold mb-2">Block Section - Lines/Roads</h3>
             <div className="mb-4 space-y-2 text-[14px] text-gray-600">
@@ -396,8 +465,9 @@ function ReviewBlockRequestModal({
                         {section.road.match(/rd\s*\d+/i) ? (
                           <div className="flex items-center">
                             <span className="font-medium bg-blue-100 text-blue-800 px-2 rounded mr-2">
-                              {section.road.match(/rd\s*\d+/i)[0].toUpperCase()}{section.road.replace(/rd\s*\d+/i, '').trim()}
+                              {section.road.match(/rd\s*\d+/i)[0].toUpperCase()}
                             </span>
+                            <span>{section.road.replace(/rd\s*\d+/i, '').trim()}</span>
                           </div>
                         ) : (
                           <div className="flex items-center">
@@ -423,7 +493,7 @@ function ReviewBlockRequestModal({
               <h3 className="font-bold mb-2">Other Affected Lines/Roads:</h3>
               {formData.processedLineSections && formData.processedLineSections.some((s: any) => s.otherLines?.trim() || s.otherRoads?.trim()) ? (
                 <div className="">
-                  {formData.processedLineSections.map((s: any, index:any) => (
+                  {formData.processedLineSections.map((s: any, index: any) => (
                     <React.Fragment key={`other-${index}`}>
                       {s.otherLines?.trim() && (
                         <div className="mb-2">
@@ -525,18 +595,7 @@ function ReviewBlockRequestModal({
   );
 }
 
-// Helper to determine if Type of Block should be locked to Urgent Block
-// export function isUrgentBlockDate(dateString: string): boolean {
-//   if (!dateString) return false;
-//   const today = new Date();
-//   today.setHours(0, 0, 0, 0);
-//   const targetDate = new Date(dateString);
-//   targetDate.setHours(0, 0, 0, 0);
-//   const dayDiff = Math.floor((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-//   return dayDiff === 0 || dayDiff === 1 || dayDiff === 2;
-// }
 
-// Add a new style object for better contrast in 'Other affected Lines/Roads' dropdowns
 const otherAffectedSelectStyles = {
   ...selectStyles,
   option: (base: any, state: any) => ({
@@ -613,14 +672,152 @@ function getDurationFromTimes(from: string, to: string) {
   return `${hours}h ${mins}m`;
 }
 
+// Multi-Select Depot Component
+interface MultiSelectDepotProps {
+  department: "S&T" | "TRD"|"ENGG";
+  selectedDepots: string[];
+  onDepotsChange: (depots: string[]) => void;
+  majorSection: string;
+  blockSections: string[];
+  disabled?: boolean;
+}
+
+function MultiSelectDepot({
+  department,
+  selectedDepots,
+  onDepotsChange,
+  majorSection,
+  blockSections,
+  disabled = false
+}: MultiSelectDepotProps) {
+  // Get available depots: combine auto-assigned depots + all depot options for this major section
+  const getAvailableDepots = () => {
+    if (!majorSection) return [];
+
+    // Get auto-assigned depots from block section mapping
+    const autoAssignedDepots = getAutoAssignedDepots(majorSection, blockSections, department)
+      .split(", ")
+      .filter(d => d.trim());
+
+    // Get all available depots from depot structure for this major section
+    const allMajorSectionDepots = depot[majorSection]?.[department] || [];
+
+    // Combine and deduplicate: auto-assigned depots first, then other available ones
+    const combinedDepots = [...new Set([...autoAssignedDepots, ...allMajorSectionDepots])];
+
+    return combinedDepots.sort();
+  };
+
+  // Get default depot from block section mapping
+  const getDefaultDepot = () => {
+    return getAutoAssignedDepots(majorSection, blockSections, department);
+  };
+
+  const availableDepots = getAvailableDepots();
+  const defaultDepot = getDefaultDepot();
+
+  // Initialize with default depot if no depots selected
+  React.useEffect(() => {
+    if (selectedDepots.length === 0 && defaultDepot) {
+      const defaultDepots = defaultDepot.split(", ").filter(d => d.trim());
+      if (defaultDepots.length > 0) {
+        onDepotsChange(defaultDepots);
+      }
+    }
+  }, [defaultDepot, selectedDepots.length, onDepotsChange]);
+
+  const handleAddDepot = (depotToAdd: string) => {
+    if (!selectedDepots.includes(depotToAdd)) {
+      onDepotsChange([...selectedDepots, depotToAdd]);
+    }
+  };
+
+  const handleRemoveDepot = (depotToRemove: string) => {
+    // Don't allow removing if it's the last depot
+    if (selectedDepots.length > 1) {
+      onDepotsChange(selectedDepots.filter(d => d !== depotToRemove));
+    }
+  };
+
+  return (
+    <div className="flex flex-col my-5">
+      <div className="flex flex-row flex-wrap gap-1 w-full items-center justify-center">
+        <span className="text-black font-bold text-2xl">
+          Assign To:
+        </span>
+        <div className="flex flex-col space-y-2 w-full items-center justify-center">
+          {/* Selected Depots as Tags */}
+          <div className="flex flex-wrap gap-2 min-h-[40px] items-center">
+            {selectedDepots.map((depotCode, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center px-3 py-1 rounded-xl text-medium font-bold bg-blue-100 text-blue-800 border border-black"
+              >
+                {depotCode}
+                {selectedDepots.length > 1 && !disabled && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveDepot(depotCode)}
+                    className="ml-2 inline-flex items-center justify-center w-4 h-4 text-blue-600 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors"
+                  >
+                    ×
+                  </button>
+                )}
+              </span>
+            ))}
+            {selectedDepots.length === 0 && (
+              <span className="text-gray-500 text-sm">
+                {majorSection && blockSections.length > 0
+                  ? `No ${department} depots available for selected sections`
+                  : "Select Major Section and Block Sections first"}
+              </span>
+            )}
+          </div>
+
+          {/* Dropdown to Add More Depots */}
+          {!disabled && availableDepots.length > 0 && (
+            <select
+              onChange={(e) => {
+                if (e.target.value) {
+                  handleAddDepot(e.target.value);
+                  e.target.value = ""; // Reset dropdown
+                }
+              }}
+              className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black px-3 py-2 text-lg rounded w-full max-w-xs"
+              defaultValue=""
+            >
+              <option value="" disabled>
+                Add more depots...
+              </option>
+              {availableDepots
+                .filter(depotOption => !selectedDepots.includes(depotOption))
+                .map((depotOption, index) => (
+                  <option key={index} value={depotOption}>
+                    {depotOption}
+                  </option>
+                ))}
+            </select>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 type FormDataValue = string | number | boolean | null | string[];
 
 interface FormData {
+  engDisconnectionAssignTo: string;
+  engDisconnectionRemarks: string;
   freshCautions: {
     adjacentLinesAffected: string;
     freshCautionLocationFrom: string;
     freshCautionLocationTo: string;
-    freshCautionSpeed: string; // or number if you prefer
+    freshCautionSpeed: string;
+    freshCautionFromDate: string;        
+    freshCautionToDate: string;          
+    freshCautionFromTime: string;        
+    freshCautionToTime: string;
   }[];
   powerBlockDisconnectionAssignTo: string;
   sntDisconnectionAssignTo: string;
@@ -679,6 +876,7 @@ interface FormData {
   routeTo: string;
   powerBlockRequired: boolean | null;
   sntDisconnectionRequired: boolean | null;
+  enggDisconnectionsRequired: boolean | null;
   sntDisconnectionRequirements: string[];
   powerBlockRequirements: string[];
   sigResponse: string;
@@ -741,6 +939,7 @@ export default function CreateBlockRequestPage() {
     routeTo: "",
     powerBlockRequired: null,
     sntDisconnectionRequired: null,
+    enggDisconnectionsRequired: null,
     sntDisconnectionRequirements: [],
     powerBlockRequirements: [],
     sigResponse: "",
@@ -758,18 +957,31 @@ export default function CreateBlockRequestPage() {
     sntDisconnectionAssignTo: "",
     powerBlockDisconnectionAssignTo: "",
     emergencyBlockRemarks: "",
+    engDisconnectionAssignTo: "",
+    engDisconnectionRemarks: "",
     freshCautions: [
       {
         adjacentLinesAffected: "",
         freshCautionLocationFrom: "",
         freshCautionLocationTo: "",
         freshCautionSpeed: "",
+        freshCautionFromDate: "",        
+      freshCautionToDate: "",          
+      freshCautionFromTime: "",       
+      freshCautionToTime: "",
       },
     ],
   };
 
   const [formData, setFormData] = useState<FormData>(initialFormData);
-const [selectionHistory, setSelectionHistory] = useState<Record<string, ('line' | 'road')[]>>({});
+const [userDepots, setUserDepots] = useState<string>("");
+
+  // State for multi-select depots
+  const [selectedSTDepots, setSelectedSTDepots] = React.useState<string[]>([]);
+  // Add this with your other state declarations
+const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
+  const [selectedTRDDepots, setSelectedTRDDepots] = React.useState<string[]>([]);
+  const [selectionHistory, setSelectionHistory] = useState<Record<string, ('line' | 'road')[]>>({});
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showReview, setShowReview] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -801,14 +1013,58 @@ const [selectionHistory, setSelectionHistory] = useState<Record<string, ('line' 
   const [showPopup, setShowPopup] = useState(false);
   const [popupLink, setPopupLink] = useState("");
   const [proceedAnyway, setProceedAnyway] = useState(false);
-  // Add this useEffect to auto-set corridor type based on line selections
+  // Initialize the depot from session when the session loads
+  useEffect(() => {
+    if (session?.user?.depot) {
+      setUserDepots(session.user.depot || "");
+      setFormData(prev => ({
+        ...prev,
+        selectedDepo: session.user.depot
+      }));
+    }
+  }, [session]);
 
-  // Add this useEffect to auto-set corridor type based on line selections
-useEffect(() => {
-  // Only run if we have a date and corridor type is not Urgent Block
-  if (formData.date && formData.corridorTypeSelection !== "Urgent Block") {
-    // Check if any block has multiple lines
-    const hasMultipleLines = blockSectionValue.some(block => {
+  // Real-time site location validation
+  // useEffect(() => {
+  //   if (formData.workLocationFrom || formData.workLocationTo) {
+  //     const currentErrors = { ...errors };
+
+  //     // Clear previous site location errors
+  //     delete currentErrors.workLocationFrom;
+  //     delete currentErrors.workLocationTo;
+
+  //     if (formData.selectedSection && blockSectionValue.length > 0 && userDepartment) {
+  //       if (formData.workLocationFrom && formData.workLocationTo) {
+  //         const siteLocationValidation = validateSiteLocationPair(
+  //           formData.workLocationFrom,
+  //           formData.workLocationTo,
+  //           formData.selectedSection,
+  //           blockSectionValue,
+  //           userDepartment,
+  //           userDepot
+  //         );
+
+  //         if (!siteLocationValidation.fromValid && siteLocationValidation.fromError) {
+  //           currentErrors.workLocationFrom = siteLocationValidation.fromError;
+  //         }
+
+  //         if (!siteLocationValidation.toValid && siteLocationValidation.toError) {
+  //           currentErrors.workLocationTo = siteLocationValidation.toError;
+  //         }
+
+  //         if (siteLocationValidation.pairError) {
+  //           currentErrors.workLocationTo = siteLocationValidation.pairError;
+  //         }
+  //       }
+  //     }
+
+  //     setErrors(currentErrors);
+  //   }
+  // }, [formData.workLocationFrom, formData.workLocationTo, formData.selectedSection, blockSectionValue]);
+
+  // Add this helper function to check if multiple lines exist
+  const hasMultipleLinesSelected = () => {
+    return blockSectionValue.some(block => {
       const section = (formData.processedLineSections || []).find(
         (s: any) => s.block === block
       );
@@ -817,38 +1073,57 @@ useEffect(() => {
         .filter(Boolean).length + (section.otherLines ? section.otherLines.split(',').length : 0);
       return lineCount > 1;
     });
+  };
 
-    // Auto-set to Outside Corridor if multiple lines detected
-    if (hasMultipleLines && formData.corridorTypeSelection !== "Outside Corridor") {
-      setFormData(prev => ({
-        ...prev,
-        corridorTypeSelection: "Outside Corridor"
-      }));
-    }
-  }
-}, [formData.processedLineSections, blockSectionValue, formData.date, formData.corridorTypeSelection]);
-
-// Add this helper function to check if multiple lines exist
-const hasMultipleLinesSelected = () => {
-  return blockSectionValue.some(block => {
-    const section = (formData.processedLineSections || []).find(
-      (s: any) => s.block === block
-    );
-    if (!section) return false;
-    const lineCount = [section.lineName, section.otherLines]
-      .filter(Boolean).length + (section.otherLines ? section.otherLines.split(',').length : 0);
-    return lineCount > 1;
-  });
-};
-  // Initialize the depot from session when the session loads
+  // Auto-assign depot assignments when block sections change
   useEffect(() => {
-    if (session?.user?.depot) {
-      setFormData(prev => ({
-        ...prev,
-        selectedDepo: session.user.depot
-      }));
+    if (blockSectionValue.length > 0 && formData.selectedSection) {
+
+      // Auto-assign S&T depots
+      const sntDepots = getAutoAssignedDepots(formData.selectedSection, blockSectionValue, "S&T");
+      if (sntDepots) {
+        const sntDepotArray = sntDepots.split(", ").filter(d => d.trim());
+        if (sntDepotArray.length > 0) {
+          // Always update when block sections change to ensure we get all depots
+          setSelectedSTDepots(sntDepotArray);
+        }
+      } else {
+        setSelectedSTDepots([]);
+      }
+
+      // Auto-assign TRD depots
+      const trdDepots = getAutoAssignedDepots(formData.selectedSection, blockSectionValue, "TRD");
+      if (trdDepots) {
+        const trdDepotArray = trdDepots.split(", ").filter(d => d.trim());
+        if (trdDepotArray.length > 0) {
+          // Always update when block sections change to ensure we get all depots
+          setSelectedTRDDepots(trdDepotArray);
+        }
+      } else {
+        setSelectedTRDDepots([]);
+      }
+    } else {
+      // Clear depots when no block sections are selected
+      setSelectedSTDepots([]);
+      setSelectedTRDDepots([]);
     }
-  }, [session]);
+  }, [blockSectionValue, formData.selectedSection]);
+
+
+  // Sync depot arrays with form data for API submission
+  useEffect(() => {
+    const sntDepotsString = selectedSTDepots.join(", ");
+    const trdDepotsString = selectedTRDDepots.join(", ");
+    const engDepotsString = selectedENGDepots.join(", ");
+
+    setFormData(prev => ({
+      ...prev,
+      sntDisconnectionAssignTo: sntDepotsString,
+      powerBlockDisconnectionAssignTo: trdDepotsString,
+      engDisconnectionAssignTo: engDepotsString
+    }));
+  }, [selectedSTDepots, selectedTRDDepots,selectedENGDepots]);
+
   const mutation = useCreateUserRequest();
   const userLocation = session?.user.location;
   // const majorSectionOptions =
@@ -890,11 +1165,33 @@ const hasMultipleLinesSelected = () => {
       ? workType[userDepartment as keyof typeof workType]
       : [];
   const selectedWorkType = formData.workType;
-  const activityOptions =
-    selectedWorkType && Activity[selectedWorkType as keyof typeof Activity]
-      ? Activity[selectedWorkType as keyof typeof Activity]
-      : [];
+  // const activityOptions =
+  //   selectedWorkType && Activity[selectedWorkType as keyof typeof Activity]
+  //     ? Activity[selectedWorkType as keyof typeof Activity]
+  //     : [];
 
+const getActivityOptions = () => {
+  if (!formData.workType) return [];
+  
+  // Handle both single and multiple work types
+  const workTypes = formData.workType.split(',').map(type => type.trim()).filter(type => type !== '');
+  
+  // Get all unique activities from all selected work types
+  const allActivities = new Set<string>();
+  
+  workTypes.forEach(workType => {
+    const activitiesForType = Activity[workType as keyof typeof Activity] || [];
+    activitiesForType.forEach(activity => {
+      if (activity && activity.trim() !== '') {
+        allActivities.add(activity.trim());
+      }
+    });
+  });
+  
+  return Array.from(allActivities);
+};
+
+const activityOptions = getActivityOptions();
   const blockSectionOptionsList = blockSectionOptions.map((block: string) => ({
     value: block,
     label: block,
@@ -1393,8 +1690,21 @@ const hasMultipleLinesSelected = () => {
         ...formData,
         corridorType: formData.corridorTypeSelection,
         sntDisconnectionRequired: formData.sntDisconnectionRequired ?? false,
+        enggDisconnectionsRequired: formData.enggDisconnectionsRequired ?? false,
         powerBlockRequired: formData.powerBlockRequired ?? false,
         freshCautionRequired: formData.freshCautionRequired ?? false,
+        freshCautionFromDate: formData.freshCautions[0]?.freshCautionFromDate 
+    ? formatDateToISO(formData.freshCautions[0].freshCautionFromDate)
+    : null,
+  freshCautionToDate: formData.freshCautions[0]?.freshCautionToDate 
+    ? formatDateToISO(formData.freshCautions[0].freshCautionToDate)
+    : null,
+  freshCautionFromTime: formData.freshCautions[0]?.freshCautionFromTime 
+    ? formatTimeToDatetime(formData.date || "", formData.freshCautions[0].freshCautionFromTime)
+    : null,
+  freshCautionToTime: formData.freshCautions[0]?.freshCautionToTime 
+    ? formatTimeToDatetime(formData.date || "", formData.freshCautions[0].freshCautionToTime)
+    : null,
         sntDisconnectionRequirements: formData.sntDisconnectionRequired
           ? [
             formData.sntDisconnectionPointNo.toString(),
@@ -1441,6 +1751,10 @@ const hasMultipleLinesSelected = () => {
           managerAcceptance: true,
           isSanctioned: true,
         }),
+        // activity: formData.activity === "others" ? customActivity : formData.activity
+         activity: selectedActivities.includes("others") 
+    ? [...selectedActivities.filter(a => a !== "others"), customActivity].join(",")
+    : selectedActivities.join(","),
       };
 
       // ─── 7. Submit to backend ────────────────────────────────────────────
@@ -1641,6 +1955,31 @@ const hasMultipleLinesSelected = () => {
         errors.workLocationFrom = "Work location from is required";
       if (!formData.workLocationTo)
         errors.workLocationTo = "Work location to is required";
+
+      // Enhanced site location validation with range checking
+      // if (formData.workLocationFrom && formData.workLocationTo) {
+      //   const siteLocationValidation = validateSiteLocationPair(
+      //     formData.workLocationFrom,
+      //     formData.workLocationTo,
+      //     formData.selectedSection,
+      //     blockSectionValue,
+      //     userDepartment || "",
+      //     userDepot
+      //   );
+
+      //   if (!siteLocationValidation.fromValid && siteLocationValidation.fromError) {
+      //     errors.workLocationFrom = siteLocationValidation.fromError;
+      //   }
+
+      //   if (!siteLocationValidation.toValid && siteLocationValidation.toError) {
+      //     errors.workLocationTo = siteLocationValidation.toError;
+      //   }
+
+      //   if (siteLocationValidation.pairError) {
+      //     errors.workLocationTo = siteLocationValidation.pairError;
+      //   }
+      // }
+
       if (formData.cautionRequired) {
         if (!formData.cautionSpeed)
           errors.cautionSpeed = "Caution speed is required";
@@ -1736,6 +2075,10 @@ const hasMultipleLinesSelected = () => {
           freshCautionLocationFrom: "",
           freshCautionLocationTo: "",
           freshCautionSpeed: "",
+          freshCautionFromDate: "",  
+        freshCautionToDate: "",    
+        freshCautionFromTime: "", 
+        freshCautionToTime: "",
         },
       ],
     }));
@@ -1778,6 +2121,15 @@ const hasMultipleLinesSelected = () => {
       formData.powerBlockRequired
     );
   }, [formData.powerBlockRequired]);
+
+  // Sync depot arrays with formData
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      stDepotAssignTo: selectedSTDepots.join(", "),
+      trdDepotAssignTo: selectedTRDDepots.join(", ")
+    }));
+  }, [selectedSTDepots, selectedTRDDepots]);
 
   // Handle date change and corridor type selection logic
   useEffect(() => {
@@ -1940,135 +2292,135 @@ const hasMultipleLinesSelected = () => {
   //     };
   //   });
   // };
-const updateSelectionHistory = (block: string, type: 'line' | 'road' | 'clear') => {
-  setSelectionHistory(prev => {
-    const blockHistory = prev[block] || [];
-    
-    if (type === 'clear') {
-      // Clear history when nothing is selected
-      const newHistory = { ...prev };
-      delete newHistory[block];
-      return newHistory;
-    }
-    
-    // Add to history if it's different from last
-    if (blockHistory[blockHistory.length - 1] !== type) {
-      return {
-        ...prev,
-        [block]: [...blockHistory, type]
-      };
-    }
-    
-    return prev;
-  });
-};
+  const updateSelectionHistory = (block: string, type: 'line' | 'road' | 'clear') => {
+    setSelectionHistory(prev => {
+      const blockHistory = prev[block] || [];
 
-const getFirstSelection = (block: string): 'line' | 'road' | null => {
-  const history = selectionHistory[block];
-  return history && history.length > 0 ? history[0] : null;
-};
+      if (type === 'clear') {
+        // Clear history when nothing is selected
+        const newHistory = { ...prev };
+        delete newHistory[block];
+        return newHistory;
+      }
 
-const getCurrentFirstSelection = (block: string, currentLines: number, currentRoads: number): 'line' | 'road' | null => {
-  // If nothing selected now, return null
-  if (currentLines === 0 && currentRoads === 0) return null;
-  
-  const history = selectionHistory[block];
-  if (!history || history.length === 0) {
-    // Determine based on current state
-    return currentLines > 0 ? 'line' : 'road';
-  }
-  
-  return history[0];
-};
+      // Add to history if it's different from last
+      if (blockHistory[blockHistory.length - 1] !== type) {
+        return {
+          ...prev,
+          [block]: [...blockHistory, type]
+        };
+      }
+
+      return prev;
+    });
+  };
+
+  const getFirstSelection = (block: string): 'line' | 'road' | null => {
+    const history = selectionHistory[block];
+    return history && history.length > 0 ? history[0] : null;
+  };
+
+  const getCurrentFirstSelection = (block: string, currentLines: number, currentRoads: number): 'line' | 'road' | null => {
+    // If nothing selected now, return null
+    if (currentLines === 0 && currentRoads === 0) return null;
+
+    const history = selectionHistory[block];
+    if (!history || history.length === 0) {
+      // Determine based on current state
+      return currentLines > 0 ? 'line' : 'road';
+    }
+
+    return history[0];
+  };
 
 
   const handleLineNameSelection = (block: string, values: string[]) => {
-  setFormData((prev) => {
-    const existingProcessedSections = [...(prev.processedLineSections || [])];
-    const sectionIndex = existingProcessedSections.findIndex(
-      (section) => section.block === block
-    );
+    setFormData((prev) => {
+      const existingProcessedSections = [...(prev.processedLineSections || [])];
+      const sectionIndex = existingProcessedSections.findIndex(
+        (section) => section.block === block
+      );
 
-    if (values.length === 0) {
-      // Clear line selection
-      if (sectionIndex !== -1) {
-        const section = existingProcessedSections[sectionIndex];
-        const hasRoads = section.road || section.otherRoads;
-        
-        if (!hasRoads) {
-          // No roads left, clear everything
-          existingProcessedSections.splice(sectionIndex, 1);
-          updateSelectionHistory(block, 'clear');
-        } else {
-          // Keep section but clear line data
-          existingProcessedSections[sectionIndex] = {
-            ...section,
-            lineName: "",
-            otherLines: "",
-            type: "yard",
-          };
-          // Update history - roads become first selection
-          updateSelectionHistory(block, 'road');
-        }
-      }
-    } else {
-      const lineName = values[0].trim();
-      const otherLines = values
-        .slice(1)
-        .map((v) => v.trim())
-        .filter(Boolean)
-        .join(",");
+      if (values.length === 0) {
+        // Clear line selection
+        if (sectionIndex !== -1) {
+          const section = existingProcessedSections[sectionIndex];
+          const hasRoads = section.road || section.otherRoads;
 
-      const lineCount = values.length;
-      const newSectionData = {
-        block,
-        lineName,
-        otherLines,
-        stream: "",
-      };
-
-      if (sectionIndex !== -1) {
-        const existingSection = existingProcessedSections[sectionIndex];
-        const hasRoads = existingSection.road || existingSection.otherRoads;
-        const currentRoadCount = [existingSection.road, existingSection.otherRoads]
-          .filter(Boolean).length + (existingSection.otherRoads ? existingSection.otherRoads.split(',').length : 0);
-        
-        const firstSelection = getCurrentFirstSelection(block, lineCount, currentRoadCount);
-        
-        if (firstSelection === 'road') {
-          // Road was first - show NOTHING (Scenario 5)
-          existingProcessedSections[sectionIndex] = {
-            ...existingSection,
-            ...newSectionData,
-            type: "yard", // Force nothing display
-          };
-        } else {
-          // Line first or no roads - follow line count rules
-          existingProcessedSections[sectionIndex] = {
-            ...existingSection,
-            ...newSectionData,
-            type: lineCount === 1 ? "line" : "combined",
-          };
-          updateSelectionHistory(block, 'line');
+          if (!hasRoads) {
+            // No roads left, clear everything
+            existingProcessedSections.splice(sectionIndex, 1);
+            updateSelectionHistory(block, 'clear');
+          } else {
+            // Keep section but clear line data
+            existingProcessedSections[sectionIndex] = {
+              ...section,
+              lineName: "",
+              otherLines: "",
+              type: "yard",
+            };
+            // Update history - roads become first selection
+            updateSelectionHistory(block, 'road');
+          }
         }
       } else {
-        // New section with lines
-        existingProcessedSections.push({
-          ...newSectionData,
-          type: lineCount === 1 ? "line" : "combined",
-          road: "",
-          otherRoads: "",
-        });
-        updateSelectionHistory(block, 'line');
-      }
-    }
+        const lineName = values[0].trim();
+        const otherLines = values
+          .slice(1)
+          .map((v) => v.trim())
+          .filter(Boolean)
+          .join(",");
 
-    return {
-      ...prev,
-      processedLineSections: existingProcessedSections,
-    };
-  });
-};
+        const lineCount = values.length;
+        const newSectionData = {
+          block,
+          lineName,
+          otherLines,
+          stream: "",
+        };
+
+        if (sectionIndex !== -1) {
+          const existingSection = existingProcessedSections[sectionIndex];
+          const hasRoads = existingSection.road || existingSection.otherRoads;
+          const currentRoadCount = [existingSection.road, existingSection.otherRoads]
+            .filter(Boolean).length + (existingSection.otherRoads ? existingSection.otherRoads.split(',').length : 0);
+
+          const firstSelection = getCurrentFirstSelection(block, lineCount, currentRoadCount);
+
+          if (firstSelection === 'road') {
+            // Road was first - show NOTHING (Scenario 5)
+            existingProcessedSections[sectionIndex] = {
+              ...existingSection,
+              ...newSectionData,
+              type: "yard", // Force nothing display
+            };
+          } else {
+            // Line first or no roads - follow line count rules
+            existingProcessedSections[sectionIndex] = {
+              ...existingSection,
+              ...newSectionData,
+              type: lineCount === 1 ? "line" : "combined",
+            };
+            updateSelectionHistory(block, 'line');
+          }
+        } else {
+          // New section with lines
+          existingProcessedSections.push({
+            ...newSectionData,
+            type: lineCount === 1 ? "line" : "combined",
+            road: "",
+            otherRoads: "",
+          });
+          updateSelectionHistory(block, 'line');
+        }
+      }
+
+      return {
+        ...prev,
+        processedLineSections: existingProcessedSections,
+      };
+    });
+  };
   const handleOtherAffectedLinesChange = (
     block: string,
     options: { value: string }[]
@@ -2233,129 +2585,129 @@ const getCurrentFirstSelection = (block: string, currentLines: number, currentRo
   // };
 
   // Add state to track if the success page should be shown and the submitted request summary
- 
- const handleRoadSelection = (block: string, value: string) => {
-  setFormData((prev) => {
-    const existingProcessedSections = [...prev.processedLineSections];
-    const sectionIndex = existingProcessedSections.findIndex(
-      (section) => section.block === block
-    );
 
-    if (!value) {
-      // Clear road selection
-      if (sectionIndex !== -1) {
-        const section = existingProcessedSections[sectionIndex];
-        const hasLines = section.lineName || section.otherLines;
-        
-        if (!hasLines) {
-          // No lines left, clear everything
-          existingProcessedSections.splice(sectionIndex, 1);
-          updateSelectionHistory(block, 'clear');
-        } else {
-          // Keep section but clear road data
-          existingProcessedSections[sectionIndex] = {
-            ...section,
-            road: "",
-            otherRoads: "",
-            type: section.otherLines ? "combined" : "line",
-          };
-          // Update history - lines become first selection
-          updateSelectionHistory(block, 'line');
-        }
-      }
-    } else {
-      const roads = value
-        .split(",")
-        .map((r) => r.trim())
-        .filter(Boolean);
-      
-      const roadCount = roads.length;
-      const roadData = {
-        block,
-        road: roads[0] || "",
-        otherRoads: roads.length > 1 ? roads.slice(1).join(",") : "",
-      };
+  const handleRoadSelection = (block: string, value: string) => {
+    setFormData((prev) => {
+      const existingProcessedSections = [...prev.processedLineSections];
+      const sectionIndex = existingProcessedSections.findIndex(
+        (section) => section.block === block
+      );
 
-      if (sectionIndex !== -1) {
-        const existingSection = existingProcessedSections[sectionIndex];
-        const hasLines = existingSection.lineName || existingSection.otherLines;
-        const currentLineCount = [existingSection.lineName, existingSection.otherLines]
-          .filter(Boolean).length + (existingSection.otherLines ? existingSection.otherLines.split(',').length : 0);
-        
-        const firstSelection = getCurrentFirstSelection(block, currentLineCount, roadCount);
-        
-        if (firstSelection === 'line') {
-          // Line was first - roads don't affect display (Scenario 4)
-          existingProcessedSections[sectionIndex] = {
-            ...existingSection,
-            ...roadData,
-            type: currentLineCount === 1 ? "line" : "combined",
-          };
-        } else {
-          // Road first or no lines - show NOTHING
-          existingProcessedSections[sectionIndex] = {
-            ...existingSection,
-            ...roadData,
-            type: "yard", // Force nothing display
-          };
-          updateSelectionHistory(block, 'road');
+      if (!value) {
+        // Clear road selection
+        if (sectionIndex !== -1) {
+          const section = existingProcessedSections[sectionIndex];
+          const hasLines = section.lineName || section.otherLines;
+
+          if (!hasLines) {
+            // No lines left, clear everything
+            existingProcessedSections.splice(sectionIndex, 1);
+            updateSelectionHistory(block, 'clear');
+          } else {
+            // Keep section but clear road data
+            existingProcessedSections[sectionIndex] = {
+              ...section,
+              road: "",
+              otherRoads: "",
+              type: section.otherLines ? "combined" : "line",
+            };
+            // Update history - lines become first selection
+            updateSelectionHistory(block, 'line');
+          }
         }
       } else {
-        // New section with only roads
-        existingProcessedSections.push({
-          ...roadData,
-          type: "yard", // Show nothing
-          lineName: "",
-          otherLines: "",
-          stream: "",
-        });
-        updateSelectionHistory(block, 'road');
+        const roads = value
+          .split(",")
+          .map((r) => r.trim())
+          .filter(Boolean);
+
+        const roadCount = roads.length;
+        const roadData = {
+          block,
+          road: roads[0] || "",
+          otherRoads: roads.length > 1 ? roads.slice(1).join(",") : "",
+        };
+
+        if (sectionIndex !== -1) {
+          const existingSection = existingProcessedSections[sectionIndex];
+          const hasLines = existingSection.lineName || existingSection.otherLines;
+          const currentLineCount = [existingSection.lineName, existingSection.otherLines]
+            .filter(Boolean).length + (existingSection.otherLines ? existingSection.otherLines.split(',').length : 0);
+
+          const firstSelection = getCurrentFirstSelection(block, currentLineCount, roadCount);
+
+          if (firstSelection === 'line') {
+            // Line was first - roads don't affect display (Scenario 4)
+            existingProcessedSections[sectionIndex] = {
+              ...existingSection,
+              ...roadData,
+              type: currentLineCount === 1 ? "line" : "combined",
+            };
+          } else {
+            // Road first or no lines - show NOTHING
+            existingProcessedSections[sectionIndex] = {
+              ...existingSection,
+              ...roadData,
+              type: "yard", // Force nothing display
+            };
+            updateSelectionHistory(block, 'road');
+          }
+        } else {
+          // New section with only roads
+          existingProcessedSections.push({
+            ...roadData,
+            type: "yard", // Show nothing
+            lineName: "",
+            otherLines: "",
+            stream: "",
+          });
+          updateSelectionHistory(block, 'road');
+        }
+      }
+
+      return {
+        ...prev,
+        processedLineSections: existingProcessedSections,
+      };
+    });
+  };
+  const getDisplayInfo = (block: string) => {
+    const section = (formData.processedLineSections || []).find(
+      (s: any) => s.block === block
+    );
+
+    if (!section) return { display: 'nothing', text: 'Nothing' };
+
+    const lineCount = [section.lineName, section.otherLines]
+      .filter(Boolean).length + (section.otherLines ? section.otherLines.split(',').length : 0);
+    const roadCount = [section.road, section.otherRoads]
+      .filter(Boolean).length + (section.otherRoads ? section.otherRoads.split(',').length : 0);
+
+    const firstSelection = getCurrentFirstSelection(block, lineCount, roadCount);
+
+    // Apply the rules from your scenarios
+    if (firstSelection === 'road') {
+      // Road first → NOTHING (Scenarios 1, 5)
+      return { display: 'nothing', text: 'Nothing' };
+    }
+
+    if (firstSelection === 'line') {
+      // Line first → follow line count rules
+      if (lineCount === 0) {
+        return { display: 'nothing', text: 'Nothing' };
+      } else if (lineCount === 1) {
+        return { display: 'corridor', text: 'Corridor for this section' };
+      } else {
+        return { display: 'combined', text: 'Combined block' };
       }
     }
 
-    return {
-      ...prev,
-      processedLineSections: existingProcessedSections,
-    };
-  });
-};
-const getDisplayInfo = (block: string) => {
-  const section = (formData.processedLineSections || []).find(
-    (s: any) => s.block === block
-  );
-  
-  if (!section) return { display: 'nothing', text: 'Nothing' };
-
-  const lineCount = [section.lineName, section.otherLines]
-    .filter(Boolean).length + (section.otherLines ? section.otherLines.split(',').length : 0);
-  const roadCount = [section.road, section.otherRoads]
-    .filter(Boolean).length + (section.otherRoads ? section.otherRoads.split(',').length : 0);
-
-  const firstSelection = getCurrentFirstSelection(block, lineCount, roadCount);
-
-  // Apply the rules from your scenarios
-  if (firstSelection === 'road') {
-    // Road first → NOTHING (Scenarios 1, 5)
+    // Default fallback
     return { display: 'nothing', text: 'Nothing' };
-  }
-  
-  if (firstSelection === 'line') {
-    // Line first → follow line count rules
-    if (lineCount === 0) {
-      return { display: 'nothing', text: 'Nothing' };
-    } else if (lineCount === 1) {
-      return { display: 'corridor', text: 'Corridor for this section' };
-    } else {
-      return { display: 'combined', text: 'Combined block' };
-    }
-  }
+  };
 
-  // Default fallback
-  return { display: 'nothing', text: 'Nothing' };
-};
- 
- 
- 
+
+
   const [showSuccessPage, setShowSuccessPage] = useState(false);
   const [submittedSummary, setSubmittedSummary] = useState<any>(null);
   // Add state for showing the details modal
@@ -2700,7 +3052,7 @@ const getDisplayInfo = (block: string) => {
         <div className="w-full max-w-2xl mx-auto mt-4">
           <div className=" text-center bg-[#f7f7a1] rounded-t-2xl p-4 border-b-2 border-[#b6f7e6]">
             <div className="font-extrabold text-[9vw] min-[430px]:text-4xl   text-[#b07be0]">
-              RBMS-SA-DIVN
+              RBMS-{session?.user?.location}-DIVN
             </div>
           </div>
           <div className="bg-[#fffaf0] rounded-b-2xl p-4 sm:p-6 w-full max-w-2xl overflow-auto">
@@ -2868,7 +3220,7 @@ const getDisplayInfo = (block: string) => {
             fontFamily: "Arial Black, Arial, sans-serif",
           }}
         >
-          RBMS-SA-DIVN
+          RBMS-{session?.user?.location}-DIVN
         </span>
       </div>
       {/* Sub-header */}
@@ -2981,7 +3333,7 @@ const getDisplayInfo = (block: string) => {
                 )}
 
 
-                
+
               </div>
               {errors.date && (
                 <span className="text-[24px] text-[#e07a5f] font-medium mt-2 block">
@@ -3089,17 +3441,17 @@ const getDisplayInfo = (block: string) => {
                   //     ).filter((s: any) => values.includes(s.block)),
                   //   }));
                   // }
-                   if (userDepartment !== "TRD" && values.length > 2) {
-        return; 
-      }
+                  if (userDepartment !== "TRD" && values.length > 2) {
+                    return;
+                  }
                   setBlockSectionValue(values);
-      setFormData((prev) => ({
-        ...prev,
-        missionBlock: values.join(","),
-        processedLineSections: (
-          prev.processedLineSections || []
-        ).filter((s: any) => values.includes(s.block)),
-      }));
+                  setFormData((prev) => ({
+                    ...prev,
+                    missionBlock: values.join(","),
+                    processedLineSections: (
+                      prev.processedLineSections || []
+                    ).filter((s: any) => values.includes(s.block)),
+                  }));
                 }}
                 classNamePrefix="react-select"
                 styles={{
@@ -3175,18 +3527,18 @@ const getDisplayInfo = (block: string) => {
 
 
                 placeholder={
-      userDepartment === "TRD"
-        ? "Select Block Sections/Yards"
-        : "Select up to 2 Block Sections/Yards"
-    }
+                  userDepartment === "TRD"
+                    ? "Select Block Sections/Yards"
+                    : "Select up to 2 Block Sections/Yards"
+                }
                 closeMenuOnSelect={false}
                 // isOptionDisabled={() => blockSectionValue.length >= 2}
                 // isOptionDisabled={() =>
                 //   blockSectionValue.length >= (userDepartment === "TRD" ? 6 : 2)
                 // }
-                 isOptionDisabled={() => 
-      userDepartment !== "TRD" && blockSectionValue.length >= 2
-    }
+                isOptionDisabled={() =>
+                  userDepartment !== "TRD" && blockSectionValue.length >= 2
+                }
                 required
               />
               {errors.missionBlock && (
@@ -3392,165 +3744,165 @@ const getDisplayInfo = (block: string) => {
 
 
 
-{blockSectionValue.map((block: string, idx: number) => {
-  const isYard = block.includes("-YD");
-  const lineOrRoadOptions = isYard
-    ? getAllRoadsForYard(block).map((road: string) => ({
-      value: road,
-      label: road,
-    }))
-    : (lineData[block as keyof typeof lineData] || []).map(
-      (line: string) => ({
-        value: line,
-        label: line,
-      })
-    );
-  
-  const sectionEntry: any = (formData.processedLineSections || []).find(
-    (s: any) => s.block === block
-  ) || {};
-  
-  const displayInfo = getDisplayInfo(block);
+            {blockSectionValue.map((block: string, idx: number) => {
+              const isYard = block.includes("-YD");
+              const lineOrRoadOptions = isYard
+                ? getAllRoadsForYard(block).map((road: string) => ({
+                  value: road,
+                  label: road,
+                }))
+                : (lineData[block as keyof typeof lineData] || []).map(
+                  (line: string) => ({
+                    value: line,
+                    label: line,
+                  })
+                );
 
-  return (
-    <div key={block} className="flex flex-col gap-1 w-full">
-      <span className="text-[24px] font-bold text-black mb-1">
-        Select {isYard ? "Road(s)" : "Line(s)"} for{" "}
-        <span className="text-[#3a506b]">{block}</span>
-      </span>
-      
-      <div className="flex flex-row items-center gap-3 w-full">
-        <Select
-          isMulti
-          name={`lineOrRoad-${block}`}
-          options={lineOrRoadOptions}
-          value={(() => {
-            const selectedValues: { value: string; label: string }[] = [];
-            if (isYard) {
-              if (sectionEntry?.road) {
-                selectedValues.push({ value: sectionEntry.road, label: sectionEntry.road });
-              }
-              if (sectionEntry?.otherRoads) {
-                const otherRoadList = sectionEntry.otherRoads.split(",").map((road: string) => road.trim()).filter(Boolean);
-                selectedValues.push(...otherRoadList.map((road: string) => ({ value: road, label: road })));
-              }
-            } else {
-              if (sectionEntry?.lineName) {
-                selectedValues.push({ value: sectionEntry.lineName, label: sectionEntry.lineName });
-              }
-              if (sectionEntry?.otherLines) {
-                const otherLineList = sectionEntry.otherLines.split(",").map((line: string) => line.trim()).filter(Boolean);
-                selectedValues.push(...otherLineList.map((line: string) => ({ value: line, label: line })));
-              }
-            }
-            return selectedValues;
-          })()}
-          onChange={(selected) => {
-            const values = selected ? selected.map((opt: any) => opt.value) : [];
-            if (isYard) {
-              handleRoadSelection(block, values.join(","));
-            } else {
-              handleLineNameSelection(block, values);
-            }
-          }}
-          classNamePrefix="react-select"
-          menuPortalTarget={typeof window !== "undefined" ? document.body : null}
-          styles={{
-            control: (base) => ({
-              ...base,
-              backgroundColor: "#e6f7fa",
-              borderColor: "black",
-              borderWidth: 2,
-              borderRadius: 12,
-              minHeight: "44px",
-              fontWeight: "bold",
-              fontSize: "24px",
-              boxShadow: "none",
-              padding: "0 2px",
-            }),
-            menu: (base) => ({ ...base, zIndex: 9999 }),
-            multiValue: (base) => ({
-              ...base,
-              backgroundColor: isYard ? "#e6f7fa" : "#f6fff6",
-              color: "black",
-              fontWeight: "bold",
-              fontSize: "22px",
-              border: "1.5px solid #b6e6c6",
-              borderRadius: 8,
-              marginRight: 4,
-            }),
-            multiValueLabel: (base) => ({
-              ...base,
-              color: "black",
-              fontWeight: "bold",
-              fontSize: "24px",
-              padding: "2px 8px",
-            }),
-            multiValueRemove: (base) => ({
-              ...base,
-              color: "#e07a5f",
-              ":hover": {
-                backgroundColor: "#f6fff6",
-                color: "#b91c1c",
-              },
-            }),
-            option: (base, state) => ({
-              ...base,
-              backgroundColor: state.isSelected
-                ? "#b6e6f7"
-                : state.isFocused
-                  ? "#b6e6f799"
-                  : "#e6f7fa",
-              color: "black",
-              fontWeight: "bold",
-              fontSize: "22px",
-              padding: "4px 8px",
-            }),
-            placeholder: (base) => ({
-              ...base,
-              color: "black",
-              fontWeight: "bold",
-              fontSize: "24px",
-            }),
-            dropdownIndicator: (base) => ({
-              ...base,
-              color: "black",
-              fontSize: "24px",
-              padding: 0,
-            }),
-          }}
-          placeholder={isYard ? "Select Road(s)" : "Select Line(s)"}
-          closeMenuOnSelect={false}
-          required
-        />
-        {renderError(`${block}.lineName`)}
-        {renderError(`${block}.road`)}
-        {renderError(`${block}.stream`)}
-      </div>
-    </div>
-  );
-})}
+              const sectionEntry: any = (formData.processedLineSections || []).find(
+                (s: any) => s.block === block
+              ) || {};
 
-{/* Corridor display - ONLY SHOW when NOT "nothing" */}
-{getDisplayInfo(blockSectionValue[0])?.display !== 'nothing' && (
-  <div
-    className="w-full mt-3 mb-2 px-4 py-2 rounded-lg border-2 border-[#e07a5f] bg-[#ffd6d6] flex flex-col items-center justify-center shadow-sm whitespace-nowrap overflow-x-auto min-w-0"
-    style={{ boxSizing: "border-box" }}
-  >
-    <span className="text-[26px] font-bold text-black text-center mr-4">
-      {getDisplayInfo(blockSectionValue[0])?.text === 'Corridor for this section' 
-        ? 'Corridor for this section'
-        : 'Combined block'}
-    </span>
-     {getDisplayInfo(blockSectionValue[0])?.text === 'Corridor for this section' && (
-      <span className="text-[24px] font-bold text-black text-center">
-        {corridorTime?.from || "--:--"}
-        <span className="mx-2">TO</span>
-        {corridorTime?.to || "--:--"}
-      </span>
-    )}
-  </div>
-)}
+              const displayInfo = getDisplayInfo(block);
+
+              return (
+                <div key={block} className="flex flex-col gap-1 w-full">
+                  <span className="text-[24px] font-bold text-black mb-1">
+                    Select {isYard ? "Road(s)" : "Line(s)"} for{" "}
+                    <span className="text-[#3a506b]">{block}</span>
+                  </span>
+
+                  <div className="flex flex-row items-center gap-3 w-full">
+                    <Select
+                      isMulti
+                      name={`lineOrRoad-${block}`}
+                      options={lineOrRoadOptions}
+                      value={(() => {
+                        const selectedValues: { value: string; label: string }[] = [];
+                        if (isYard) {
+                          if (sectionEntry?.road) {
+                            selectedValues.push({ value: sectionEntry.road, label: sectionEntry.road });
+                          }
+                          if (sectionEntry?.otherRoads) {
+                            const otherRoadList = sectionEntry.otherRoads.split(",").map((road: string) => road.trim()).filter(Boolean);
+                            selectedValues.push(...otherRoadList.map((road: string) => ({ value: road, label: road })));
+                          }
+                        } else {
+                          if (sectionEntry?.lineName) {
+                            selectedValues.push({ value: sectionEntry.lineName, label: sectionEntry.lineName });
+                          }
+                          if (sectionEntry?.otherLines) {
+                            const otherLineList = sectionEntry.otherLines.split(",").map((line: string) => line.trim()).filter(Boolean);
+                            selectedValues.push(...otherLineList.map((line: string) => ({ value: line, label: line })));
+                          }
+                        }
+                        return selectedValues;
+                      })()}
+                      onChange={(selected) => {
+                        const values = selected ? selected.map((opt: any) => opt.value) : [];
+                        if (isYard) {
+                          handleRoadSelection(block, values.join(","));
+                        } else {
+                          handleLineNameSelection(block, values);
+                        }
+                      }}
+                      classNamePrefix="react-select"
+                      menuPortalTarget={typeof window !== "undefined" ? document.body : null}
+                      styles={{
+                        control: (base) => ({
+                          ...base,
+                          backgroundColor: "#e6f7fa",
+                          borderColor: "black",
+                          borderWidth: 2,
+                          borderRadius: 12,
+                          minHeight: "44px",
+                          fontWeight: "bold",
+                          fontSize: "24px",
+                          boxShadow: "none",
+                          padding: "0 2px",
+                        }),
+                        menu: (base) => ({ ...base, zIndex: 9999 }),
+                        multiValue: (base) => ({
+                          ...base,
+                          backgroundColor: isYard ? "#e6f7fa" : "#f6fff6",
+                          color: "black",
+                          fontWeight: "bold",
+                          fontSize: "22px",
+                          border: "1.5px solid #b6e6c6",
+                          borderRadius: 8,
+                          marginRight: 4,
+                        }),
+                        multiValueLabel: (base) => ({
+                          ...base,
+                          color: "black",
+                          fontWeight: "bold",
+                          fontSize: "24px",
+                          padding: "2px 8px",
+                        }),
+                        multiValueRemove: (base) => ({
+                          ...base,
+                          color: "#e07a5f",
+                          ":hover": {
+                            backgroundColor: "#f6fff6",
+                            color: "#b91c1c",
+                          },
+                        }),
+                        option: (base, state) => ({
+                          ...base,
+                          backgroundColor: state.isSelected
+                            ? "#b6e6f7"
+                            : state.isFocused
+                              ? "#b6e6f799"
+                              : "#e6f7fa",
+                          color: "black",
+                          fontWeight: "bold",
+                          fontSize: "22px",
+                          padding: "4px 8px",
+                        }),
+                        placeholder: (base) => ({
+                          ...base,
+                          color: "black",
+                          fontWeight: "bold",
+                          fontSize: "24px",
+                        }),
+                        dropdownIndicator: (base) => ({
+                          ...base,
+                          color: "black",
+                          fontSize: "24px",
+                          padding: 0,
+                        }),
+                      }}
+                      placeholder={isYard ? "Select Road(s)" : "Select Line(s)"}
+                      closeMenuOnSelect={false}
+                      required
+                    />
+                    {renderError(`${block}.lineName`)}
+                    {renderError(`${block}.road`)}
+                    {renderError(`${block}.stream`)}
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Corridor display - ONLY SHOW when NOT "nothing" */}
+            {getDisplayInfo(blockSectionValue[0])?.display !== 'nothing' && (
+              <div
+                className="w-full mt-3 mb-2 px-4 py-2 rounded-lg border-2 border-[#e07a5f] bg-[#ffd6d6] flex flex-col items-center justify-center shadow-sm whitespace-nowrap overflow-x-auto min-w-0"
+                style={{ boxSizing: "border-box" }}
+              >
+                <span className="text-[26px] font-bold text-black text-center mr-4">
+                  {getDisplayInfo(blockSectionValue[0])?.text === 'Corridor for this section'
+                    ? 'Corridor for this section'
+                    : 'Combined block'}
+                </span>
+                {getDisplayInfo(blockSectionValue[0])?.text === 'Corridor for this section' && (
+                  <span className="text-[24px] font-bold text-black text-center">
+                    {corridorTime?.from || "--:--"}
+                    <span className="mx-2">TO</span>
+                    {corridorTime?.to || "--:--"}
+                  </span>
+                )}
+              </div>
+            )}
             {/* Preferred Slot and Site Location grouped in a box - ALIGNED, PROFESSIONAL, NO OVERFLOW, SINGLE LINE */}
             <div className="w-full mt-1 mb-4 p-6 rounded-2xl border-4 border-[#b6e6c6] bg-gradient-to-br from-[#f7f7a1] to-[#f0f0c0] flex flex-col gap-4 shadow-xl min-w-0 hover:shadow-2xl transition-shadow duration-300">
               {/* Preferred Slot label */}
@@ -3599,12 +3951,12 @@ const getDisplayInfo = (block: string) => {
                         //   }
                         // }
                         if (isToday(formData.date)) {
-  const now = new Date();
-  const currentHour = now.getHours();
-  if (h < currentHour + 1 && h !== 0) {
-    return null;
-  }
-}
+                          const now = new Date();
+                          const currentHour = now.getHours();
+                          if (h < currentHour + 1 && h !== 0) {
+                            return null;
+                          }
+                        }
 
                         return (
                           <option key={h} value={hourStr}>
@@ -3741,58 +4093,71 @@ const getDisplayInfo = (block: string) => {
               {/* Site Location row */}
               <div className="flex flex-row items-center gap-4 w-full pl-1">
                 <div className="flex flex-col items-center bg-gradient-to-b from-[#fffbe9] to-[#fff7d6] border-2 border-[#b7cbe8] rounded-xl px-4 py-5 space-y-4 w-full shadow-md hover:shadow-lg transition-shadow duration-200">
-                  <span className="font-bold text-[#2c3e50] text-[24px] leading-none tracking-wide">
-                    Site Location
-                  </span>
-                  <div className="flex flex-wrap items-center justify-center gap-3">
-                    <input
-                      type="text"
-                      name="workLocationFrom"
-                      value={formData.workLocationFrom || ""}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        if (value.length === 4) {
-                          handleInputChange({
-                            target: {
-                              name: "workLocationFrom",
-                              value: value + "/",
-                            },
-                          } as React.ChangeEvent<HTMLInputElement>);
-                        } else {
-                          handleInputChange(e);
-                        }
-                      }}
-                      maxLength={7}
-                      placeholder="From"
-                      className="border-2 border-[#2c3e50] rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] w-[120px] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200"
-                      required
-                    />
-                    <span className="font-bold text-[#2c3e50] text-[24px]">
-                      to
+                  <div className="flex flex-col items-center space-y-2">
+                    <span className="font-bold text-[#2c3e50] text-[24px] leading-none tracking-wide">
+                      Site Location
                     </span>
-                    <input
-                      type="text"
-                      name="workLocationTo"
-                      value={formData.workLocationTo || ""}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        const prevValue = formData.workLocationTo || "";
-                        if (value.length === 4 && value.length > prevValue.length) {
-                          handleInputChange({
-                            target: {
-                              name: "workLocationTo",
-                              value: value + "/",
-                            },
-                          } as React.ChangeEvent<HTMLInputElement>);
-                        } else {
-                          handleInputChange(e);
-                        }
-                      }}
-                      maxLength={7}
-                      placeholder="To"
-                      className="border-2 border-[#2c3e50] rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] w-[120px] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200"
-                      required
-                    />
+                    {/* Display range information */}
+                    {/* {formData.selectedSection && blockSectionValue.length > 0 && userDepartment && (
+                      <span className="text-sm text-[#666] font-medium bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+                        {getSiteLocationRange(formData.selectedSection, blockSectionValue, userDepartment).displayText}
+                      </span>
+                    )} */}
+                  </div>
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <div className="flex flex-col items-center">
+                      <input
+                        type="text"
+                        name="workLocationFrom"
+                        value={formData.workLocationFrom || ""}
+                        onChange={createSiteLocationChangeHandler(
+                          'workLocationFrom',
+                          formData,
+                          handleInputChange,
+                          formData.selectedSection,
+                          blockSectionValue,
+                          userDepartment || "",
+                          userDepot
+                        )}
+                        maxLength={7}
+                        placeholder="From"
+                        className={`border-2 ${errors.workLocationFrom ?  'border-[#2c3e50]' : 'border-[#2c3e50]'} rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] w-[120px] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200`}
+                        required
+                      />
+                      {/* <div className="h-8 mt-1 flex items-center justify-center">
+                        <span className={`text-xs text-center max-w-[120px] leading-tight ${errors.workLocationFrom ? 'text-red-500' : 'text-transparent'}`}>
+                          {errors.workLocationFrom || "No error"}
+                        </span>
+                      </div> */}
+                    </div>
+                    <span className="font-bold text-[#2c3e50] text-[24px] mb-10">
+                      TO
+                    </span>
+                    <div className="flex flex-col items-center">
+                      <input
+                        type="text"
+                        name="workLocationTo"
+                        value={formData.workLocationTo || ""}
+                        onChange={createSiteLocationChangeHandler(
+                          'workLocationTo',
+                          formData,
+                          handleInputChange,
+                          formData.selectedSection,
+                          blockSectionValue,
+                          userDepartment || "",
+                          userDepot
+                        )}
+                        maxLength={7}
+                        placeholder="To"
+                        className={`border-2 ${errors.workLocationTo ? 'border-[#2c3e50]' : 'border-[#2c3e50]'} rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] w-[120px] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200`}
+                        required
+                      />
+                      {/* <div className="h-8 mt-1 flex items-center justify-center">
+                        <span className={`text-xs text-center max-w-[120px] leading-tight ${errors.workLocationTo ? 'text-red-500' : 'text-transparent'}`}>
+                          {errors.workLocationTo || "No error"}
+                        </span>
+                      </div> */}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -3867,8 +4232,7 @@ const getDisplayInfo = (block: string) => {
 
 
           {/* Type of Work and Activity - horizontal, pastel green */}
-          <div className="w-full flex flex-row  items-center bg-[#e6f7c6] rounded-2xl p-3 mb-8 border-2 border-[#b6e6c6] shadow">
-            {/* Type of Work dropdown */}
+          {/* <div className="w-full flex flex-row  items-center bg-[#e6f7c6] rounded-2xl p-3 mb-8 border-2 border-[#b6e6c6] shadow">
             <div className="flex-1 pr-2 border-r-2 border-slate-400">
               <label
                 htmlFor="workType"
@@ -3907,7 +4271,7 @@ const getDisplayInfo = (block: string) => {
                 </span>
               )}
             </div>
-            {/* Activity dropdown */}
+         
             <div className="flex-1 pl-2">
               <label
                 htmlFor="activity"
@@ -3965,8 +4329,321 @@ const getDisplayInfo = (block: string) => {
                 </span>
               )}
             </div>
-          </div>
+          </div> */}
+{/* Type of Work and Activity - horizontal, pastel green */}
 
+
+{/* Type of Work and Activity - both multi-select */}
+<div className="w-full flex flex-row items-center bg-[#e6f7c6] rounded-2xl p-3 mb-8 border-2 border-[#b6e6c6] shadow">
+  {/* Type of Work Multi-Select */}
+  <div className="flex-1 pr-2 border-r-2 border-slate-400">
+    <label className="block text-[24px] text-nowrap font-bold text-black mb-2">
+      Type of Work
+    </label>
+    <Select
+      isMulti
+      value={formData.workType 
+        ? formData.workType.split(',').map(type => ({
+            value: type.trim(),
+            label: type.trim()
+          }))
+        : []
+      }
+      onChange={(selectedOptions) => {
+        const selected = selectedOptions || [];
+        const selectedValues = selected.map(option => option.value);
+        const workTypeValues = selectedValues.join(",");
+        
+        setFormData(prev => ({
+          ...prev,
+          workType: workTypeValues,
+          activity: ""
+        }));
+        
+        setSelectedActivities([]);
+        setCustomActivity("");
+      }}
+      options={workTypeOptions.map((type: string) => ({
+        value: type,
+        label: type,
+      }))}
+      classNamePrefix="react-select"
+      styles={{
+        control: (base, state) => ({
+          ...base,
+          backgroundColor: "white",
+          borderColor: state.isFocused ? "#b7cbe8" : "#b7cbe8",
+          borderWidth: 2,
+          borderRadius: 12,
+          minHeight: "60px",
+          maxHeight: "60px",
+          fontWeight: "bold",
+          fontSize: "18px",
+          boxShadow: "none",
+        }),
+        valueContainer: (base) => ({
+          ...base,
+          padding: "4px 8px",
+          height: "52px",
+          overflowY: "auto",
+          flexWrap: "wrap",
+          alignItems: "flex-start",
+          alignContent: "flex-start",
+        }),
+        multiValue: (base) => ({
+          ...base,
+          backgroundColor: "#e6f7fa",
+          color: "black",
+          fontWeight: "bold",
+          fontSize: "16px",
+          border: "1.5px solid #b6e6c6",
+          borderRadius: 6,
+          margin: "2px 4px 2px 0",
+          flexShrink: 0,
+        }),
+        multiValueLabel: (base) => ({
+          ...base,
+          color: "black",
+          fontWeight: "bold",
+          fontSize: "16px",
+          padding: "4px 8px",
+        }),
+        multiValueRemove: (base) => ({
+          ...base,
+          color: "#e07a5f",
+          padding: "0 6px",
+          ":hover": {
+            backgroundColor: "#f6fff6",
+            color: "#b91c1c",
+          },
+        }),
+        option: (base, state) => ({
+          ...base,
+          backgroundColor: state.isSelected
+            ? "#b6e6f7"
+            : state.isFocused
+            ? "#b6e6f799"
+            : "white",
+          color: "black",
+          fontWeight: "bold",
+          fontSize: "18px",
+          padding: "8px 12px",
+        }),
+        menu: (base) => ({
+          ...base,
+          zIndex: 9999,
+        }),
+        menuList: (base) => ({
+          ...base,
+          maxHeight: "200px",
+          overflowY: "auto",
+        }),
+        placeholder: (base) => ({
+          ...base,
+          color: "#3a506b",
+          fontWeight: "bold",
+          fontSize: "18px",
+        }),
+        dropdownIndicator: (base) => ({
+          ...base,
+          color: "#3a506b",
+          fontSize: "18px",
+          padding: "0 8px",
+        }),
+        input: (base) => ({
+          ...base,
+          fontSize: "18px",
+          color: "black",
+          margin: 0,
+          padding: 0,
+        }),
+        indicatorsContainer: (base) => ({
+          ...base,
+          height: "52px",
+        }),
+      }}
+      placeholder="Select Types of Work"
+      closeMenuOnSelect={false}
+      required
+    />
+    {errors.workType && (
+      <span className="text-[24px] text-[#e07a5f] font-medium mt-2 block">
+        {errors.workType}
+      </span>
+    )}
+  </div>
+
+  {/* Activity Multi-Select */}
+  <div className="flex-1 pl-2">
+    <label className="block text-[24px] font-bold text-black mb-2">
+      Activity
+    </label>
+    <Select
+      isMulti
+      value={(() => {
+        const selectedValues: { value: string; label: string }[] = [];
+        
+        if (formData.activity) {
+          const activities = formData.activity.split(",").filter(a => a.trim() && a !== "others");
+          activities.forEach(activity => {
+            if (activityOptions.includes(activity)) {
+              selectedValues.push({ value: activity, label: activity });
+            }
+          });
+        }
+        
+        if (customActivity && selectedActivities.includes("others")) {
+          selectedValues.push({ value: "others", label: "Others" });
+        }
+        
+        return selectedValues;
+      })()}
+      onChange={(selectedOptions) => {
+        const selected = selectedOptions || [];
+        const selectedValues = selected.map(option => option.value);
+        
+        setSelectedActivities(selectedValues);
+        
+        const activityValues = selectedValues.filter(val => val !== "others").join(",");
+        
+        setFormData(prev => ({
+          ...prev,
+          activity: activityValues
+        }));
+        
+        if (!selectedValues.includes("others")) {
+          setCustomActivity("");
+        }
+      }}
+      options={[
+        ...activityOptions.map((activity: string) => ({
+          value: activity,
+          label: activity,
+        })),
+        { value: "others", label: "Others" }
+      ]}
+      classNamePrefix="react-select"
+      styles={{
+        control: (base, state) => ({
+          ...base,
+          backgroundColor: "white",
+          borderColor: state.isFocused ? "#b7cbe8" : "#b7cbe8",
+          borderWidth: 2,
+          borderRadius: 12,
+          minHeight: "60px",
+          maxHeight: "60px",
+          fontWeight: "bold",
+          fontSize: "18px",
+          boxShadow: "none",
+        }),
+        valueContainer: (base) => ({
+          ...base,
+          padding: "4px 8px",
+          height: "52px",
+          overflowY: "auto",
+          flexWrap: "wrap",
+          alignItems: "flex-start",
+          alignContent: "flex-start",
+        }),
+        multiValue: (base) => ({
+          ...base,
+          backgroundColor: "#e6f7fa",
+          color: "black",
+          fontWeight: "bold",
+          fontSize: "16px",
+          border: "1.5px solid #b6e6c6",
+          borderRadius: 6,
+          margin: "2px 4px 2px 0",
+          flexShrink: 0,
+        }),
+        multiValueLabel: (base) => ({
+          ...base,
+          color: "black",
+          fontWeight: "bold",
+          fontSize: "16px",
+          padding: "4px 8px",
+        }),
+        multiValueRemove: (base) => ({
+          ...base,
+          color: "#e07a5f",
+          padding: "0 6px",
+          ":hover": {
+            backgroundColor: "#f6fff6",
+            color: "#b91c1c",
+          },
+        }),
+        option: (base, state) => ({
+          ...base,
+          backgroundColor: state.isSelected
+            ? "#b6e6f7"
+            : state.isFocused
+            ? "#b6e6f799"
+            : "white",
+          color: "black",
+          fontWeight: "bold",
+          fontSize: "18px",
+          padding: "8px 12px",
+        }),
+        menu: (base) => ({
+          ...base,
+          zIndex: 9999,
+        }),
+        menuList: (base) => ({
+          ...base,
+          maxHeight: "200px",
+          overflowY: "auto",
+        }),
+        placeholder: (base) => ({
+          ...base,
+          color: "#3a506b",
+          fontWeight: "bold",
+          fontSize: "18px",
+        }),
+        dropdownIndicator: (base) => ({
+          ...base,
+          color: "#3a506b",
+          fontSize: "18px",
+          padding: "0 8px",
+        }),
+        input: (base) => ({
+          ...base,
+          fontSize: "18px",
+          color: "black",
+          margin: 0,
+          padding: 0,
+        }),
+        indicatorsContainer: (base) => ({
+          ...base,
+          height: "52px",
+        }),
+      }}
+      placeholder={formData.workType ? `Select Activities (${activityOptions.length} available)` : "Select Type of Work first"}
+      closeMenuOnSelect={false}
+      isDisabled={!formData.workType}
+      required
+    />
+    
+    {/* Custom activity input for "Others" */}
+    {selectedActivities.includes("others") && (
+      <div className="mt-4">
+        <input
+          type="text"
+          className="w-full border-2 border-[#b7cbe8] rounded-xl px-4 py-3 text-[20px] font-medium bg-white text-[#3a506b] shadow focus:outline-none focus:ring-2 focus:ring-[#b7cbe8]"
+          placeholder="Enter custom activity"
+          value={customActivity}
+          onChange={(e) => setCustomActivity(e.target.value)}
+          required
+        />
+      </div>
+    )}
+    
+    {errors.activity && (
+      <span className="text-[24px] text-[#e07a5f] font-medium mt-2 block">
+        {errors.activity}
+      </span>
+    )}
+  </div>
+</div>
           {/*Coaching*/}
           <div className="w-full flex flex-row  items-center bg-[#e6f7c6] rounded-2xl p-3 mb-8 border-2 border-[#b6e6c6] shadow">
             {/* Type of Work dropdown */}
@@ -4000,8 +4677,7 @@ const getDisplayInfo = (block: string) => {
 
           {userDepartment !== "TRD" && (
             <div className="flex flex-col gap-2 border-2 border-[#b6e6c6] shadow rounded-2xl px-4 py-2 bg-white">
-              {/* Fresh Caution Section */}
-              <div className="w-full mt-2 bg-fuchsia-100 rounded-2xl ">
+              {/* <div className="w-full mt-2 bg-fuchsia-100 rounded-2xl ">
                 <div className="flex justify-between items-center mb-1 bg-fuchsia-300  rounded-2xl  px-2">
                   <span className="text-black font-bold text-[24px] ">
                     Fresh Caution Needed?
@@ -4032,8 +4708,7 @@ const getDisplayInfo = (block: string) => {
                   </select>
                   {renderError("freshCautionRequired")}
                 </div>
-                {/* ───── Fresh Caution ───── */}
-                {/* {false && ( */}
+            
 
                 {formData.freshCautionRequired && (
                   <div className="flex flex-col gap-2 mt-2 pb-2">
@@ -4043,7 +4718,6 @@ const getDisplayInfo = (block: string) => {
                         className="flex flex-row flex-wrap gap-1 bg-[#fffbe9] border-2 border-[#b71c1c] rounded items-center p-1"
                         style={{ fontSize: "24px", fontWeight: "bold" }}
                       >
-                        {/* ◼︎ Direction / Road */}
                         <input
                           list={`adjacentLinesList-${idx}`}
                           value={caution.adjacentLinesAffected}
@@ -4071,7 +4745,6 @@ const getDisplayInfo = (block: string) => {
                           })}
                         </datalist>
 
-                        {/* ◼︎ KM From / To */}
                         <input
                           value={caution.freshCautionLocationFrom}
                           onChange={(e) =>
@@ -4100,7 +4773,6 @@ const getDisplayInfo = (block: string) => {
                           className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black placeholder-black px-1 w-12 text-2xl"
                         />
 
-                        {/* ◼︎ Speed */}
                         <input
                           type="number"
                           value={caution.freshCautionSpeed}
@@ -4116,7 +4788,6 @@ const getDisplayInfo = (block: string) => {
                           className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black placeholder-black px-1 w-12 flex-1 text-2xl"
                         />
 
-                        {/* ◼︎ Remove */}
                         {formData.freshCautions.length > 1 && (
                           <button
                             type="button"
@@ -4129,7 +4800,6 @@ const getDisplayInfo = (block: string) => {
                       </div>
                     ))}
 
-                    {/* ➕ Add Button */}
                     <button
                       type="button"
                       onClick={addFreshCaution}
@@ -4139,7 +4809,201 @@ const getDisplayInfo = (block: string) => {
                     </button>
                   </div>
                 )}
-              </div>
+              </div> */}
+
+<div className="w-full mt-2 bg-fuchsia-100 rounded-2xl ">
+  <div className="flex justify-between items-center mb-1 bg-fuchsia-300  rounded-2xl  px-2">
+    <span className="text-black font-bold text-[24px] ">
+      Fresh Caution Needed?
+    </span>
+    <select
+      name="freshCautionRequired"
+      value={formData.freshCautionRequired ? "Y" : "N"}
+      onChange={(e) => {
+        const value = e.target.value === "Y";
+        console.log("Setting freshCautionRequired to:", value);
+        setFormData({
+          ...formData,
+          freshCautionRequired: value,
+        });
+      }}
+      className="ml-2 pr-8 border-2  border-black rounded 
+      px-1 my-3 text-2xl font-bold bg-white text-black placeholder-black"
+      style={{
+        appearance: "none",
+        backgroundImage: `url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9L12 15L18 9' stroke='%23000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "right 0.5rem center",
+        backgroundSize: "1.2rem",
+      }}
+    >
+      <option value="N">N</option>
+      <option value="Y">Y</option>
+    </select>
+    {renderError("freshCautionRequired")}
+  </div>
+
+  {formData.freshCautionRequired && (
+    <div className="flex flex-col gap-2 mt-2 pb-2">
+      {formData.freshCautions.map((caution, idx) => (
+        <div
+          key={idx}
+          className="flex flex-col gap-1 bg-[#fffbe9] border-2 border-[#b71c1c] rounded p-1"
+          style={{ fontSize: "24px", fontWeight: "bold" }}
+        >
+          {/* First Row: Direction, KM From/To, Speed */}
+          <div className="flex flex-row flex-wrap gap-1 items-center">
+            <input
+              list={`adjacentLinesList-${idx}`}
+              value={caution.adjacentLinesAffected}
+              onChange={(e) =>
+                handleFreshCautionChange(
+                  idx,
+                  "adjacentLinesAffected",
+                  e.target.value
+                )
+              }
+              placeholder="UP/DN/SL/Road No."
+              required
+              className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black placeholder-black px-1 w-28 text-2xl"
+            />
+            <datalist id={`adjacentLinesList-${idx}`}>
+              {blockSectionValue.flatMap((block) => {
+                const isYard = block.includes("-YD");
+                return isYard
+                  ? getAllRoadsForYard(block).map((r) => (
+                    <option key={r} value={r} />
+                  ))
+                  : (
+                    lineData[block as keyof typeof lineData] || []
+                  ).map((l) => <option key={l} value={l} />);
+              })}
+            </datalist>
+
+            <input
+              value={caution.freshCautionLocationFrom}
+              onChange={(e) =>
+                handleFreshCautionChange(
+                  idx,
+                  "freshCautionLocationFrom",
+                  e.target.value
+                )
+              }
+              placeholder="KM"
+              required
+              className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black placeholder-black px-1 w-12 text-2xl"
+            />
+            <span className="px-1 text-2xl text-black">to</span>
+            <input
+              value={caution.freshCautionLocationTo}
+              onChange={(e) =>
+                handleFreshCautionChange(
+                  idx,
+                  "freshCautionLocationTo",
+                  e.target.value
+                )
+              }
+              placeholder="KM"
+              required
+              className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black placeholder-black px-1 w-12 text-2xl"
+            />
+
+            <input
+              type="number"
+              value={caution.freshCautionSpeed}
+              onChange={(e) =>
+                handleFreshCautionChange(
+                  idx,
+                  "freshCautionSpeed",
+                  e.target.value
+                )
+              }
+              placeholder="Speed"
+              required
+              className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black placeholder-black px-1 w-12 flex-1 text-2xl"
+            />
+
+            {formData.freshCautions.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeFreshCaution(idx)}
+                className="px-2 py-1 text-2xl bg-red-600 text-white rounded"
+              >
+                Remove
+              </button>
+            )}
+          </div>
+
+          {/* Second Row: Dates */}
+          <div className="flex flex-row flex-wrap gap-1 items-center">
+            <input
+              type="date"
+              value={caution.freshCautionFromDate || ""}
+              onChange={(e) =>
+                handleFreshCautionChange(
+                  idx,
+                  "freshCautionFromDate",
+                  e.target.value
+                )
+              }
+              className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black px-1 text-2xl"
+            />
+            
+            <input
+              type="date"
+              value={caution.freshCautionToDate || ""}
+              onChange={(e) =>
+                handleFreshCautionChange(
+                  idx,
+                  "freshCautionToDate",
+                  e.target.value
+                )
+              }
+              className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black px-1 text-2xl"
+            />
+          </div>
+
+          {/* Third Row: Times */}
+          <div className="flex flex-row flex-wrap gap-1 items-center">
+            <input
+              type="time"
+              value={caution.freshCautionFromTime || ""}
+              onChange={(e) =>
+                handleFreshCautionChange(
+                  idx,
+                  "freshCautionFromTime",
+                  e.target.value
+                )
+              }
+              className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black px-1 text-2xl"
+            />
+            
+            <input
+              type="time"
+              value={caution.freshCautionToTime || ""}
+              onChange={(e) =>
+                handleFreshCautionChange(
+                  idx,
+                  "freshCautionToTime",
+                  e.target.value
+                )
+              }
+              className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black px-1 text-2xl"
+            />
+          </div>
+        </div>
+      ))}
+
+      <button
+        type="button"
+        onClick={addFreshCaution}
+        className="self-center px-2 py-1  bg-green-600 text-white rounded text-2xl font-semibold"
+      >
+        + Add Fresh Caution
+      </button>
+    </div>
+  )}
+</div>
 
               {/* Power Block Section */}
               <div className="w-full mt-2 bg-indigo-200 rounded-2xl">
@@ -4178,7 +5042,7 @@ const getDisplayInfo = (block: string) => {
                   <div className="flex flex-col gap-2 mt-2 pb-2">
                     <div className="flex flex-row flex-wrap gap-1">
                       <input
-                        type="number"
+                        type="text"
                         name="powerBlockKmFrom"
                         value={formData.powerBlockKmFrom || ""}
                         onChange={handleInputChange}
@@ -4188,7 +5052,7 @@ const getDisplayInfo = (block: string) => {
                       />
                       <span className="text-black font-bold text-2xl">to</span>
                       <input
-                        type="number"
+                        type="text"
                         name="powerBlockKmTo"
                         value={formData.powerBlockKmTo || ""}
                         onChange={handleInputChange}
@@ -4207,48 +5071,14 @@ const getDisplayInfo = (block: string) => {
                       />
                     </div>
                     <div className="col-span-1">
-                      <span className="text-black font-bold text-2xl">
-                        Assign To
-                      </span>
-
-                      <select
-                        name="powerBlockDisconnectionAssignTo"
-                        value={formData.powerBlockDisconnectionAssignTo || ""}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            powerBlockDisconnectionAssignTo: e.target.value,
-                          }))
-                        }
-                        className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black placeholder-black py-2 px-1 w-full text-2xl"
-                        required
-                        style={{
-                          color: "black",
-                          borderColor: errors.powerBlockDisconnectionAssignTo
-                            ? "#dc2626"
-                            : "#45526c",
-                        }}
-                      >
-                        <option value="" disabled>
-                          Select Depo
-                        </option>
-                        {selectedMajorSection &&
-                          session?.user.department &&
-                          depot[selectedMajorSection] &&
-                          depot[selectedMajorSection]["TRD"] ? (
-                          depot[selectedMajorSection]["TRD"].map(
-                            (depotOption: string, index) => (
-                              <option key={index} value={depotOption}>
-                                {depotOption}
-                              </option>
-                            )
-                          )
-                        ) : (
-                          <option value="" disabled>
-                            Select Major Section first
-                          </option>
-                        )}
-                      </select>
+                      <MultiSelectDepot
+                        department="TRD"
+                        selectedDepots={selectedTRDDepots}
+                        onDepotsChange={setSelectedTRDDepots}
+                        majorSection={formData.selectedSection}
+                        blockSections={blockSectionValue}
+                        disabled={false}
+                      />
                       {errors.powerBlockDisconnectionAssignTo && (
                         <span className="text-xs text-red-700 font-medium mt-1 block">
                           {errors.powerBlockDisconnectionAssignTo}
@@ -4271,14 +5101,12 @@ const getDisplayInfo = (block: string) => {
                       value={formData.sntDisconnectionRequired ? "Y" : "N"}
                       onChange={(e) => {
                         const value = e.target.value === "Y";
-                        console.log("Setting sntDisconnectionRequired to:", value);
                         setFormData({
                           ...formData,
-                          sntDisconnectionRequired: value,
-                        });
+                          sntDisconnectionRequired: e.target.value === "Y",
+                        })
                       }}
-                      className="ml-2 pr-8 border-2  border-black rounded 
-                px-1 my-3 text-2xl font-bold bg-white text-black placeholder-black"
+                      className="ml-2 pr-8 border-2  border-black rounded px-1 my-3 text-2xl font-bold bg-white text-black placeholder-black"
                       style={{
                         appearance: "none",
                         backgroundImage: `url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9L12 15L18 9' stroke='%23000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
@@ -4547,49 +5375,98 @@ const getDisplayInfo = (block: string) => {
                         </div>
                       </div>
 
-                      <div className="flex flex-row flex-wrap gap-1 w-full">
-                        <span className="text-black font-bold text-2xl">
-                          Assign To:
+                      <MultiSelectDepot
+                        department="S&T"
+                        selectedDepots={selectedSTDepots}
+                        onDepotsChange={setSelectedSTDepots}
+                        majorSection={formData.selectedSection}
+                        blockSections={blockSectionValue}
+                        disabled={false}
+                      />
+                      {errors.sntDisconnectionAssignTo && (
+                        <span className="text-xs text-red-700 font-medium mt-1 block">
+                          {errors.sntDisconnectionAssignTo}
                         </span>
-                        <select
-                          name="sntDisconnectionAssignTo"
-                          value={formData.sntDisconnectionAssignTo}
-                          onChange={handleInputChange}
-                          required
-                          className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black placeholder-black px-1 w-full text-2xl"
-                        >
-                          <option value="" disabled>
-                            Select Depo
-                          </option>
-                          {selectedMajorSection &&
-                            session?.user.department &&
-                            depot[selectedMajorSection] &&
-                            depot[selectedMajorSection]["S&T"] ? (
-                            depot[selectedMajorSection]["S&T"].map(
-                              (depotOption: string, index) => (
-                                <option key={index} value={depotOption}>
-                                  {depotOption}
-                                </option>
-                              )
-                            )
-                          ) : (
-                            <option value="" disabled>
-                              Select Major Section first
-                            </option>
-                          )}
-                        </select>
-                        {errors.sntDisconnectionAssignTo && (
-                          <span className="text-xs text-red-700 font-medium mt-1 block">
-                            {errors.sntDisconnectionAssignTo}
-                          </span>
-                        )}
-
-                        {/* {false && ( */}
-                      </div>
+                      )}
                     </div>
                   )}
                 </div>
               )}
+
+
+
+
+{session?.user.department === "S&T" && (
+  <div className="w-full mt-2 bg-orange-200 rounded-2xl">
+    <div className="flex justify-between items-center mb-1 bg-orange-400 rounded-2xl px-2">
+      <span className="text-black font-bold text-[24px]">
+        ENG Disconnection Needed?
+      </span>
+      <select
+        name="enggDisconnectionsRequired"
+        value={formData.enggDisconnectionsRequired ? "Y" : "N"}
+        onChange={(e) => {
+          const value = e.target.value === "Y";
+          console.log("Setting enggDisconnectionsRequired to:", value);
+          setFormData({
+            ...formData,
+            enggDisconnectionsRequired: value,
+          });
+        }}
+        className="ml-2 pr-8 border-2 border-black rounded px-1 my-3 text-2xl font-bold bg-white text-black placeholder-black"
+        style={{
+          appearance: "none",
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9L12 15L18 9' stroke='%23000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "right 0.5rem center",
+          backgroundSize: "1.2rem",
+        }}
+      >
+        <option value="N">N</option>
+        <option value="Y">Y</option>
+      </select>
+      {renderError("enggDisconnectionsRequired")}
+    </div>
+    
+    {/* ENG Disconnection Details */}
+    {formData.enggDisconnectionsRequired && (
+      <div className="flex flex-col gap-2 mt-2 pb-2">
+        {/* Remarks Field */}
+        <div className="flex flex-col gap-1">
+          <span className="text-black font-bold text-2xl">Remarks:</span>
+          <textarea
+            name="engDisconnectionRemarks"
+            value={formData.engDisconnectionRemarks || ""}
+            onChange={handleInputChange}
+            placeholder="Enter ENG disconnection remarks"
+            rows={2}
+            className="w-full border-2 border-[#b71c1c] bg-[#fffbe9] text-black placeholder-black px-2 py-1 text-2xl rounded"
+            required
+          />
+          {renderError("engDisconnectionRemarks")}
+        </div>
+
+        {/* Assign To using MultiSelectDepot component */}
+        <MultiSelectDepot
+          department="ENGG"
+          selectedDepots={selectedENGDepots}
+          onDepotsChange={setSelectedENGDepots}
+          majorSection={formData.selectedSection}
+          blockSections={blockSectionValue}
+          disabled={false}
+        />
+        {errors.engDisconnectionAssignTo && (
+          <span className="text-xs text-red-700 font-medium mt-1 block">
+            {errors.engDisconnectionAssignTo}
+          </span>
+        )}
+      </div>
+    )}
+  </div>
+)}
+
+
+
 
             </div>
           )}
@@ -4684,6 +5561,7 @@ const getDisplayInfo = (block: string) => {
               selectedActivities={selectedActivities}
               customActivity={customActivity}
               formSubmitting={formSubmitting}
+              userDepot={userDepots}
             />
             <button
               type="submit"
