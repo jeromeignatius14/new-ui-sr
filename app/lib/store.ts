@@ -3810,3 +3810,16 @@ export const departmentDepot = {
   ]
 
 }
+export type BlockSectionDepotAssignment = {
+  [majorSection: string]: {
+    [blockSection: string]: {
+      "S&T"?: string;
+      "TRD"?: string;
+      "ENGG"?: string;
+    };
+  };
+};
+export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {}
+export const sectionsWithAlphanumericSiteLocation = [
+""
+];

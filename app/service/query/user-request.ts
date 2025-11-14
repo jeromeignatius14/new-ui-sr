@@ -17,70 +17,107 @@ export interface RequestResponse {
 }
 
 export interface RequestItem {
-    AvailedTimeTo: string;
-    AvailedTimeFrom: string;
-    overAllStatus: String;
-    emergencyBlockRemarks: any;
-    powerBlockDisconnectionAssignTo: string;
-    sntDisconnectionAssignTo: any;
-    divisionId:any,
-    isSanctioned: boolean;
-    adjacentLinesAffected: string;
-    id: string;
-    date: string;
-    selectedDepartment: string;
-    selectedSection: string;
-    stationID: string | null;
-    missionBlock: string;
-    workType: string;
-    activity: string;
-    selectedStream: string | null;
-    selectedStreams?: any;
-    selectedRoads?: any;
-    cautionRequired: boolean;
-    cautionSpeed: number | null;
-    cautionLocationFrom: string | null;
-    cautionLocationTo: string | null;
-    freshCautionRequired: boolean | null;
-    freshCautionSpeed: number | null;
-    freshCautionLocationFrom: string | null;
-    freshCautionLocationTo: string | null;
-    workLocationFrom: string;
-    workLocationTo: string;
-    demandTimeFrom: string;
-    demandTimeTo: string;
-    duration: string | null;
-    sanctionedTimeFrom: string | null;
-    sanctionedTimeTo: string | null;
-    sigDisconnection: boolean;
-    elementarySection: string | null;
-    elementarySectionTo: string | null;
-    sigElementarySectionFrom: string | null;
-    sigElementarySectionTo: string | null;
-    repercussions: string | null;
-    requestremarks: string;
-    createdAt: string;
-    status: "PENDING" | "APPROVED" | "REJECTED";
-    selectedDepo: string;
-    sigResponse: string | null;
-    ohDisconnection: string | null;
-    oheDisconnection: string | null;
-    oheResponse: string | null;
-    corridorType: string | null;
-    corridorTypeSelection: string | null;
-    sigActionsNeeded: boolean;
-    trdActionsNeeded: boolean;
-    ManagerResponse: string | null;
-    sigDisconnectionRequirements: string | null;
-    sntDisconnectionRequirements: string[] | null;
-    sntDisconnectionLine: string | null;
-    sntDisconnectionLineFrom: string | null;
-    sntDisconnectionLineTo: string | null;
-    trdDisconnectionRequirements: string | null;
-    powerBlockRequirements: string[] | null;
-    powerBlockRequired: boolean;
-    sntDisconnectionRequired: boolean;
-    processedLineSections: {
+  userResponse: string | null;
+ rejectedBy: User | null;
+   trdDisconnections:
+    | {
+        depot: string;
+        status: "PENDING" | "ACCEPTED" | "REJECTED";
+        approvedAt: string | null;
+        remarks: string | null;
+      }[]
+    | null;
+  sntDisconnections:
+    | {
+        depot: string;
+        status: "PENDING" | "ACCEPTED" | "REJECTED";
+        approvedAt: string | null;
+        remarks: string | null;
+      }[]
+    | null;
+    enggDisconnections:
+    | {
+        depot: string;
+        status: "PENDING" | "ACCEPTED" | "REJECTED";
+        approvedAt: string | null;
+        remarks: string | null;
+      }[]
+    | null;
+  AvailedTimeTo?: any;
+  AvailedTimeFrom?: any;
+  freshCautions?: any;
+  tpcRemarks?: string;
+  AppliedTimeTo?: any;
+  AppliedTimeFrom?: any;
+  grantedFromTime?: any;
+  TrdDisconnectionAvailedTimeTo?: any;
+  TrdDisconnectionAvailedTimeFrom?: any;
+  SntDisconnectionAvailedTimeFrom?: any;
+  SntDisconnectionAvailedTimeTo?: any;
+  grantedToTime?: any;
+  enggDisconnectionsRequired: boolean;
+  overAllStatus: String;
+  emergencyBlockRemarks: string;
+  powerBlockDisconnectionAssignTo: string;
+  sntDisconnectionAssignTo: any;
+  divisionId: any;
+  isSanctioned: boolean;
+  adjacentLinesAffected: string;
+  id: string;
+  date: string;
+  selectedDepartment: string;
+  selectedSection: string;
+  stationID: string | null;
+  missionBlock: string;
+  workType: string;
+  activity: string;
+  selectedStream: string | null;
+  selectedStreams?: any;
+  selectedRoads?: any;
+  cautionRequired: boolean;
+  cautionSpeed: number | null;
+  cautionLocationFrom: string | null;
+  cautionLocationTo: string | null;
+  freshCautionRequired: boolean | null;
+  freshCautionSpeed: number | null;
+  freshCautionLocationFrom: string | null;
+  freshCautionLocationTo: string | null;
+  workLocationFrom: string;
+  workLocationTo: string;
+  demandTimeFrom: string;
+  demandTimeTo: string;
+  sanctionedTimeFrom: string;
+  sanctionedTimeTo: string;
+  sigDisconnection: boolean;
+  elementarySection: string | null;
+  elementarySectionTo: string | null;
+  sigElementarySectionFrom: string | null;
+  sigElementarySectionTo: string | null;
+  repercussions: string | null;
+  requestremarks: string;
+  createdAt: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  selectedDepo: string;
+  sigResponse: string | null;
+  ohDisconnection: string | null;
+  oheDisconnection: string | null;
+  oheResponse: string | null;
+  corridorType: string | null;
+  corridorTypeSelection: string | null;
+  sigActionsNeeded: boolean;
+  trdActionsNeeded: boolean;
+  ManagerResponse: string | null;
+  sigDisconnectionRequirements: string | null;
+  sntDisconnectionRequirements: string[] | null;
+  sntDisconnectionLine: string | null;
+  sntDisconnectionLineFrom: string | null;
+  sntDisconnectionLineTo: string | null;
+  trdDisconnectionRequirements: string | null;
+  powerBlockRequirements: string[] | null;
+  powerBlockRequired: boolean;
+  sntDisconnectionRequired: boolean;
+  processedLineSections:
+    | {
         block: string;
         type: string;
         lineName?: string;
@@ -108,7 +145,12 @@ export interface RequestItem {
         role: string;
     };
 }
-
+export type User = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+};
 export type DateRangeFilter = {
     startDate: string;
     endDate: string;
