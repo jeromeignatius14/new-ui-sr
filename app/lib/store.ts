@@ -182,12 +182,12 @@ export let MajorSection = {
 //   ]
 // };
 
-export let blockSection = {
+export let blockSection: { [key: string]: string[] } = {
   'JTJ-ED': [
     "JTJ-TPT", "TPT-KEY", "KEY-SLY", "SLY-DST", 
     "DST-DPI", "DPI-MAP", "MAP-BDY", "BDY-BQI", 
     "BQI-LCR", "LCR-DSPT", "DSPT-TNT", "TNT-KPPR", 
-    "KPPR-MGSJ", "MGSJ-SA","SA-VRPD", "VRPD-DC", "DC-MVPM", 
+    "KPPR-MGSJ", "MGSJ-SA", "SA-VRPD", "VRPD-DC", "DC-MVPM", 
     "MVPM-SGE", "SGE-ANU", "ANU-CV", "CV-ED",
     "TPT-YD", "KEY-YD", "SLY-YD", "DST-YD", "DPI-YD",
     "MAP-YD", "BDY-YD", "BQI-YD", "LCR-YD", "DSPT-YD", "TNT-YD", 
@@ -195,64 +195,71 @@ export let blockSection = {
     "ANU-YD", "CV-YD", "ED-YD"
   ],
 
-'ED-PTJ': [
+  'ED-PTJ': [
     "ED-TPM", "TPM-PY", "PY-IGR", "IGR-VZ", 
     "VZ-UKL", "UKL-TUP", "TUP-VNJ", "VNJ-SNO", 
-    "SNO-SUU", "SUU-IGU", "IGU-PLMD","IGU-PTJ", "PLMD-CBF", 
+    "SNO-SUU", "SUU-IGU", "IGU-PLMD", "IGU-PTJ", "PLMD-CBF", 
     "CBF-CBE", "CBE-PTJ", "PTJ-MDKI",
     "JTJ-YD", "TPT-YD", "DST-YD", "DPI-YD", "TNT-YD", "MAP-YD",
     "BQI-YD", "DSPT-YD", "MGSJ-YD", "SGE-YD", "ANU-YD", "CV-YD",
-    "ED-YD", "TPM-YD", "PY-YD", "IGR-YD", "VZ-YD", "VNJ-YD","SNO-YD",
+    "ED-YD", "TPM-YD", "PY-YD", "IGR-YD", "VZ-YD", "VNJ-YD", "SNO-YD",
     "SUU-YD", "IGU-YD", "PLMD-YD", "CBF-YD", "CBE-YD", "PTJ-YD",
-  "ULK-YD", "TUP-YD"
+    "ULK-YD", "TUP-YD"
   ],
-'ED-TP': [
+
+  'ED-TP': [
     "ED-CVD", "CVD-PAS", "PAS-URL", "URL-KMD", 
     "KMD-PGR", "PGR-MPLM", "MPLM-KRR", "KRR-VRQ", 
     "VRQ-MYU", "MYU-MMH", "MMH-LP", "LP-KLT", 
     "KLT-PLI", "PLI-PGN", "PGN-EL", "EL-MTNL", 
     "MTNL-TP",
+    "ED-YD", "CVD-YD", "PAS-YD", "URL-YD", "KMD-YD", "PGR-YD", "PGR TNPL SIDING",
+    "MPLM-YD", "KRR-YD", "VRQ-YD", "MMH-YD", "MYU-YD", "LP-YD", "KLT-YD",
+    "PLI-YD", "PGN-YD", "EL-YD", "MTNL-YD", "TP-YD", "PALM-YD", "UTCL-YD"
+  ],
 
-    "ED-YD", "CVD-YD", "PAS-YD", "URL-YD", "KMD-YD", "PGR-YD","PGR TNPL SIDING",
-    "MPLM-YD", "KRR-YD", "VRQ-YD","MMH-YD", "MYU-YD", "LP-YD", "KLT-YD",
-    "PLI-YD", "PGN-YD", "EL-YD", "MTNL-YD", "TP-YD","PALM-YD","UTCL-YD"
+  'KRR-DG': [
+    "KRR-VEI", "VEI-PALM", "PALM-EDU", "EDU-DG",
+    "KRR-YD", "VEI-YD", "VEI UTCL siding", "PALM-YD", "EDU-YD", "PALM CCCL siding", "PALM LAYBY"
   ],
-'KRR-DG': [
-    "KRR-VEI", "VEI-PALM", "PALM-EDU","EDU-DG",
-    "KRR-YD", "VEI-YD",,"VEI UTCL siding", "PALM-YD","EDU-YD","PALM CCCL siding","PALM LAYBY"
-  ],
-'SA-VRI': [
+
+  'SA-VRI': [
     "SA-SAMT", "SAMT-SXT", "SXT-MPLI", "MPLI-ETP", 
     "ETP-ATU", "ATU-CHSM", "CHSM-PRV", "PRV-MKSP", 
     "MKSP-VRI",
     "SA-YD", "SAMT-YD", "SXT-YD", "MPLI-YD", "ETP-YD", "ATU-YD",
     "CHSM-YD", "PRV-YD", "MKSP-YD", "VRI-YD"
   ],
-'SA-MTDM': [
+
+  'SA-MTDM': [
     "SA-MGSJ", "MGSJ-OML", "OML-MCRD", "MCRD-MTDM", 
     "MTDM-MTPP",
     "SA-YD", "MGSJ-YD", "OML-YD", "MCRD-YD", "MTDM-YD", "MTPP-YD"
   ],
-'SA-KRR': [
+
+  'SA-KRR': [
     "SA-MALR", "MALR-RASP", "RASP-KLGN", "KLGN-NMKL", 
     "NMKL-MONR", "MONR-KRR",
     "SA-YD", "MALR-YD", "RASP-YD", "KLGN-YD", "NMKL-YD", "MONR-YD", "KRR-YD"
   ],
-'MTP-UAM': [
+
+  'MTP-UAM': [
     "MTP-QLR", "QLR-HLG", "HLG-ONR", "ONR-WEL", 
     "WEL-AVK", "AVK-KXT", "KXT-LOV", "LOV-UAM",
     "MTP-YD", "QLR-YD", "HLG-YD", "ONR-YD", "WEL-YD", "AVK-YD",
     "KXT-YD", "LOV-YD", "UAM-YD"
   ],
-'PTJ-CNV': [
+
+  'PTJ-CNV': [
     "POY-CNV", "CNV-PTJ",
     "POY-YD", "CNV-YD", "PTJ-YD"
   ],
-'CBE-MTP': [
+
+  'CBE-MTP': [
     "CBE-CBF", "CBF-KAY",
-    "KAY-MTP", "CBE-YD", "CBF-YD","KAY-YD","MTP-YD",
+    "KAY-MTP", "CBE-YD", "CBF-YD", "KAY-YD", "MTP-YD"
   ]
-};
+}
  
 
 
