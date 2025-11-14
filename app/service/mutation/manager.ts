@@ -116,7 +116,8 @@ export const useEditUserRequest = () => {
             data: { 
                 date: string; 
                 demandTimeFrom: string; 
-                demandTimeTo: string 
+                demandTimeTo: string ;
+                tpcRemarks: string;
             } 
         }) => managerService.editUserRequest(id, data),
         onSuccess: () => {

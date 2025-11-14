@@ -139,6 +139,10 @@ export default function GenerateReportPage() {
     majorSections: [] as string[],
     department: ["Engineering"],
     blockType: ["All"],
+    globalWorkType: "ALL",
+    globalActivity: "ALL", 
+     durationOperator: "ALL",
+  durationValue: "",
   });
 
   const { data, isLoading, error } = useQuery({
@@ -562,6 +566,10 @@ export default function GenerateReportPage() {
         majorSections: selectedMajorSections,
         department: selectedDepartments,
         blockType: selectedBlockTypes,
+        globalWorkType: "ALL",
+        globalActivity: "ALL",
+         durationOperator: "ALL",
+  durationValue: "",
       });
 
       await refetch();

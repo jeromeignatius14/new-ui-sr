@@ -271,6 +271,12 @@ export default function ViewRequest() {
                   )}
                 </td>
               </tr>
+               <tr>
+                <td className="py-1 font-medium">Sanctioned Remark:</td>
+                <td className="py-1">
+                     {request.sanctionedRemarks||"N/A"}
+                </td>
+              </tr>
                  <tr>
                 <td className="py-1 font-medium">Availed Time:</td>
                 <td className="py-1">
@@ -308,6 +314,17 @@ export default function ViewRequest() {
                 <td className="py-1">
                   {request.TrdDisconnectionAvailedTimeFrom && request.TrdDisconnectionAvailedTimeTo ? (
                     `${formatTime(request.TrdDisconnectionAvailedTimeFrom)} to ${formatTime(request.TrdDisconnectionAvailedTimeTo)}`
+                  ) : (
+                    "N/A"
+                  )}
+                </td>
+              </tr>
+
+                 <tr>
+                <td className="py-1 font-medium">Applied Time:</td>
+                <td className="py-1">
+                  {request.AppliedTimeFrom && request.AppliedTimeTo ? (
+                    `${formatTime(request.AppliedTimeFrom)} to ${formatTime(request.AppliedTimeTo)}`
                   ) : (
                     "N/A"
                   )}
@@ -517,6 +534,8 @@ export default function ViewRequest() {
                       </td>
                     </tr>
                   )}
+                     {request.sntDisconnectionRequired &&
+                  request.sntDisconnectionRequirements && (
                 <tr>
                   <td className="py-1 font-medium">
                     Selected Depot For S&T Disconnection:
@@ -525,6 +544,7 @@ export default function ViewRequest() {
                     {request.sntDisconnectionAssignTo || "N/A"}
                   </td>
                 </tr>
+                 )}
                 {request.sntDisconnectionLineFrom &&
                   request.sntDisconnectionLineTo && (
                     <tr>
@@ -565,7 +585,7 @@ export default function ViewRequest() {
             Safety & Additional Information
           </h2>
           <table className="w-full text-sm">
-            <tbody>
+            {/* <tbody>
               <tr>
                 <td className="py-1 font-medium">Fresh Caution Required:</td>
                 <td className="py-1">
@@ -610,7 +630,73 @@ export default function ViewRequest() {
                   <td className="py-1">{request.repercussions}</td>
                 </tr>
               )}
-            </tbody>
+            </tbody> */}
+<tbody>
+  <tr>
+    <td className="py-1 font-medium">Fresh Caution Required:</td>
+    <td className="py-1">
+      {request.freshCautionRequired ? "Yes" : "No"}
+    </td>
+  </tr>
+  
+  {request.freshCautionRequired && request.freshCautions && (
+    <>
+      <tr>
+        <td colSpan={2} className="py-2 font-medium bg-gray-50">
+          Fresh Caution Details:
+        </td>
+      </tr>
+      {request.freshCautions.map((caution:any, index:any) => (
+        <React.Fragment key={index}>
+          <tr className="bg-gray-25">
+            <td className="py-2 pl-4 font-medium border-l-4 border-blue-500">
+              Caution {index + 1}
+            </td>
+            <td className="py-2"></td>
+          </tr>
+          <tr>
+            <td className="py-1 pl-6 font-medium">Speed:</td>
+            <td className="py-1">{caution.freshCautionSpeed} km/h</td>
+          </tr>
+          <tr>
+            <td className="py-1 pl-6 font-medium">Date:</td>
+            <td className="py-1">
+              {caution.freshCautionFromDate} to {caution.freshCautionToDate}
+            </td>
+          </tr>
+          <tr>
+            <td className="py-1 pl-6 font-medium">Time:</td>
+            <td className="py-1">
+              {caution.freshCautionFromTime} to {caution.freshCautionToTime}
+            </td>
+          </tr>
+          <tr>
+            <td className="py-1 pl-6 font-medium">Location:</td>
+            <td className="py-1">
+              {caution.freshCautionLocationFrom} to {caution.freshCautionLocationTo}
+            </td>
+          </tr>
+          <tr>
+            <td className="py-1 pl-6 font-medium">Lines Affected:</td>
+            <td className="py-1">{caution.adjacentLinesAffected}</td>
+          </tr>
+          {index < request.freshCautions.length - 1 && (
+            <tr>
+              <td colSpan={2} className="py-3 border-b border-gray-200"></td>
+            </tr>
+          )}
+        </React.Fragment>
+      ))}
+    </>
+  )}
+  
+  {request.repercussions && (
+    <tr>
+      <td className="py-1 font-medium">Repercussions:</td>
+      <td className="py-1">{request.repercussions}</td>
+    </tr>
+  )}
+</tbody>
           </table>
         </div>
       </div>
@@ -623,7 +709,14 @@ export default function ViewRequest() {
           <p className="text-sm">{request.requestremarks}</p>
         </div>
       )}
-
+ {request.tpcRemarks && (
+        <div className="border border-black p-3 mb-4">
+          <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
+            Department Controller Remarks
+          </h2>
+          <p className="text-sm">{request.tpcRemarks}</p>
+        </div>
+      )}
       {request.status !== "PENDING" && request.ManagerResponse && (
         <div className="border border-black p-3 mb-4">
           <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
