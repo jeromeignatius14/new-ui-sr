@@ -94,7 +94,11 @@ export default function GenerateReportPage() {
     endDate: '',
     majorSections: [] as string[],
     department: ['Engineering'],
-    blockType: ['All']
+    blockType: ['All'],
+    globalWorkType: "ALL",
+    globalActivity: "ALL", 
+    durationOperator: "ALL",
+  durationValue: "",
   });
 
   // Get user's location and set up major section options
@@ -212,7 +216,11 @@ export default function GenerateReportPage() {
         endDate: formattedEndDate,
         majorSections: selectedMajorSections,
         department: selectedDepartments,
-        blockType: selectedBlockTypes
+        blockType: selectedBlockTypes,
+        globalWorkType: "ALL",
+        globalActivity: "ALL", 
+        durationOperator: "ALL",
+  durationValue: "",
       });
 
       // Trigger the query - react-query will handle the loading state

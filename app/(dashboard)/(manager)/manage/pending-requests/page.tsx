@@ -24,10 +24,11 @@ export default function PendingRequestsPage() {
     const [editFormData, setEditFormData] = useState({
         date: "",
         demandTimeFrom: "",
-        demandTimeTo: ""
+        demandTimeTo: "",
+        tpcRemarks: "" 
     });
     const [isEditing, setIsEditing] = useState(false);
-    const [activeTab, setActiveTab] = useState<'urgent' | 'corridor' | 'non-corridor' | 'multi-line' | 'rejected'>('urgent');
+    const [activeTab, setActiveTab] = useState<'urgent' | 'corridor' | 'non-corridor'|"disconnections" | 'multi-line' | 'rejected'>('urgent');
     // CSS for flashing animation
     const flashingRowStyle = `
   @keyframes flashRed {
@@ -101,25 +102,52 @@ export default function PendingRequestsPage() {
         const dateB = new Date(b.date).getTime();
         return dateA - dateB;
     });
-    const pendingMultiLineRequests = (Array.isArray(data?.data?.requests) ? data.data.requests : [])
-    .filter((r: UserRequest) => 
-        r.status === 'PENDING' && 
-        r.managerAcceptance === false &&
-        r.processedLineSections?.some((section: any) => 
-            section.otherLines && section.otherLines.trim() !== ''
-        )
-    )
-    .sort((a: UserRequest, b: UserRequest) => {
-        // Priority sort: urgent blocks first
-        const urgentA = a.corridorType === 'Urgent Block' ? 0 : 1;
-        const urgentB = b.corridorType === 'Urgent Block' ? 0 : 1;
-        if (urgentA !== urgentB) return urgentA - urgentB;
 
-        // Date sort (earliest first)
-        const dateA = new Date(a.date).getTime();
-        const dateB = new Date(b.date).getTime();
-        return dateA - dateB;
+
+const sessionDepartment = session?.user?.department; // ENGG | S&T | TRD | undefined
+
+const pendingDisconnectionRequests =
+  (Array.isArray(data?.data?.requests) ? data.data.specialDeptRequests : [])
+    .filter((r: UserRequest) => {
+      // Base filters
+      const isPending = r.status === 'PENDING';
+      const isManagerPending = r.managerAcceptance === false;
+      const hasDisconnection =
+        r.powerBlockRequired === true ||
+        r.sntDisconnectionRequired === true ||
+        r.enggDisconnectionsRequired === true;
+
+      // Department-based filtering from session
+      let deptMatch = true; // default — no department OR HQ users see all
+
+      if (sessionDepartment === "ENGG") {
+        deptMatch = r.enggDisconnectionsRequired === true;
+      } else if (sessionDepartment === "S&T") {
+        deptMatch = r.sntDisconnectionRequired === true;
+      } else if (sessionDepartment === "TRD") {
+        deptMatch = r.powerBlockRequired === true;
+      }
+
+      return isPending && isManagerPending && hasDisconnection && deptMatch;
+    })
+    .sort((a: UserRequest, b: UserRequest) => {
+      return new Date(a.date).getTime() - new Date(b.date).getTime();
     });
+const pendingMultiLineRequests = (Array.isArray(data?.data?.requests) ? data.data.requests : [])
+  .filter((r: UserRequest) => 
+    r.status === 'PENDING' && 
+    r.managerAcceptance === false &&
+    r.corridorType !== 'Urgent Block' && 
+    r.processedLineSections?.some((section: any) => 
+      section.otherLines && section.otherLines.trim() !== ''
+    )
+  )
+  .sort((a: UserRequest, b: UserRequest) => {
+    // Sort by date (earliest first)
+    const dateA = new Date(a.date).getTime();
+    const dateB = new Date(b.date).getTime();
+    return dateA - dateB;
+  });
     const rejectedRequest = (Array.isArray(data?.data?.requests) ? data.data.requests : [])
         .filter((r: UserRequest) => (r.trdActionsNeeded === false && r.oheResponse !== "") || (r.sigActionsNeeded === false && r.sigResponse !== "") || (r.overAllStatus === "return to applicant by optg") || (r.overAllStatus === "return to applicant by trd.") || (r.overAllStatus === "return to applicant by s&t and trd.") || (r.overAllStatus === "return to applicant by s&t."))
         .sort((a: UserRequest, b: UserRequest) => {
@@ -348,13 +376,14 @@ useEffect(() => {
         setEditFormData({
             date: formattedDate,
             demandTimeFrom: timeFrom,
-            demandTimeTo: timeTo
+            demandTimeTo: timeTo,
+            tpcRemarks: request.tpcRemarks ||""
         });
         setShowEditModal(true);
     };
 
     // Handle edit form input changes
-    const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement| HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setEditFormData(prev => ({
             ...prev,
@@ -391,6 +420,7 @@ useEffect(() => {
                 date: `${editFormData.date}T00:00:00.000Z`,
                 demandTimeFrom: `${editFormData.date}T${editFormData.demandTimeFrom}:00.000Z`,
                 demandTimeTo: `${editFormData.date}T${editFormData.demandTimeTo}:00.000Z`,
+                tpcRemarks: editFormData.tpcRemarks||""
             };
 
             await editMutation.mutateAsync({
@@ -407,7 +437,8 @@ useEffect(() => {
                             ...req,
                             date: formattedData.date,
                             demandTimeFrom: formattedData.demandTimeFrom,
-                            demandTimeTo: formattedData.demandTimeTo
+                            demandTimeTo: formattedData.demandTimeTo,
+                            tpcRemarks: formattedData.tpcRemarks||""
                         };
                     }
                     return req;
@@ -744,15 +775,27 @@ useEffect(() => {
             )}
 
 <div className="mx-4 mt-6 flex flex-wrap gap-2 justify-center">
-        <button
+        {/* <button
             onClick={() => setActiveTab('urgent')}
             className={`px-4 py-2 rounded-lg border-2 border-black font-bold ${
                 activeTab === 'urgent' ? 'bg-[#FF6B6B] text-white' : 'bg-[#D6F3FF] text-black'
             }`}
         >
             Urgent Block ({pendingRequests.filter(r => r.corridorType === "Urgent Block").length})
-        </button>
-    
+        </button> */}
+    <button
+  onClick={() => setActiveTab('urgent')}
+  className={`
+    px-4 py-2 rounded-lg border-2 border-black font-bold
+    ${activeTab === 'urgent'
+      ? 'bg-[#FF6B6B] text-white'
+      : 'bg-[#D6F3FF] text-black'}
+    ${pendingRequests.filter(r => r.corridorType === "Urgent Block").length > 0 ? 'animate-pulse bg-[#FF6B6B] text-white' : ''}
+  `}
+>
+  Urgent Block ({pendingRequests.filter(r => r.corridorType === "Urgent Block").length})
+</button>
+
         <button
             onClick={() => setActiveTab('corridor')}
             className={`px-4 py-2 rounded-lg border-2 border-black font-bold ${
@@ -771,6 +814,8 @@ useEffect(() => {
             Non-Corridor ({pendingNonCorridorRequests.length})
         </button>
     
+
+       
         <button
             onClick={() => setActiveTab('multi-line')}
             className={`px-4 py-2 rounded-lg border-2 border-black font-bold ${
@@ -779,7 +824,14 @@ useEffect(() => {
         >
             Combined line(Multiple Line) ({pendingMultiLineRequests.length})
         </button>
-    
+      <button
+            onClick={() => setActiveTab('disconnections')}
+            className={`px-4 py-2 rounded-lg border-2 border-black font-bold ${
+                activeTab === 'disconnections' ? 'bg-[#45B7D1] text-white' : 'bg-[#D6F3FF] text-black'
+            }`}
+        >
+            Job Pending With SSE ({pendingDisconnectionRequests.length})
+        </button>
         <button
             onClick={() => setActiveTab('rejected')}
             className={`px-4 py-2 rounded-lg border-2 border-black font-bold ${
@@ -819,7 +871,7 @@ useEffect(() => {
                     </thead>
                     <tbody>
                         {pendingRequests.filter((request: UserRequest) => request.corridorType === "Urgent Block").map((request: UserRequest) => (
-                            <tr key={request.id} className={`hover:bg-[#FFF86B] text-black ${request.corridorType === "Urgent Block" ? "urgent-block-row" : "bg-white"}`}>
+                            <tr key={request.id} className="hover:bg-[#FFF86B] text-black bg-white">
                                 <td className="border border-black px-2 py-1 text-center align-middle">
                                     <input
                                         type="checkbox"
@@ -891,7 +943,70 @@ useEffect(() => {
         </div>
     </div>
 )}
+{activeTab === 'disconnections' && (
+    <div className="mx-4 mt-6 overflow-x-auto">
+        <div className={`rounded-xl overflow-hidden border-2 border-black bg-[#F5E7B2] min-w-[700px] ${showRejectModal || showSuccessModal ? 'invisible' : ''}`}>
+            <div className="bg-[#FF6B6B] text-white font-bold py-2 text-center">
+                Job Pending With SSE Requests
+            </div>
+            {pendingDisconnectionRequests.length > 0 ? (
+                <table className="w-full text-black text-base border-collapse">
+                    <thead>
+                        <tr className="bg-[#D6F3FF] text-black font-bold">
+                            <th className="border-2 border-black px-2 py-2 w-10 bg-[#D6F3FF]">
+                                <input
+                                    type="checkbox"
+                                    checked={selectedRequests.size ===pendingDisconnectionRequests.length && pendingDisconnectionRequests.length > 0}
+                                    onChange={handleSelectAll}
+                                    className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]"
+                                />
+                            </th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Date</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">ID</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Block Section</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Work type</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Demanded</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Activity</th>
+                            <th className="border-2 border-black px-2 py-2 bg-[#D6F3FF]">Requested By</th>
 
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {pendingDisconnectionRequests.map((request: UserRequest) => (
+                            <tr key={request.id} className={`hover:bg-[#FFF86B] text-black ${request.corridorType === "Urgent Block" ? "urgent-block-row" : "bg-white"}`}>
+                                <td className="border border-black px-2 py-1 text-center align-middle">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedRequests.has(request.id)}
+                                        onChange={() => handleSelectRequest(request.id)}
+                                        className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]"
+                                    />
+                                </td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">{formatDate(request.date)}</td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">
+                                    <Link href={`/manage/view-request/${request.id}`} className="text-[#13529e] hover:underline font-semibold">
+                                        {request.divisionId || request.id}
+                                    </Link>
+                                </td>
+                                <td className="border border-black px-2 py-1 align-middle">{request.missionBlock}</td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">
+                                    {request.workType || 'N/A'}
+                                </td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
+                                <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
+                                <td className="border border-black px-2 py-1 align-middle">{request.user?.name || 'N/A'}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            ) : (
+                <div className="py-8 text-center text-gray-500 font-semibold">
+                    No data available
+                </div>
+            )}
+        </div>
+    </div>
+)}
 {activeTab === 'corridor' && (
     <div className="mx-4 mt-6 overflow-x-auto">
         <div className={`rounded-xl overflow-hidden border-2 border-black bg-[#F5E7B2] min-w-[700px] ${showRejectModal || showSuccessModal ? 'invisible' : ''}`}>
@@ -1453,7 +1568,19 @@ useEffect(() => {
                                 {getDuration(editFormData.demandTimeFrom || "", editFormData.demandTimeTo || "") || "--"}
                             </div>
                         </div>
-
+ <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Department Controller Remarks
+                </label>
+                <textarea
+                    name="tpcRemarks"
+                    value={editFormData.tpcRemarks || ""}
+                    onChange={handleEditFormChange}
+                    className="w-full p-2 border border-gray-300 rounded text-black"
+                    rows={3}
+                    placeholder="Enter Department Controller remarks..."
+                />
+            </div>
                         <div className="flex justify-end gap-2">
                             <button
                                 onClick={() => {

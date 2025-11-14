@@ -375,7 +375,7 @@ export default function RequestTablePage() {
   const userName = session?.user?.name || "User";
   const userRole = session?.user?.role || "USER";
   const selectedDepo = session?.user?.depot || "";
-  const userDepartement = session?.user?.department || ""
+  const userDepartment = session?.user?.department || ""
 
   const [rejectRemarkPopup, setRejectRemarkPopup] = useState(false);
   const [rejectRemarks, setRejectRemarks] = useState("");
@@ -404,7 +404,7 @@ export default function RequestTablePage() {
     pageSize,
     formattedStartDate,
     formattedEndDate,
-    userDepartement,
+    userDepartment,
   );
 
   // Helper function to map user's depot to a major section
@@ -438,7 +438,7 @@ export default function RequestTablePage() {
   };
 
   // Get the major section for the current user's depot using the user's department
-  const userMajorSection = mapDepotToMajorSection(selectedDepo, userDepartement);
+  const userMajorSection = mapDepotToMajorSection(selectedDepo, userDepartment);
   console.log(`Session depot: "${session?.user?.depot}", department: "${session?.user?.department}", Mapped section: "${userMajorSection}"`);
 
   // Fetch sanctioned blocks data
@@ -1068,7 +1068,7 @@ export default function RequestTablePage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredRequests.map((request: any, idx: number) => (
+                {filteredRequests.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map((request: any, idx: number) => (
                   <tr
                     key={request.id}
                     className={idx % 2 === 0 ? "bg-[#FFF86B]" : "bg-[#E6E6FA]"}
@@ -1129,7 +1129,7 @@ export default function RequestTablePage() {
                       {(request.isSanctioned === true&&(request.userResponse===null||request.userResponse==="ACCEPTED")) ? (
                         <>
                           {
-                            request.userResponse === "ACCEPTED" ? (
+                            request.userResponse === "ACCEPTED"|| request.overAllStatus === "Sanctioned and Accepted" ? (
                               <div className="px-2 py-1 bg-green-100 text-green-800 mx-auto">
                                 Sanctioned and Accepted
                               </div>
@@ -1274,7 +1274,7 @@ export default function RequestTablePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {otherRequestsData?.data.requests.map(
+                  {otherRequestsData?.data.requests.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(
                     (request: any, idx: number) => (
                       <tr
                         key={request.id}
@@ -1367,127 +1367,102 @@ export default function RequestTablePage() {
                         <td className="border border-black px-2 py-1 text-center whitespace-nowrap">
                           {request.DisconnAcceptance === "ACCEPTED" ? (
                             <>
-                              {/*
-                          <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                            <svg
-                              className="w-3 h-3 mr-1"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                            Accepted 
-                          </span>
-                              */}
-                              {request.isSanctioned ? (
-                                request.userResponse === "ACCEPTED" ? (
-                                  <div className="px-2 py-1 bg-green-100 text-green-800 mx-auto">
-                                    Sanctioned and Accepted
-                                  </div>
-                                ) : (<span className="bg-gray-100 p-2 text-gray-600 rounded">
-                                  {request.overAllStatus === "Sanctioned" ? "Sanctioned, Pending for Acceptance" : request.overAllStatus || "Pending"}
-                                </span>)
-                              ) : (
-                                <span className="text-gray-500 ">
-                                  {request.overAllStatus || "Pending"}
-                                </span>
-                              )}
-                            </>
-                          ) : request.DisconnAcceptance === "REJECTED" ? (
-                            <span className="inline-flex items-center px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
-                              <svg
-                                className="w-3 h-3 mr-1"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                              {request.overAllStatus}
-                            </span>
-                          ) : (
-                            <>
-                              {/* For JE role, only show status without any buttons */}
-                              {session?.user?.role === "JE" ? (
-                                <span className="bg-gray-100 p-2 text-gray-600 rounded">
-                                  {request.overAllStatus === "Sanctioned" ? "Sanctioned, Pending for Acceptance" : request.overAllStatus || "Pending"}
-                                </span>
-                              ) : (
-                                // For USER role, check conditions for showing buttons
-                                ((userDepartement === "SIG" || userDepartement === "S&T") && request.sigActionsNeeded === false && request.sntDisconnectionRequired) ||
-                                  (userDepartement === "TRD" && request.trdActionsNeeded === false && request.powerBlockRequired) ? (
-                                  <div className="flex gap-2 justify-center">
-                                    <button
-                                      onClick={() =>
-                                        handleStatusUpdate(
-                                          request.id,
-                                          true,
-                                          userDepartement,
-                                          "mobileView",
-                                          request.date,
-                                          request.corridorType
-                                        )
-                                      }
-                                      disabled={isMutating}
-                                      className="px-3 py-1 bg-green-50 hover:bg-green-100 text-green-700 text-xs rounded-md border border-green-200 flex items-center transition-colors"
-                                    >
-                                      <svg
-                                        className="w-3 h-3 mr-1"
-                                        fill="currentColor"
-                                        viewBox="0 0 20 20"
-                                      >
-                                        <path
-                                          fillRule="evenodd"
-                                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                          clipRule="evenodd"
-                                        />
-                                      </svg>
-                                      Accept
-                                    </button>
-                                    <button
-                                      onClick={() =>
-                                        handleStatusUpdate(
-                                          request.id,
-                                          false,
-                                          userDepartement,
-                                          "mobileView",
-                                          request.date,
-                                          request.corridorType
-                                        )
-                                      }
-                                      disabled={isMutating}
-                                      className="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-700 text-xs rounded-md border border-red-200 flex items-center transition-colors"
-                                    >
-                                      <svg
-                                        className="w-3 h-3 mr-1"
-                                        fill="currentColor"
-                                        viewBox="0 0 20 20"
-                                      >
-                                        <path
-                                          fillRule="evenodd"
-                                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                          clipRule="evenodd"
-                                        />
-                                      </svg>
-                                      Reject
-                                    </button>
-                                  </div>
+                              <span className="inline-flex items-center px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
+                                <svg
+                                  className="w-3 h-3 mr-1"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                                {request.overAllStatus || "Rejected"}
+                              </span>
 
-                                ) : (
-                                  <span className="bg-green-100 p-2 text-green-600">
-                                    {request.overAllStatus === "Sanctioned" ? "Sanctioned, Pending for Acceptance" : request.overAllStatus || "Pending"}
-                                  </span>
-                                )
-                              )}
                             </>
-                          )}
+                          ) : request.isSanctioned ? (
+                            request.userResponse === "ACCEPTED"||request.overAllStatus === "Sanctioned and Accepted" ? (
+                              <div className="px-2 py-1 bg-green-100 text-green-800 mx-auto">
+                                Sanctioned and Accepted
+                              </div>
+                            ) : (<span className="bg-gray-100 p-2 text-gray-600 rounded">
+                              Sanctioned and Pending for Acceptance
+                            </span>)
+                          ) : session?.user?.role === "JE" ? (
+                            <span className="bg-gray-100 p-2 text-gray-600 rounded">
+                              {request.overAllStatus || "Pending"}
+                            </span>
+                          ) :
+                            // For USER role, check conditions for showing buttons
+                            (userDepartment === "S&T" && request.sntDisconnectionRequired && request.sntDisconnections?.[0]?.status === "PENDING") ||
+                              (userDepartment === "TRD" && request.powerBlockRequired && request.trdDisconnections?.[0]?.status === "PENDING") ? (
+                              <div className="flex gap-2 justify-center">
+                                <button
+                                  onClick={() =>
+                                    handleStatusUpdate(
+                                      request.id,
+                                      true,
+                                      userDepartment,
+                                      "mobileView",
+                                      request.date,
+                                      request.corridorType
+                                    )
+                                  }
+                                  disabled={isMutating}
+                                  className="px-3 py-1 bg-green-50 hover:bg-green-100 text-green-700 text-xs rounded-md border border-green-200 flex items-center transition-colors"
+                                >
+                                  <svg
+                                    className="w-3 h-3 mr-1"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                  Accept
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    handleStatusUpdate(
+                                      request.id,
+                                      false,
+                                      userDepartment,
+                                      "mobileView",
+                                      request.date,
+                                      request.corridorType
+                                    )
+                                  }
+                                  disabled={isMutating}
+                                  className="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-700 text-xs rounded-md border border-red-200 flex items-center transition-colors"
+                                >
+                                  <svg
+                                    className="w-3 h-3 mr-1"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                  Reject
+                                </button>
+                              </div>
+                            )
+                              : (
+                                <span className="bg-green-100 p-2 text-green-600">
+                                  {request.overAllStatus === "Sanctioned" ? "Sanctioned, Pending for Acceptance" : request.overAllStatus || "Pending"}
+                                </span>
+                              )
+                          }
+
                         </td>
                         {/* {request.DisconnAcceptance === "PENDING" && (
                         <div className="flex gap-1 mt-1">
@@ -1523,7 +1498,247 @@ export default function RequestTablePage() {
       </div>
       )
       }
+{session?.user?.department === "ENGG" && (
+        <div className="flex justify-center mt-3 mb-6">
+          <div className="w-full rounded-2xl border-2 border-[#B5B5B5] bg-[#F5E7B2] shadow p-0">
+            <div className="text-[24px] font-bold text-black text-center py-2">
+              SUMMARY OF ENGG REQUEST FOR NEXT 10 DAYS
+            </div>
+            <div className="italic text-center text-[24px] text-black pb-2">
+              (Click ID to see full details or to Edit)
+            </div>
 
+            {/* Table */}
+            <div className="overflow-x-auto rounded-xl mx-2 mb-2">
+              <table className="w-full border border-black rounded-xl overflow-hidden text-[24px]">
+                <thead>
+                  <tr className="bg-[#D6F3FF] text-black">
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[12%]">
+                      Date
+                    </th>
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[8%]">
+                      ID
+                    </th>
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[25%]">
+                      Block Section
+                    </th>
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[15%]">
+                      Line/Road
+                    </th>
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[20%]">
+                      Activity
+                    </th>
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[20%]">
+                      Demanded
+                    </th>
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[20%]">
+                      Offered
+                    </th>
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[10%]">
+                      Duration
+                    </th>
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[10%]">
+                      Status
+                    </th>
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[15%]">
+                      Requested By
+                    </th>
+                    <th className="border border-black px-2 py-1 whitespace-nowrap w-[10%]">
+                      Accept the offer timings
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {otherRequestsData?.data.requests.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).filter(request => request.enggDisconnectionsRequired === true).map(
+                    (request: any, idx: number) => (
+                      <tr
+                        key={request.id}
+                        className={
+                          idx % 2 === 0 ? "bg-[#FFF86B]" : "bg-[#E6E6FA]"
+                        }
+                      >
+                        <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                          {formatDate(request.date)}
+                        </td>
+                        <td className="border border-black px-2 py-1 whitespace-nowrap text-center">
+                          <Link
+                            href={`/view-request/${request.id}?from=request-table`}
+                            className="text-black hover:underline"
+                          >
+                            {request.divisionId || request.id.slice(-4)}
+                          </Link>
+                        </td>
+                        <td className="border border-black px-2 py-1 text-black">
+                          {request.missionBlock}
+                        </td>
+                        <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                          {request.processedLineSections
+                            .map((section: any) =>
+                              section.type === "line"
+                                ? [section.lineName, section.otherLines]
+                                : [section.road, section.otherRoads]
+                            )
+                            .flat()
+                            .filter(Boolean)
+                            .join(", ") || "N/A"}
+                        </td>
+
+                        <td className="border border-black px-2 py-1 text-black">
+                          {request.activity}
+                        </td>
+                        <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                          {formatTime(request.demandTimeFrom)} -{" "}
+                          {formatTime(request.demandTimeTo)}
+                        </td>
+                        <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                          {request.isSanctioned === true ? (
+                            <>
+                              {request.sanctionedTimeFrom === null ||
+                                request.sanctionedTimeTo === null ? (
+                                <span className="text-gray-500">
+                                  00:00 - 00:00
+                                </span>
+                              ) : (
+                                <>
+                                  {formatTime(request.sanctionedTimeFrom)} -{" "}
+                                  {formatTime(request.sanctionedTimeTo)}
+                                </>
+                              )}
+                            </>
+                          ) : (
+                            <span className="text-gray-500">N/A</span>
+                          )}
+                        </td>
+                        <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                          {formatDuration(
+                            request.demandTimeFrom,
+                            request.demandTimeTo
+                          )}
+                        </td>
+                        <td className="border border-black px-2 py-1 text-center whitespace-nowrap text-black">
+                          {request.isSanctioned === true ? "Y" : "N"}
+                        </td>
+                        <td className="border border-black px-2 py-1 text-center whitespace-nowrap text-black">
+                          <div className="flex flex-col items-center">
+                            <span>{request.user?.name || "Unknown"}</span>
+                            {request.user?.role && (
+                              <span className="text-xs text-gray-600">{request.user?.role}</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="border border-black px-2 py-1 text-center whitespace-nowrap">
+                          {request.status === "REJECTED" ? (
+
+                            <>
+                              <span className="inline-flex items-center px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
+                                <svg
+                                  className="w-3 h-3 mr-1"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                                {request.overAllStatus || "Rejected"}
+                              </span>
+
+                            </>
+                          ) : request.isSanctioned ? (
+                            request.userResponse === "ACCEPTED"||request.overAllStatus === "Sanctioned and Accepted" ? (
+                              <div className="px-2 py-1 bg-green-100 text-green-800 mx-auto">
+                                Sanctioned and Accepted
+                              </div>
+                            ) : (<span className="bg-gray-100 p-2 text-gray-600 rounded">
+                               {request.userResponse !== "ACCEPTED" &&request.userAcceptanceForSanction === false 
+    ? "Sanctioned and Rejected by User"
+    : "Sanctioned and Pending for Acceptance"
+                               }
+                            </span>)
+                          ) : session?.user?.role === "JE" ? (
+                            <span className="bg-gray-100 p-2 text-gray-600 rounded">
+                              {request.overAllStatus || "Pending"}
+                            </span>
+                          ) :
+                            // For USER role, check conditions for showing buttons
+                            
+                              (userDepartment === "ENGG" && request.enggDisconnectionsRequired && request.enggDisconnections?.[0]?.status === "PENDING") ? (
+                              <div className="flex gap-2 justify-center">
+                                <button
+                                  onClick={() =>
+                                    handleStatusUpdate(
+                                      request.id,
+                                      true,
+                                      userDepartment,
+                                      "mobileView",
+                                      request.date,
+                                      request.corridorType
+                                    )
+                                  }
+                                  disabled={isMutating}
+                                  className="px-3 py-1 bg-green-50 hover:bg-green-100 text-green-700 text-xs rounded-md border border-green-200 flex items-center transition-colors"
+                                >
+                                  <svg
+                                    className="w-3 h-3 mr-1"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                  Accept
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    handleStatusUpdate(
+                                      request.id,
+                                      false,
+                                      userDepartment,
+                                      "mobileView",
+                                      request.date,
+                                      request.corridorType
+                                    )
+                                  }
+                                  disabled={isMutating}
+                                  className="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-700 text-xs rounded-md border border-red-200 flex items-center transition-colors"
+                                >
+                                  <svg
+                                    className="w-3 h-3 mr-1"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                  Reject
+                                </button>
+                              </div>
+                            )
+                              : (
+                                <span className="bg-green-100 p-2 text-green-600">
+                                  {request.overAllStatus === "Sanctioned" ? "Sanctioned, Pending for Acceptance" : request.overAllStatus || "Pending"}
+                                </span>
+                              )
+                          }
+
+                        </td>
+                      </tr>
+                    )
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Sanctioned Blocks Section */}
       <div className="flex justify-center mt-3 mb-6">
         <div className="w-full rounded-2xl border-2 border-[#B5B5B5] bg-[#F5E7B2] shadow p-0">
@@ -1573,7 +1788,7 @@ export default function RequestTablePage() {
                 </tr>
               </thead>
               <tbody>
-                {sanctionedBlocksData?.data.requests?.map(
+                {sanctionedBlocksData?.data.requests?.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())?.map(
                   (request: any, idx: number) => (
                     <tr
                       key={request.id}
