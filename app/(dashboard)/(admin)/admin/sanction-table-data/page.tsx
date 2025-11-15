@@ -2306,7 +2306,7 @@ const handleDownloadDepartmentCount = () => {
                     let statusLabel = "";
                     let statusStyle = { background: "#fff", color: "#222" };
                     if (block.Status === "APPROVED" && block.isSanctioned&&block.userResponse===null) {
-                      statusLabel = "Sanctioned Pending with SSE";
+                      statusLabel = "Sanctioned, Pending with SSE For Acceptance";
                       statusStyle = { background: "#fff86b", color: "#222" };
                     }  else if (block.userResponse === "ACCEPTED"|| block.overAllStatus === "Sanctioned and Accepted") {
                       statusLabel = "Sanctioned and Accepted by SSE";

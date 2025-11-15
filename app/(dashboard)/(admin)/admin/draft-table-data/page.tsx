@@ -568,6 +568,9 @@ export default function OptimiseTablePage() {
       ? decodeURIComponent(deptParam)
       : "ALL";
   });
+  // Add this after your existing state declarations
+  const [selectedRequests, setSelectedRequests] = useState<Set<string>>(new Set());
+  const [isBulkSanctioning, setIsBulkSanctioning] = useState(false);
   const [workTypeFilter, setWorkTypeFilter] = useState<string>("ALL");
   const [activityFilter, setActivityFilter] = useState<string>("ALL");
   const [timeSlotFilter, setTimeSlotFilter] = useState<string>("ALL");
@@ -1174,6 +1177,98 @@ export default function OptimiseTablePage() {
       return newDate;
     });
   };
+  // Add these functions after your existing handler functions
+
+// Handle checkbox selection
+const handleCheckboxChange = (requestId: string) => {
+  setSelectedRequests(prev => {
+    const newSelected = new Set(prev);
+    if (newSelected.has(requestId)) {
+      newSelected.delete(requestId);
+    } else {
+      newSelected.add(requestId);
+    }
+    return newSelected;
+  });
+};
+
+// Handle select all for a specific section
+const handleSelectAllForSection = (sectionRequests: UserRequest[]) => {
+  if (sectionRequests.length === 0) return;
+  
+  setSelectedRequests(prev => {
+    const newSelected = new Set(prev);
+    const allIds = sectionRequests.map(req => req.id);
+    const allSelectedInSection = sectionRequests.every(req => newSelected.has(req.id));
+    
+    if (allSelectedInSection) {
+      // Deselect all in this section
+      allIds.forEach(id => newSelected.delete(id));
+    } else {
+      // Select all in this section
+      allIds.forEach(id => newSelected.add(id));
+    }
+    
+    return newSelected;
+  });
+};
+
+// Handle bulk sanction
+const handleBulkSanction = async () => {
+  if (selectedRequests.size === 0) {
+    alert("No requests selected");
+    return;
+  }
+  
+  setIsBulkSanctioning(true);
+  try {
+    const allRequests = data?.data?.requests || [];
+    
+    const requestsToSanction = Array.from(selectedRequests)
+      .map(id => {
+        const request = allRequests.find((r: UserRequest) => r.id === id);
+        if (!request) return null;
+        
+        return {
+          id: request.id,
+          optimizeTimeFrom: request.optimizeTimeFrom || "",
+          optimizeTimeTo: request.optimizeTimeTo || "",
+          sanctionedRemark: request.sanctionedRemarks || "",
+        };
+      })
+      .filter(Boolean);
+
+    if (requestsToSanction.length === 0) {
+      alert("No valid requests found to sanction");
+      return;
+    }
+
+    const response = await adminService.updateSanctionStatus(requestsToSanction);
+    if (response.success) {
+      alert(`${requestsToSanction.length} requests sanctioned successfully!`);
+      setSelectedRequests(new Set()); // Clear selection
+      refetch();
+    } else {
+      alert("Failed to sanction requests");
+    }
+  } catch (err) {
+    console.error("Failed to bulk sanction requests", err);
+    alert("Error sanctioning requests. Please try again.");
+  } finally {
+    setIsBulkSanctioning(false);
+  }
+};
+
+// Clear all selections
+const handleClearSelection = () => {
+  setSelectedRequests(new Set());
+};
+
+// Check if all requests in a section are selected
+const isAllSelected = (requests: UserRequest[]) => {
+  if (requests.length === 0) return false;
+  return requests.every(req => selectedRequests.has(req.id));
+};
 
   const handleOptimize = async () => {
     const today = new Date();
@@ -1398,6 +1493,7 @@ export default function OptimiseTablePage() {
     router.push("/auth/login");
     return null;
   }
+  
 
   // CSS for flashing animation
   const flashingRowStyle = `
@@ -1410,6 +1506,43 @@ export default function OptimiseTablePage() {
     animation: flashRed 5s infinite ease-in-out; /* slower and smoother */
   }
 `;
+// Add this component before the main return statement
+const TableSelectionControls = ({ 
+  selectedCount, 
+  onBulkSanction, 
+  onClearSelection,
+  isBulkSanctioning 
+}: {
+  selectedCount: number;
+  onBulkSanction: () => void;
+  onClearSelection: () => void;
+  isBulkSanctioning: boolean;
+}) => {
+  if (selectedCount === 0) return null;
+
+  return (
+    <div className="flex items-center gap-4 mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+      <div className="text-sm font-medium text-blue-800">
+        {selectedCount} request(s) selected
+      </div>
+      <div className="flex gap-2">
+        <button
+          onClick={onBulkSanction}
+          disabled={isBulkSanctioning}
+          className="px-4 py-2 bg-green-600 text-white rounded border border-black disabled:opacity-50 text-sm hover:bg-green-700 transition-colors"
+        >
+          {isBulkSanctioning ? "Sanctioning..." : "Sanction Selected"}
+        </button>
+        <button
+          onClick={onClearSelection}
+          className="px-4 py-2 bg-gray-500 text-white rounded border border-black text-sm hover:bg-gray-600 transition-colors"
+        >
+          Clear Selection
+        </button>
+      </div>
+    </div>
+  );
+};
   return (
     <div className="min-h-screen w-screen flex flex-col justify-between bg-white p-3 border border-black">
       <style jsx global>
@@ -1630,40 +1763,16 @@ export default function OptimiseTablePage() {
             </h3>
             <div className="grid grid-cols-1 gap-2 text-sm">
               <div className="flex items-center gap-3 py-1">
-                <div className="w-5 h-5 bg-blue-200 border border-gray-400 rounded-sm"></div>
+                <div className="w-5 h-5 bg-red-200 border border-gray-400 rounded-sm"></div>
                 <span className="text-black font-medium">ENGG</span>
               </div>
               <div className="flex items-center gap-3 py-1">
-                <div className="w-5 h-5 bg-lime-200 border border-gray-400 rounded-sm"></div>
-                <span className="text-black">ENGG + S&T</span>
-              </div>
-              <div className="flex items-center gap-3 py-1">
                 <div className="w-5 h-5 bg-yellow-200 border border-gray-400 rounded-sm"></div>
-                <span className="text-black">ENGG + TRD</span>
-              </div>
-              <div className="flex items-center gap-3 py-1">
-                <div className="w-5 h-5 bg-purple-200 border border-gray-400 rounded-sm"></div>
-                <span className="text-black">ENGG + S&T + TRD</span>
-              </div>
-              <div className="flex items-center gap-3 py-1">
-                <div className="w-5 h-5 bg-amber-200 border border-gray-400 rounded-sm"></div>
                 <span className="text-black font-medium">TRD</span>
               </div>
               <div className="flex items-center gap-3 py-1">
-                <div className="w-5 h-5 bg-red-200 border border-gray-400 rounded-sm"></div>
+                <div className="w-5 h-5 bg-green-200 border border-gray-400 rounded-sm"></div>
                 <span className="text-black font-medium">S&T</span>
-              </div>
-              <div className="flex items-center gap-3 py-1">
-                <div className="w-5 h-5 bg-orange-200 border border-gray-400 rounded-sm"></div>
-                <span className="text-black">S&T + ENGG</span>
-              </div>
-              <div className="flex items-center gap-3 py-1">
-                <div className="w-5 h-5 bg-teal-200 border border-gray-400 rounded-sm"></div>
-                <span className="text-black">S&T + TRD</span>
-              </div>
-              <div className="flex items-center gap-3 py-1">
-                <div className="w-5 h-5 bg-indigo-200 border border-gray-400 rounded-sm"></div>
-                <span className="text-black">S&T + ENGG + TRD</span>
               </div>
             </div>
           </div>
@@ -1737,9 +1846,20 @@ export default function OptimiseTablePage() {
         })()}
       {/* Urgent Blocks Section - now at the top */}
       <div className="mt-4 mb-8">
-        <h2 className="border-b-2 pb-2 border-[#13529e] text-[24px] font-semibold text-[#13529e]">
-          Urgent Blocks
-        </h2>
+        <div className="flex justify-between items-center mb-2">
+    <h2 className="text-[24px] font-semibold text-[#13529e]">
+      Urgent Blocks
+    </h2>
+    <TableSelectionControls
+      selectedCount={urgentRequestsFiltered
+        .filter((req: { id: string; }) => selectedRequests.has(req.id))
+        .length
+      }
+      onBulkSanction={handleBulkSanction}
+      onClearSelection={handleClearSelection}
+      isBulkSanctioning={isBulkSanctioning}
+    />
+  </div>
 
         <DaySwitcher
           currentDate={selectedDate}
@@ -1767,6 +1887,26 @@ export default function OptimiseTablePage() {
               } bg-gray-100 shadow`}
             >
               <tr className="bg-gray-50">
+                <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+  <div className="flex items-center">
+    <input
+      type="checkbox"
+      checked={isAllSelected(urgentRequestsFiltered.filter((r: UserRequest) => 
+        isSameDay(typeof r.date === "string" ? parseISO(r.date) : r.date, selectedDate) && 
+        r.Draft === true
+      ))}
+      onChange={() => {
+        const filteredRequests = urgentRequestsFiltered.filter((r: UserRequest) => 
+          isSameDay(typeof r.date === "string" ? parseISO(r.date) : r.date, selectedDate) && 
+          r.Draft === true
+        );
+        handleSelectAllForSection(filteredRequests);
+      }}
+      className="w-5 h-5 mr-2"
+    />
+    Select All
+  </div>
+</th>
                 <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
                   <ColumnHeader icon="date" title="Date" />
                 </th>
@@ -1834,40 +1974,25 @@ export default function OptimiseTablePage() {
                   const getDepartmentColor = (request: UserRequest) => {
                     const {
                       selectedDepartment,
-                      sntDisconnectionRequired,
-                      powerBlockRequired,
-                      enggDisconnectionsRequired,
                     } = request;
 
                     // ENGG Department with combinations
                     if (selectedDepartment === "ENGG") {
-                      if (sntDisconnectionRequired && powerBlockRequired) {
-                        return "bg-purple-200"; // ENGG + S&T + TRD combination
-                      } else if (sntDisconnectionRequired) {
-                        return "bg-lime-200"; // ENGG + S&T combination
-                      } else if (powerBlockRequired) {
-                        return "bg-yellow-200"; // ENGG + TRD combination
-                      } else {
-                        return "bg-blue-200"; // Pure ENGG
-                      }
+                   
+                        return "bg-red-200"; // Pure ENGG
+                      
                     }
 
                     // TRD Department
                     else if (selectedDepartment === "TRD") {
-                      return "bg-amber-200"; // Pure TRD
+                      return "bg-yellow-200"; // Pure TRD
                     }
 
                     // S&T Department with combinations
                     else if (selectedDepartment === "S&T") {
-                      if (enggDisconnectionsRequired && powerBlockRequired) {
-                        return "bg-indigo-200"; // S&T + ENGG + TRD combination
-                      } else if (enggDisconnectionsRequired) {
-                        return "bg-orange-200"; // S&T + ENGG combination
-                      } else if (powerBlockRequired) {
-                        return "bg-teal-200"; // S&T + TRD combination
-                      } else {
-                        return "bg-red-200"; // Pure S&T
-                      }
+                   
+                        return "bg-green-200"; // Pure S&T
+                      
                     }
 
                     // Default for other departments
@@ -1879,8 +2004,20 @@ export default function OptimiseTablePage() {
                   return (
                     <tr
                       key={`request-${request.id}-${request.date}`}
-                      className={`hover:bg-blue-50 transition-colors ${rowColor}`}
+                       className={`${rowColor} transition-colors ${
+    (request.sntDisconnectionRequired || request.powerBlockRequired || request.enggDisconnectionsRequired)
+      ? "hover:bg-blue-50"  // Only show hover effect if any condition is true
+      : ""  // No hover effect if all conditions are false
+  }`}
                     >
+                      <td className="border border-black p-2 text-[24px]">
+  <input
+    type="checkbox"
+    checked={selectedRequests.has(request.id)}
+    onChange={() => handleCheckboxChange(request.id)}
+    className="w-5 h-5"
+  />
+</td>
                       <td className="border border-black p-2 text-[24px]">
   {dayjs(request.date).format("DD-MM-YY")}
 </td>
@@ -2006,13 +2143,38 @@ export default function OptimiseTablePage() {
 
       {/* Corridor Requests Section (with its own controls) */}
       <div className="mb-8">
-        <h2 className="text-[24px] font-semibold mb-2 text-[#13529e]">
-          Corridor Requests
-        </h2>
+        <div className="flex justify-between items-center mb-2">
+    <h2 className="text-[24px] font-semibold text-[#13529e]">
+      Corridor Requests
+    </h2>
+    <TableSelectionControls
+      selectedCount={corridorRequestsFiltered
+        .filter((req: { id: string; }) => selectedRequests.has(req.id))
+        .length
+      }
+      onBulkSanction={handleBulkSanction}
+      onClearSelection={handleClearSelection}
+      isBulkSanctioning={isBulkSanctioning}
+    />
+  </div>
         <div className="overflow-x-auto max-h-[70vh] overflow-y-auto rounded-lg border border-gray-300 shadow-sm">
           <table className="w-full border-collapse text-black bg-white">
             <thead className="sticky top-0 z-10 bg-gray-100 shadow">
               <tr className="bg-gray-50">
+                <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+  <div className="flex items-center">
+    <input
+      type="checkbox"
+      checked={isAllSelected(corridorRequestsFiltered.filter((r: UserRequest) => r.Draft === true))}
+      onChange={() => {
+        const filteredRequests = corridorRequestsFiltered.filter((r: UserRequest) => r.Draft === true);
+        handleSelectAllForSection(filteredRequests);
+      }}
+      className="w-5 h-5 mr-2"
+    />
+    Select All
+  </div>
+</th>
                 <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
                   <ColumnHeader icon="date" title="Date" />
                 </th>
@@ -2082,31 +2244,29 @@ export default function OptimiseTablePage() {
                 )
                 .map((request: UserRequest) => (
                   <tr
-                    key={`request-${request.id}-${request.date}`}
-                    className={`hover:bg-blue-50 transition-colors ${
-                      request.selectedDepartment === "ENGG"
-                        ? request.sntDisconnectionRequired &&
-                          request.powerBlockRequired
-                          ? "bg-purple-200"
-                          : request.sntDisconnectionRequired
-                          ? "bg-lime-200"
-                          : request.powerBlockRequired
-                          ? "bg-yellow-200"
-                          : "bg-blue-200"
-                        : request.selectedDepartment === "TRD"
-                        ? "bg-amber-200"
-                        : request.selectedDepartment === "S&T"
-                        ? request.enggDisconnectionsRequired &&
-                          request.powerBlockRequired
-                          ? "bg-indigo-200"
-                          : request.enggDisconnectionsRequired
-                          ? "bg-orange-200"
-                          : request.powerBlockRequired
-                          ? "bg-teal-200"
-                          : "bg-red-200"
-                        : "bg-gray-200"
-                    }`}
+  key={`request-${request.id}-${request.date}`}
+  className={`transition-colors ${
+    request.selectedDepartment === "ENGG"
+      ? "bg-green-200"  // Green for ENGG
+      : request.selectedDepartment === "S&T"
+      ? "bg-red-200"    // Red for S&T
+      : request.selectedDepartment === "TRD"
+      ? "bg-yellow-200" // Yellow for TRD
+      : "bg-gray-200"   // Default gray for other departments
+  } ${
+    (request.sntDisconnectionRequired || request.powerBlockRequired || request.enggDisconnectionsRequired)
+      ? "hover:bg-blue-50"  // Only show hover effect if any condition is true
+      : ""  // No hover effect if all conditions are false
+  }`}
                   >
+                    <td className="border border-black p-2 text-[24px]">
+  <input
+    type="checkbox"
+    checked={selectedRequests.has(request.id)}
+    onChange={() => handleCheckboxChange(request.id)}
+    className="w-5 h-5"
+  />
+</td>
                     <td className="border border-black p-2 text-[24px]">
   {dayjs(request.date).format("DD-MM-YY")}
 </td>
@@ -2228,13 +2388,38 @@ export default function OptimiseTablePage() {
       </div>
 
       <div className="mb-8">
-        <h2 className="text-[24px] font-semibold mb-2 text-[#13529e]">
-          Combined Requests (Multiple Line Selected)
-        </h2>
+        <div className="flex justify-between items-center mb-2">
+    <h2 className="text-[24px] font-semibold mb-2 text-[#13529e]">
+      Combined Requests (Multiple Line Selected)
+    </h2>
+    <TableSelectionControls
+      selectedCount={combinedRequestsFiltered
+        .filter((req: { id: string; }) => selectedRequests.has(req.id))
+        .length
+      }
+      onBulkSanction={handleBulkSanction}
+      onClearSelection={handleClearSelection}
+      isBulkSanctioning={isBulkSanctioning}
+    />
+  </div>
         <div className="overflow-x-auto max-h-[70vh] overflow-y-auto rounded-lg border border-gray-300 shadow-sm">
           <table className="w-full border-collapse text-black bg-white">
             <thead className="sticky top-0 z-10 bg-gray-100 shadow">
               <tr className="bg-gray-50">
+                <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+  <div className="flex items-center">
+    <input
+      type="checkbox"
+      checked={isAllSelected(combinedRequestsFiltered.filter((r: UserRequest) => r.Draft === true))}
+      onChange={() => {
+        const filteredRequests = combinedRequestsFiltered.filter((r: UserRequest) => r.Draft === true);
+        handleSelectAllForSection(filteredRequests);
+      }}
+      className="w-5 h-5 mr-2"
+    />
+    Select All
+  </div>
+</th>
                 <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
                   <ColumnHeader icon="date" title="Date" />
                 </th>
@@ -2295,31 +2480,29 @@ export default function OptimiseTablePage() {
                 )
                 .map((request: UserRequest) => (
                   <tr
-                    key={`request-${request.id}-${request.date}`}
-                    className={`hover:bg-blue-50 transition-colors ${
-                      request.selectedDepartment === "ENGG"
-                        ? request.sntDisconnectionRequired &&
-                          request.powerBlockRequired
-                          ? "bg-purple-200"
-                          : request.sntDisconnectionRequired
-                          ? "bg-lime-200"
-                          : request.powerBlockRequired
-                          ? "bg-yellow-200"
-                          : "bg-blue-200"
-                        : request.selectedDepartment === "TRD"
-                        ? "bg-amber-200"
-                        : request.selectedDepartment === "S&T"
-                        ? request.enggDisconnectionsRequired &&
-                          request.powerBlockRequired
-                          ? "bg-indigo-200"
-                          : request.enggDisconnectionsRequired
-                          ? "bg-orange-200"
-                          : request.powerBlockRequired
-                          ? "bg-teal-200"
-                          : "bg-red-200"
-                        : "bg-gray-200"
-                    }`}
+  key={`request-${request.id}-${request.date}`}
+  className={`transition-colors ${
+    request.selectedDepartment === "ENGG"
+      ? "bg-green-200"  // Green for ENGG
+      : request.selectedDepartment === "S&T"
+      ? "bg-red-200"    // Red for S&T
+      : request.selectedDepartment === "TRD"
+      ? "bg-yellow-200" // Yellow for TRD
+      : "bg-gray-200"   // Default gray for other departments
+  } ${
+    (request.sntDisconnectionRequired || request.powerBlockRequired || request.enggDisconnectionsRequired)
+      ? "hover:bg-blue-50"  // Only show hover effect if any condition is true
+      : ""  // No hover effect if all conditions are false
+  }`}
                   >
+                    <td className="border border-black p-2 text-[24px]">
+  <input
+    type="checkbox"
+    checked={selectedRequests.has(request.id)}
+    onChange={() => handleCheckboxChange(request.id)}
+    className="w-5 h-5"
+  />
+</td>
                     <td className="border border-black p-2 text-[24px]">
   {dayjs(request.date).format("DD-MM-YY")}
 </td>
@@ -2443,13 +2626,38 @@ export default function OptimiseTablePage() {
 
       {/* Non-Corridor Requests Section */}
       <div className="mb-8">
-        <h2 className="text-[24px] font-semibold mb-2 text-[#13529e]">
-          Non-Corridor Requests
-        </h2>
+          <div className="flex justify-between items-center mb-2">
+    <h2 className="text-[24px] font-semibold mb-2 text-[#13529e]">
+      Non-Corridor Requests
+    </h2>
+    <TableSelectionControls
+      selectedCount={nonCorridorRequestsFiltered
+        .filter((req: { id: string; }) => selectedRequests.has(req.id))
+        .length
+      }
+      onBulkSanction={handleBulkSanction}
+      onClearSelection={handleClearSelection}
+      isBulkSanctioning={isBulkSanctioning}
+    />
+  </div>
         <div className="overflow-x-auto max-h-[70vh] overflow-y-auto rounded-lg border border-gray-300 shadow-sm">
           <table className="w-full border-collapse text-black bg-white">
             <thead className="sticky top-0 z-10 bg-gray-100 shadow">
               <tr className="bg-gray-50">
+                <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+  <div className="flex items-center">
+    <input
+      type="checkbox"
+      checked={isAllSelected(nonCorridorRequestsFiltered.filter((r: UserRequest) => r.Draft === true))}
+      onChange={() => {
+        const filteredRequests = nonCorridorRequestsFiltered.filter((r: UserRequest) => r.Draft === true);
+        handleSelectAllForSection(filteredRequests);
+      }}
+      className="w-5 h-5 mr-2"
+    />
+    Select All
+  </div>
+</th>
                 <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
                   <ColumnHeader icon="date" title="Date" />
                 </th>
@@ -2510,31 +2718,29 @@ export default function OptimiseTablePage() {
                 )
                 .map((request: UserRequest) => (
                   <tr
-                    key={`request-${request.id}-${request.date}`}
-                    className={`hover:bg-blue-50 transition-colors ${
-                      request.selectedDepartment === "ENGG"
-                        ? request.sntDisconnectionRequired &&
-                          request.powerBlockRequired
-                          ? "bg-purple-200"
-                          : request.sntDisconnectionRequired
-                          ? "bg-lime-200"
-                          : request.powerBlockRequired
-                          ? "bg-yellow-200"
-                          : "bg-blue-200"
-                        : request.selectedDepartment === "TRD"
-                        ? "bg-amber-200"
-                        : request.selectedDepartment === "S&T"
-                        ? request.enggDisconnectionsRequired &&
-                          request.powerBlockRequired
-                          ? "bg-indigo-200"
-                          : request.enggDisconnectionsRequired
-                          ? "bg-orange-200"
-                          : request.powerBlockRequired
-                          ? "bg-teal-200"
-                          : "bg-red-200"
-                        : "bg-gray-200"
-                    }`}
+  key={`request-${request.id}-${request.date}`}
+  className={`transition-colors ${
+    request.selectedDepartment === "ENGG"
+      ? "bg-green-200"  // Green for ENGG
+      : request.selectedDepartment === "S&T"
+      ? "bg-red-200"    // Red for S&T
+      : request.selectedDepartment === "TRD"
+      ? "bg-yellow-200" // Yellow for TRD
+      : "bg-gray-200"   // Default gray for other departments
+  } ${
+    (request.sntDisconnectionRequired || request.powerBlockRequired || request.enggDisconnectionsRequired)
+      ? "hover:bg-blue-50"  // Only show hover effect if any condition is true
+      : ""  // No hover effect if all conditions are false
+  }`}
                   >
+                    <td className="border border-black p-2 text-[24px]">
+  <input
+    type="checkbox"
+    checked={selectedRequests.has(request.id)}
+    onChange={() => handleCheckboxChange(request.id)}
+    className="w-5 h-5"
+  />
+</td>
                    <td className="border border-black p-2 text-[24px]">
   {dayjs(request.date).format("DD-MM-YY")}
 </td>
