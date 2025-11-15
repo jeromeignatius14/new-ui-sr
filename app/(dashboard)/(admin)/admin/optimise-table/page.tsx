@@ -517,31 +517,7 @@ const finalWeekEnd = isUrgentMode ? currentWeekStart : weekEnd;
         : request.corridorType !== "Urgent Block" && request.workType !== "EMERGENCY";
     }) || [];
 
-  // Auto-shift to next week if no requests are found
-  useEffect(() => {
-    // Only run if not loading and no requests
-    if (!isLoading && Array.isArray(data?.data?.requests) && data.data.requests.length === 0) {
-      let attempts = 0;
-      const maxAttempts = 5; // Prevent infinite loop, scan up to 5 weeks ahead
-      const shiftWeek = () => {
-        setCurrentWeekStart((prev) => {
-          if (isUrgentMode) {
-            return addDays(prev, 1);
-          } else {
-            return addDays(prev, 7);
-          }
-        });
-      };
-      // Use a timer to avoid React state batching issues
-      const timer = setTimeout(() => {
-        if (attempts < maxAttempts) {
-          attempts++;
-          shiftWeek();
-        }
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [isLoading, data, isUrgentMode]);
+
 
   const UrgentRequests =
     data?.data?.requests?.filter((request: UserRequest) => {
