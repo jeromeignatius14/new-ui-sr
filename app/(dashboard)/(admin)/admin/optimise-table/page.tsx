@@ -311,8 +311,9 @@ useEffect(() => {
   const [draftRemark, setDraftRemark] = useState("");
   const [selectedRequests, setSelectedRequests] = useState<UserRequest[]>([]);
   const [selectedRequestsForOptimization, setSelectedRequestsForOptimization] = useState<Set<string>>(new Set());
-  const [modifyModalOpen, setModifyModalOpen] = useState(false);
-const [currentModifyRequest, setCurrentModifyRequest] = useState<UserRequest | null>(null);
+  const [isSanctionModalOpen, setIsSanctionModalOpen] = useState(false);
+const [sanctionRemark, setSanctionRemark] = useState("");
+const [selectedRequestsForSanction, setSelectedRequestsForSanction] = useState<UserRequest[]>([]);
   // Update URL when deptFilter changes
   useEffect(() => {
     // Only update URL if dept filter changes to something other than ALL
@@ -343,90 +344,7 @@ const [currentModifyRequest, setCurrentModifyRequest] = useState<UserRequest | n
     const deptWorkTypes = workType[request.selectedDepartment as keyof typeof workType] || [];
     return deptWorkTypes.includes(workTypeFilter);
   };
-// Modify Modal Component
-const ModifyModal = () => {
-  if (!currentModifyRequest) return null;
 
-  return (
-    <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-96 max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl font-bold mb-4 text-black">Modify Request</h2>
-        
-        <div className="space-y-4">
-          {/* Date Field */}
-          <div>
-            <label className="block text-sm font-medium text-black mb-1">
-              Date
-            </label>
-            <input
-              type="date"
-              value={editDate}
-              onChange={(e) => setEditDate(e.target.value)}
-              className="w-full border border-gray-300 p-2 rounded text-black"
-            />
-          </div>
-
-          {/* Time Fields */}
-          <div>
-            <label className="block text-sm font-medium text-black mb-1">
-              Optimized Time
-            </label>
-            <div className="flex gap-2 items-center">
-              <input
-                type="time"
-                value={timeFrom}
-                onChange={(e) => setTimeFrom(e.target.value)}
-                className="w-full border border-gray-300 p-2 rounded text-black"
-              />
-              <span className="text-black">-</span>
-              <input
-                type="time"
-                value={timeTo}
-                onChange={(e) => setTimeTo(e.target.value)}
-                className="w-full border border-gray-300 p-2 rounded text-black"
-              />
-            </div>
-          </div>
-
-          {/* Request Details (Read-only) */}
-          <div className="border-t pt-3">
-            <h3 className="font-medium text-black mb-2">Request Details</h3>
-            <div className="text-sm text-gray-600 space-y-1">
-              <p><strong>Department:</strong> {currentModifyRequest.selectedDepartment}</p>
-              <p><strong>Section:</strong> {currentModifyRequest.selectedSection}</p>
-              <p><strong>Activity:</strong> {currentModifyRequest.activity}</p>
-              <p><strong>Demanded Time:</strong> {formatTime(currentModifyRequest.demandTimeFrom)} - {formatTime(currentModifyRequest.demandTimeTo)}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex justify-end gap-2 mt-6">
-          <button
-            className="px-4 py-2 bg-gray-400 text-white rounded"
-            onClick={() => {
-              setModifyModalOpen(false);
-              setCurrentModifyRequest(null);
-              handleCancelEdit();
-            }}
-          >
-            Cancel
-          </button>
-          <button
-            className="px-4 py-2 bg-green-600 text-white rounded"
-            onClick={() => {
-              handleUpdateClick(currentModifyRequest.id);
-              setModifyModalOpen(false);
-              setCurrentModifyRequest(null);
-            }}
-            disabled={updateOptimizedTimes.isPending}
-          >
-            {updateOptimizedTimes.isPending ? "Saving..." : "Save"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
   const matchesActivity = (request: UserRequest): boolean => {
     if (activityFilter === 'ALL') return true;
     if (!request.activity) return false;
@@ -902,47 +820,53 @@ const combinedRequestsFiltered = pendingRequests
     }
   };
 
-  
+  const handleSanctionClick = (request: UserRequest) => {
+  setSelectedRequestsForSanction([request]);
+  setIsSanctionModalOpen(true);
+};
 
-  // const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: string) => {
-  //   try {
-  //     // Only send the required fields for each non-urgent request
-  //     const nonUrgentRequestsData =
-  //       requests?.filter(
-  //         (request: UserRequest) =>
-  //           request.optimizeTimeFrom != null &&
-  //           request.optimizeTimeTo != null
-  //       )
-  //         .map((request: UserRequest) => ({
-  //           id: request.id,
-  //           optimizeTimeFrom: request.optimizeTimeFrom,
-  //           optimizeTimeTo: request.optimizeTimeTo,
-  //           sanctionedRemark: remark,
-  //         })) || [];
+  const handleSendSanctionedRequests = async (requests: UserRequest[], remark: string) => {
+    try {
+      // Only send the required fields for each non-urgent request
+      const nonUrgentRequestsData =
+        requests?.filter(
+          (request: UserRequest) =>
+            request.optimizeTimeFrom != null &&
+            request.optimizeTimeTo != null
+        )
+          .map((request: UserRequest) => ({
+            id: request.id,
+            optimizeTimeFrom: request.optimizeTimeFrom,
+            optimizeTimeTo: request.optimizeTimeTo,
+            sanctionedRemark: remark,
+          })) || [];
 
-  //     if (nonUrgentRequestsData.length === 0) {
-  //       alert("No requests to update");
-  //       return;
-  //     }
+      if (nonUrgentRequestsData.length === 0) {
+        alert("No requests to update");
+        return;
+      }
 
-  //     console.dir("nonUrgentRequestsData");
-  //     console.dir(nonUrgentRequestsData);
+      console.dir("nonUrgentRequestsData");
+      console.dir(nonUrgentRequestsData);
 
-  //     console.dir(data);
-  //     const response = await adminService.updateSanctionStatus(
-  //       nonUrgentRequestsData
-  //     );
-  //     if (response.success) {
-  //       alert("Optimization status updated successfully!");
-  //       refetch();
-  //     } else {
-  //       alert("Failed to update optimization status");
-  //     }
-  //   } catch (err) {
-  //     console.error("Failed to update optimization status", err);
-  //     alert("Error updating optimization status. Please try again.");
-  //   }
-  // };
+      console.dir(data);
+      const response = await adminService.updateSanctionStatus(
+        nonUrgentRequestsData
+      );
+      if (response.success) {
+        alert("Optimization status updated successfully!");
+        refetch();
+           setIsSanctionModalOpen(false);
+      setSanctionRemark("");
+      setSelectedRequestsForSanction([]);
+      } else {
+        alert("Failed to update optimization status");
+      }
+    } catch (err) {
+      console.error("Failed to update optimization status", err);
+      alert("Error updating optimization status. Please try again.");
+    }
+  };
 
   // Format date
   
@@ -1381,7 +1305,6 @@ const handleOptimize = async () => {
 
     <div className="min-h-screen w-screen flex flex-col justify-between bg-white p-3 border border-black">
       <style jsx global>{flashingRowStyle}</style>
-      {modifyModalOpen && <ModifyModal />}
       <div>
         {/* Overall Title */}
         <h1 className="text-2xl font-bold text-center mb-6 text-[#13529e]">Requests With Me</h1>
@@ -1566,44 +1489,20 @@ const handleOptimize = async () => {
     {/* Dropdown Legend */}
     <div className="absolute right-0 top-full mt-2 hidden group-hover:block bg-white border border-gray-200 rounded-lg shadow-xl p-4 z-50 min-w-[220px]">
       <h3 className="text-black font-bold text-sm mb-3 pb-2 border-b border-gray-200">Department Colors</h3>
-      <div className="grid grid-cols-1 gap-2 text-sm">
-        <div className="flex items-center gap-3 py-1">
-          <div className="w-5 h-5 bg-blue-200 border border-gray-400 rounded-sm"></div>
-          <span className="text-black font-medium">ENGG</span>
-        </div>
-        <div className="flex items-center gap-3 py-1">
-          <div className="w-5 h-5 bg-lime-200 border border-gray-400 rounded-sm"></div>
-          <span className="text-black">ENGG + S&T</span>
-        </div>
-        <div className="flex items-center gap-3 py-1">
-          <div className="w-5 h-5 bg-yellow-200 border border-gray-400 rounded-sm"></div>
-          <span className="text-black">ENGG + TRD</span>
-        </div>
-        <div className="flex items-center gap-3 py-1">
-          <div className="w-5 h-5 bg-purple-200 border border-gray-400 rounded-sm"></div>
-          <span className="text-black">ENGG + S&T + TRD</span>
-        </div>
-        <div className="flex items-center gap-3 py-1">
-          <div className="w-5 h-5 bg-amber-200 border border-gray-400 rounded-sm"></div>
-          <span className="text-black font-medium">TRD</span>
-        </div>
-        <div className="flex items-center gap-3 py-1">
-          <div className="w-5 h-5 bg-red-200 border border-gray-400 rounded-sm"></div>
-          <span className="text-black font-medium">S&T</span>
-        </div>
-        <div className="flex items-center gap-3 py-1">
-          <div className="w-5 h-5 bg-orange-200 border border-gray-400 rounded-sm"></div>
-          <span className="text-black">S&T + ENGG</span>
-        </div>
-        <div className="flex items-center gap-3 py-1">
-          <div className="w-5 h-5 bg-teal-200 border border-gray-400 rounded-sm"></div>
-          <span className="text-black">S&T + TRD</span>
-        </div>
-        <div className="flex items-center gap-3 py-1">
-          <div className="w-5 h-5 bg-indigo-200 border border-gray-400 rounded-sm"></div>
-          <span className="text-black">S&T + ENGG + TRD</span>
-        </div>
-      </div>
+        <div className="grid grid-cols-1 gap-2 text-sm">
+              <div className="flex items-center gap-3 py-1">
+                <div className="w-5 h-5 bg-red-200 border border-gray-400 rounded-sm"></div>
+                <span className="text-black font-medium">ENGG</span>
+              </div>
+              <div className="flex items-center gap-3 py-1">
+                <div className="w-5 h-5 bg-yellow-200 border border-gray-400 rounded-sm"></div>
+                <span className="text-black font-medium">TRD</span>
+              </div>
+              <div className="flex items-center gap-3 py-1">
+                <div className="w-5 h-5 bg-green-200 border border-gray-400 rounded-sm"></div>
+                <span className="text-black font-medium">S&T</span>
+              </div>
+            </div>
     </div>
   </div>
         </div>
@@ -1839,46 +1738,25 @@ const handleOptimize = async () => {
         const requestDate = typeof request.date === "string" ? parseISO(request.date) : request.date;
         return isSameDay(requestDate, selectedDate)&&(request.Draft === false);
       }).map((request: UserRequest) => {
-        // Enhanced department-based background colors with combination detection
-        const getDepartmentColor = (request: UserRequest) => {
-          const { selectedDepartment, sntDisconnectionRequired, powerBlockRequired, enggDisconnectionsRequired } = request;
-          
-          // ENGG Department with combinations
-          if (selectedDepartment === "ENGG") {
-            if (sntDisconnectionRequired && powerBlockRequired) {
-              return "bg-purple-200"; // ENGG + S&T + TRD combination
-            } else if (sntDisconnectionRequired) {
-              return "bg-lime-200"; // ENGG + S&T combination
-            } else if (powerBlockRequired) {
-              return "bg-yellow-200"; // ENGG + TRD combination
-            } else {
-              return "bg-blue-200"; // Pure ENGG
-            }
-          }
-          
-          // TRD Department
-          else if (selectedDepartment === "TRD") {
-            return "bg-amber-200"; // Pure TRD
-          }
-          
-          // S&T Department with combinations
-          else if (selectedDepartment === "S&T") {
-            if (enggDisconnectionsRequired && powerBlockRequired) {
-              return "bg-indigo-200"; // S&T + ENGG + TRD combination
-            } else if (enggDisconnectionsRequired) {
-              return "bg-orange-200"; // S&T + ENGG combination
-            } else if (powerBlockRequired) {
-              return "bg-teal-200"; // S&T + TRD combination
-            } else {
-              return "bg-red-200"; // Pure S&T
-            }
-          }
-          
-          // Default for other departments
-          return "bg-gray-200";
-        };
-
-        const rowColor = getDepartmentColor(request);
+          const getDepartmentColor = (request: UserRequest) => {
+                         const {
+                           selectedDepartment,
+                         } = request;
+                         if (selectedDepartment === "ENGG"&&(request.sntDisconnectionRequired|| request.powerBlockRequired || request.enggDisconnectionsRequired)) {
+                             return "bg-red-200"; // Pure ENGG         
+                         }
+                         // TRD Department
+                         else if (selectedDepartment === "TRD"&&(request.sntDisconnectionRequired|| request.powerBlockRequired || request.enggDisconnectionsRequired)) {
+                           return "bg-yellow-200"; // Pure TRD
+                         }
+                         // S&T Department with combinations
+                         else if (selectedDepartment === "S&T"&&(request.sntDisconnectionRequired|| request.powerBlockRequired || request.enggDisconnectionsRequired)) { 
+                             return "bg-green-200"; // Pure S&T        
+                         }
+                         return "bg-white-200";
+                       };
+     
+                       const rowColor = getDepartmentColor(request);
         
         return (
           <tr 
@@ -1904,16 +1782,40 @@ const handleOptimize = async () => {
                 dayjs(request.date).format("DD-MM-YY")
               )}
             </td> */}
-            <td className="border border-black p-2 text-[24px]">
-  {dayjs(request.date).format("DD-MM-YY")}
+ <td className="border border-black p-2 text-[24px]">
+  {editingId === request.id ? (
+    <input
+      type="date"
+      value={editDate}
+      onChange={(e) => setEditDate(e.target.value)}
+      className="w-28 border p-1 text-sm rounded"
+    />
+  ) : (
+    dayjs(request.date).format("DD-MM-YY")
+  )}
 </td>
-            <td className="border border-black p-2 text-[24px]">{request.selectedDepartment}</td>
+                             <td className="border border-black p-2 text-[24px]">
+  <div className="flex flex-col items-start gap-1">
+    <span>{request.selectedDepartment}</span>
+    <div className="flex gap-1">
+      {request.sntDisconnectionRequired && (
+        <span className="bg-red-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">S</span>
+      )}
+      {request.powerBlockRequired && (
+        <span className="bg-yellow-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">T</span>
+      )}
+      {request.enggDisconnectionsRequired && (
+        <span className="bg-green-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">E</span>
+      )}
+    </div>
+  </div>
+</td>
             <td className="border border-black p-2 text-[24px]">{request.selectedSection}</td>
             <td className="border border-black p-2 text-[24px]">{request.selectedDepo}</td>
             <td className="border border-black p-2 text-[24px]">{request.missionBlock}</td>
             <td className="border border-black p-2 text-[24px]">{getLineOrRoad(request)}</td>
             <td className="border border-black p-2 text-[24px]">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
-            {/* <td className="border border-black p-2 text-[24px]">
+            <td className="border border-black p-2 text-[24px]">
               {editingId === request.id ? (
                 <div className="flex gap-1 items-center">
                   <input
@@ -1943,16 +1845,8 @@ const handleOptimize = async () => {
                     : "N/A"}
                 </>
               )}
-            </td> */}
-            <td className="border border-black p-2 text-[24px]">
-  {request.optimizeTimeFrom && request.optimizeTimeFrom !== "WrongRequest"
-    ? formatTime(request.optimizeTimeFrom)
-    : "N/A"}{" "}
-  -{" "}
-  {request.optimizeTimeTo && request.optimizeTimeTo !== "WrongRequest"
-    ? formatTime(request.optimizeTimeTo)
-    : "N/A"}
-</td>
+            </td>
+
             <td className="border border-black p-2 text-[24px]">{request.activity}</td>
             <td className="border border-black p-2 text-[24px]">
               <div className="flex gap-2">
@@ -1994,9 +1888,6 @@ const handleOptimize = async () => {
     setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
     setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
     
-    // Open modal instead of inline editing
-    setCurrentModifyRequest(request);
-    setModifyModalOpen(true);
     setModifyReturnOpenId(null);
   }}
 >
@@ -2041,9 +1932,7 @@ const handleOptimize = async () => {
     setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
     setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
     
-    // Open modal instead of inline editing
-    setCurrentModifyRequest(request);
-    setModifyModalOpen(true);
+
     setModifyReturnOpenId(null);
   }}
 >
@@ -2057,6 +1946,13 @@ const handleOptimize = async () => {
                         >
                           Draft
                         </button>
+                              <button
+              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
+                         onClick={() => handleSanctionClick(request)}
+
+            >
+              Sanction
+            </button>
                         <button
                           className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
                           onClick={() => setModifyReturnOpenId(request.id)}
@@ -2194,28 +2090,25 @@ const handleOptimize = async () => {
                 )}
                 {corridorRequestsFiltered.filter((request: UserRequest) => request.Draft === false).sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
                   <tr
-                    key={`request-${request.id}-${request.date}`}
-                     className={`hover:bg-blue-50 transition-colors ${
-    request.selectedDepartment === "ENGG" 
-      ? (request.sntDisconnectionRequired && request.powerBlockRequired 
-          ? "bg-purple-200" 
-          : request.sntDisconnectionRequired 
-            ? "bg-lime-200" 
-            : request.powerBlockRequired 
-              ? "bg-yellow-200" 
-              : "bg-blue-200")
-      : request.selectedDepartment === "TRD" 
-        ? "bg-amber-200"
-        : request.selectedDepartment === "S&T"
-          ? (request.enggDisconnectionsRequired && request.powerBlockRequired
-              ? "bg-indigo-200"
-              : request.enggDisconnectionsRequired
-                ? "bg-orange-200"
-                : request.powerBlockRequired
-                  ? "bg-teal-200"
-                  : "bg-red-200")
-          : "bg-gray-200"
-  }`}
+ key={`request-${request.id}-${request.date}`}
+className={`transition-colors ${
+  request.selectedDepartment === "ENGG" &&
+  (request.sntDisconnectionRequired ||
+    request.powerBlockRequired ||
+    request.enggDisconnectionsRequired)
+    ? "bg-green-200"
+    : request.selectedDepartment === "S&T" &&
+      (request.sntDisconnectionRequired ||
+        request.powerBlockRequired ||
+        request.enggDisconnectionsRequired)
+    ? "bg-red-200"
+    : request.selectedDepartment === "TRD" &&
+      (request.sntDisconnectionRequired ||
+        request.powerBlockRequired ||
+        request.enggDisconnectionsRequired)
+    ? "bg-yellow-200"
+    : "bg-white-200"
+}`}
                   >
                        <td className="border border-black p-2 text-[24px]">
         <input
@@ -2236,12 +2129,34 @@ const handleOptimize = async () => {
                         dayjs(request.date).format("DD-MM-YY")
                       )}
                     </td> */}
-                    <td className="border border-black p-2 text-[24px]">
-  {dayjs(request.date).format("DD-MM-YY")}
+<td className="border border-black p-2 text-[24px]">
+  {editingId === request.id ? (
+    <input
+      type="date"
+      value={editDate}
+      onChange={(e) => setEditDate(e.target.value)}
+      className="w-28 border p-1 text-sm rounded"
+    />
+  ) : (
+    dayjs(request.date).format("DD-MM-YY")
+  )}
 </td>
-                    <td className="border border-black p-2 text-[24px]">
-                      {request.selectedDepartment}
-                    </td>
+                                    <td className="border border-black p-2 text-[24px]">
+  <div className="flex flex-col items-start gap-1">
+    <span>{request.selectedDepartment}</span>
+    <div className="flex gap-1">
+      {request.sntDisconnectionRequired && (
+        <span className="bg-red-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">S</span>
+      )}
+      {request.powerBlockRequired && (
+        <span className="bg-yellow-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">T</span>
+      )}
+      {request.enggDisconnectionsRequired && (
+        <span className="bg-green-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">E</span>
+      )}
+    </div>
+  </div>
+</td>
                     <td className="border border-black p-2 text-[24px]">
                       {request.selectedSection}
                     </td>
@@ -2264,7 +2179,7 @@ const handleOptimize = async () => {
                           : ""})
                       </div>
                     </td>
-                    {/* <td className="border border-black p-2 text-[24px]">
+                    <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (
                         <div className="flex gap-1 items-center">
                           <input
@@ -2294,16 +2209,8 @@ const handleOptimize = async () => {
                             : "N/A"}
                         </>
                       )}
-                    </td> */}
-                      <td className="border border-black p-2 text-[24px]">
-  {request.optimizeTimeFrom && request.optimizeTimeFrom !== "WrongRequest"
-    ? formatTime(request.optimizeTimeFrom)
-    : "N/A"}{" "}
-  -{" "}
-  {request.optimizeTimeTo && request.optimizeTimeTo !== "WrongRequest"
-    ? formatTime(request.optimizeTimeTo)
-    : "N/A"}
-</td>
+                    </td>
+
                     <td className="border border-black p-2 text-[24px]">
                       {request.activity}
                     </td>
@@ -2346,10 +2253,7 @@ const handleOptimize = async () => {
     setEditDate(request.date.split("T")[0]);
     setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
     setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
-    
-    // Open modal instead of inline editing
-    setCurrentModifyRequest(request);
-    setModifyModalOpen(true);
+
     setModifyReturnOpenId(null);
   }}
 >
@@ -2394,9 +2298,7 @@ const handleOptimize = async () => {
     setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
     setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
     
-    // Open modal instead of inline editing
-    setCurrentModifyRequest(request);
-    setModifyModalOpen(true);
+
     setModifyReturnOpenId(null);
   }}
 >
@@ -2409,6 +2311,12 @@ const handleOptimize = async () => {
              onClick={() => handleDraftClick(request)}
             >
               Draft
+            </button>
+                  <button
+              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
+             onClick={() => handleSanctionClick(request)}
+            >
+              Sanction
             </button>
             <button
               className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
@@ -2474,6 +2382,41 @@ const handleOptimize = async () => {
     </div>
   </div>
 )}
+{/* Sanction Modal */}
+{isSanctionModalOpen && (
+  <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+      <h2 className="text-xl font-bold mb-4 text-black">Sanction Request</h2>
+      <p className="mb-4 text-black">
+        Are you sure you want to sanction this request?
+      </p>
+      <textarea
+        className="w-full border p-2 rounded mb-4 text-black"
+        rows={4}
+        placeholder="Enter sanction remark (optional)..."
+        value={sanctionRemark}
+        onChange={(e) => setSanctionRemark(e.target.value)}
+      />
+      <div className="flex justify-end gap-2">
+        <button
+          className="px-4 py-2 bg-gray-400 text-white rounded"
+          onClick={() => {
+            setIsSanctionModalOpen(false);
+            setSanctionRemark("");
+          }}
+        >
+          Cancel
+        </button>
+        <button
+          className="px-4 py-2 bg-green-600 text-white rounded"
+          onClick={() => handleSendSanctionedRequests(selectedRequestsForSanction, sanctionRemark)}
+        >
+          Sanction
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
                <div className="mb-8">
           <h2 className="text-[24px] font-semibold mb-2 text-[#13529e]">Combined Requests (Multiple Line Selected)</h2>
@@ -2531,28 +2474,25 @@ const handleOptimize = async () => {
                 )}
                 {combinedRequestsFiltered.filter((request: UserRequest) => request.Draft === false).sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
                   <tr
-                    key={`request-${request.id}-${request.date}`}
-                      className={`hover:bg-blue-50 transition-colors ${
-    request.selectedDepartment === "ENGG" 
-      ? (request.sntDisconnectionRequired && request.powerBlockRequired 
-          ? "bg-purple-200" 
-          : request.sntDisconnectionRequired 
-            ? "bg-lime-200" 
-            : request.powerBlockRequired 
-              ? "bg-yellow-200" 
-              : "bg-blue-200")
-      : request.selectedDepartment === "TRD" 
-        ? "bg-amber-200"
-        : request.selectedDepartment === "S&T"
-          ? (request.enggDisconnectionsRequired && request.powerBlockRequired
-              ? "bg-indigo-200"
-              : request.enggDisconnectionsRequired
-                ? "bg-orange-200"
-                : request.powerBlockRequired
-                  ? "bg-teal-200"
-                  : "bg-red-200")
-          : "bg-gray-200"
-  }`}
+   key={`request-${request.id}-${request.date}`}
+className={`transition-colors ${
+  request.selectedDepartment === "ENGG" &&
+  (request.sntDisconnectionRequired ||
+    request.powerBlockRequired ||
+    request.enggDisconnectionsRequired)
+    ? "bg-green-200"
+    : request.selectedDepartment === "S&T" &&
+      (request.sntDisconnectionRequired ||
+        request.powerBlockRequired ||
+        request.enggDisconnectionsRequired)
+    ? "bg-red-200"
+    : request.selectedDepartment === "TRD" &&
+      (request.sntDisconnectionRequired ||
+        request.powerBlockRequired ||
+        request.enggDisconnectionsRequired)
+    ? "bg-yellow-200"
+    : "bg-white-200"
+}`}
                   >
                     {/* <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (
@@ -2566,12 +2506,34 @@ const handleOptimize = async () => {
                         dayjs(request.date).format("DD-MM-YY")
                       )}
                     </td> */}
-                    <td className="border border-black p-2 text-[24px]">
-  {dayjs(request.date).format("DD-MM-YY")}
+  <td className="border border-black p-2 text-[24px]">
+  {editingId === request.id ? (
+    <input
+      type="date"
+      value={editDate}
+      onChange={(e) => setEditDate(e.target.value)}
+      className="w-28 border p-1 text-sm rounded"
+    />
+  ) : (
+    dayjs(request.date).format("DD-MM-YY")
+  )}
 </td>
-                    <td className="border border-black p-2 text-[24px]">
-                      {request.selectedDepartment}
-                    </td>
+                                    <td className="border border-black p-2 text-[24px]">
+  <div className="flex flex-col items-start gap-1">
+    <span>{request.selectedDepartment}</span>
+    <div className="flex gap-1">
+      {request.sntDisconnectionRequired && (
+        <span className="bg-red-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">S</span>
+      )}
+      {request.powerBlockRequired && (
+        <span className="bg-yellow-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">T</span>
+      )}
+      {request.enggDisconnectionsRequired && (
+        <span className="bg-green-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">E</span>
+      )}
+    </div>
+  </div>
+</td>
                     <td className="border border-black p-2 text-[24px]">
                       {request.selectedSection}
                     </td>
@@ -2588,7 +2550,7 @@ const handleOptimize = async () => {
                       {formatTime(request.demandTimeFrom)} -{" "}
                       {formatTime(request.demandTimeTo)}
                     </td>
-                    {/* <td className="border border-black p-2 text-[24px]">
+                    <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (
                         <div className="flex gap-1 items-center">
                           <input
@@ -2618,16 +2580,8 @@ const handleOptimize = async () => {
                             : "N/A"}
                         </>
                       )}
-                    </td> */}
-                       <td className="border border-black p-2 text-[24px]">
-  {request.optimizeTimeFrom && request.optimizeTimeFrom !== "WrongRequest"
-    ? formatTime(request.optimizeTimeFrom)
-    : "N/A"}{" "}
-  -{" "}
-  {request.optimizeTimeTo && request.optimizeTimeTo !== "WrongRequest"
-    ? formatTime(request.optimizeTimeTo)
-    : "N/A"}
-</td>
+                    </td>
+
                     <td className="border border-black p-2 text-[24px]">
                       {request.activity}
                     </td>
@@ -2671,9 +2625,7 @@ const handleOptimize = async () => {
     setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
     setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
     
-    // Open modal instead of inline editing
-    setCurrentModifyRequest(request);
-    setModifyModalOpen(true);
+
     setModifyReturnOpenId(null);
   }}
 >
@@ -2717,10 +2669,6 @@ const handleOptimize = async () => {
     setEditDate(request.date.split("T")[0]);
     setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
     setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
-    
-    // Open modal instead of inline editing
-    setCurrentModifyRequest(request);
-    setModifyModalOpen(true);
     setModifyReturnOpenId(null);
   }}
 >
@@ -2733,6 +2681,13 @@ const handleOptimize = async () => {
               onClick={() => handleDraftClick(request)}
             >
               Draft
+            </button>
+                  <button
+              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
+                         onClick={() => handleSanctionClick(request)}
+
+            >
+              Sanction
             </button>
             <button
               className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
@@ -2826,28 +2781,25 @@ const handleOptimize = async () => {
                 )}
                 {nonCorridorRequestsFiltered.filter((request: UserRequest) => request.Draft === false).sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
                   <tr
-                    key={`request-${request.id}-${request.date}`}
-                     className={`hover:bg-blue-50 transition-colors ${
-    request.selectedDepartment === "ENGG" 
-      ? (request.sntDisconnectionRequired && request.powerBlockRequired 
-          ? "bg-purple-200" 
-          : request.sntDisconnectionRequired 
-            ? "bg-lime-200" 
-            : request.powerBlockRequired 
-              ? "bg-yellow-200" 
-              : "bg-blue-200")
-      : request.selectedDepartment === "TRD" 
-        ? "bg-amber-200"
-        : request.selectedDepartment === "S&T"
-          ? (request.enggDisconnectionsRequired && request.powerBlockRequired
-              ? "bg-indigo-200"
-              : request.enggDisconnectionsRequired
-                ? "bg-orange-200"
-                : request.powerBlockRequired
-                  ? "bg-teal-200"
-                  : "bg-red-200")
-          : "bg-gray-200"
-  }`}
+  key={`request-${request.id}-${request.date}`}
+className={`transition-colors ${
+  request.selectedDepartment === "ENGG" &&
+  (request.sntDisconnectionRequired ||
+    request.powerBlockRequired ||
+    request.enggDisconnectionsRequired)
+    ? "bg-green-200"
+    : request.selectedDepartment === "S&T" &&
+      (request.sntDisconnectionRequired ||
+        request.powerBlockRequired ||
+        request.enggDisconnectionsRequired)
+    ? "bg-red-200"
+    : request.selectedDepartment === "TRD" &&
+      (request.sntDisconnectionRequired ||
+        request.powerBlockRequired ||
+        request.enggDisconnectionsRequired)
+    ? "bg-yellow-200"
+    : "bg-white-200"
+}`}
                   >
                     {/* <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (
@@ -2861,12 +2813,34 @@ const handleOptimize = async () => {
                         dayjs(request.date).format("DD-MM-YY")
                       )}
                     </td> */}
-                    <td className="border border-black p-2 text-[24px]">
-  {dayjs(request.date).format("DD-MM-YY")}
+  <td className="border border-black p-2 text-[24px]">
+  {editingId === request.id ? (
+    <input
+      type="date"
+      value={editDate}
+      onChange={(e) => setEditDate(e.target.value)}
+      className="w-28 border p-1 text-sm rounded"
+    />
+  ) : (
+    dayjs(request.date).format("DD-MM-YY")
+  )}
 </td>
-                    <td className="border border-black p-2 text-[24px]">
-                      {request.selectedDepartment}
-                    </td>
+                                    <td className="border border-black p-2 text-[24px]">
+  <div className="flex flex-col items-start gap-1">
+    <span>{request.selectedDepartment}</span>
+    <div className="flex gap-1">
+      {request.sntDisconnectionRequired && (
+        <span className="bg-red-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">S</span>
+      )}
+      {request.powerBlockRequired && (
+        <span className="bg-yellow-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">T</span>
+      )}
+      {request.enggDisconnectionsRequired && (
+        <span className="bg-green-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">E</span>
+      )}
+    </div>
+  </div>
+</td>
                     <td className="border border-black p-2 text-[24px]">
                       {request.selectedSection}
                     </td>
@@ -2888,7 +2862,7 @@ const handleOptimize = async () => {
                           : ""})
                       </div>
                     </td>
-                    {/* <td className="border border-black p-2 text-[24px]">
+                    <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (
                         <div className="flex gap-1 items-center">
                           <input
@@ -2929,16 +2903,8 @@ const handleOptimize = async () => {
                           </div>
                         </>
                       )}
-                    </td> */}
-<td className="border border-black p-2 text-[24px]">
-  {request.optimizeTimeFrom && request.optimizeTimeFrom !== "WrongRequest"
-    ? formatTime(request.optimizeTimeFrom)
-    : "N/A"}{" "}
-  -{" "}
-  {request.optimizeTimeTo && request.optimizeTimeTo !== "WrongRequest"
-    ? formatTime(request.optimizeTimeTo)
-    : "N/A"}
-</td>
+                    </td>
+
                     <td className="border border-black p-2 text-[24px]">
                       {request.activity}
                     </td>
@@ -2981,10 +2947,6 @@ const handleOptimize = async () => {
     setEditDate(request.date.split("T")[0]);
     setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
     setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
-    
-    // Open modal instead of inline editing
-    setCurrentModifyRequest(request);
-    setModifyModalOpen(true);
     setModifyReturnOpenId(null);
   }}
 >
@@ -3028,10 +2990,6 @@ const handleOptimize = async () => {
     setEditDate(request.date.split("T")[0]);
     setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
     setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
-    
-    // Open modal instead of inline editing
-    setCurrentModifyRequest(request);
-    setModifyModalOpen(true);
     setModifyReturnOpenId(null);
   }}
 >
@@ -3043,7 +3001,14 @@ const handleOptimize = async () => {
               className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
              onClick={() => handleDraftClick(request)}
             >
-              Draft
+              Draft  
+            </button>
+             <button
+              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
+                        onClick={() => handleSanctionClick(request)}
+
+            >
+              Sanction
             </button>
             <button
               className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
