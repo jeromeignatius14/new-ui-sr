@@ -1363,8 +1363,7 @@ export default function RequestTablePage() {
                           </div>
                         </td>
                         <td className="border border-black px-2 py-1 text-center whitespace-nowrap">
-                          {request.status === "REJECTED" ? (
-
+                          {request.DisconnAcceptance === "ACCEPTED"? (
                             <>
                               <span className="inline-flex items-center px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
                                 <svg
@@ -1396,8 +1395,8 @@ export default function RequestTablePage() {
                             </span>
                           ) :
                             // For USER role, check conditions for showing buttons
-                            (userDepartment === "S&T" && request.sntDisconnectionRequired &&( request.sntDisconnections?.[0]?.status === "PENDING"||request.DisconnAcceptance==="PENDING")) ||
-                              (userDepartment === "TRD" && request.powerBlockRequired && (request.trdDisconnections?.[0]?.status === "PENDING"||request.DisconnAcceptance==="PENDING")) ? (
+                            (userDepartment === "S&T" && request.sntDisconnectionRequired &&( request.sntDisconnections?.[0]?.status === "PENDING")) ||
+                              (userDepartment === "TRD" && request.powerBlockRequired && (request.trdDisconnections?.[0]?.status === "PENDING")) ? (
                               <div className="flex gap-2 justify-center">
                                 <button
                                   onClick={() =>
@@ -1638,7 +1637,7 @@ export default function RequestTablePage() {
                           ) :
                             // For USER role, check conditions for showing buttons
                             
-                              (userDepartment === "ENGG" && request.enggDisconnectionsRequired && (request.enggDisconnections?.[0]?.status === "PENDING"||request.DisconnAcceptance==="PENDING")) ? (
+                              (userDepartment === "ENGG" && request.enggDisconnectionsRequired && (request.enggDisconnections?.[0]?.status === "PENDING")) ? (
                               <div className="flex gap-2 justify-center">
                                 <button
                                   onClick={() =>
