@@ -80,6 +80,9 @@ export default function ViewRequest() {
   };
 
   const getStatusBadgeClass = (status: string) => {
+    if (request && isAvailedTimeExceeded(request)) {
+    return "bg-red-100 text-red-800 border border-black";
+  }
     switch (status) {
       case "APPROVED":
         return "bg-green-100 text-green-800 border border-black";
@@ -118,6 +121,39 @@ export default function ViewRequest() {
     : [];
 
     console.log("Request Data:", request);
+    
+    const calculateDuration = (fromTime: string, toTime: string): number => {
+  if (!fromTime || !toTime) return 0;
+  
+  try {
+    const [fromHours, fromMinutes] = fromTime.split(':').map(Number);
+    const [toHours, toMinutes] = toTime.split(':').map(Number);
+    
+    const fromTotalMinutes = fromHours * 60 + (fromMinutes || 0);
+    const toTotalMinutes = toHours * 60 + (toMinutes || 0);
+    
+    return toTotalMinutes - fromTotalMinutes;
+  } catch {
+    return 0;
+  }
+};
+const isAvailedTimeExceeded = (request: any): boolean => {
+  if (!request.AvailedTimeFrom || !request.AvailedTimeTo || 
+      !request.grantedFromTime || !request.grantedToTime) {
+    return false;
+  }
+  
+  // Format times first to ensure consistent format
+  const availedFrom = formatTime(request.AvailedTimeFrom);
+  const availedTo = formatTime(request.AvailedTimeTo);
+  const grantedFrom = formatTime(request.grantedFromTime);
+  const grantedTo = formatTime(request.grantedToTime);
+  
+  const availedDuration = calculateDuration(availedFrom, availedTo);
+  const grantedDuration = calculateDuration(grantedFrom, grantedTo);
+  
+  return availedDuration > grantedDuration;
+};
 
   return (
     <div className="bg-white p-3 border border-black mb-3 text-black">
@@ -170,12 +206,14 @@ export default function ViewRequest() {
 
       <div className="mb-4 px-2 py-1 inline-block">
         <span
-          className={`px-2 py-0.5 text-sm ${getStatusBadgeClass(
-            request.status
-          )}`}
-        >
-          Status: {request.overAllStatus}
-        </span>
+  className={`px-2 py-0.5 text-sm ${
+    isAvailedTimeExceeded(request) 
+      ? 'bg-red-100 text-red-800 border border-black' 
+      : getStatusBadgeClass(request.status)
+  }`}
+>
+  Status: {isAvailedTimeExceeded(request) ? 'BLOCK BURST' : request.overAllStatus}
+</span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -271,26 +309,28 @@ export default function ViewRequest() {
                   )}
                 </td>
               </tr>
-                 <tr>
-                <td className="py-1 font-medium">Availed Time:</td>
-                <td className="py-1">
-                  {request.AvailedTimeFrom && request.AvailedTimeTo ? (
-                    `${formatTime(request.AvailedTimeFrom)} to ${formatTime(request.AvailedTimeTo)}`
-                  ) : (
-                    "N/A"
-                  )}
-                </td>
-              </tr>
-                 <tr>
-                <td className="py-1 font-medium">Granted Time:</td>
-                <td className="py-1">
-                  {request.grantedFromTime && request.grantedToTime ? (
-                    `${formatTime(request.grantedFromTime)} to ${formatTime(request.grantedToTime)}`
-                  ) : (
-                    "N/A"
-                  )}
-                </td>
-              </tr>
+             <tr >
+  <td className="py-1 font-medium">Availed Time:</td>
+  <td className={"py-1"}>
+   {request.AvailedTimeFrom && request.AvailedTimeTo ? (
+      <span className={isAvailedTimeExceeded(request) ? 'bg-red-300' : ''}>
+        {formatTime(request.AvailedTimeFrom)} to {formatTime(request.AvailedTimeTo)}
+      </span>
+    ) : (
+      "N/A"
+    )}
+  </td>
+</tr>
+<tr>
+  <td className="py-1 font-medium">Granted Time:</td>
+  <td className="py-1">
+    {request.grantedFromTime && request.grantedToTime ? (
+      `${formatTime(request.grantedFromTime)} to ${formatTime(request.grantedToTime)}`
+    ) : (
+      "N/A"
+    )}
+  </td>
+</tr>
 
                <tr>
                 <td className="py-1 font-medium">S&T Availed Time:</td>
