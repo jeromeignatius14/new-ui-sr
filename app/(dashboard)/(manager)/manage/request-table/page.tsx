@@ -900,7 +900,7 @@ const updateQueryParams = (updates: Record<string, string | string[] | null>) =>
     // Sanctioned (light green)
     if (request.status === "APPROVED" && request.isSanctioned&&request.userResponse===null) {
       return {
-        label: "Sanctioned Pending with SSE",
+        label: "Sanctioned, Pending with SSE For Acceptance",
         style: { background:   "#fff86b", color: "#11332b" },
       };
     }

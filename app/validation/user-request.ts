@@ -30,6 +30,8 @@ export const userRequestSchema = z.object({
     sntDisconnectionLineFrom: z.string().optional(),
     sntDisconnectionLineTo: z.string().optional(),
     repercussions: z.string().optional(),
+    assetName: z.string().optional(),
+    assetNumber: z.string().optional(),
     sntDisconnectionLine: z.string().optional(),
     elementarySectionTo: z.string().optional(),
     freshCautionLocationTo: z.string().optional(),
