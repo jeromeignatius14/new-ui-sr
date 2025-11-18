@@ -4987,55 +4987,53 @@ const activityOptions = getActivityOptions();
           </div>
 
 
-<div className="w-full flex flex-row items-center bg-[#e6f7c6] rounded-2xl p-3 mb-8 border-2 border-[#b6e6c6] shadow">
-  {/* Asset Name input */}
-  <div className="flex-1 pr-2">
-    <label
-      htmlFor="assetName"
-      className="block text-[24px] text-nowrap font-bold text-black mb-2"
-    >
-      Asset Name
+<div className="w-full flex flex-col items-center bg-[#e6f7c6] rounded-2xl p-3 mb-8 border-2 border-[#b6e6c6] shadow">
+  {/* Common heading */}
+  <div className="w-full mb-4">
+    <label className="block text-[24px] text-nowrap font-bold text-black text-center">
+      Asset Details
     </label>
-    <input
-      id="assetName"
-      name="assetName"
-      value={formData.assetName || ""}
-      onChange={handleInputChange}
-      required
-      placeholder="Asset Name"
-      className="w-full border-2 border-[#2c3e50] rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200"
-      aria-label="Asset Name"
-    />
-    {/* {errors.assetName && (
-      <span className="text-[24px] text-[#e07a5f] font-medium mt-2 block">
-        {errors.assetName}
-      </span>
-    )} */}
   </div>
   
-  {/* Asset Number input - parallel to Asset Name */}
-  <div className="flex-1 pl-2">
-    <label
-      htmlFor="assetNumber"
-      className="block text-[24px] text-nowrap font-bold text-black mb-2"
-    >
-      Asset Number
-    </label>
-    <input
-      id="assetNumber"
-      name="assetNumber"
-      value={formData.assetNumber || ""}
-      onChange={handleInputChange}
-      required
-      placeholder="Asset Number"
-      className="w-full border-2 border-[#2c3e50] rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200"
-      aria-label="Asset Number"
-    />
-    {/* {errors.assetNumber && (
-      <span className="text-[24px] text-[#e07a5f] font-medium mt-2 block">
-        {errors.assetNumber}
-      </span>
-    )} */}
+  {/* Input fields row */}
+  <div className="w-full flex flex-row items-center">
+    {/* Asset Name input */}
+    <div className="flex-1 pr-2">
+      <input
+        id="assetName"
+        name="assetName"
+        value={formData.assetName || ""}
+        onChange={handleInputChange}
+        required
+        placeholder="Asset Name"
+        className="w-full border-2 border-[#2c3e50] rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200"
+        aria-label="Asset Name"
+      />
+      {errors.assetName && (
+        <span className="text-[24px] text-[#e07a5f] font-medium mt-2 block">
+          {errors.assetName}
+        </span>
+      )}
+    </div>
+    
+    {/* Asset Number input */}
+    <div className="flex-1 pl-2">
+      <input
+        id="assetNumber"
+        name="assetNumber"
+        value={formData.assetNumber || ""}
+        onChange={handleInputChange}
+        required
+        placeholder="Asset Number"
+        className="w-full border-2 border-[#2c3e50] rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200"
+        aria-label="Asset Number"
+      />
+      {errors.assetNumber && (
+        <span className="text-[24px] text-[#e07a5f] font-medium mt-2 block">
+          {errors.assetNumber}
+        </span>
+      )}
+    </div>
   </div>
 </div>
 
