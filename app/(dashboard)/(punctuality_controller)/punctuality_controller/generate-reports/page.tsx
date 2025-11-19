@@ -1,17 +1,20 @@
 "use client";
+
 import { useState, useEffect, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import Select, { MultiValue } from "react-select";
 import { toast } from "react-hot-toast";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useGenerateReport } from "@/app/service/query/hq";
-import { Activity, MajorSection } from "@/app/lib/store";
+import { MajorSection } from "@/app/lib/store";
 import { useSession } from "next-auth/react";
 import { managerService, UserRequest } from "@/app/service/api/manager";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import formatTime from "@/app/utils/formatTime";
 import * as XLSX from "xlsx";
 
@@ -28,7 +31,13 @@ interface FormData {
   majorSection: OptionType[];
 }
 
+// Interfaces aligned with the API service
 interface PastBlockSummary {
+  NotAvailedCount?: number;
+  NotGrantedCount?: number;
+  Applied?: number;
+  AppliedCount?: number;
+  GrantedCount?: number;
   SectionId?: string;
   Section: string;
   Demanded: number;
@@ -38,34 +47,49 @@ interface PastBlockSummary {
   Percentage?: number;
   PercentGranted?: number;
   PercentAvailed?: number;
-  Department?: string;
-  corridorType?: string;
-  MissionBlock?: string;
+  Department?: String;
+  corridorType?: String;
+  MissionBlock?: String;
   DemandsCount?: number;
   ApprovedCount?: number;
   AvailedCount?: number;
 }
 
 interface DetailedData {
+  sntDisconnectionRequired?: boolean;
+  powerBlockRequired?: boolean;
+  enggDisconnectionsRequired?: boolean;
+  selectedDepartment?: string;
+  userResponse?: string;
+  useAcceptanceForSanction?: boolean;
+  AvailedTimeTo?: any;
+  DemandedTimeFrom?: any;
+  isApplied?: boolean;
+  AvailedTimeFrom?: any;
+  isGranted?: boolean;
+  isSanctioned?: boolean;
   Date: string;
   Section: string;
   Duration: number;
   Type: string;
   Status: string;
-  DivisionId?: string;
-  Activity?: string;
-  AvailedTimeFrom?: string;
-  AvailedTimeTo?: string;
-  stationId?: string;
-  overAllStatus?: string;
 }
 
-const blockTypeOptions = [
-  { label: "All", value: "ALL" },
-  { label: "Corridor (C)", value: "Corridor" },
-  { label: "Non-corridor(NC)", value: "Outside Corridor" },
-  { label: "Emergency (E)", value: "Urgent Block" },
-  { label: "Mega Block (M)", value: "MEGA_BLOCK" },
+const locationOptions: OptionType[] = [
+  { value: "MAS", label: "MAS" },
+  { value: "SA", label: "SA" },
+  { value: "MCU", label: "MCU" },
+  { value: "TPJ", label: "TPJ" },
+  { value: "PGT", label: "PGT" },
+  { value: "TVC", label: "TVC" },
+];
+
+const blockTypeOptions: OptionType[] = [
+  { value: "All", label: "All" },
+  { value: "Corridor", label: "Corridor" },
+  { value: "Non-corridor", label: "Outside corridor" },
+  { value: "Emergency", label: "Emergency" },
+  { value: "Mega", label: "Mega Block" },
 ];
 
 const departmentOptions: OptionType[] = [
@@ -73,66 +97,131 @@ const departmentOptions: OptionType[] = [
   { value: "ST", label: "S & T" },
   { value: "TRD", label: "TRD" },
 ];
+// Add after your departmentOptions
+const globalFilterOptions = {
+    workType: {
+    'Engineering': [
+      { value: "ALL", label: "ALL" },
+      { value: "Machine", label: "Machine" },
+      { value: "Non-Machine", label: "Non-Machine" },
+    ],
+    'ST': [
+      { value: "ALL", label: "ALL" },
+      { value: "Gear", label: "Gear" },
+    
+    ],
+    'TRD': [
+      { value: "ALL", label: "ALL" },
+     { value: "Tw", label: "Tw" },
+      { value: "Lt", label: "Lt" },
+    ]
+  },
+  activity: {
+    'Gear': ['Point', 'EI', 'Signal', 'DC Track', 'AFTC', 'SSDAC', 'MSDAC', 'Panel', 'LC Gate Mechanical', 'LC Gate ELB', 'Emergency Sliding Boom', 'IPS', 'Conventional power supply equipment', 'System Integrity Test of each PI/EI/RRI stations', 'Cable Insulation testing (cable meggering) for one station.', 'DLBI- SGE', 'TLBI-FM Inst', 'UFSBI', 'Fuse', 'EKT'],
+    'Tw': ['AOH', 'POH', 'IOH', 'RE POH', 'RD WORK', 'TURN OUT CHECKING', 'CROSS OVER CHECKING', 'CROSS TRACK FEEDERS CHECKING', 'GANTRY MAINTENANCE', 'CONTACT WIRE RENEWAL WORK', 'CATENARY WIRE RENEWAL WORK', 'CANTILEVER ERECTION/REPLACEMENT(2x25KV WORK)', 'MAST ERECTION(2x25KV WORK)', 'FEEDERS ERECTION(2x25KV WORK)', 'OHE PROFILING', 'OHE/CN WORK', 'OTHER SPECIAL WORKS'],
+    'Lt': ['AOH', 'POH', 'IOH', 'RE POH', 'RD WORK', 'TURN OUT CHECKING', 'CROSS OVER CHECKING', 'CROSS TRACK FEEDERS CHECKING', 'GANTRY MAINTENANCE', 'CONTACT WIRE RENEWAL WORK', 'CATENARY WIRE RENEWAL WORK', 'CANTILEVER ERECTION/REPLACEMENT(2x25KV WORK)', 'MAST ERECTION(2x25KV WORK)', 'FEEDERS ERECTION(2x25KV WORK)', 'OHE PROFILING', 'OHE/CN WORK', 'OTHER SPECIAL WORKS'],
+    'Machine': ['BCM', 'DTE', 'CSM', 'DUOMAT', 'UNIMAT', 'MPT', 'BRM', 'TRT', 'UTV', 'DTS', 'T28', 'SQRS', 'RGM working', 'SBCM'],
+    'Non-Machine': ['Rail renewal', 'Welding work', 'Destressing work', 'Switch renewal', 'CMS Crossing renewal', 'SEJ Renewal', 'Glued Joint renewal', 'Dummy Glued Joint removal', 'TRR P 60 Kg', 'TRR S 60 Kg', 'TRR S 60 kg', 'TRR S 52 kg', 'Interchanging', 'Trucking out/Shifting materials', 'TWR with MFBW', 'TBTR (Br sleeper renewal)', 'TSR P 60 Kg', 'TSR S 60 Kg', 'TSR S 52 Kg', 'TTSR work', 'Jt Insp Notes Attn', 'Stretcherbar renewal', 'TFR Work', 'Ballast Unloading', 'Rail unloading', 'Lifting and packing', 'Gauge tie plate renewal', 'Sleeper renewal', 'Fish Plates O&E', 'Preliminary/Post works', 'Trucking out materials', 'Cutting Widening work', 'JCB working', 'Earth work/Muck removal', 'Crane Moving/Working', 'Attention to Track', 'Attention to Fittings', 'Attention to Bridge', 'Attention to Guard rail', 'Attention to Points & Xing', 'Attention to LC', 'Attention to Curve check rail', 'Sheet Piling work', 'Platform work', 'Platform Shelter work', 'ABSS work', 'Erection of Platform shelter purlins work', 'Erection of FOB Girders', 'Other FOB works', 'Other Track works', 'Other Bridge work'],
+  },
+};
+
+
+// Helper function to get work types based on selected departments
+const getWorkTypesForDepartments = (departments: string[]): OptionType[] => {
+  if (departments.length === 0) return [{ value: "ALL", label: "ALL" }];
+  
+  // If multiple departments selected, combine and deduplicate work types
+  const allWorkTypes = new Map();
+  
+  departments.forEach(dept => {
+    const deptWorkTypes = globalFilterOptions.workType[dept as keyof typeof globalFilterOptions.workType] || [];
+    deptWorkTypes.forEach(workType => {
+      if (!allWorkTypes.has(workType.value)) {
+        allWorkTypes.set(workType.value, workType);
+      }
+    });
+  });
+  
+  return Array.from(allWorkTypes.values());
+};
+
+// Helper function to get activities based on work type
+const getActivitiesForWorkType = (workTypeSelected: string): string[] => {
+  if (workTypeSelected === 'ALL') return ['ALL'];
+  return ['ALL', ...(globalFilterOptions.activity[workTypeSelected as keyof typeof globalFilterOptions.activity] || [])];
+};
+// Helper function to get operator symbol for display
+const getOperatorSymbol = (operator: string): string => {
+  const operatorMap: { [key: string]: string } = {
+    ">": ">",
+    ">=": "≥", 
+    "=": "=",
+    "<=": "≤",
+    "<": "<",
+    "ALL": "ALL"
+  };
+  return operatorMap[operator] || operator;
+};
 
 export default function GenerateReportPage() {
-  const [customDateRange, setCustomDateRange] = useState({
-    start: "",
-    end: "",
+  const [durationFilter, setDurationFilter] = useState({
+  operator: "ALL", // "ALL", ">", ">=", "=", "<", "<="
+  value: ""
   });
-  const [sectionDropdownOpen, setSectionDropdownOpen] = useState(false);
-  const [activityDropdownOpen, setActivityDropdownOpen] = useState(false);
-  const [showTimeSlotDropdown, setShowTimeSlotDropdown] = useState(false);
-  const [timeSlotFilter, setTimeSlotFilter] = useState<string>('ALL');
-  const [blockTypeDropdownOpen, setBlockTypeDropdownOpen] = useState(false);
-  const [selectedSections, setSelectedSections] = useState<string[]>([]);
-  const [blockType, setBlockType] = useState<string[]>([]);
-  const [type, setType] = useState<string[]>([]);
-  const [section, setSection] = useState<string[]>([]);
-  const [showTable, setShowTable] = useState(false);
-
-  type SummaryFilters = {
-    start: string;
-    end: string;
-    blockType: string[];
-    section: string[];
-    activity: string[];
-    dept: string;
-    line: string;
-  };
-
-  const [pendingSummaryFilters, setPendingSummaryFilters] = useState<SummaryFilters>({
-    start: "",
-    end: "",
-    blockType: [],
-    section: [],
-    activity: [],
-    dept: "",
-    line: "",
-  });
-
-  const [activeSummaryFilters, setActiveSummaryFilters] = useState<SummaryFilters>({
-    start: "",
-    end: "",
-    blockType: [],
-    section: [],
-    activity: [],
-    dept: "",
-    line: "",
-  });
-
-  const [pastBlockSummary, setPastBlockSummary] = useState<PastBlockSummary[]>([]);
+  const [pastBlockSummary, setPastBlockSummary] = useState<PastBlockSummary[]>(
+    []
+  );
+  const [activeFilter, setActiveFilter] = useState<"approved" | "granted" | "availed" |"applied" |"demanded"|"notGranted" | "notAvailed" |"all">("all");
+  const [activeSection, setActiveSection] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [reportGenerated, setReportGenerated] = useState(false);
   const [selectedLocations, setSelectedLocations] = useState<string[]>(["All"]);
-  const [selectedBlockTypes, setSelectedBlockTypes] = useState<string[]>(["All"]);
-  const [selectedDepartments, setSelectedDepartments] = useState<string[]>(["Engineering"]);
-  const [selectedMajorSections, setSelectedMajorSections] = useState<string[]>([]);
-  const [majorSectionOptions, setMajorSectionOptions] = useState<OptionType[]>([]);
+  const [selectedBlockTypes, setSelectedBlockTypes] = useState<string[]>([
+    "All",
+  ]);
+  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([
+    "Engineering",
+  ]);
+  const [selectedMajorSections, setSelectedMajorSections] = useState<string[]>(
+    []
+  );
+  const [majorSectionOptions, setMajorSectionOptions] = useState<OptionType[]>(
+    []
+  );
+    const [upcomingDivisionIdSearch, setUpcomingDivisionIdSearch] = useState<string>("");
+const [sseFilter, setSseFilter] = useState("All");
+const [sseDropdownOpen, setSseDropdownOpen] = useState(false);
+// Add after your existing state variables
+const [globalWorkTypeFilter, setGlobalWorkTypeFilter] = useState<string>("ALL");
+const [globalActivityFilter, setGlobalActivityFilter] = useState<string>("ALL");
 
+// Dropdown visibility states
+const [showGlobalWorkTypeDropdown, setShowGlobalWorkTypeDropdown] = useState(false);
+const [showGlobalActivityDropdown, setShowGlobalActivityDropdown] = useState(false);
+const [showDurationDropdown, setShowDurationDropdown] = useState(false);
+const [departmentCountFilter, setDepartmentCountFilter] = useState<{
+  department: string;
+  supportingDepartment: string;
+  filterType: 'requested' | 'sanctioned' | 'availed';
+} | null>(null);
+const durationDropdownRef = useRef<HTMLDivElement>(null);
+
+// Refs for dropdowns
+const globalWorkTypeDropdownRef = useRef<HTMLDivElement>(null);
+const globalActivityDropdownRef = useRef<HTMLDivElement>(null);
+const sseDropdownRef = useRef<HTMLDivElement>(null);
+  
   const router = useRouter();
-  const { register, handleSubmit, control, watch, formState: { errors } } = useForm<FormData>();
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    formState: { errors },
+  } = useForm<FormData>();
   const { data: session } = useSession();
 
+  // Parameters for the query
   const [queryParams, setQueryParams] = useState({
     startDate: "",
     endDate: "",
@@ -141,40 +230,20 @@ export default function GenerateReportPage() {
     blockType: ["All"],
     globalWorkType: "ALL",
     globalActivity: "ALL", 
-     durationOperator: "ALL",
+    durationOperator: "ALL",
   durationValue: "",
   });
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["admin-requests", customDateRange],
-    queryFn: () =>
-      managerService.getUserRequestsByAdmin(
-        1,
-        10000,
-        customDateRange.start || undefined,
-        customDateRange.end || undefined,
-        undefined,
-        "632e3c5d-518b-4f12-998e-7155f3d5da99",
-      ),
-  });
-
-  const { data: reportData, refetch } = useGenerateReport(queryParams);
-
-  useEffect(() => {
-    setType(blockType);
-  }, [blockType]);
-
-  useEffect(() => {
-    setSection(selectedSections);
-  }, [selectedSections]);
-
+  // Get user's location and set up major section options
   useEffect(() => {
     if (session?.user?.location) {
       const userLocation = session.user.location;
       setSelectedLocations([userLocation]);
 
+      // Set up major section options based on user's location
       if (MajorSection[userLocation as keyof typeof MajorSection]) {
-        const sections = MajorSection[userLocation as keyof typeof MajorSection];
+        const sections =
+          MajorSection[userLocation as keyof typeof MajorSection];
         const options = sections.map((section) => ({
           value: section,
           label: section,
@@ -183,17 +252,70 @@ export default function GenerateReportPage() {
       }
     }
   }, [session]);
+  // Reset work type filter when departments change
+useEffect(() => {
+  const availableWorkTypes = getWorkTypesForDepartments(selectedDepartments);
+  const currentWorkTypeExists = availableWorkTypes.some(wt => wt.value === globalWorkTypeFilter);
+  
+  if (!currentWorkTypeExists) {
+    setGlobalWorkTypeFilter("ALL");
+    setGlobalActivityFilter("ALL");
+  }
+}, [selectedDepartments]);
+  // Add after your existing useEffects
+// Close dropdowns when clicking outside
+useEffect(() => {
+  const handleClickOutside = (event: MouseEvent) => {
+    if (globalWorkTypeDropdownRef.current && !globalWorkTypeDropdownRef.current.contains(event.target as Node)) {
+      setShowGlobalWorkTypeDropdown(false);
+    }
+    if (globalActivityDropdownRef.current && !globalActivityDropdownRef.current.contains(event.target as Node)) {
+      setShowGlobalActivityDropdown(false);
+    }
+    if (durationDropdownRef.current && !durationDropdownRef.current.contains(event.target as Node)) {
+      setShowDurationDropdown(false);
+    }
+  };
 
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => document.removeEventListener('mousedown', handleClickOutside);
+}, []);
+  // Use the react-query hook with enabled: false initially
+  const {
+    data: reportData,
+    isLoading,
+    error,
+    // refetch,
+  } = useGenerateReport(queryParams);
+
+  // Watch for query results and loading state
   useEffect(() => {
     setLoading(isLoading);
+    console.log("Full reportData:", reportData);
+
     if (reportData && reportData.data) {
+      // Safe access of nested properties with detailed logging
+      console.log(
+        "pastBlockSummary raw data:",
+        reportData.data.pastBlockSummary
+      );
+      console.log("detailedData raw data:", reportData.data.detailedData);
+
+      // Handle data even if the property names don't exactly match
       const pastData = reportData.data.pastBlockSummary || [];
       setPastBlockSummary(pastData);
+      console.log("Set pastBlockSummary to:", pastData);
+
+      // Set the detailed data directly
+      const detailedData = reportData.data.detailedData || [];
+      console.log("Set upcomingBlocks to:", detailedData);
+
       setReportGenerated(true);
       toast.success(reportData.message || "Report generated successfully");
     }
   }, [reportData, isLoading]);
 
+  // Watch for query errors
   useEffect(() => {
     if (error) {
       console.error("Error fetching report data:", error);
@@ -202,321 +324,27 @@ export default function GenerateReportPage() {
     }
   }, [error]);
 
-  const formatDate = (dateString: string) => {
-    try {
-      return format(parseISO(dateString), "dd-MM-yyyy");
-    } catch {
-      return "Invalid date";
-    }
+  // Function to handle row click for section details
+  const handleSectionClick = (section: string) => {
+    toast.success(`Viewing details for section: ${section}`);
+    // In a real implementation, this would navigate to a detail view
+    // router.push(`/dashboard/drm/drm/section-details/${section}`);
   };
 
-  const formatTime = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return "N/A";
-      const hours = date.getUTCHours().toString().padStart(2, "0");
-      const minutes = date.getUTCMinutes().toString().padStart(2, "0");
-      return `${hours}:${minutes}`;
-    } catch {
-      return "N/A";
-    }
-  };
-
-  const sectionOptions = Array.from(
-    new Set(
-      data?.data?.requests
-        ?.map((r: UserRequest) => r.selectedSection)
-        .filter(Boolean) || []
-    )
-  );
-  const activityOptions = Array.from(
-    new Set(
-      data?.data?.requests
-        ?.map((r: UserRequest) => r.activity)
-        .filter(Boolean) || []
-    )
-  );
-  const handleDownloadExcel = async (rowsToDownload: UserRequest[]) => {
-    try {
-      if (!rowsToDownload || rowsToDownload.length === 0) {
-        alert("No data available to download!");
-        return;
-      }
-      const XLSX = await import('xlsx');
-
-      const headers = [
-        "Date",
-        "Request ID",
-        "Block Section",
-        "Line/Road",
-        "Activity",
-        "Status",
-        "Demanded From Time (HH:MM)",
-        "Demanded To Time (HH:MM)",
-        "Sanctioned From Time (HH:MM)",
-        "Sanctioned To Time (HH:MM)",
-        "Corridor Type",
-        "Department",
-        "SSE Name",
-        "Work Location",
-        "Remarks",
-        "OverAllStatus"
-      ];
-
-      const rows = rowsToDownload.map((request) => {
-        const startTime = request.demandTimeFrom
-          ? new Date(request.demandTimeFrom).toISOString().slice(11, 16)
-          : "N/A";
-
-        const endTime = request.demandTimeTo
-          ? new Date(request.demandTimeTo).toISOString().slice(11, 16)
-          : "N/A";
-
-        const sanctionedFrom = request.sanctionedTimeFrom
-          ? new Date(request.sanctionedTimeFrom).toISOString().slice(11, 16)
-          : request.optimizeTimeFrom
-            ? new Date(request.optimizeTimeFrom).toISOString().slice(11, 16)
-            : "N/A";
-
-        const sanctionedTo = request.sanctionedTimeTo
-          ? new Date(request.sanctionedTimeTo).toISOString().slice(11, 16)
-          : request.optimizeTimeTo
-            ? new Date(request.optimizeTimeTo).toISOString().slice(11, 16)
-            : "N/A";
-
-        return [
-          formatDate(request.date),
-          request.divisionId || request.id,
-          request.missionBlock,
-          request.processedLineSections?.[0]?.road || request.processedLineSections?.[0]?.lineName,
-          request.activity,
-          getStatusDisplay(request).label,
-          startTime,
-          endTime,
-          sanctionedFrom,
-          sanctionedTo,
-          request.corridorType,
-          request.user?.department || request.selectedDepartment || "N/A",
-          request.user?.name || "N/A",
-          request.workLocationFrom,
-          request.requestremarks,
-          request.overAllStatus || "N/A"
-        ];
-      });
-
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-      XLSX.utils.book_append_sheet(wb, ws, "Block Requests");
-
-      const formatDateForFilename = (dateString: string) => {
-        if (!dateString) return "";
-        try {
-          const date = new Date(dateString);
-          const day = String(date.getDate()).padStart(2, '0');
-          const month = String(date.getMonth() + 1).padStart(2, '0');
-          const year = date.getFullYear();
-          return `${day}-${month}-${year}`;
-        } catch {
-          return "";
-        }
-      };
-
-      let filename;
-      if (activeSummaryFilters.start && activeSummaryFilters.end) {
-        const startDate = formatDateForFilename(activeSummaryFilters.start);
-        const endDate = formatDateForFilename(activeSummaryFilters.end);
-        filename = `block_requests_${startDate}_to_${endDate}.xlsx`;
-      } else if (activeSummaryFilters.start) {
-        filename = `block_requests_${formatDateForFilename(activeSummaryFilters.start)}.xlsx`;
-      } else if (activeSummaryFilters.end) {
-        filename = `block_requests_${formatDateForFilename(activeSummaryFilters.end)}.xlsx`;
-      } else {
-        const today = new Date();
-        const day = String(today.getDate()).padStart(2, '0');
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const year = today.getFullYear();
-        filename = `block_requests_${day}-${month}-${year}.xlsx`;
-      }
-
-      XLSX.writeFile(wb, filename);
-    } catch (error) {
-      console.error("Download failed:", error);
-      alert("Failed to generate Excel file. Please check console for details.");
-    }
-  };
-
-  function getStatusDisplay(request: UserRequest) {
-    if (request.status === "APPROVED" && request.isSanctioned) {
-      return {
-        label: "Sanctioned",
-        style: { background: "#d6ecd2", color: "#11332b" },
-      };
-    }
-    if (request.status === "APPROVED" && !request.isSanctioned && request.adminRequestStatus !== "REJECTED") {
-      return {
-        label: "Pending with me",
-        style: { background: "#d47ed4", color: "#222" },
-      };
-    }
-    if (request.status === "REJECTED" || request.adminRequestStatus === "REJECTED") {
-      return {
-        label: "Return to Applicant",
-        style: { background: "#ff4e36", color: "#fff" },
-      };
-    }
-    if (["NOT_AVAILED", "AVAILED", "CANCELLED"].includes(request.userStatus)) {
-      return {
-        label: request.userStatus.replace("_", "-").toLowerCase(),
-        style: { background: "#fff", color: "#222" },
-      };
-    }
-    if (request.status === "BURST") {
-      return {
-        label: "Burst",
-        style: { background: "#ff944c", color: "#fff" },
-      };
-    }
-    return {
-      label: request.status,
-      style: { background: "#fff", color: "#222" },
-    };
-  }
-
-  const handlePendingDateChange = (field: "start" | "end", value: string) => {
-    setPendingSummaryFilters((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handlePendingBlockTypeChange = (value: string) => {
-    setPendingSummaryFilters((prev) => {
-      const allBlockTypeValues = blockTypeOptions.slice(1).map(opt => opt.value);
-
-      if (value === "ALL") {
-        const shouldSelectAll = prev.blockType.length < allBlockTypeValues.length;
-        return {
-          ...prev,
-          blockType: shouldSelectAll ? [...allBlockTypeValues] : []
-        };
-      } else {
-        let newBlockTypes;
-        if (prev.blockType.includes(value)) {
-          newBlockTypes = prev.blockType.filter(v => v !== value);
-        } else {
-          newBlockTypes = [...prev.blockType, value];
-        }
-
-        return {
-          ...prev,
-          blockType: newBlockTypes
-        };
-      }
-    });
-  }
-
-  const handlePendingSectionChange = (value: string) => {
-    setPendingSummaryFilters((prev) => ({
-      ...prev,
-      section: prev.section.includes(value)
-        ? prev.section.filter((v) => v !== value)
-        : [...prev.section, value],
-    }));
-  };
-  const matchesTimeSlot = (request: UserRequest): boolean => {
-    if (timeSlotFilter === 'ALL') return true;
-    const demandTime = new Date(request.demandTimeFrom);
-    const hour = demandTime.getUTCHours();
-
-    switch (timeSlotFilter) {
-      case 'Morning': return hour >= 4 && hour < 12;
-      case 'Afternoon': return hour >= 12 && hour < 20;
-      case 'Night': return hour >= 20 || hour < 4;
-      default: return true;
-    }
-  };
-
-  const handlePendingDeptChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setPendingSummaryFilters((prev) => ({ ...prev, dept: e.target.value }));
-  };
-
-  const handlePendingLineChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setPendingSummaryFilters((prev) => ({ ...prev, line: e.target.value }));
-  };
-
-  const handleApplySummaryFilters = () => {
-    setActiveSummaryFilters({ ...pendingSummaryFilters });
-    setShowTable(true);
-  };
-
-  let summaryFilteredRequests = data?.data?.requests || [];
-
-  if (activeSummaryFilters.start) {
-    const startDate = new Date(activeSummaryFilters.start);
-    summaryFilteredRequests = summaryFilteredRequests.filter((r) => {
-      const requestDate = new Date(r.date);
-      return requestDate >= startDate;
-    });
-  }
-
-  if (activeSummaryFilters.end) {
-    const endDate = new Date(activeSummaryFilters.end);
-    summaryFilteredRequests = summaryFilteredRequests.filter((r) => {
-      const requestDate = new Date(r.date);
-      const endOfDay = new Date(endDate);
-      endOfDay.setDate(endOfDay.getDate() + 1);
-      return requestDate < endOfDay;
-    });
-  }
-
-  if (activeSummaryFilters.blockType.length > 0) {
-    const allTypesSelected = activeSummaryFilters.blockType.length === blockTypeOptions.length - 1;
-    if (!allTypesSelected) {
-      summaryFilteredRequests = summaryFilteredRequests.filter((r) =>
-        activeSummaryFilters.blockType.includes(r.corridorType)
-      );
-    }
-  }
-
-  if (activeSummaryFilters.section.length > 0) {
-    const allSectionsSelected = activeSummaryFilters.section.length === sectionOptions.length;
-    if (!allSectionsSelected) {
-      summaryFilteredRequests = summaryFilteredRequests.filter((r) =>
-        activeSummaryFilters.section.includes(r.selectedSection)
-      );
-    }
-  }
-
-
-  if (activeSummaryFilters.activity.length > 0) {
-    const allSectionsSelected = activeSummaryFilters.activity.length === activityOptions.length;
-    if (!allSectionsSelected) {
-      summaryFilteredRequests = summaryFilteredRequests.filter((r) =>
-        activeSummaryFilters.activity.includes(r.activity)
-      );
-    }
-  }
-
-  if (activeSummaryFilters.dept) {
-    summaryFilteredRequests = summaryFilteredRequests.filter((r) => r.selectedDepartment === activeSummaryFilters.dept);
-  }
-
-  if (activeSummaryFilters.line) {
-    summaryFilteredRequests = summaryFilteredRequests.filter((r) => r.selectedLine === activeSummaryFilters.line);
-  }
-  if (activeSummaryFilters.activity) {
-    summaryFilteredRequests = summaryFilteredRequests.filter(matchesTimeSlot);
-
-  }
-  let sanctionedRequests = summaryFilteredRequests.filter((r) => r.isSanctioned);
-
+  // Handler for major section selection
   const handleMajorSectionChange = (options: MultiValue<OptionType>) => {
     if (Array.isArray(options) && options.length > 0) {
       const selectedValues = options.map((option) => option.value);
 
+      // Check if 'All' is included in the selected options
       if (selectedValues.includes("All")) {
+        // If 'All' is selected, include all major sections except 'All' itself
         const allSpecificSections = majorSectionOptions
           .map((option) => option.value)
           .filter((value) => value !== "All");
         setSelectedMajorSections(allSpecificSections);
       } else {
+        // Otherwise just set the selected values
         setSelectedMajorSections(selectedValues);
       }
     } else {
@@ -524,6 +352,7 @@ export default function GenerateReportPage() {
     }
   };
 
+  // Toggle selection for buttons
   const toggleBlockType = (blockType: string) => {
     if (blockType === "All") {
       setSelectedBlockTypes(["All"]);
@@ -547,61 +376,393 @@ export default function GenerateReportPage() {
     }
   };
 
-  const onSubmit = async (data: FormData) => {
-    if (!data.startDate || !data.endDate) {
-      toast.error("Please enter both start and end dates");
-      return;
-    }
+  // const onSubmit = async (data: FormData) => {
+  //   // Validate dates
+  //   if (!data.startDate || !data.endDate) {
+  //     toast.error("Please enter both start and end dates");
+  //     return;
+  //   }
 
-    try {
-      const startDate = new Date(data.startDate);
-      const endDate = new Date(data.endDate);
+  //   try {
+  //     // Format dates to DD/MM/YY format for API
+  //     const startDate = new Date(data.startDate);
+  //     const endDate = new Date(data.endDate);
 
-      const formattedStartDate = format(startDate, "dd/MM/yy");
-      const formattedEndDate = format(endDate, "dd/MM/yy");
+  //     const formattedStartDate = format(startDate, "dd/MM/yy");
+  //     const formattedEndDate = format(endDate, "dd/MM/yy");
 
-      setQueryParams({
-        startDate: formattedStartDate,
-        endDate: formattedEndDate,
-        majorSections: selectedMajorSections,
-        department: selectedDepartments,
-        blockType: selectedBlockTypes,
-        globalWorkType: "ALL",
-        globalActivity: "ALL",
-         durationOperator: "ALL",
-  durationValue: "",
-      });
+  //     // Update query parameters
+  //     setQueryParams({
+  //       startDate: formattedStartDate,
+  //       endDate: formattedEndDate,
+  //       majorSections: selectedMajorSections,
+  //       department: selectedDepartments,
+  //       blockType: selectedBlockTypes,
+  //     });
 
-      await refetch();
-    } catch (error) {
-      console.error("Error initiating report generation:", error);
-      toast.error("Failed to generate report");
-    }
+  //     // Trigger the query - react-query will handle the loading state
+  //     // await refetch();
+  //   } catch (error) {
+  //     console.error("Error initiating report generation:", error);
+  //     toast.error("Failed to generate report");
+  //   }
+  // };
+
+  // Replace your existing onSubmit with this:
+const onSubmit = async (data: FormData) => {
+  // Validate dates
+  if (!data.startDate || !data.endDate) {
+    toast.error("Please enter both start and end dates");
+    return;
+  }
+
+  try {
+    // Format dates to DD/MM/YY format for API
+    const startDate = new Date(data.startDate);
+    const endDate = new Date(data.endDate);
+
+    const formattedStartDate = format(startDate, "dd/MM/yy");
+    const formattedEndDate = format(endDate, "dd/MM/yy");
+
+    // Update query parameters with ALL filters
+    setQueryParams({
+      startDate: formattedStartDate,
+      endDate: formattedEndDate,
+      majorSections: selectedMajorSections,
+      department: selectedDepartments,
+      blockType: selectedBlockTypes,
+      globalWorkType: globalWorkTypeFilter,
+      globalActivity: globalActivityFilter,
+   
+      durationOperator: durationFilter.operator,
+      durationValue: durationFilter.value,
+    });
+
+  } catch (error) {
+    console.error("Error initiating report generation:", error);
+    toast.error("Failed to generate report");
+  }
+};
+// Add this function after onSubmit
+const clearGlobalFilters = () => {
+  setGlobalWorkTypeFilter("ALL");
+  setGlobalActivityFilter("ALL");
+  setDurationFilter({ operator: "ALL", value: "" });
+};
+  const formatDateInput = (value: string) => {
+    // Format as DD/MM/YY
+    if (!value) return "";
+    const [day, month, year] = value.split("/");
+    if (!day || !month || !year) return value;
+    return `${day}/${month}/${year}`;
   };
-
+  // Format the selected dates for display
   const formatDisplayDate = (dateStr: string) => {
     if (!dateStr) return "";
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return "";
-    return d.toLocaleDateString("en-GB");
+    return d.toLocaleDateString("en-GB"); // DD/MM/YYYY
   };
 
-  const [upcomingSectionFilter, setUpcomingSectionFilter] = useState<string>("All");
+  // (B) Summary of Upcoming Blocks
+  const [upcomingSectionFilter, setUpcomingSectionFilter] =
+    useState<string>("All");
   const sectionOptionsB: string[] = Array.from(
     new Set(
       reportData?.data?.detailedData?.map((b: DetailedData) => b.Section) || []
     )
   );
+//    const filteredUpcomingBlocks: DetailedData[] = (
+//   upcomingSectionFilter === "All"
+//     ? reportData?.data?.detailedData || []
+//     : reportData?.data?.detailedData?.filter(
+//       (b: DetailedData) => b.Section === upcomingSectionFilter
+//     ) || []
+// ).filter((block: any) => {
+//   // Division ID search filter
+//   if (upcomingDivisionIdSearch.trim() === "") return true;
+  
+//   const divisionId = block.DivisionId || "";
+//   return divisionId.toLowerCase().includes(upcomingDivisionIdSearch.toLowerCase());
+// });
 
-  const filteredUpcomingBlocks: DetailedData[] =
-    upcomingSectionFilter === "All"
-      ? reportData?.data?.detailedData || []
-      : reportData?.data?.detailedData?.filter(
-        (b: DetailedData) => b.Section === upcomingSectionFilter
-      ) || [];
+
+const filterBlocksByDepartmentCount = (block: any): boolean => {
+  if (!departmentCountFilter) return true;
+  
+  const { department, supportingDepartment, filterType } = departmentCountFilter;
+  
+  // Base department filter
+  if (block.selectedDepartment !== department) return false;
+  
+  // Supporting department filters - MATCHING YOUR COUNTING LOGIC EXACTLY
+  if (supportingDepartment === "-") {
+    // No supporting department - only blocks that don't require any support
+    if (department === "ENGG" && (block.sntDisconnectionRequired || block.powerBlockRequired)) return false;
+    if (department === "S&T" && (block.enggDisconnectionsRequired || block.powerBlockRequired)) return false;
+    // TRD doesn't have supporting departments, so all TRD blocks pass
+  } else if (supportingDepartment === "S&T") {
+    // ENGG + S&T - matches your enggWithSnt counting
+    if (!block.sntDisconnectionRequired) return false;
+    if (block.powerBlockRequired) return false; // Matches: enggWithSnt excludes powerBlockRequired
+  } else if (supportingDepartment === "TRD") {
+    if (department === "ENGG") {
+      // ENGG + TRD - matches your enggWithPower counting
+      if (!block.powerBlockRequired) return false;
+      if (block.sntDisconnectionRequired) return false; // Matches: enggWithPower excludes sntDisconnectionRequired
+    } else if (department === "S&T") {
+      // S&T + TRD - matches your sntWithPower counting
+      if (!block.powerBlockRequired) return false;
+      if (block.enggDisconnectionsRequired) return false; // Matches: sntWithPower excludes enggDisconnectionsRequired
+    }
+  } else if (supportingDepartment === "ENGG") {
+    // S&T + ENGG - matches your sntWithEngg counting
+    if (!block.enggDisconnectionsRequired) return false;
+    if (block.powerBlockRequired) return false; // Matches: sntWithEngg excludes powerBlockRequired
+  } else if (supportingDepartment === "S&T and TRD") {
+    // ENGG + S&T + TRD - matches your enggWithSntAndPower counting
+    if (!block.sntDisconnectionRequired || !block.powerBlockRequired) return false;
+  } else if (supportingDepartment === "ENGG and TRD") {
+    // S&T + ENGG + TRD - matches your sntWithEnggAndPower counting
+    if (!block.enggDisconnectionsRequired || !block.powerBlockRequired) return false;
+  }
+  
+  // Filter type conditions
+  switch (filterType) {
+    case 'requested':
+      return true;
+    case 'sanctioned':
+      return block.isSanctioned === true;
+    case 'availed':
+      return block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null;
+    default:
+      return true;
+  }
+};
+
+
+
+
+
+const filteredUpcomingBlocks: DetailedData[] = (
+  upcomingSectionFilter === "All"
+    ? reportData?.data?.detailedData || []
+    : reportData?.data?.detailedData?.filter(
+      (b: DetailedData) => b.Section === upcomingSectionFilter
+    ) || []
+)
+.filter((block: any) => {
+  // Division ID search filter
+  if (upcomingDivisionIdSearch.trim() !== "") {
+    const divisionId = block.DivisionId || "";
+    if (!divisionId.toLowerCase().includes(upcomingDivisionIdSearch.toLowerCase())) {
+      return false;
+    }
+  }
+  
+  // SSE filter
+  if (sseFilter !== "All") {
+    const userName = block.userName || "";
+    if (userName !== sseFilter) {
+      return false;
+    }
+  }
+  
+  return true;
+});
+
+// Use the same data source for both tables
+const detailedData: DetailedData[] = reportData?.data?.detailedData || [];
+
+// ENGG counts
+const enggTotal = detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === false && block.powerBlockRequired === false).length;
+const enggWithSnt = detailedData.filter(block => 
+  block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true&&block.powerBlockRequired === false
+).length;
+const enggWithPower = detailedData.filter(block => 
+  block.selectedDepartment === "ENGG" && block.powerBlockRequired === true&& block.sntDisconnectionRequired === false
+).length;
+const enggWithSntAndPower = detailedData.filter(block => 
+  block.selectedDepartment === "ENGG" && 
+  block.sntDisconnectionRequired === true && 
+  block.powerBlockRequired === true
+).length;
+
+// S&T counts
+const sntTotal = detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === false && block.powerBlockRequired === false).length;
+const sntWithPower = detailedData.filter(block => 
+  block.selectedDepartment === "S&T" && block.powerBlockRequired === true&&block.enggDisconnectionsRequired === false
+).length;
+const sntWithEngg = detailedData.filter(block => 
+  block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true&&block.powerBlockRequired === false
+).length;
+const sntWithEnggAndPower = detailedData.filter(block => 
+  block.selectedDepartment === "S&T" && 
+  block.enggDisconnectionsRequired === true && 
+  block.powerBlockRequired === true
+).length;
+
+// TRD counts
+const trdTotal = detailedData.filter(block => block.selectedDepartment === "TRD").length;
+
+// Total counts for the bottom row
+const totalRequested = detailedData.length;
+const totalSanctioned = detailedData.filter(block => block.isSanctioned === true).length;
+const totalAvailed = detailedData.filter(block => block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length;
+
+// Remove this line since we're not using countBlock anymore
+// const countBlock: DetailedData[] = reportData?.data?.detailedData || [];
+// ===== END COUNTING LOGIC =====
+
+const filteredBlocks = filteredUpcomingBlocks.filter((block) => {
+   if (activeFilter === "approved" && !block.isSanctioned) return false;
+  if (activeFilter === "granted" && !block.isGranted) return false;
+  if (activeFilter === "applied" && !block.isApplied) return false;
+
+  if( activeFilter === "availed" && block.AvailedTimeFrom===null) return false;
+if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false;
+  if (activeFilter === "notGranted" && block.isGranted !== false) return false;
+  if (activeFilter === "notAvailed" && !(
+    (!block.AvailedTimeFrom&&block.isSanctioned) ||
+    (!block.AvailedTimeTo&&block.isSanctioned) ||
+    (block.isApplied === null&&block.isGranted===true) ||
+    (block.isApplied === false) ||
+    (block.userResponse !== "ACCEPTED" && block.useAcceptanceForSanction === false && block.isSanctioned === true)
+  )) return false;
+  // Filter by selected section
+  if (activeSection && block.Section !== activeSection) return false;
+    if (!filterBlocksByDepartmentCount(block)) return false;
+  return true;
+});
+
+  function formatDateB(dateString: string) {
+    if (!dateString) return "";
+    // Accepts both MM/DD/YYYY and DD/MM/YYYY
+    const parts = dateString.split("/");
+    if (parts.length === 3) {
+      // Try MM/DD/YYYY first
+      const d1 = new Date(dateString);
+      if (!isNaN(d1.getTime())) return d1.toLocaleDateString("en-GB");
+      // Try DD/MM/YYYY
+      const d2 = new Date(parts[2] + "-" + parts[1] + "-" + parts[0]);
+      if (!isNaN(d2.getTime())) return d2.toLocaleDateString("en-GB");
+    }
+    return dateString;
+  }
+
+  const upcomingBlocks: DetailedData[] = reportData?.data?.detailedData || [];
 
   const [sectionDropdownOpenB, setSectionDropdownOpenB] = useState(false);
   const sectionDropdownRefB = useRef<HTMLDivElement>(null);
+
+
+  // Function to download block summary table as XLSX
+  const handleDownloadSummary = () => {
+    try {
+      if (pastBlockSummary.length === 0) {
+        toast.error("No data available to download");
+        return;
+      }
+
+      const excelData = pastBlockSummary.map((summary: any) => ({
+        Section: summary.Department || summary.Section || "", // Using the fixed value as in the table
+        Demanded: summary.Demanded?.toFixed(2) || "0.00",
+        Approved: summary.Approved?.toFixed(2) || "0.00",
+        Granted: summary.Granted?.toFixed(2) || "0.00",
+        "% Granted":
+          summary.PercentGranted !== undefined
+            ? summary.PercentGranted.toFixed(2) + "%"
+            : "",
+        Availed: summary.Availed.toFixed(2) || "0.00",
+        "% Availed":
+          summary.PercentAvailed !== undefined
+            ? summary.PercentAvailed.toFixed(2) + "%"
+            : "",
+      }));
+
+      // Add total row
+      excelData.push({
+        Section: "Total",
+        Demanded: pastBlockSummary
+          .reduce((sum, item) => sum + (item.Demanded || 0), 0)
+          .toFixed(2),
+        Approved: pastBlockSummary
+          .reduce((sum, item) => sum + (item.Approved || 0), 0)
+          .toFixed(2),
+        Granted: String(
+          pastBlockSummary.reduce((sum, item) => sum + (item.Granted || 0), 0).toFixed(2)
+        ),
+        "% Granted":
+          String(
+            pastBlockSummary.reduce(
+              (sum, item) => sum + (item.PercentGranted || 0),
+              0
+            ).toFixed(2)
+          ) + "%",
+        Availed: String(
+          pastBlockSummary.reduce((sum, item) => sum + (item.Availed || 0), 0).toFixed(2)
+        ),
+        "% Availed":
+          String(
+            pastBlockSummary.reduce(
+              (sum, item) => sum + (item.PercentAvailed || 0),
+              0
+            ).toFixed(2)
+          ) + "%",
+      });
+
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+      // Add title before the data
+      XLSX.utils.sheet_add_aoa(
+        worksheet,
+        [
+          [
+            `(A) Block Summary: ${formatDisplayDate(
+              watch("startDate")
+            )} to ${formatDisplayDate(watch("endDate"))}`,
+          ],
+          [`Department: ${selectedDepartments.join(", ")} (in Hrs)`],
+          [], // Empty row for spacing
+        ],
+        { origin: "A1" }
+      );
+
+      // Adjust column widths
+      const colWidths = [
+        { wch: 15 }, // Section
+        { wch: 10 }, // Demanded
+        { wch: 10 }, // Approved
+        { wch: 10 }, // Granted
+        { wch: 10 }, // % Granted
+        { wch: 10 }, // Availed
+        { wch: 10 }, // % Availed
+      ];
+      worksheet["!cols"] = colWidths;
+
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Block Summary");
+
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+      const blob = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `block_summary_${format(new Date(), "dd-MM-yyyy")}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success("Block summary downloaded successfully");
+    } catch (error) {
+      console.error("Download error:", error);
+      toast.error("Failed to download Excel file. Please try again.");
+    }
+  };
 
   // Function to download upcoming blocks table as XLSX
   const handleDownloadUpcomingBlocks = () => {
@@ -625,12 +786,14 @@ export default function GenerateReportPage() {
         }
 
         return {
-          Date: formatDate(block.Date),
+          Date: formatDateB(block.Date),
           "Request ID": block.DivisionId || "N/A",
           "Station ID": block.stationId || "N/A",
+          "Block Section": block.MissionBlock || "N/A",
           Type: block.Type || "N/A",
-          Activity: block.Activity || "N/A",
           Duration: block.Duration,
+          Activity: block.Activity || "N/A",
+          Depo:block.selectedDepo||"N/A",
           "Availed Time":
             block.AvailedTimeFrom && block.AvailedTimeTo
               ? `${formatTime(block.AvailedTimeFrom)} to ${formatTime(
@@ -694,348 +857,1369 @@ export default function GenerateReportPage() {
       toast.error("Failed to download Excel file. Please try again.");
     }
   };
+  // Get unique SSE names from your data
+const sseOptions = [...new Set(
+  reportData?.data?.detailedData
+    ?.map((item: any) => item.userName)
+    .filter(Boolean) // Remove null/undefined
+)].sort();
+const handleDownloadDepartmentCount = () => {
+  try {
+    if (detailedData.length === 0) { // Changed from countBlock to detailedData
+      toast.error("No data available to download");
+      return;
+    }
 
-  // if (isLoading) {
-  //   return (
-  //     <div className="min-h-screen text-black bg-white p-3 border border-black flex items-center justify-center">
-  //       <div className="text-center py-5">Loading approved requests...</div>
-  //     </div>
-  //   );
-  // }
+    // Prepare the Excel data matching your table structure
+    const excelData = [
+      // ENGG Rows
+      {
+        "Location": "MAS",
+        "Department": "ENGG",
+        "Supporting Department": "-",
+        "Total Block Requested": enggTotal,
+        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.isSanctioned).length,
+        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
+      },
+      {
+        "Location": "MAS",
+        "Department": "ENGG",
+        "Supporting Department": "S&T",
+        "Total Block Requested": enggWithSnt,
+        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.isSanctioned),
+        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+      },
+      {
+        "Location": "MAS",
+        "Department": "ENGG",
+        "Supporting Department": "TRD",
+        "Total Block Requested": enggWithPower,
+        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.isSanctioned),
+        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+      },
+      {
+        "Location": "MAS",
+        "Department": "ENGG",
+        "Supporting Department": "S&T and TRD",
+        "Total Block Requested": enggWithSntAndPower,
+        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.powerBlockRequired === true && block.isSanctioned),
+        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+      },
+      
+      // TRD Rows
+      {
+        "Location": "MAS",
+        "Department": "TRD",
+        "Supporting Department": "-",
+        "Total Block Requested": trdTotal,
+        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "TRD" && block.isSanctioned),
+        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "TRD" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+      },
+      
+      // S&T Rows
+      {
+        "Location": "MAS",
+        "Department": "S&T",
+        "Supporting Department": "-",
+        "Total Block Requested": sntTotal,
+        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "S&T" && block.isSanctioned),
+        "Total Block Availed":detailedData.filter(block => block.selectedDepartment === "S&T" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+      },
+      {
+        "Location": "MAS",
+        "Department": "S&T",
+        "Supporting Department": "ENGG",
+        "Total Block Requested": sntWithEngg,
+        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.isSanctioned),
+        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+      },
+      {
+        "Location": "MAS",
+        "Department": "S&T",
+        "Supporting Department": "TRD",
+        "Total Block Requested": sntWithPower,
+        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.isSanctioned),
+        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+      },
+      {
+        "Location": "MAS",
+        "Department": "S&T",
+        "Supporting Department": "ENGG and TRD",
+        "Total Block Requested": sntWithEnggAndPower,
+        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.powerBlockRequired === true && block.isSanctioned),
+        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+      },
+      
+      // Total Row
+      {
+        "Location": "TOTAL",
+        "Department": "",
+        "Supporting Department": "",
+        "Total Block Requested": totalRequested,
+        "Total Block Sanctioned": totalSanctioned,
+        "Total Block Availed": totalAvailed
+      }
+    ];
+
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+    // Add title before the data
+    XLSX.utils.sheet_add_aoa(
+      worksheet,
+      [
+        [`Department Wise Request Count`],
+        [], // Empty row for spacing
+      ],
+      { origin: "A1" }
+    );
+
+    // Adjust column widths for better readability
+    const colWidths = [
+      { wch: 12 }, // Location
+      { wch: 15 }, // Department
+      { wch: 25 }, // Supporting Department
+      { wch: 20 }, // Total Block Requested
+      { wch: 20 }, // Total Block Sanctioned
+      { wch: 20 }, // Total Block Availed
+    ];
+    worksheet["!cols"] = colWidths;
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Department Count");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `department_wise_request_count_${format(
+      new Date(),
+      "dd-MM-yyyy"
+    )}.xlsx`;
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast.success("Department wise request count downloaded successfully");
+  } catch (error) {
+    console.error("Download error:", error);
+    toast.error("Failed to download Excel file. Please try again.");
+  }
+};
 
   return (
     <div className="min-h-screen w-full bg-[#fffbe9] flex flex-col items-center">
       {/* RBMS Header */}
       <div className="w-full bg-[#fff35c] flex flex-col items-center py-2 rounded-t-2xl">
-        <span className="text-[24px] font-extrabold text-[#b07be0] tracking-wide">
+        <span className="text-[18px] md:text-[24px] font-extrabold text-[#b07be0] tracking-wide">
           RBMS-{session?.user?.location}-DIVN
         </span>
       </div>
-
+      
       {/* Block Summary Report Title */}
       <div className="w-full bg-[#b7e3ee] flex flex-col items-center pt-2 pb-1">
-        <span className="text-[24px] font-extrabold text-black">
+        <span className="text-[18px] md:text-[24px] font-extrabold text-black text-center px-2">
           Block Summary Report
         </span>
-        <span className="text-[24px] font-bold text-black">{session?.user?.name}</span>
-        <div className="mt-2 bg-[#7be09b] px-6 py-1 rounded-2xl">
-          <span className="text-[24px] font-bold text-white">
+        <span className="text-[16px] md:text-[24px] font-bold text-black">DRM/ADRM/SrDOM</span>
+        <div className="mt-2 bg-[#7be09b] px-4 md:px-6 py-1 rounded-2xl">
+          <span className="text-[16px] md:text-[24px] font-bold text-white">
             Blocks Granted/Availed/Pending
           </span>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-screen-lg mx-auto w-full px-3">
-        {/* Filters Section */}
-        <div className="w-full bg-[#fffbe9] px-2 py-2">
-          <div className="flex flex-row gap-8 items-end w-full flex-wrap">
-            {/* Choose Section Dropdown */}
-            <div className="flex flex-col flex-1 min-w-[90px] max-w-[110px] w-full">
-              <span className="text-[24px] font-bold text-black mb-1 whitespace-nowrap">
-                Choose Section
+      {/* === FILTERS SECTION === */}
+      <div className="w-full max-w-screen-lg bg-[#fffbe9] px-2 py-2">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 items-end w-full">
+          <div className="flex flex-col w-full sm:min-w-[90px] sm:max-w-[110px]">
+            <span className="text-[16px] md:text-[24px] font-bold text-black mb-1 whitespace-nowrap">
+              Choose Section
+            </span>
+            <Select
+              options={majorSectionOptions}
+              isMulti={true}
+              value={majorSectionOptions.filter((opt) =>
+                selectedMajorSections.includes(opt.value)
+              )}
+              onChange={(opts) => handleMajorSectionChange(opts)}
+              classNamePrefix="section-select"
+              styles={{
+                container: (base) => ({
+                  ...base,
+                  width: "100%",
+                  maxWidth: "110px",
+                  minWidth: "90px",
+                }),
+                control: (base, state) => ({
+                  ...base,
+                  borderColor: "#00bfff",
+                  borderWidth: 2,
+                  borderRadius: 0,
+                  minHeight: 32,
+                  fontSize: 16,
+                  width: "100%",
+                  maxWidth: "110px",
+                  minWidth: "90px",
+                  // Show only the count in the input
+                  "&:after": selectedMajorSections.length > 0 ? {
+                    content: `"${selectedMajorSections.length}"`,
+                    position: 'absolute',
+                    left: 8,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: '#000',
+                    fontWeight: 'bold',
+                    pointerEvents: 'none',
+                  } : {},
+                }),
+                input: (base) => ({
+                  ...base,
+                  opacity: 0, // Hide the default input
+                  width: 0,
+                }),
+                placeholder: (base) => ({
+                  ...base,
+                  display: selectedMajorSections.length > 0 ? 'none' : 'block',
+                }),
+                option: (base, state) => ({
+                  ...base,
+                  backgroundColor: state.isSelected ? "#b7e3ee" : "#fff",
+                  color: "#000",
+                  fontWeight: "bold",
+                  fontSize: 16,
+                }),
+                menu: (base) => ({ ...base, zIndex: 50 }),
+                multiValue: (base) => ({
+                  ...base,
+                  backgroundColor: "#e0e0ff",
+                  color: "#000",
+                  display: 'none', // Hide the chips in the input
+                }),
+                multiValueLabel: (base) => ({
+                  ...base,
+                  color: "#000",
+                  fontWeight: "bold",
+                }),
+                multiValueRemove: (base) => ({
+                  ...base,
+                  color: "#b07be0",
+                  ":hover": { backgroundColor: "#b07be0", color: "white" },
+                }),
+              }}
+              placeholder="Section"
+              closeMenuOnSelect={false}
+              hideSelectedOptions={false}
+              menuPortalTarget={
+                typeof window !== "undefined" ? document.body : undefined
+              }
+              menuPosition="fixed"
+            />
+          </div>
+          
+          {/* Select Period */}
+          <div className="flex flex-col w-full">
+            <div className="flex justify-center w-full mb-1">
+              <span className="text-[16px] md:text-[24px] font-bold text-black">
+                Select Period
               </span>
-              <Select
-                options={majorSectionOptions}
-                isMulti={true}
-                value={majorSectionOptions.filter((opt) =>
-                  selectedMajorSections.includes(opt.value)
-                )}
-                onChange={(opts) => handleMajorSectionChange(opts)}
-                classNamePrefix="section-select"
-                styles={{
-                  container: (base) => ({
-                    ...base,
-                    width: "100%",
-                    maxWidth: "110px",
-                    minWidth: "90px",
-                  }),
-                  control: (base, state) => ({
-                    ...base,
-                    borderColor: "#00bfff",
-                    borderWidth: 2,
-                    borderRadius: 0,
-                    minHeight: 32,
-                    fontSize: 24,
-                    width: "100%",
-                    maxWidth: "110px",
-                    minWidth: "90px",
-                    "&:after": selectedMajorSections.length > 0 ? {
-                      content: `"${selectedMajorSections.length}"`,
-                      position: 'absolute',
-                      left: 8,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      color: '#000',
-                      fontWeight: 'bold',
-                      pointerEvents: 'none',
-                    } : {},
-                  }),
-                  input: (base) => ({
-                    ...base,
-                    opacity: 0,
-                    width: 0,
-                  }),
-                  placeholder: (base) => ({
-                    ...base,
-                    display: selectedMajorSections.length > 0 ? 'none' : 'block',
-                  }),
-                  option: (base, state) => ({
-                    ...base,
-                    backgroundColor: state.isSelected ? "#b7e3ee" : "#fff",
-                    color: "#000",
-                    fontWeight: "bold",
-                    fontSize: 24,
-                  }),
-                  menu: (base) => ({ ...base, zIndex: 50 }),
-                  multiValue: (base) => ({
-                    ...base,
-                    backgroundColor: "#e0e0ff",
-                    color: "#000",
-                    display: 'none',
-                  }),
-                  multiValueLabel: (base) => ({
-                    ...base,
-                    color: "#000",
-                    fontWeight: "bold",
-                  }),
-                  multiValueRemove: (base) => ({
-                    ...base,
-                    color: "#b07be0",
-                    ":hover": { backgroundColor: "#b07be0", color: "white" },
-                  }),
-                }}
-                placeholder="Section"
-                closeMenuOnSelect={false}
-                hideSelectedOptions={false}
-                menuPortalTarget={
-                  typeof window !== "undefined" ? document.body : undefined
-                }
-                menuPosition="fixed"
-              />
             </div>
-
-            {/* Select Period */}
-            <div className="flex flex-col flex-1 min-w-[180px] w-full">
-              <div className="flex justify-center w-full mb-1">
-                <span className="text-[24px] font-bold text-black">
-                  Select Period
-                </span>
-              </div>
-              <div className="flex flex-row items-center gap-1 w-full">
-                <input
-                  type="date"
-                  className="border-2 border-[#e57373] rounded-md px-1 py-1 w-full max-w-[120px] text-[24px] font-bold text-center"
-                  style={{ color: "black" }}
-                  {...register("startDate")}
-                />
-                <span className="text-base font-bold" style={{ color: "black" }}>
-                  to
-                </span>
-                <input
-                  type="date"
-                  className="border-2 border-[#e57373] rounded-md px-1 py-1 w-full max-w-[120px] text-[24px] font-bold text-center"
-                  style={{ color: "black" }}
-                  {...register("endDate")}
-                />
-              </div>
+            <div className="flex flex-row items-center gap-1 w-full justify-center sm:justify-start">
+              <input
+                type="date"
+                className="border-2 border-[#e57373] rounded-md px-1 py-1 w-full max-w-[100px] md:max-w-[120px] text-[14px] md:text-[24px] font-bold text-center"
+                style={{ color: "black" }}
+                {...register("startDate")}
+              />
+              <span className="text-[14px] md:text-base font-bold" style={{ color: "black" }}>
+                to
+              </span>
+              <input
+                type="date"
+                className="border-2 border-[#e57373] rounded-md px-1 py-1 w-full max-w-[100px] md:max-w-[120px] text-[14px] md:text-[24px] font-bold text-center"
+                style={{ color: "black" }}
+                {...register("endDate")}
+              />
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Block Type Filters */}
-        <div className="w-full flex flex-wrap justify-center gap-2 mt-2 mb-1">
-          {blockTypeOptions.map((opt) => (
-            <button
-              key={opt.value}
-              className={`rounded-full px-3 py-1 text-[24px] font-semibold border border-[#b7e3ee] flex items-center gap-1 transition-colors duration-150 ${selectedBlockTypes.includes(opt.value)
+      {/* Block Type Filters */}
+      <div className="w-full max-w-screen-lg flex flex-wrap justify-center gap-2 mt-2 mb-1 px-2">
+        {blockTypeOptions.map((opt) => (
+          <button
+            key={opt.value}
+            className={`rounded-full px-2 py-1 text-[12px] md:text-[24px] font-semibold border border-[#b7e3ee] flex items-center gap-1 transition-colors duration-150 ${
+              selectedBlockTypes.includes(opt.value)
                 ? "bg-[#b7e3ee] text-black"
                 : "bg-[#e0e0ff] text-black"
-                }`}
-              onClick={() => toggleBlockType(opt.value)}
-              type="button"
-            >
-              {selectedBlockTypes.includes(opt.value) && (
-                <span className="text-green-600 font-bold">✔</span>
-              )}
-              {opt.label}
-            </button>
-          ))}
-        </div>
+            }`}
+            onClick={() => toggleBlockType(opt.value)}
+            type="button"
+          >
+            {selectedBlockTypes.includes(opt.value) && (
+              <span className="text-green-600 font-bold">✔</span>
+            )}
+            {opt.label}
+          </button>
+        ))}
+      </div>
 
-        {/* Department Filters */}
-        <div className="w-full flex flex-wrap justify-center gap-2 mb-2">
-          {departmentOptions.map((opt) => (
-            <button
-              key={opt.value}
-              className={`rounded-full px-3 py-1 text-[24px] font-semibold border flex items-center gap-1 transition-colors duration-150
-                ${opt.value === "Engineering"
+      {/* Department Filters */}
+      <div className="w-full max-w-screen-lg flex flex-wrap justify-center gap-2 mb-2 px-2">
+        {departmentOptions.map((opt) => (
+          <button
+            key={opt.value}
+            className={`rounded-full px-2 py-1 text-[12px] md:text-[24px] font-semibold border flex items-center gap-1 transition-colors duration-150
+              ${
+                opt.value === "Engineering"
                   ? selectedDepartments.includes(opt.value)
                     ? "bg-[#e49edd] border-[#b07be0] text-black"
                     : "bg-[#f3e6f7] border-[#b07be0] text-black"
                   : opt.value === "ST"
-                    ? selectedDepartments.includes(opt.value)
-                      ? "bg-[#fff35c] border-[#e0e0e0] text-black"
-                      : "bg-[#fffbe9] border-[#e0e0e0] text-black"
-                    : selectedDepartments.includes(opt.value)
-                      ? "bg-[#c7f7c7] border-[#7be09b] text-black"
-                      : "bg-[#e0fff0] border-[#7be09b] text-black"
-                }`}
-              onClick={() => toggleDepartment(opt.value)}
-              type="button"
+                  ? selectedDepartments.includes(opt.value)
+                    ? "bg-[#fff35c] border-[#e0e0e0] text-black"
+                    : "bg-[#fffbe9] border-[#e0e0e0] text-black"
+                  : selectedDepartments.includes(opt.value)
+                  ? "bg-[#c7f7c7] border-[#7be09b] text-black"
+                  : "bg-[#e0fff0] border-[#7be09b] text-black"
+              }`}
+            onClick={() => toggleDepartment(opt.value)}
+            type="button"
+          >
+            {selectedDepartments.includes(opt.value) && (
+              <span className="text-green-600 font-bold">✔</span>
+            )}
+            {opt.label}
+          </button>
+        ))}
+      </div>
+{/* === GLOBAL FILTERS SECTION === */}
+<div className="w-full max-w-screen-lg flex flex-wrap justify-center gap-2 mb-4 px-2">
+  {/* Work Type Filter */}
+  <div className="relative" ref={globalWorkTypeDropdownRef}>
+    <button
+      onClick={() => setShowGlobalWorkTypeDropdown(!showGlobalWorkTypeDropdown)}
+      className="px-3 py-1 bg-white border border-black rounded flex items-center gap-2 text-black text-[12px] md:text-[14px]"
+      disabled={selectedDepartments.length === 0}
+    >
+      Work Type: {globalWorkTypeFilter}
+      <span>▼</span>
+    </button>
+    {showGlobalWorkTypeDropdown && selectedDepartments.length > 0 && (
+      <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[150px]">
+        {getWorkTypesForDepartments(selectedDepartments).map((type) => (
+          <button
+            key={type.value}
+            onClick={() => {
+              setGlobalWorkTypeFilter(type.value);
+              setGlobalActivityFilter('ALL');
+              setShowGlobalWorkTypeDropdown(false);
+            }}
+            className={`block w-full text-left px-3 py-2 hover:bg-gray-100 text-black ${globalWorkTypeFilter === type.value ? 'bg-blue-100' : ''}`}
+          >
+            {type.label}
+          </button>
+        ))}
+      </div>
+    )}
+  </div>
+
+  {/* Activity Filter */}
+  <div className="relative" ref={globalActivityDropdownRef}>
+    <button
+      onClick={() => globalWorkTypeFilter !== 'ALL' && setShowGlobalActivityDropdown(!showGlobalActivityDropdown)}
+      className={`px-3 py-1 bg-white border border-black rounded flex items-center gap-2 text-black text-[12px] md:text-[14px] ${
+        globalWorkTypeFilter === 'ALL' || selectedDepartments.length === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+      }`}
+      disabled={globalWorkTypeFilter === 'ALL' || selectedDepartments.length === 0}
+    >
+      Activity: {globalActivityFilter}
+      <span>▼</span>
+    </button>
+    {showGlobalActivityDropdown && globalWorkTypeFilter !== 'ALL' && selectedDepartments.length > 0 && (
+      <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[200px] max-h-60 overflow-y-auto">
+        {getActivitiesForWorkType(globalWorkTypeFilter).map((activity) => (
+          <button
+            key={activity}
+            onClick={() => {
+              setGlobalActivityFilter(activity);
+              setShowGlobalActivityDropdown(false);
+            }}
+            className={`block w-full text-left px-3 py-2 hover:bg-gray-100 text-black ${globalActivityFilter === activity ? 'bg-blue-100' : ''}`}
+          >
+            {activity}
+          </button>
+        ))}
+      </div>
+    )}
+  </div>
+
+  {/* Time Slot Filter */}
+{/* Duration Filter */}
+<div className="relative" ref={durationDropdownRef}>
+  <button
+    onClick={() => setShowDurationDropdown(!showDurationDropdown)}
+    className="px-3 py-1 bg-white border border-black rounded flex items-center gap-2 text-black text-[12px] md:text-[14px]"
+  >
+    Duration: {durationFilter.operator === "ALL" 
+      ? "ALL" 
+      : `${getOperatorSymbol(durationFilter.operator)} ${durationFilter.value}h`
+    }
+    <span>▼</span>
+  </button>
+  
+  {showDurationDropdown && (
+    <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[200px] p-3">
+      {/* Operator Selection */}
+      <div className="mb-3">
+        <label className="block text-sm font-medium text-black mb-1">Operator:</label>
+        <div className="grid grid-cols-3 gap-1">
+          {[
+            { value: "ALL", label: "ALL", symbol: "ALL" },
+            { value: ">", label: ">", symbol: "Greater than" },
+            { value: ">=", label: "≥", symbol: "Greater than or equal" },
+            { value: "=", label: "=", symbol: "Equal to" },
+            { value: "<=", label: "≤", symbol: "Less than or equal" },
+            { value: "<", label: "<", symbol: "Less than" }
+          ].map((op) => (
+            <button
+              key={op.value}
+              onClick={() => setDurationFilter(prev => ({ ...prev, operator: op.value }))}
+              className={`p-2 border rounded text-sm ${
+                durationFilter.operator === op.value 
+                  ? 'bg-blue-500 text-white border-blue-500' 
+                  : 'bg-gray-100 text-black border-gray-300'
+              }`}
+              title={op.symbol}
             >
-              {selectedDepartments.includes(opt.value) && (
-                <span className="text-green-600 font-bold">✔</span>
-              )}
-              {opt.label}
+              {op.label}
             </button>
           ))}
         </div>
+      </div>
 
-        {/* Submit Button */}
-        <div className="w-full flex justify-center mb-2">
-          <button
-            className="bg-[#7be09b] hover:bg-[#5bc07b] text-white font-bold px-8 py-2 rounded-lg shadow border border-[#00b347] text-[24px]"
-            onClick={handleSubmit(onSubmit)}
-            disabled={loading}
-          >
-            {loading ? "Generating..." : "Generate Report"}
-          </button>
+      {/* Duration Input */}
+      {durationFilter.operator !== "ALL" && (
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-black mb-1">
+            Duration (hours):
+          </label>
+          <input
+            type="number"
+            min="0"
+            max="24"
+            step="0.5"
+            value={durationFilter.value}
+            onChange={(e) => setDurationFilter(prev => ({ 
+              ...prev, 
+              value: e.target.value 
+            }))}
+            className="w-full px-2 py-1 border border-gray-300 rounded text-black"
+            placeholder="Enter hours"
+          />
+          <div className="flex gap-1 mt-1">
+            {[1, 2, 4, 6, 8].map((hours) => (
+              <button
+                key={hours}
+                onClick={() => setDurationFilter(prev => ({ 
+                  ...prev, 
+                  value: hours.toString() 
+                }))}
+                className="flex-1 px-2 py-1 bg-gray-200 text-black rounded text-xs hover:bg-gray-300"
+              >
+                {hours}h
+              </button>
+            ))}
+          </div>
         </div>
+      )}
 
-        {/* (A) Block Summary Table */}
-        {/* <div className="w-full mt-4">
-          <div className="flex w-full">
-            <div className="flex-1 bg-[#ff914d] text-[24px] font-bold border-2 border-black px-2 py-1" style={{ color: "black" }}>
-              (A)Block Summary: {formatDisplayDate(watch("startDate")) || "........"} to {formatDisplayDate(watch("endDate")) || "........"}
-            </div>
-            <div className="flex-1 bg-[#ff914d] text-[24px] font-bold border-2 border-black px-2 py-1" style={{ color: "black" }}>
-              Department: {selectedDepartments.length > 0 ? selectedDepartments.join(", ") : "............."} (in Hrs)
-            </div>
-          </div>
-          <div className="overflow-x-auto w-full">
-            <table className="w-full border-2 border-black">
-              <thead>
-                <tr className="bg-[#f7c7ac] text-black text-[24px] font-bold">
-                  <th className="border-2 border-black px-2 py-1">Section</th>
-                  <th className="border-2 border-black px-2 py-1">Demanded</th>
-                  <th className="border-2 border-black px-2 py-1">Approved</th>
-                  <th className="border-2 border-black px-2 py-1">Granted</th>
-                  <th className="border-2 border-black px-2 py-1">% Granted</th>
-                  <th className="border-2 border-black px-2 py-1">Availed</th>
-                  <th className="border-2 border-black px-2 py-1">% Availed</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pastBlockSummary.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="text-center py-4" style={{ color: "black" }}>
-                      No data found.
-                    </td>
-                  </tr>
-                ) : (
-                  pastBlockSummary.map((summary: any, idx: number) => (
-                    <tr className={`font-bold ${idx % 2 === 0 ? "bg-[#f4dcf1]" : "bg-white"}`} key={idx}>
-                      <td className="border-2 border-black px-2 py-1 text-center" style={{ color: "black" }}>
-                        {summary.Department || summary.Section || ""}
-                      </td>
-                      <td className="border-2 border-black px-2 py-1 text-center" style={{ color: "black" }}>
-                        {summary.Demanded}
-                      </td>
-                      <td className="border-2 border-black px-2 py-1 text-center" style={{ color: "black" }}>
-                        {summary.Approved}
-                      </td>
-                      <td className="border-2 border-black px-2 py-1 text-center" style={{ color: "black" }}>
-                        {summary.Granted}
-                      </td>
-                      <td className="border-2 border-black px-2 py-1 text-center" style={{ color: "black" }}>
-                        {summary.PercentGranted !== undefined ? summary.PercentGranted + "%" : ""}
-                      </td>
-                      <td className="border-2 border-black px-2 py-1 text-center" style={{ color: "black" }}>
-                        {summary.Availed}
-                      </td>
-                      <td className="border-2 border-black px-2 py-1 text-center" style={{ color: "black" }}>
-                        {summary.PercentAvailed !== undefined ? summary.PercentAvailed + "%" : ""}
-                      </td>
-                    </tr>
-                  ))
-                )}
+      {/* Action Buttons */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => {
+            setShowDurationDropdown(false);
+          }}
+          className="flex-1 bg-green-500 text-white py-1 rounded text-sm hover:bg-green-600"
+        >
+          Apply
+        </button>
+        <button
+          onClick={() => {
+            setDurationFilter({ operator: "ALL", value: "" });
+            setShowDurationDropdown(false);
+          }}
+          className="flex-1 bg-red-500 text-white py-1 rounded text-sm hover:bg-red-600"
+        >
+          Clear
+        </button>
+      </div>
+    </div>
+  )}
+</div>
 
-                {pastBlockSummary.length > 0 && (
-                  <tr className="bg-[#ff914d] text-white font-bold">
-                    <td className="border-2 border-black px-2 py-1 text-center">Total</td>
-                    <td className="border-2 border-black px-2 py-1 text-center" style={{ color: "black" }}>
-                      {pastBlockSummary.reduce((sum, item) => sum + (item.Demanded || 0), 0)}
-                    </td>
-                    <td className="border-2 border-black px-2 py-1 text-center" style={{ color: "black" }}>
-                      {pastBlockSummary.reduce((sum, item) => sum + (item.Approved || 0), 0)}
-                    </td>
-                    <td className="border-2 border-black px-2 py-1 text-center" style={{ color: "black" }}>
-                      {pastBlockSummary.reduce((sum, item) => sum + (item.Granted || 0), 0)}
-                    </td>
-                    <td className="border-2 border-black px-2 py-1 text-center" style={{ color: "black" }}>
-                      {pastBlockSummary.reduce((sum, item) => sum + (item.PercentGranted || 0), 0)}
-                    </td>
-                    <td className="border-2 border-black px-2 py-1 text-center" style={{ color: "black" }}>
-                      {pastBlockSummary.reduce((sum, item) => sum + (item.Availed || 0), 0)}
-                    </td>
-                    <td className="border-2 border-black px-2 py-1 text-center" style={{ color: "black" }}>
-                      {pastBlockSummary.reduce((sum, item) => sum + (item.PercentAvailed || 0), 0)}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div> */}
+  {/* Clear Filters Button */}
+  <button
+    onClick={clearGlobalFilters}
+    className="px-3 py-1 bg-red-500 text-white border border-black rounded text-[12px] md:text-[14px]"
+  >
+    Clear Filters
+  </button>
+</div>
 
-        {/* (B) Summary of Upcoming Blocks */}
-        <div className="w-full max-w-4xl mt-8">
+      {/* Submit Button */}
+      <div className="w-full max-w-screen-lg flex justify-center mb-4">
+        <button
+          className="bg-[#7be09b] hover:bg-[#5bc07b] text-white font-bold px-6 md:px-8 py-2 rounded-[50%] shadow border border-[#00b347] text-[16px] md:text-[24px]"
+          onClick={handleSubmit(onSubmit)}
+          disabled={loading}
+        >
+          {loading ? "Loading..." : "Submit"}
+        </button>
+      </div>
+
+
+      {/* === PAGE 1: (A) BLOCK SUMMARY TABLE - FULL WIDTH === */}
+      <div className="w-full bg-white flex flex-col py-4">
+        <div className="w-full px-2 md:px-4">
           <div className="my-2">
             <button
-              onClick={handleDownloadUpcomingBlocks}
-              className="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1 mr-2 shadow border border-green-800 text-base flex items-center"
-              disabled={filteredUpcomingBlocks.length === 0}
+              onClick={handleDownloadSummary}
+              className="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1 shadow border border-green-800 text-[12px] md:text-base flex items-center mx-auto"
+              disabled={pastBlockSummary.length === 0}
             >
-              {" "}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 mr-1"
+                className="h-4 w-4 md:h-5 md:w-5 mr-1"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
               >
-                {" "}
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
                   d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                 />
-              </svg>{" "}
-              Download Summary of Upcoming Blocks (XLSX)
+              </svg>
+              Download Past Blocks Summary (XLSX)
             </button>
           </div>
-          <div className="flex w-full items-center">
-            <div className="flex-1 bg-[#f1a983] text-[24px] font-bold border-2 border-black px-2 py-1">
-              (B) Summary of Upcoming Blocks
+          
+          <div className="flex flex-col md:flex-row w-full">
+            <div className="bg-[#ff914d] text-[16px] md:text-[24px] font-bold border-2 border-black px-2 py-1 text-center">
+              (A) Block Summary:{" "}
+              {formatDisplayDate(watch("startDate")) || "........"} to{" "}
+              {formatDisplayDate(watch("endDate")) || "........"}
             </div>
-            <div className="flex items-center gap-2 ml-4">
+            <div className="bg-[#ff914d] text-[16px] md:text-[24px] font-bold border-2 border-black px-2 py-1 text-center md:mt-0 mt-1">
+              Department:{" "}
+              {selectedDepartments.length > 0
+                ? selectedDepartments.join(", ")
+                : "............."}{" "}
+              (in Hrs)
+            </div>
+          </div>
+          
+          <div className="w-full overflow-x-auto">
+            <table className="w-full border-2 border-black min-w-[800px]">
+              <thead>
+                <tr className="bg-[#f7c7ac] text-black text-[14px] md:text-[24px] font-bold">
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Section</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Demanded (Hrs)/Blocks</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Approved (Hrs)/Blocks</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Applied (Hrs)/Blocks</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Granted (Hrs)/Blocks</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">% Granted</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Availed (Hrs)/Blocks</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">% Availed</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Not Granted</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Not Availed</th>
+
+                </tr>
+              </thead>
+              <tbody>
+                {pastBlockSummary.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="text-center py-4 text-black">
+                      No data found.
+                    </td>
+                  </tr>
+                ) : (
+                  pastBlockSummary.map((summary: any, idx: number) => (
+                    <tr
+                      className={`font-bold ${idx % 2 === 0 ? "bg-[#f4dcf1]" : "bg-white"}`}
+                      key={idx}
+                    >
+                      <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                        {summary.Department || summary.Section || ""}
+                      </td>
+                      <td
+                        className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                         onClick={() => {
+    setActiveFilter("demanded");
+    setActiveSection(summary.Department || summary.Section);
+  }}
+                      >
+                        {summary.Demanded.toFixed(2)} / {summary.DemandsCount}
+                      </td>
+                      <td
+                        className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                        onClick={() => {
+                          setActiveFilter("approved");
+                          setActiveSection(summary.Department || summary.Section);
+                        }}
+                      >
+                        {summary.Approved.toFixed(2)} / {summary.ApprovedCount}
+                      </td>
+                      <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                         onClick={() => {
+                          setActiveFilter("applied");
+                          setActiveSection(summary.Department || summary.Section);
+                        }}
+                      >
+                        {summary.Applied.toFixed(2)} /{summary.AppliedCount}
+                      </td>
+                      <td
+                        className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                        onClick={() => {
+                          setActiveFilter("granted");
+                          setActiveSection(summary.Department || summary.Section);
+                        }}
+                      >
+                        {summary.Granted.toFixed(2)} /{summary.GrantedCount}
+                      </td>
+                    
+                      <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                        {summary.PercentGranted !== undefined
+                          ? summary.PercentGranted.toFixed(2) + "%"
+                          : ""}
+                      </td>
+                      <td
+                        className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                        onClick={() => {
+                          setActiveFilter("availed");
+                          setActiveSection(summary.Department || summary.Section);
+                        }}
+                      >
+                        {summary.Availed.toFixed(2)} / {summary.AvailedCount}
+                      </td>
+                      <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                        {summary.PercentAvailed !== undefined
+                          ? summary.PercentAvailed.toFixed(2) + "%"
+                          : ""}
+                      </td>
+<td
+  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+  onClick={() => {
+    // You can define what happens when Not Granted is clicked
+    // For example, filter the upcoming blocks to show only not granted requests
+    setActiveFilter("notGranted");
+    setActiveSection(summary.Department || summary.Section);
+    toast.success(`Viewing Not Granted for: ${summary.Department || summary.Section}`);
+  }}
+>
+  {summary.NotGrantedCount}
+</td>
+<td
+  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+  onClick={() => {
+    // You can define what happens when Not Availed is clicked
+    setActiveFilter("notAvailed");
+    setActiveSection(summary.Department || summary.Section);
+    toast.success(`Viewing Not Availed for: ${summary.Department || summary.Section}`);
+  }}
+>
+  {summary.NotAvailedCount}
+</td>
+                    
+                    </tr>
+                  ))
+                )}
+
+                {pastBlockSummary.length > 0 && (
+                  <tr className="bg-[#ff914d] text-white font-bold">
+                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-[12px] md:text-[16px]">Totals</td>
+                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                      {pastBlockSummary
+                        .reduce((sum, item) => sum + (item.Demanded || 0), 0)
+                        .toFixed(2)}{" "}
+                      /{" "}
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.DemandsCount || 0),
+                        0
+                      )}
+                    </td>
+                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                      {pastBlockSummary
+                        .reduce((sum, item) => sum + (item.Approved || 0), 0)
+                        .toFixed(2)}{" "}
+                      /{" "}
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.ApprovedCount || 0),
+                        0
+                      )}
+                    </td>
+                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.Applied || 0),
+                        0
+                      ).toFixed(2)} /{" "}
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.AppliedCount || 0),
+                        0
+                      )}
+                    </td>
+                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.Granted || 0),
+                        0
+                      ).toFixed(2)} /{" "}
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.GrantedCount || 0),
+                        0
+                      )}
+                    </td>
+                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.PercentGranted || 0),
+                        0
+                      ).toFixed(2)}
+                    </td>
+                    
+                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.Availed || 0),
+                        0
+                      ).toFixed(2)}{" "}
+                      /{" "}
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.AvailedCount || 0),
+                        0
+                      )}
+                    </td>
+                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.PercentAvailed || 0),
+                        0
+                      ).toFixed(2)}
+                    </td>
+                  <td
+  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+  onClick={() => {
+    setActiveFilter("notGranted");
+    setActiveSection(null); // Show all sections for total
+    toast.success("Viewing all Not Granted requests");
+  }}
+>
+  {pastBlockSummary.reduce(
+    (sum, item) => sum + (item.NotGrantedCount || 0),
+    0
+  )}
+</td>
+<td
+  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+  onClick={() => {
+    setActiveFilter("notAvailed");
+    setActiveSection(null); // Show all sections for total
+    toast.success("Viewing all Not Availed requests");
+  }}
+>
+  {pastBlockSummary.reduce(
+    (sum, item) => sum + (item.NotAvailedCount || 0),
+    0
+  )}
+</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+
+
+  <div className="flex flex-col md:flex-row w-full mt-8 gap-4 mb-2 ">
+  <button
+    onClick={handleDownloadDepartmentCount}
+    className="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1 shadow border border-green-800 text-[12px] md:text-base flex items-center"
+    disabled={detailedData.length === 0}
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="h-4 w-4 md:h-5 md:w-5 mr-1"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+      />
+    </svg>
+    Download Count (XLSX)
+  </button>
+
+  <div className="bg-[#ff914d] text-[16px] md:text-[24px] font-bold border-2 border-black px-2 py-1 text-center">
+    Department Wise Request Count
+  </div>
+  {/* Department Count Filter Display */}
+{departmentCountFilter && (
+  <div className="w-full flex flex-col sm:flex-row justify-center items-center gap-4 my-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+    <div className="bg-blue-100 border border-blue-300 px-4 py-2 rounded-lg">
+      <span className="text-blue-700 font-bold text-sm md:text-base">
+        Filtering: {departmentCountFilter.department} 
+        {departmentCountFilter.supportingDepartment !== "-" ? ` + ${departmentCountFilter.supportingDepartment}` : ''} 
+        ({departmentCountFilter.filterType.toUpperCase()})
+      </span>
+    </div>
+    <button
+      onClick={() => setDepartmentCountFilter(null)}
+      className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm font-bold flex items-center gap-2"
+    >
+      <span>✕</span>
+      Clear Department Filter
+    </button>
+  </div>
+)}
+</div>
+
+<div className="w-full overflow-x-auto ">
+  <table className="w-full border-2 border-black min-w-[800px]">
+    <thead>
+      <tr className="bg-[#f7c7ac] text-black text-[14px] md:text-[24px] font-bold">
+        <th className="border-2 border-black px-1 md:px-2 py-2">Location</th>
+        <th className="border-2 border-black px-1 md:px-2 py-2">Department</th>
+        <th className="border-2 border-black px-1 md:px-2 py-2">Supporting Department</th>
+        <th className="border-2 border-black px-1 md:px-2 py-2">Total Block Requested</th>
+        <th className="border-2 border-black px-1 md:px-2 py-2">Total Block Sanctioned</th>
+        <th className="border-2 border-black px-1 md:px-2 py-2">Total Block Availed</th>
+      </tr>
+    </thead>
+<tbody>
+  {/* ENGG Rows */}
+  <tr className="bg-white font-bold">
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">-</td>
+    <td 
+      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+      onClick={() => {
+        setDepartmentCountFilter({
+          department: "ENGG",
+          supportingDepartment: "-",
+          filterType: 'requested'
+        });
+        toast.success("Showing requested ENGG blocks (no supporting departments)");
+      }}
+    >
+      {enggTotal}
+    </td>
+    <td 
+      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+      onClick={() => {
+        setDepartmentCountFilter({
+          department: "ENGG",
+          supportingDepartment: "-",
+          filterType: 'sanctioned'
+        });
+        toast.success("Showing sanctioned ENGG blocks (no supporting departments)");
+      }}
+    >
+      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.isSanctioned && block.powerBlockRequired === false && block.sntDisconnectionRequired === false).length}
+    </td>
+    <td 
+      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+      onClick={() => {
+        setDepartmentCountFilter({
+          department: "ENGG",
+          supportingDepartment: "-",
+          filterType: 'availed'
+        });
+        toast.success("Showing availed ENGG blocks (no supporting departments)");
+      }}
+    >
+      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null && block.powerBlockRequired === false && block.sntDisconnectionRequired === false).length}
+    </td>
+  </tr>
+  
+  <tr className="bg-[#f4dcf1] font-bold">
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
+    <td 
+      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+      onClick={() => {
+        setDepartmentCountFilter({
+          department: "ENGG",
+          supportingDepartment: "S&T",
+          filterType: 'requested'
+        });
+        toast.success("Showing requested ENGG blocks with S&T support");
+      }}
+    >
+      {enggWithSnt}
+    </td>
+    <td 
+      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+      onClick={() => {
+        setDepartmentCountFilter({
+          department: "ENGG",
+          supportingDepartment: "S&T",
+          filterType: 'sanctioned'
+        });
+        toast.success("Showing sanctioned ENGG blocks with S&T support");
+      }}
+    >
+      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.isSanctioned && block.powerBlockRequired === false && block.enggDisconnectionsRequired === false).length}
+    </td>
+    <td 
+      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+      onClick={() => {
+        setDepartmentCountFilter({
+          department: "ENGG",
+          supportingDepartment: "S&T",
+          filterType: 'availed'
+        });
+        toast.success("Showing availed ENGG blocks with S&T support");
+      }}
+    >
+      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null && block.powerBlockRequired === false && block.enggDisconnectionsRequired === false).length}
+    </td>
+  </tr>
+  
+  <tr className="bg-white font-bold">
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">TRD</td>
+    <td 
+      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+      onClick={() => {
+        setDepartmentCountFilter({
+          department: "ENGG",
+          supportingDepartment: "TRD",
+          filterType: 'requested'
+        });
+        toast.success("Showing requested ENGG blocks with TRD support");
+      }}
+    >
+      {enggWithPower}
+    </td>
+    <td 
+      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+      onClick={() => {
+        setDepartmentCountFilter({
+          department: "ENGG",
+          supportingDepartment: "TRD",
+          filterType: 'sanctioned'
+        });
+        toast.success("Showing sanctioned ENGG blocks with TRD support");
+      }}
+    >
+      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.isSanctioned).length}
+    </td>
+    <td 
+      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+      onClick={() => {
+        setDepartmentCountFilter({
+          department: "ENGG",
+          supportingDepartment: "TRD",
+          filterType: 'availed'
+        });
+        toast.success("Showing availed ENGG blocks with TRD support");
+      }}
+    >
+      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
+    </td>
+  </tr>
+  
+  <tr className="bg-[#f4dcf1] font-bold">
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T and TRD</td>
+    <td 
+      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+      onClick={() => {
+        setDepartmentCountFilter({
+          department: "ENGG",
+          supportingDepartment: "S&T and TRD",
+          filterType: 'requested'
+        });
+        toast.success("Showing requested ENGG blocks with S&T and TRD support");
+      }}
+    >
+      {enggWithSntAndPower}
+    </td>
+    <td 
+      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+      onClick={() => {
+        setDepartmentCountFilter({
+          department: "ENGG",
+          supportingDepartment: "S&T and TRD",
+          filterType: 'sanctioned'
+        });
+        toast.success("Showing sanctioned ENGG blocks with S&T and TRD support");
+      }}
+    >
+      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.powerBlockRequired === true && block.isSanctioned).length}
+    </td>
+    <td 
+      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+      onClick={() => {
+        setDepartmentCountFilter({
+          department: "ENGG",
+          supportingDepartment: "S&T and TRD",
+          filterType: 'availed'
+        });
+        toast.success("Showing availed ENGG blocks with S&T and TRD support");
+      }}
+    >
+      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
+    </td>
+  </tr>
+
+  {/* TRD Rows */}
+  <tr className="bg-white font-bold">
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">TRD</td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">-</td>
+    <td 
+      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+      onClick={() => {
+        setDepartmentCountFilter({
+          department: "TRD",
+          supportingDepartment: "-",
+          filterType: 'requested'
+        });
+        toast.success("Showing requested TRD blocks");
+      }}
+    >
+      {trdTotal}
+    </td>
+    <td 
+      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+      onClick={() => {
+        setDepartmentCountFilter({
+          department: "TRD",
+          supportingDepartment: "-",
+          filterType: 'sanctioned'
+        });
+        toast.success("Showing sanctioned TRD blocks");
+      }}
+    >
+      {detailedData.filter(block => block.selectedDepartment === "TRD" && block.isSanctioned).length}
+    </td>
+    <td 
+      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+      onClick={() => {
+        setDepartmentCountFilter({
+          department: "TRD",
+          supportingDepartment: "-",
+          filterType: 'availed'
+        });
+        toast.success("Showing availed TRD blocks");
+      }}
+    >
+      {detailedData.filter(block => block.selectedDepartment === "TRD" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
+    </td>
+  </tr>
+
+  {/* S&T Rows */}
+  <tr className="bg-[#f4dcf1] font-bold">
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">-</td>
+    <td 
+      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+      onClick={() => {
+        setDepartmentCountFilter({
+          department: "S&T",
+          supportingDepartment: "-",
+          filterType: 'requested'
+        });
+        toast.success("Showing requested S&T blocks (no supporting departments)");
+      }}
+    >
+      {sntTotal}
+    </td>
+    <td 
+      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+      onClick={() => {
+        setDepartmentCountFilter({
+          department: "S&T",
+          supportingDepartment: "-",
+          filterType: 'sanctioned'
+        });
+        toast.success("Showing sanctioned S&T blocks (no supporting departments)");
+      }}
+    >
+      {detailedData.filter(block => block.selectedDepartment === "S&T" && block.isSanctioned).length}
+    </td>
+    <td 
+      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+      onClick={() => {
+        setDepartmentCountFilter({
+          department: "S&T",
+          supportingDepartment: "-",
+          filterType: 'availed'
+        });
+        toast.success("Showing availed S&T blocks (no supporting departments)");
+      }}
+    >
+      {detailedData.filter(block => block.selectedDepartment === "S&T" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
+    </td>
+  </tr>
+  
+  <tr className="bg-white font-bold">
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
+    <td 
+      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+      onClick={() => {
+        setDepartmentCountFilter({
+          department: "S&T",
+          supportingDepartment: "ENGG",
+          filterType: 'requested'
+        });
+        toast.success("Showing requested S&T blocks with ENGG support");
+      }}
+    >
+      {sntWithEngg}
+    </td>
+    <td 
+      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+      onClick={() => {
+        setDepartmentCountFilter({
+          department: "S&T",
+          supportingDepartment: "ENGG",
+          filterType: 'sanctioned'
+        });
+        toast.success("Showing sanctioned S&T blocks with ENGG support");
+      }}
+    >
+      {detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.isSanctioned).length}
+    </td>
+    <td 
+      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+      onClick={() => {
+        setDepartmentCountFilter({
+          department: "S&T",
+          supportingDepartment: "ENGG",
+          filterType: 'availed'
+        });
+        toast.success("Showing availed S&T blocks with ENGG support");
+      }}
+    >
+      {detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
+    </td>
+  </tr>
+  
+  <tr className="bg-[#f4dcf1] font-bold">
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">TRD</td>
+    <td 
+      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+      onClick={() => {
+        setDepartmentCountFilter({
+          department: "S&T",
+          supportingDepartment: "TRD",
+          filterType: 'requested'
+        });
+        toast.success("Showing requested S&T blocks with TRD support");
+      }}
+    >
+      {sntWithPower}
+    </td>
+    <td 
+      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+      onClick={() => {
+        setDepartmentCountFilter({
+          department: "S&T",
+          supportingDepartment: "TRD",
+          filterType: 'sanctioned'
+        });
+        toast.success("Showing sanctioned S&T blocks with TRD support");
+      }}
+    >
+      {detailedData.filter(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.isSanctioned).length}
+    </td>
+    <td 
+      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+      onClick={() => {
+        setDepartmentCountFilter({
+          department: "S&T",
+          supportingDepartment: "TRD",
+          filterType: 'availed'
+        });
+        toast.success("Showing availed S&T blocks with TRD support");
+      }}
+    >
+      {detailedData.filter(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
+    </td>
+  </tr>
+  
+  <tr className="bg-white font-bold">
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG and TRD</td>
+    <td 
+      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+      onClick={() => {
+        setDepartmentCountFilter({
+          department: "S&T",
+          supportingDepartment: "ENGG and TRD",
+          filterType: 'requested'
+        });
+        toast.success("Showing requested S&T blocks with ENGG and TRD support");
+      }}
+    >
+      {sntWithEnggAndPower}
+    </td>
+    <td 
+      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+      onClick={() => {
+        setDepartmentCountFilter({
+          department: "S&T",
+          supportingDepartment: "ENGG and TRD",
+          filterType: 'sanctioned'
+        });
+        toast.success("Showing sanctioned S&T blocks with ENGG and TRD support");
+      }}
+    >
+      {detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.powerBlockRequired === true && block.isSanctioned).length}
+    </td>
+    <td 
+      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+      onClick={() => {
+        setDepartmentCountFilter({
+          department: "S&T",
+          supportingDepartment: "ENGG and TRD",
+          filterType: 'availed'
+        });
+        toast.success("Showing availed S&T blocks with ENGG and TRD support");
+      }}
+    >
+      {detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
+    </td>
+  </tr>
+
+  {/* Total Row */}
+  <tr className="bg-[#ff914d] text-white font-bold">
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-[12px] md:text-[16px]" colSpan={3}>Total</td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+      {totalRequested}
+    </td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+      {totalSanctioned}
+    </td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+      {totalAvailed}
+    </td>
+  </tr>
+</tbody>
+  </table>
+</div>
+
+
+        </div>
+      </div>
+
+      {/* === PAGE 2: (B) SUMMARY OF UPCOMING BLOCKS - FULL WIDTH === */}
+      <div className="w-full bg-white flex flex-col py-4">
+        <div className="w-full px-2 md:px-4 flex-1">
+          <div className="my-2 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+            <button
+              onClick={handleDownloadUpcomingBlocks}
+              className="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1 shadow border border-green-800 text-[12px] md:text-base flex items-center"
+              disabled={filteredUpcomingBlocks.length === 0}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4 md:h-5 md:w-5 mr-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
+              </svg>
+              Download Upcoming Blocks (XLSX)
+            </button>
+
+            <div className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1 shadow border border-green-800 text-[12px] md:text-base">
+              <label className="whitespace-nowrap mr-2 text-[12px] md:text-base">Search ID:</label>
+              <div className="relative">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-3 w-3 md:h-4 md:w-4 absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+                <input
+                  type="text"
+                  value={upcomingDivisionIdSearch}
+                  onChange={(e) => setUpcomingDivisionIdSearch(e.target.value)}
+                  placeholder="Enter ID..."
+                  className="w-24 md:w-40 pl-6 md:pl-8 pr-6 py-1 border border-gray-300 text-black bg-white rounded focus:outline-none focus:ring-1 focus:ring-white text-[12px] md:text-base"
+                />
+                {upcomingDivisionIdSearch && (
+                  <button
+                    onClick={() => setUpcomingDivisionIdSearch('')}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 text-[10px] md:text-sm"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col md:flex-row w-full items-center gap-2">
+            <div className="bg-[#f1a983] text-[16px] md:text-[24px] font-bold border-2 border-black px-2 py-1 text-center w-full md:w-auto">
+              (B) Summary of Blocks
+            </div>
+            <div className="flex items-center gap-2">
               <div className="relative inline-block" ref={sectionDropdownRefB}>
                 <button
                   onClick={() => setSectionDropdownOpenB((v) => !v)}
-                  className="bg-[#B2F3F5] px-3 py-1 rounded-full border-2 border-black font-semibold text-black flex items-center gap-2 text-base min-w-[100px]"
+                  className="bg-[#B2F3F5] px-3 py-1 rounded-full border-2 border-black font-semibold text-black flex items-center gap-2 text-[12px] md:text-base min-w-[80px] md:min-w-[100px]"
                 >
                   {upcomingSectionFilter === "All" ? "All" : upcomingSectionFilter}
                   <span className="ml-1">▼</span>
                 </button>
                 {sectionDropdownOpenB && (
-                  <div className="absolute z-10 mt-2 w-40 bg-white border-2 border-black rounded shadow-lg max-h-60 overflow-y-auto">
+                  <div className="absolute z-10 mt-2 w-32 md:w-40 bg-white border-2 border-black rounded shadow-lg max-h-60 overflow-y-auto">
                     <div
-                      className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-base"
+                      className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-[12px] md:text-base"
                       onClick={() => {
                         setUpcomingSectionFilter("All");
                         setSectionDropdownOpenB(false);
+                        setActiveFilter("all")
+                        setActiveSection(null);
                       }}
                     >
                       All
@@ -1043,7 +2227,7 @@ export default function GenerateReportPage() {
                     {sectionOptionsB.map((section: string) => (
                       <div
                         key={section}
-                        className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-[24px]"
+                        className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-[14px] md:text-[24px]"
                         onClick={() => {
                           setUpcomingSectionFilter(section);
                           setSectionDropdownOpenB(false);
@@ -1056,45 +2240,79 @@ export default function GenerateReportPage() {
                 )}
               </div>
             </div>
+              <div className="relative inline-block" ref={sseDropdownRef}>
+      <button
+        onClick={() => setSseDropdownOpen((v) => !v)}
+        className="bg-[#B2F3F5] px-3 py-1 rounded-full border-2 border-black font-semibold text-black flex items-center gap-2 text-[12px] md:text-base min-w-[80px] md:min-w-[100px]"
+      >
+        {sseFilter === "All" ? "All SSE" : sseFilter}
+        <span className="ml-1">▼</span>
+      </button>
+      {sseDropdownOpen && (
+        <div className="absolute z-10 mt-2 w-32 md:w-40 bg-white border-2 border-black rounded shadow-lg max-h-60 overflow-y-auto">
+          <div
+            className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-[12px] md:text-base"
+            onClick={() => {
+              setSseFilter("All");
+              setSseDropdownOpen(false);
+            }}
+          >
+            All SSE
           </div>
-          <div className="overflow-x-auto w-full max-w-full">
-            <table className="w-full border-2 border-black mt-1 text-[24px]">
+          {sseOptions.map((sse: string) => (
+            <div
+              key={sse}
+              className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-[14px] md:text-[24px]"
+              onClick={() => {
+                setSseFilter(sse);
+                setSseDropdownOpen(false);
+              }}
+            >
+              {sse}
+            </div>
+          ))}
+        </div>
+      )}
+ 
+</div>
+          </div>
+
+          <div className="w-full mt-4 overflow-x-auto">
+            <table className="w-full border-2 border-black min-w-[900px] text-[12px] md:text-[20px]">
               <thead>
-                <tr className="bg-[#e49edd] text-black text-[24px] font-bold">
-                  <th className="border-2 border-black px-2 py-1">Date</th>
-                  <th className="border-2 border-black px-2 py-1">RequestID</th>
-                  <th className="border-2 border-black px-2 py-1">Type</th>
-                  <th className="border-2 border-black px-2 py-1">Activity</th>
-                  <th className="border-2 border-black px-2 py-1">Duration</th>
-                  <th className="border-2 border-black px-2 py-1">
-                    Availed time
-                  </th>
-                  <th className="border-2 border-black px-2 py-1">Station ID</th>
-                  <th className="border-2 border-black px-2 py-1">Status</th>
+                <tr className="bg-[#e49edd] text-black text-[12px] md:text-[20px] font-bold">
+                  <th className="border-2 border-black px-1 md:px-2 py-2">S.No</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Date</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Department</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">RequestId</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Block Section</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Depo</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Type</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Activity</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Availed time</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Station ID</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredUpcomingBlocks.length === 0 ? (
                   <tr className="bg-white">
-                    <td colSpan={5} className="text-center py-4" style={{ color: "black" }}>
+                    <td colSpan={9} className="text-center py-4 text-black">
                       No data found.
                     </td>
                   </tr>
                 ) : (
-                  filteredUpcomingBlocks.slice(0, 200).map((block: DetailedData, idx: number) => {
+                  filteredBlocks.slice(0, 200).map((block: any, idx: number) => {
                     let statusLabel = "";
                     let statusStyle = { background: "#fff", color: "#222" };
-                    if (block.overAllStatus === "Sanctioned") {
-                      statusLabel = "Sanctioned";
+                    if (block.Status === "APPROVED" && block.isSanctioned&&block.userResponse===null) {
+                      statusLabel = "Sanctioned, Pending with SSE For Acceptance";
                       statusStyle = { background: "#fff86b", color: "#222" };
-                    } else if (block.overAllStatus === "with optg.") {
-                      statusLabel = "with optg.";
+                    }  else if (block.userResponse === "ACCEPTED"|| block.overAllStatus === "Sanctioned and Accepted") {
+                      statusLabel = "Sanctioned and Accepted by SSE";
                       statusStyle = { background: "#d47ed4", color: "#222" };
-                    } else if (block.Status === "PENDING") {
-                      statusLabel = "Pending with dept control";
-                      statusStyle = { background: "#d47ed4", color: "#222" };
-                    } else if (block.Status === "REJECTED") {
-                      statusLabel = "Returned by Optg";
+                    } else if ( block.isSanctioned === true&&block.userAcceptanceForSanction===false&&block.userResponse!=="ACCEPTED" ) {
+                      statusLabel = "Sanctioned and Rejected by SSE";
                       statusStyle = { background: "#ff4e36", color: "#fff" };
                     } else {
                       statusLabel = block.overAllStatus || block.Status;
@@ -1104,22 +2322,37 @@ export default function GenerateReportPage() {
 
                     return (
                       <tr key={idx} className={`${rowBgColor} hover:bg-[#F3F3F3]`}>
-                        <td className="border-2 border-black px-2 py-1 text-black">
+                         <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px] text-center">
+                {idx + 1}
+              </td>
+                        <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
                           {dayjs(block.Date).format("DD-MM-YY")}
                         </td>
-                        <td className="border-2 border-black px-2 py-1 font-bold text-black">
-                          {block.DivisionId}
+                         <td className="border-2 border-black px-1 md:px-2 py-2 font-bold text-black text-[10px] md:text-[14px]">
+                          {block.selectedDepartment}
                         </td>
-                        <td className="border-2 border-black px-2 py-1 text-black">
+                        <td className="border-2 border-black px-1 md:px-2 py-2 font-bold text-black text-[10px] md:text-[14px]">
+                          <Link
+                            href={`/admin/view-request/${block.id}?from=sanction-table-data`}
+                            className="block w-full h-full"
+                          >
+                            {block.DivisionId}
+                          </Link>
+                        </td>
+                        
+                        <td className="border-2 border-black px-1 md:px-2 py-2 font-bold text-black text-[10px] md:text-[14px]">
+                          {block.MissionBlock}
+                        </td>
+                        <td className="border-2 border-black px-1 md:px-2 py-2 font-bold text-black text-[10px] md:text-[14px]">
+                          {block.selectedDepo}
+                        </td>
+                        <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
                           {block.Type}
                         </td>
-                        <td className="border-2 border-black px-2 py-1 text-black">
+                        <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
                           {block.Activity}
                         </td>
-                        <td className="border-2 border-black px-2 py-1 text-black">
-                          {block.Duration}
-                        </td>
-                        <td className="border-2 border-black px-2 py-1 text-black">
+                        <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
                           {block.AvailedTimeFrom && block.AvailedTimeTo ? (
                             <>
                               {formatTime(block.AvailedTimeFrom)} to{" "}
@@ -1128,12 +2361,12 @@ export default function GenerateReportPage() {
                           ) : (
                             "Not Availed Yet"
                           )}
-                        </td>
-                        <td className="border-2 border-black px-2 py-1 font-bold text-black">
+                        </td>  
+                        <td className="border-2 border-black px-1 md:px-2 py-2 font-bold text-black text-[10px] md:text-[14px]">
                           {block.stationId || "N/A"}
                         </td>
                         <td
-                          className="border-2 border-black px-2 py-1 font-bold text-center text-black"
+                          className="border-2 border-black px-1 md:px-2 py-2 font-bold text-center text-black text-[10px] md:text-[14px]"
                           style={statusStyle}
                         >
                           {statusLabel}
@@ -1147,397 +2380,25 @@ export default function GenerateReportPage() {
           </div>
         </div>
 
-        {/* View Summary of Sanctioned Blocks */}
-        <div className="flex justify-center mb-8 mt-7 max-w-[2000px]">
-          <div className="max-w-[2000px] max-w-6xl rounded-2xl border-4 border-[#00B4D8] bg-[#CAF0F8] shadow-lg p-0">
-            <div className="text-[24px] font-bold text-[#0077B6] text-center py-3 tracking-wide">
-              View Summary of Sanctioned Blocks
-            </div>
-            <div className="px-2 pb-4">
-              {/* Filters Row */}
-              <div className="flex flex-wrap gap-2 items-center justify-between bg-[#D6F3FF] p-2 rounded-md border border-[#00B4D8] mb-2">
-                {/* Date Range */}
-                <div className="flex items-center flex-wrap gap-1">
-                  <span className="bg-[#E6E6FA] px-2 py-1 border border-[#00B4D8] font-bold text-black rounded-l-md text-[24px]">
-                    date
-                  </span>
-                  <input
-                    type="date"
-                    value={pendingSummaryFilters.start}
-                    onChange={(e) => handlePendingDateChange("start", e.target.value)}
-                    className="p-1 border border-[#00B4D8] text-black bg-white w-28 focus:outline-none focus:ring-2 focus:ring-[#B57CF6] text-[24px]"
-                  />
-                  <span className="px-1 text-black text-[24px]">to</span>
-                  <input
-                    type="date"
-                    value={pendingSummaryFilters.end}
-                    onChange={(e) => handlePendingDateChange("end", e.target.value)}
-                    className="p-1 border border-[#00B4D8] text-black bg-white w-28 focus:outline-none focus:ring-2 focus:ring-[#B57CF6] text-[24px]"
-                  />
-                </div>
-
-
-
-                <div className="relative">
-                  <button
-                    onClick={() => setShowTimeSlotDropdown(!showTimeSlotDropdown)}
-                    className="bg-[#E6E6FA] px-3 py-1 rounded-full border-2 border-[#00B4D8] font-semibold text-black flex items-center gap-2 text-[24px]"
-                  >
-                    Time Slot
-                    <span className="ml-1 text-sm">▼</span>
-                  </button>
-                  {showTimeSlotDropdown && (
-                    <div className="absolute z-10 mt-2 w-60 bg-white border-2 border-[#00B4D8] rounded shadow-lg">
-                      {[
-                        { key: 'ALL', label: 'ALL' },
-                        { key: 'Morning', label: 'Morning (4:00-12:00)' },
-                        { key: 'Afternoon', label: 'Afternoon (12:00-20:00)' },
-                        { key: 'Night', label: 'Night (20:00-4:00)' }
-                      ].map((slot) => (
-                        <button
-                          key={slot.key}
-                          onClick={() => {
-                            setTimeSlotFilter(slot.key);
-                            setShowTimeSlotDropdown(false);
-                          }}
-                          className={`block w-full text-left px-3 py-2 hover:bg-gray-100 text-black text-[20px] ${timeSlotFilter === slot.key ? 'bg-blue-100' : ''
-                            }`}
-                        >
-                          {slot.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Block Type Dropdown */}
-                <div className="relative inline-block">
-                  <button
-                    onClick={() => setBlockTypeDropdownOpen((v) => !v)}
-                    className="bg-[#E6E6FA] px-3 py-1 rounded-full border-2 border-[#00B4D8] font-semibold text-black flex items-center gap-2 text-[24px]"
-                  >
-                    Type
-                    <span className="ml-1 text-sm">▼</span>
-                  </button>
-                  {blockTypeDropdownOpen && (
-                    <div className="absolute z-10 mt-2 w-40 bg-white border-2 border-[#00B4D8] rounded shadow-lg">
-                      {blockTypeOptions.map((opt) => {
-                        const allBlockTypeValues = blockTypeOptions.slice(1).map(o => o.value);
-                        const allSelected = allBlockTypeValues.every(val =>
-                          pendingSummaryFilters.blockType.includes(val)
-                        );
-
-                        return (
-                          <label
-                            key={opt.value}
-                            className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-[20px]"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={
-                                opt.value === "ALL"
-                                  ? allSelected
-                                  : pendingSummaryFilters.blockType.includes(opt.value)
-                              }
-                              onChange={() => {
-                                handlePendingBlockTypeChange(opt.value);
-                                setBlockTypeDropdownOpen(false);
-                              }}
-                              className="mr-2 accent-[#B57CF6]"
-                            />
-                            {opt.label}
-                          </label>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-
-                {/* Section Dropdown */}
-                <div className="relative inline-block">
-                  <button
-                    onClick={() => setSectionDropdownOpen((v) => !v)}
-                    className="bg-[#B2F3F5] px-3 py-1 rounded-full border-2 border-[#00B4D8] font-semibold text-black flex items-center gap-2 text-[24px]"
-                  >
-                    Section
-                    <span className="ml-1 text-sm">▼</span>
-                  </button>
-                  {sectionDropdownOpen && (
-                    <div className="absolute z-50 mt-2 w-40 bg-white border-2 border-[#00B4D8] rounded shadow-lg max-h-60 overflow-y-auto">
-                      <label className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-[20px] border-b border-gray-200">
-                        <input
-                          type="checkbox"
-                          checked={
-                            pendingSummaryFilters.section.length === sectionOptions.length ||
-                            (sectionOptions.length === 0 && pendingSummaryFilters.section.length > 0)
-                          }
-                          onChange={() => {
-                            if (pendingSummaryFilters.section.length === sectionOptions.length) {
-                              setPendingSummaryFilters(prev => ({
-                                ...prev,
-                                section: []
-                              }));
-                            } else {
-                              setPendingSummaryFilters(prev => ({
-                                ...prev,
-                                section: [...sectionOptions]
-                              }));
-                            }
-                            setSectionDropdownOpen(false);
-                          }}
-                          className="mr-2 accent-[#B57CF6]"
-                        />
-                        ALL
-                      </label>
-
-                      {sectionOptions.map((section) => (
-                        <label
-                          key={section}
-                          className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-[20px]"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={pendingSummaryFilters.section.includes(section)}
-                            onChange={() => {
-                              setPendingSummaryFilters(prev => {
-                                const newSections = prev.section.includes(section)
-                                  ? prev.section.filter(s => s !== section)
-                                  : [...prev.section, section];
-
-                                return {
-                                  ...prev,
-                                  section: newSections
-                                };
-                              });
-                              setSectionDropdownOpen(false);
-                            }}
-                            className="mr-2 accent-[#B57CF6]"
-                          />
-                          {section}
-                        </label>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-
-
-
-
-                <div className="relative inline-block">
-                  <button
-                    onClick={() => setActivityDropdownOpen((v) => !v)}
-                    className="bg-[#B2F3F5] px-3 py-1 rounded-full border-2 border-[#00B4D8] font-semibold text-black flex items-center gap-2 text-[24px]"
-                  >
-                    Activity
-                    <span className="ml-1 text-sm">▼</span>
-                  </button>
-                  {activityDropdownOpen && (
-                    <div className="absolute z-50 mt-2 w-40 bg-white border-2 border-[#00B4D8] rounded shadow-lg max-h-60 overflow-y-auto">
-                      <label className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-[20px] border-b border-gray-200">
-                        <input
-                          type="checkbox"
-                          checked={
-                            pendingSummaryFilters.activity.length === activityOptions.length ||
-                            (activityOptions.length === 0 && pendingSummaryFilters.activity.length > 0)
-                          }
-                          onChange={() => {
-                            if (pendingSummaryFilters.activity.length === activityOptions.length) {
-                              setPendingSummaryFilters(prev => ({
-                                ...prev,
-                                section: []
-                              }));
-                            } else {
-                              setPendingSummaryFilters(prev => ({
-                                ...prev,
-                                section: [...activityOptions]
-                              }));
-                            }
-                            setSectionDropdownOpen(false);
-                          }}
-                          className="mr-2 accent-[#B57CF6]"
-                        />
-                        ALL
-                      </label>
-
-                      {activityOptions.map((activity) => (
-                        <label
-                          key={activity}
-                          className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-[20px]"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={pendingSummaryFilters.activity.includes(activity)}
-                            onChange={() => {
-                              setPendingSummaryFilters(prev => {
-                                const newActivity = prev.activity.includes(activity)
-                                  ? prev.activity.filter(s => s !== activity)
-                                  : [...prev.activity, activity];
-
-                                return {
-                                  ...prev,
-                                  activity: newActivity
-                                };
-                              });
-                              setSectionDropdownOpen(false);
-                            }}
-                            className="mr-2 accent-[#B57CF6]"
-                          />
-                          {activity}
-                        </label>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-
-
-                {/* Dept Dropdown */}
-                <div className="relative inline-block">
-                  <select
-                    className="bg-[#00B4D8] border-2 border-[#00B4D8] px-2 py-1 rounded-full text-[24px] font-semibold cursor-pointer focus:outline-none appearance-none pr-6 text-white min-w-[80px]"
-                    value={pendingSummaryFilters.dept}
-                    onChange={handlePendingDeptChange}
-                  >
-                    <option value="">DEPT</option>
-                    <option value="ENGG">ENGG</option>
-                    <option value="S&T">S&T</option>
-                    <option value="TRD">TRD</option>
-                  </select>
-                  <div className="pointer-events-none absolute right-2 top-1/2 transform -translate-y-1/2 text-white text-xs">
-                    ▼
-                  </div>
-                </div>
-
-                {/* Click to View Button */}
-                <div className="flex-grow flex justify-center">
-                  <button
-                    className="bg-[#00B4D8] border-2 border-[#0077B6] px-6 py-2 rounded-[50%] text-[24px] font-bold text-white hover:bg-[#48CAE4] shadow transition"
-                    onClick={handleApplySummaryFilters}
-                  >
-                    Click to View
-                  </button>
-                </div>
-              </div>
-
-              {/* Table */}
-              {showTable && (
-                <div className="mx-2 overflow-x-auto">
-                  <div className="max-h-[1000px] overflow-y-auto border-2 border-[#00B4D8] rounded-lg bg-white">
-                    <table className="w-full text-black text-[24px] relative">
-                      <thead>
-                        <tr className="bg-[#e49edd] text-black">
-                          <th className="border-2 border-black p-1">Date</th>
-                          <th className="border-2 border-black p-1">ID</th>
-                          <th className="border-2 border-black p-1">Block Section</th>
-                          <th className="border-2 border-black p-1">Demanded</th>
-                          <th className="border-2 border-black p-1">Offered</th>
-                          <th className="border-2 border-black p-1">Block Type</th>
-                          <th className="border-2 border-black p-1">Line/Road</th>
-                          <th className="border-2 border-black p-1">Activity</th>
-                          <th className="border-2 border-black p-1 sticky right-0 z-10 bg-[#e49edd]">
-                            Status
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {sanctionedRequests.sort((a: any, b: any) => new Date(a.sanctionedTimeFrom || a.optimizeTimeFrom || a.demandTimeFrom).getTime() - new Date(b.sanctionedTimeTo || b.optimizeTimeTo || b.demandTimeTo).getTime()).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(
-                          (request: UserRequest, idx: number) => {
-                            const status = getStatusDisplay(request);
-                            return (
-                              <tr
-                                key={request.id}
-                                className={idx % 2 === 0 ? "bg-[#FFC0CB]" : "bg-white"}
-                              >
-                                <td className="border border-black p-1 text-center">
-                                  {dayjs(request.date).format("DD-MM-YY")}
-                                </td>
-                                <td className="border border-black p-1 text-center">
-                                  <Link
-                                    href={`/admin/optimise-table?id=${request.id}`}
-                                    className="text-[#13529e] hover:underline font-semibold"
-                                  >
-                                    {request.divisionId || request.id}
-                                  </Link>
-                                </td>
-                                <td className="border border-black p-1">
-                                  {request.missionBlock}
-                                </td>
-                                <td className="border border-black p-1">
-                                  {formatTime(request.demandTimeFrom)} -{" "}
-                                  {formatTime(request.demandTimeTo)}
-                                </td>
-                                <td className="border border-black p-1">
-                                  {`${formatTime(
-                                    request.sanctionedTimeFrom ||
-                                    request.optimizeTimeFrom
-                                  )} - ${formatTime(
-                                    request.sanctionedTimeTo ||
-                                    request.optimizeTimeTo
-                                  )}`}
-                                </td>
-                                <td className="border border-black p-1">
-                                  {request.corridorType}
-                                </td>
-                                <td className="border border-black p-1 text-center">
-                                  {request.processedLineSections?.[0]?.lineName ||
-                                    request.processedLineSections?.[0]?.road ||
-                                    "N/A"}
-                                </td>
-                                <td className="border border-black p-1">
-                                  {request.activity}
-                                </td>
-                                <td
-                                  className="border border-black p-1 sticky right-0 z-10 text-center font-bold"
-                                  style={status.style}
-                                >
-                                  <span className="w-full block text-base">
-                                    {status.label}
-                                  </span>
-                                </td>
-                              </tr>
-                            );
-                          }
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* Info Texts */}
-              <div className="text-center mt-1 mb-3">
-                <h3 className="inline-flex py-1 px-6 rounded-full text-black text-base font-medium text-[14px]">
-                  Click ID to see details of a Block.
-                </h3>
-                <h3 className="rounded-full pb-2 px-4 text-black text-[14px] font-medium">
-                  For printing the complete table, click to download in{" "}
-                  <span className="font-bold text-[#00B4D8] text-[14px]">
-                    .xlsx format
-                  </span>
-                </h3>
-                <button
-                  onClick={() => handleDownloadExcel(sanctionedRequests)}
-                  className="w-fit bg-[#FFA07A] hover:bg-[#FFBFAE] px-12 py-3 rounded-[50%] border-2 border-[#FF6B6B] font-bold text-[24px] text-[#5D3587] shadow transition"
-                >
-                  Download
-                </button>
-              </div>
-            </div>
+        {/* === CENTERED INFO BAR AND NAVIGATION === */}
+        <div className="w-full px-2 md:px-4 flex flex-col items-center justify-center mt-4 md:mt-8 mb-4 space-y-3 md:space-y-4">
+          {/* Centered Info Bar */}
+          <div className="flex items-center gap-2 bg-[#cfd4ff] px-3 md:px-4 py-2 rounded-2xl border-2 max-w-full">
+            <span className="text-[14px] md:text-[24px] font-bold text-black text-center">
+              Click <span className="bg-[#00b347] text-white font-bold px-1 md:px-2 py-1 rounded text-[14px] md:text-[24px] mx-1">RequestId</span> to see further details.
+            </span>
+          </div>
+          
+          {/* Centered Back Button */}
+          <div className="flex justify-center">
+            <button
+              className="flex items-center gap-2 bg-[#cfd4ff] border-2 border-black rounded-[50%] px-6 md:px-8 py-2 text-[16px] md:text-[24px] font-bold text-black"
+              onClick={() => router.push("/")}
+            >
+              Back
+            </button>
           </div>
         </div>
-      </div>
-      <div className=" w-full bg-white border-t-2 border-[#A084E8] py-4 flex flex-col justify-center items-center gap-8 z-50 ">
-        <button
-          onClick={async () => {
-            const { signOut } = await import("next-auth/react");
-            await signOut({ redirect: true, callbackUrl: "/auth/login" });
-          }}
-          className="w-fit bg-[#FFB74D] border border-black px-10 py-1.5 rounded-[50%] text-2xl font-bold text-black"
-        >
-          Logout
-        </button>
-
       </div>
     </div>
   );
