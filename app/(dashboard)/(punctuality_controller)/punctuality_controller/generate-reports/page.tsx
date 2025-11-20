@@ -2331,7 +2331,7 @@ const handleDownloadDepartmentCount = () => {
                         </td>
                         <td className="border-2 border-black px-1 md:px-2 py-2 font-bold text-black text-[10px] md:text-[14px]">
                           <Link
-                            href={`/admin/view-request/${block.id}?from=sanction-table-data`}
+                            href={`/punctuality_controller/view-request/${block.id}?from=generate-report`}
                             className="block w-full h-full"
                           >
                             {block.DivisionId}
