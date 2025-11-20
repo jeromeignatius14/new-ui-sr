@@ -2524,9 +2524,7 @@ const clearGlobalFilters = () => {
                       let statusLabel = "";
                       let statusStyle = { background: "#fff", color: "#222" };
                       if (
-                        block.Status === "APPROVED" &&
-                        block.isSanctioned &&
-                        block.userResponse === null
+                       block.Status === "APPROVED" && block.isSanctioned&&block.userResponse===null&&block.AvailedTimeFrom===null&&block.AvailedTimeTo===null&&block.userAcceptanceForSanction===false
                       ) {
                         statusLabel =
                           "Sanctioned, Pending with SSE For Acceptance";

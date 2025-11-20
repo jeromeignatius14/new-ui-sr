@@ -2229,7 +2229,7 @@ const handleDownloadDepartmentCount = () => {
                   filteredBlocks.slice(0, 200).map((block: any, idx: number) => {
                     let statusLabel = "";
                     let statusStyle = { background: "#fff", color: "#222" };
-                    if (block.Status === "APPROVED" && block.isSanctioned&&block.userResponse===null) {
+                    if (block.Status === "APPROVED" && block.isSanctioned&&block.userResponse===null&&block.AvailedTimeFrom===null&&block.AvailedTimeTo===null&&block.userAcceptanceForSanction===false) {
                       statusLabel = "Sanctioned, Pending with SSE For Acceptance";
                       statusStyle = { background: "#fff86b", color: "#222" };
                     }  else if (block.userResponse === "ACCEPTED"|| block.overAllStatus === "Sanctioned and Accepted") {
@@ -2257,7 +2257,7 @@ const handleDownloadDepartmentCount = () => {
                         </td>
                         <td className="border-2 border-black px-1 md:px-2 py-2 font-bold text-black text-[10px] md:text-[14px]">
                           <Link
-                            href={`/admin/view-request/${block.id}?from=sanction-table-data`}
+                            href={`/bo/view-request/${block.id}?from=generate-report`}
                             className="block w-full h-full"
                           >
                             {block.DivisionId}
