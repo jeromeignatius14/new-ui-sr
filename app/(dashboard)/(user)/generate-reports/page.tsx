@@ -2249,7 +2249,7 @@ export default function GenerateReportPage() {
                 </tr>
               </thead>
               <tbody>
-                {userUpcomingBlocks.length === 0 ? (
+                {filteredUpcomingBlocks.length === 0 ? (
                   <tr className="bg-white">
                     <td colSpan={9} className="text-center py-4 text-black">
                       No data found.
