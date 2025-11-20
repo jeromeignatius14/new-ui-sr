@@ -258,6 +258,10 @@ const durationDropdownRef = useRef<HTMLDivElement>(null);
     department: ["Engineering"],
     blockType: ["All"],
     userId: session?.user?.id || "",
+     globalWorkType: "ALL",
+    globalActivity: "ALL", 
+    durationOperator: "ALL",
+  durationValue: "",
   });
 
   // Get user's location and set up major section options
@@ -403,6 +407,10 @@ const durationDropdownRef = useRef<HTMLDivElement>(null);
         department: selectedDepartments,
         blockType: selectedBlockTypes,
         userId: session?.user?.id || "",
+        globalWorkType: globalWorkTypeFilter,
+        globalActivity: globalActivityFilter,
+       durationOperator: durationFilter.operator,
+       durationValue: durationFilter.value,
       });
 
     // ✅ Keep yyyy-MM-dd in URL for reloads
@@ -1107,7 +1115,8 @@ const clearGlobalFilters = () => {
       {/* Wrap the main content in a max-w-screen-lg mx-auto w-full container */}
       <div className=" mx-auto w-full px-4">
         {/* Filters Section */}
-
+<div className="w-full flex justify-center mb-4 px-2">
+  <div className="flex flex-col items-center gap-3 w-full max-w-screen-lg">
         {/* Block Type Filters (first line) */}
         <div className="w-full flex flex-wrap justify-center gap-2 mt-2 mb-1">
           {blockTypeOptions.map((opt) => (
@@ -1154,10 +1163,8 @@ const clearGlobalFilters = () => {
             />
           </div>
         </div>
+
         <div className="w-full max-w-screen-lg flex flex-wrap justify-center gap-2 mb-4 px-2">
-
-
-
   {/* Work Type Filter */}
   <div className="relative" ref={globalWorkTypeDropdownRef}>
     <button
@@ -1338,7 +1345,8 @@ const clearGlobalFilters = () => {
             {loading ? "Loading..." : "Submit"}
           </button>
         </div>
-
+</div>
+</div>
         {/* (A) Block Summary Table */}
         <div className="w-full mt-4">
           <div className="my-2">
