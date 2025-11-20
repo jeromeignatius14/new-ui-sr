@@ -22,6 +22,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useUserGenerateReport } from "@/app/service/query/user-generate-report";
 import formatTime from "@/app/utils/formatTime";
 import * as XLSX from "xlsx";
+import dayjs from "dayjs";
 
 interface OptionType {
   value: string;
@@ -36,8 +37,12 @@ interface FormData {
   majorSection: OptionType[];
 }
 
-// Interfaces aligned with the API service
 interface PastBlockSummary {
+  NotAvailedCount?: number;
+  NotGrantedCount?: number;
+  Applied?: number;
+  AppliedCount?: number;
+  GrantedCount?: number;
   SectionId?: string;
   Section: string;
   Demanded: number;
@@ -56,6 +61,18 @@ interface PastBlockSummary {
 }
 
 interface DetailedData {
+  sntDisconnectionRequired?: boolean;
+  powerBlockRequired?: boolean;
+  enggDisconnectionsRequired?: boolean;
+  selectedDepartment?: string;
+  userResponse?: string;
+  useAcceptanceForSanction?: boolean;
+  AvailedTimeTo?: any;
+  DemandedTimeFrom?: any;
+  isApplied?: boolean;
+  AvailedTimeFrom?: any;
+  isGranted?: boolean;
+  isSanctioned?: boolean;
   Date: string;
   Section: string;
   Duration: number;
@@ -91,6 +108,22 @@ export default function GenerateReportPage() {
   const [pastBlockSummary, setPastBlockSummary] = useState<PastBlockSummary[]>(
     []
   );
+  const [activeFilter, setActiveFilter] = useState<
+    | "approved"
+    | "granted"
+    | "availed"
+    | "applied"
+    | "demanded"
+    | "notGranted"
+    | "notAvailed"
+    | "all"
+  >("all");
+  const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [departmentCountFilter, setDepartmentCountFilter] = useState<{
+    department: string;
+    supportingDepartment: string;
+    filterType: "requested" | "sanctioned" | "availed";
+  } | null>(null);
   const [loading, setLoading] = useState(false);
   const [reportGenerated, setReportGenerated] = useState(false);
   const [selectedLocations, setSelectedLocations] = useState<string[]>(["All"]);
@@ -347,12 +380,64 @@ export default function GenerateReportPage() {
         .map((b: DetailedData) => b.Section) || []
     )
   );
+  const filterBlocksByDepartmentCount = (block: any): boolean => {
+  if (!departmentCountFilter) return true;
+  
+  const { department, supportingDepartment, filterType } = departmentCountFilter;
+  
+  // Base department filter
+  if (block.selectedDepartment !== department) return false;
+  
+  // Supporting department filters - MATCHING YOUR COUNTING LOGIC EXACTLY
+  if (supportingDepartment === "-") {
+    // No supporting department - only blocks that don't require any support
+    if (department === "ENGG" && (block.sntDisconnectionRequired || block.powerBlockRequired)) return false;
+    if (department === "S&T" && (block.enggDisconnectionsRequired || block.powerBlockRequired)) return false;
+    // TRD doesn't have supporting departments, so all TRD blocks pass
+  } else if (supportingDepartment === "S&T") {
+    // ENGG + S&T - matches your enggWithSnt counting
+    if (!block.sntDisconnectionRequired) return false;
+    if (block.powerBlockRequired) return false; // Matches: enggWithSnt excludes powerBlockRequired
+  } else if (supportingDepartment === "TRD") {
+    if (department === "ENGG") {
+      // ENGG + TRD - matches your enggWithPower counting
+      if (!block.powerBlockRequired) return false;
+      if (block.sntDisconnectionRequired) return false; // Matches: enggWithPower excludes sntDisconnectionRequired
+    } else if (department === "S&T") {
+      // S&T + TRD - matches your sntWithPower counting
+      if (!block.powerBlockRequired) return false;
+      if (block.enggDisconnectionsRequired) return false; // Matches: sntWithPower excludes enggDisconnectionsRequired
+    }
+  } else if (supportingDepartment === "ENGG") {
+    // S&T + ENGG - matches your sntWithEngg counting
+    if (!block.enggDisconnectionsRequired) return false;
+    if (block.powerBlockRequired) return false; // Matches: sntWithEngg excludes powerBlockRequired
+  } else if (supportingDepartment === "S&T and TRD") {
+    // ENGG + S&T + TRD - matches your enggWithSntAndPower counting
+    if (!block.sntDisconnectionRequired || !block.powerBlockRequired) return false;
+  } else if (supportingDepartment === "ENGG and TRD") {
+    // S&T + ENGG + TRD - matches your sntWithEnggAndPower counting
+    if (!block.enggDisconnectionsRequired || !block.powerBlockRequired) return false;
+  }
+  
+  // Filter type conditions
+  switch (filterType) {
+    case 'requested':
+      return true;
+    case 'sanctioned':
+      return block.isSanctioned === true;
+    case 'availed':
+      return block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null;
+    default:
+      return true;
+  }
+};
   const filteredUpcomingBlocks: DetailedData[] =
     upcomingSectionFilter === "All"
       ? reportData?.data?.detailedData || []
       : reportData?.data?.detailedData?.filter(
-        (b: DetailedData) => b.Section === upcomingSectionFilter
-      ) || [];
+          (b: DetailedData) => b.Section === upcomingSectionFilter
+        ) || [];
   function formatDateB(dateString: string) {
     if (!dateString) return "";
     // Accepts both MM/DD/YYYY and DD/MM/YYYY
@@ -368,7 +453,103 @@ export default function GenerateReportPage() {
     return dateString;
   }
 
-  const upcomingBlocks: DetailedData[] = reportData?.data?.detailedData || [];
+  const detailedData: DetailedData[] = reportData?.data?.detailedData || [];
+
+  // ENGG counts
+  const enggTotal = detailedData.filter(
+    (block) =>
+      block.selectedDepartment === "ENGG" &&
+      block.sntDisconnectionRequired === false &&
+      block.powerBlockRequired === false
+  ).length;
+  const enggWithSnt = detailedData.filter(
+    (block) =>
+      block.selectedDepartment === "ENGG" &&
+      block.sntDisconnectionRequired === true &&
+      block.powerBlockRequired === false
+  ).length;
+  const enggWithPower = detailedData.filter(
+    (block) =>
+      block.selectedDepartment === "ENGG" &&
+      block.powerBlockRequired === true &&
+      block.sntDisconnectionRequired === false
+  ).length;
+  const enggWithSntAndPower = detailedData.filter(
+    (block) =>
+      block.selectedDepartment === "ENGG" &&
+      block.sntDisconnectionRequired === true &&
+      block.powerBlockRequired === true
+  ).length;
+
+  // S&T counts
+  const sntTotal = detailedData.filter(
+    (block) =>
+      block.selectedDepartment === "S&T" &&
+      block.enggDisconnectionsRequired === false &&
+      block.powerBlockRequired === false
+  ).length;
+  const sntWithPower = detailedData.filter(
+    (block) =>
+      block.selectedDepartment === "S&T" &&
+      block.powerBlockRequired === true &&
+      block.enggDisconnectionsRequired === false
+  ).length;
+  const sntWithEngg = detailedData.filter(
+    (block) =>
+      block.selectedDepartment === "S&T" &&
+      block.enggDisconnectionsRequired === true &&
+      block.powerBlockRequired === false
+  ).length;
+  const sntWithEnggAndPower = detailedData.filter(
+    (block) =>
+      block.selectedDepartment === "S&T" &&
+      block.enggDisconnectionsRequired === true &&
+      block.powerBlockRequired === true
+  ).length;
+
+  // TRD counts
+  const trdTotal = detailedData.filter(
+    (block) => block.selectedDepartment === "TRD"
+  ).length;
+
+  // Total counts for the bottom row
+  const totalRequested = detailedData.length;
+  const totalSanctioned = detailedData.filter(
+    (block) => block.isSanctioned === true
+  ).length;
+  const totalAvailed = detailedData.filter(
+    (block) => block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null
+  ).length;
+
+  const filteredBlocks = filteredUpcomingBlocks.filter((block) => {
+    if (activeFilter === "approved" && !block.isSanctioned) return false;
+    if (activeFilter === "granted" && !block.isGranted) return false;
+    if (activeFilter === "applied" && !block.isApplied) return false;
+
+    if (activeFilter === "availed" && block.AvailedTimeFrom === null)
+      return false;
+    if (activeFilter === "demanded" && block.DemandedTimeFrom === null)
+      return false;
+    if (activeFilter === "notGranted" && block.isGranted !== false)
+      return false;
+    if (
+      activeFilter === "notAvailed" &&
+      !(
+        (!block.AvailedTimeFrom && block.isSanctioned) ||
+        (!block.AvailedTimeTo && block.isSanctioned) ||
+        (block.isApplied === null && block.isGranted === true) ||
+        block.isApplied === false ||
+        (block.userResponse !== "ACCEPTED" &&
+          block.useAcceptanceForSanction === false &&
+          block.isSanctioned === true)
+      )
+    )
+      return false;
+        if (activeSection && block.Section !== activeSection) return false;
+    if (!filterBlocksByDepartmentCount(block)) return false;
+
+    return true;
+  });
 
   const [sectionDropdownOpenB, setSectionDropdownOpenB] = useState(false);
   const sectionDropdownRefB = useRef<HTMLDivElement>(null);
@@ -407,24 +588,26 @@ export default function GenerateReportPage() {
           .reduce((sum, item) => sum + (item.Approved || 0), 0)
           .toFixed(2),
         Granted: String(
-          pastBlockSummary.reduce((sum, item) => sum + (item.Granted || 0), 0).toFixed(2)
+          pastBlockSummary
+            .reduce((sum, item) => sum + (item.Granted || 0), 0)
+            .toFixed(2)
         ),
         "% Granted":
           String(
-            pastBlockSummary.reduce(
-              (sum, item) => sum + (item.PercentGranted || 0),
-              0
-            ).toFixed(2)
+            pastBlockSummary
+              .reduce((sum, item) => sum + (item.PercentGranted || 0), 0)
+              .toFixed(2)
           ) + "%",
         Availed: String(
-          pastBlockSummary.reduce((sum, item) => sum + (item.Availed || 0), 0).toFixed(2)
+          pastBlockSummary
+            .reduce((sum, item) => sum + (item.Availed || 0), 0)
+            .toFixed(2)
         ),
         "% Availed":
           String(
-            pastBlockSummary.reduce(
-              (sum, item) => sum + (item.PercentAvailed || 0),
-              0
-            ).toFixed(2)
+            pastBlockSummary
+              .reduce((sum, item) => sum + (item.PercentAvailed || 0), 0)
+              .toFixed(2)
           ) + "%",
       });
 
@@ -515,14 +698,14 @@ export default function GenerateReportPage() {
           "Sanctioned Time":
             block.SanctionedTimeFrom && block.SanctionedTimeTo
               ? `${formatTime(block.SanctionedTimeFrom)} to ${formatTime(
-                block.SanctionedTimeTo
-              )}`
+                  block.SanctionedTimeTo
+                )}`
               : "Not Optimized Yet",
           "Availed Time":
             block.AvailedTimeFrom && block.AvailedTimeTo
               ? `${formatTime(block.AvailedTimeFrom)} to ${formatTime(
-                block.AvailedTimeTo
-              )}`
+                  block.AvailedTimeTo
+                )}`
               : "Not Available",
           Status: statusLabel,
         };
@@ -581,7 +764,248 @@ export default function GenerateReportPage() {
       toast.error("Failed to download Excel file. Please try again.");
     }
   };
+  const handleDownloadDepartmentCount = () => {
+    try {
+      if (detailedData.length === 0) {
+        // Changed from countBlock to detailedData
+        toast.error("No data available to download");
+        return;
+      }
 
+      // Prepare the Excel data matching your table structure
+      const excelData = [
+        // ENGG Rows
+        {
+          Location: "MAS",
+          Department: "ENGG",
+          "Supporting Department": "-",
+          "Total Block Requested": enggTotal,
+          "Total Block Sanctioned": detailedData.filter(
+            (block) => block.selectedDepartment === "ENGG" && block.isSanctioned
+          ).length,
+          "Total Block Availed": detailedData.filter(
+            (block) =>
+              block.selectedDepartment === "ENGG" &&
+              block.AvailedTimeFrom !== null &&
+              block.AvailedTimeTo !== null
+          ).length,
+        },
+        {
+          Location: "MAS",
+          Department: "ENGG",
+          "Supporting Department": "S&T",
+          "Total Block Requested": enggWithSnt,
+          "Total Block Sanctioned": detailedData.filter(
+            (block) =>
+              block.selectedDepartment === "ENGG" &&
+              block.sntDisconnectionRequired === true &&
+              block.isSanctioned
+          ),
+          "Total Block Availed": detailedData.filter(
+            (block) =>
+              block.selectedDepartment === "ENGG" &&
+              block.sntDisconnectionRequired === true &&
+              block.AvailedTimeFrom !== null &&
+              block.AvailedTimeTo !== null
+          ),
+        },
+        {
+          Location: "MAS",
+          Department: "ENGG",
+          "Supporting Department": "TRD",
+          "Total Block Requested": enggWithPower,
+          "Total Block Sanctioned": detailedData.filter(
+            (block) =>
+              block.selectedDepartment === "ENGG" &&
+              block.powerBlockRequired === true &&
+              block.isSanctioned
+          ),
+          "Total Block Availed": detailedData.filter(
+            (block) =>
+              block.selectedDepartment === "ENGG" &&
+              block.powerBlockRequired === true &&
+              block.AvailedTimeFrom !== null &&
+              block.AvailedTimeTo !== null
+          ),
+        },
+        {
+          Location: "MAS",
+          Department: "ENGG",
+          "Supporting Department": "S&T and TRD",
+          "Total Block Requested": enggWithSntAndPower,
+          "Total Block Sanctioned": detailedData.filter(
+            (block) =>
+              block.selectedDepartment === "ENGG" &&
+              block.sntDisconnectionRequired === true &&
+              block.powerBlockRequired === true &&
+              block.isSanctioned
+          ),
+          "Total Block Availed": detailedData.filter(
+            (block) =>
+              block.selectedDepartment === "ENGG" &&
+              block.sntDisconnectionRequired === true &&
+              block.powerBlockRequired === true &&
+              block.AvailedTimeFrom !== null &&
+              block.AvailedTimeTo !== null
+          ),
+        },
+
+        // TRD Rows
+        {
+          Location: "MAS",
+          Department: "TRD",
+          "Supporting Department": "-",
+          "Total Block Requested": trdTotal,
+          "Total Block Sanctioned": detailedData.filter(
+            (block) => block.selectedDepartment === "TRD" && block.isSanctioned
+          ),
+          "Total Block Availed": detailedData.filter(
+            (block) =>
+              block.selectedDepartment === "TRD" &&
+              block.AvailedTimeFrom !== null &&
+              block.AvailedTimeTo !== null
+          ),
+        },
+
+        // S&T Rows
+        {
+          Location: "MAS",
+          Department: "S&T",
+          "Supporting Department": "-",
+          "Total Block Requested": sntTotal,
+          "Total Block Sanctioned": detailedData.filter(
+            (block) => block.selectedDepartment === "S&T" && block.isSanctioned
+          ),
+          "Total Block Availed": detailedData.filter(
+            (block) =>
+              block.selectedDepartment === "S&T" &&
+              block.AvailedTimeFrom !== null &&
+              block.AvailedTimeTo !== null
+          ),
+        },
+        {
+          Location: "MAS",
+          Department: "S&T",
+          "Supporting Department": "ENGG",
+          "Total Block Requested": sntWithEngg,
+          "Total Block Sanctioned": detailedData.filter(
+            (block) =>
+              block.selectedDepartment === "S&T" &&
+              block.enggDisconnectionsRequired === true &&
+              block.isSanctioned
+          ),
+          "Total Block Availed": detailedData.filter(
+            (block) =>
+              block.selectedDepartment === "S&T" &&
+              block.enggDisconnectionsRequired === true &&
+              block.AvailedTimeFrom !== null &&
+              block.AvailedTimeTo !== null
+          ),
+        },
+        {
+          Location: "MAS",
+          Department: "S&T",
+          "Supporting Department": "TRD",
+          "Total Block Requested": sntWithPower,
+          "Total Block Sanctioned": detailedData.filter(
+            (block) =>
+              block.selectedDepartment === "S&T" &&
+              block.powerBlockRequired === true &&
+              block.isSanctioned
+          ),
+          "Total Block Availed": detailedData.filter(
+            (block) =>
+              block.selectedDepartment === "S&T" &&
+              block.powerBlockRequired === true &&
+              block.AvailedTimeFrom !== null &&
+              block.AvailedTimeTo !== null
+          ),
+        },
+        {
+          Location: "MAS",
+          Department: "S&T",
+          "Supporting Department": "ENGG and TRD",
+          "Total Block Requested": sntWithEnggAndPower,
+          "Total Block Sanctioned": detailedData.filter(
+            (block) =>
+              block.selectedDepartment === "S&T" &&
+              block.enggDisconnectionsRequired === true &&
+              block.powerBlockRequired === true &&
+              block.isSanctioned
+          ),
+          "Total Block Availed": detailedData.filter(
+            (block) =>
+              block.selectedDepartment === "S&T" &&
+              block.enggDisconnectionsRequired === true &&
+              block.powerBlockRequired === true &&
+              block.AvailedTimeFrom !== null &&
+              block.AvailedTimeTo !== null
+          ),
+        },
+
+        // Total Row
+        {
+          Location: "TOTAL",
+          Department: "",
+          "Supporting Department": "",
+          "Total Block Requested": totalRequested,
+          "Total Block Sanctioned": totalSanctioned,
+          "Total Block Availed": totalAvailed,
+        },
+      ];
+
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+      // Add title before the data
+      XLSX.utils.sheet_add_aoa(
+        worksheet,
+        [
+          [`Department Wise Request Count`],
+          [], // Empty row for spacing
+        ],
+        { origin: "A1" }
+      );
+
+      // Adjust column widths for better readability
+      const colWidths = [
+        { wch: 12 }, // Location
+        { wch: 15 }, // Department
+        { wch: 25 }, // Supporting Department
+        { wch: 20 }, // Total Block Requested
+        { wch: 20 }, // Total Block Sanctioned
+        { wch: 20 }, // Total Block Availed
+      ];
+      worksheet["!cols"] = colWidths;
+
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Department Count");
+
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+
+      const blob = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `department_wise_request_count_${format(
+        new Date(),
+        "dd-MM-yyyy"
+      )}.xlsx`;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success("Department wise request count downloaded successfully");
+    } catch (error) {
+      console.error("Download error:", error);
+      toast.error("Failed to download Excel file. Please try again.");
+    }
+  };
   return (
     <div className="min-h-screen w-full bg-[#fffbe9] flex flex-col items-center">
       {/* RBMS Header */}
@@ -613,10 +1037,11 @@ export default function GenerateReportPage() {
           {blockTypeOptions.map((opt) => (
             <button
               key={opt.value}
-              className={`rounded-full px-3 py-1 text-base font-semibold border border-[#b7e3ee] flex items-center gap-1 transition-colors duration-150 ${selectedBlockTypes.includes(opt.value)
-                ? "bg-[#b7e3ee] text-black"
-                : "bg-[#e0e0ff] text-black"
-                }`}
+              className={`rounded-full px-3 py-1 text-base font-semibold border border-[#b7e3ee] flex items-center gap-1 transition-colors duration-150 ${
+                selectedBlockTypes.includes(opt.value)
+                  ? "bg-[#b7e3ee] text-black"
+                  : "bg-[#e0e0ff] text-black"
+              }`}
               onClick={() => toggleBlockType(opt.value)}
               type="button"
             >
@@ -707,167 +1132,1015 @@ export default function GenerateReportPage() {
               (in Hrs)
             </div>
           </div>
-          <div className="overflow-x-auto w-full">
-            <table className="w-full border-2 border-black">
+          <div className="w-full overflow-x-auto">
+            <table className="w-full border-2 border-black min-w-[800px]">
               <thead>
-                <tr className="bg-[#f7c7ac] text-black text-[24px] font-bold">
-                  <th className="border-2 border-black px-2 py-1">Section</th>
-                  <th className="border-2 border-black px-2 py-1">Demanded / No. of Blocks</th>
-                  <th className="border-2 border-black px-2 py-1">Approved / No. of Blocks</th>
-                  <th className="border-2 border-black px-2 py-1">Granted</th>
-                  <th className="border-2 border-black px-2 py-1">% Granted</th>
-                  <th className="border-2 border-black px-2 py-1">Availed / No. of Blocks</th>
-                  <th className="border-2 border-black px-2 py-1">% Availed</th>
+                <tr className="bg-[#f7c7ac] text-black text-[14px] md:text-[24px] font-bold">
+                  <th className="border-2 border-black px-1 md:px-2 py-2">
+                    Section
+                  </th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">
+                    Demanded (Hrs)/Blocks
+                  </th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">
+                    Approved (Hrs)/Blocks
+                  </th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">
+                    Applied (Hrs)/Blocks
+                  </th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">
+                    Granted (Hrs)/Blocks
+                  </th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">
+                    % Granted
+                  </th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">
+                    Availed (Hrs)/Blocks
+                  </th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">
+                    % Availed
+                  </th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">
+                    Not Granted
+                  </th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">
+                    Not Availed
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {pastBlockSummary.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan={7}
-                      className="text-center py-4"
-                      style={{ color: "black" }}
-                    >
+                    <td colSpan={8} className="text-center py-4 text-black">
                       No data found.
                     </td>
                   </tr>
                 ) : (
                   pastBlockSummary.map((summary: any, idx: number) => (
                     <tr
-                      className={`font-bold ${idx % 2 === 0 ? "bg-[#f4dcf1]" : "bg-white"
-                        }`}
+                      className={`font-bold ${
+                        idx % 2 === 0 ? "bg-[#f4dcf1]" : "bg-white"
+                      }`}
                       key={idx}
                     >
-                      <td
-                        className="border-2 border-black px-2 py-1 text-center"
-                        style={{ color: "black" }}
-                      >
+                      <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                         {summary.Department || summary.Section || ""}
                       </td>
                       <td
-                        className="border-2 border-black px-2 py-1 text-center"
-                        style={{ color: "black" }}
+                        className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                        onClick={() => {
+                          setActiveFilter("demanded");
+                          setActiveSection(
+                            summary.Department || summary.Section
+                          );
+                        }}
                       >
                         {summary.Demanded.toFixed(2)} / {summary.DemandsCount}
                       </td>
                       <td
-                        className="border-2 border-black px-2 py-1 text-center"
-                        style={{ color: "black" }}
+                        className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                        onClick={() => {
+                          setActiveFilter("approved");
+                          setActiveSection(
+                            summary.Department || summary.Section
+                          );
+                        }}
                       >
                         {summary.Approved.toFixed(2)} / {summary.ApprovedCount}
                       </td>
                       <td
-                        className="border-2 border-black px-2 py-1 text-center"
-                        style={{ color: "black" }}
+                        className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                        onClick={() => {
+                          setActiveFilter("applied");
+                          setActiveSection(
+                            summary.Department || summary.Section
+                          );
+                        }}
                       >
-                        {summary.Granted.toFixed(2)}
+                        {summary.Applied.toFixed(2)} /{summary.AppliedCount}
                       </td>
                       <td
-                        className="border-2 border-black px-2 py-1 text-center"
-                        style={{ color: "black" }}
+                        className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                        onClick={() => {
+                          setActiveFilter("granted");
+                          setActiveSection(
+                            summary.Department || summary.Section
+                          );
+                        }}
                       >
+                        {summary.Granted.toFixed(2)} /{summary.GrantedCount}
+                      </td>
+
+                      <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                         {summary.PercentGranted !== undefined
                           ? summary.PercentGranted.toFixed(2) + "%"
                           : ""}
                       </td>
                       <td
-                        className="border-2 border-black px-2 py-1 text-center"
-                        style={{ color: "black" }}
+                        className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                        onClick={() => {
+                          setActiveFilter("availed");
+                          setActiveSection(
+                            summary.Department || summary.Section
+                          );
+                        }}
                       >
                         {summary.Availed.toFixed(2)} / {summary.AvailedCount}
                       </td>
-                      <td
-                        className="border-2 border-black px-2 py-1 text-center"
-                        style={{ color: "black" }}
-                      >
+                      <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                         {summary.PercentAvailed !== undefined
                           ? summary.PercentAvailed.toFixed(2) + "%"
                           : ""}
+                      </td>
+                      <td
+                        className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                        onClick={() => {
+                          // You can define what happens when Not Granted is clicked
+                          // For example, filter the upcoming blocks to show only not granted requests
+                          setActiveFilter("notGranted");
+                          setActiveSection(
+                            summary.Department || summary.Section
+                          );
+                          toast.success(
+                            `Viewing Not Granted for: ${
+                              summary.Department || summary.Section
+                            }`
+                          );
+                        }}
+                      >
+                        {summary.NotGrantedCount}
+                      </td>
+                      <td
+                        className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                        onClick={() => {
+                          // You can define what happens when Not Availed is clicked
+                          setActiveFilter("notAvailed");
+                          setActiveSection(
+                            summary.Department || summary.Section
+                          );
+                          toast.success(
+                            `Viewing Not Availed for: ${
+                              summary.Department || summary.Section
+                            }`
+                          );
+                        }}
+                      >
+                        {summary.NotAvailedCount}
                       </td>
                     </tr>
                   ))
                 )}
 
                 {pastBlockSummary.length > 0 && (
-                  <>
-                    <tr className="bg-[#ff914d] text-white font-bold">
-                      <td className="border-2 border-black px-2 py-1 text-center">
-                        Total
-                      </td>
-                      <td
-                        className="border-2 border-black px-2 py-1 text-center"
-                        style={{ color: "black" }}
-                      >
-                        {pastBlockSummary
-                          .reduce((sum, item) => sum + (item.Demanded || 0), 0)
-                          .toFixed(2)}{" "}
-                        /{" "}
-                        {pastBlockSummary.reduce(
-                          (sum, item) => sum + (item.DemandsCount || 0),
-                          0
-                        )}
-                      </td>
-                      <td
-                        className="border-2 border-black px-2 py-1 text-center"
-                        style={{ color: "black" }}
-                      >
-                        {pastBlockSummary
-                          .reduce((sum, item) => sum + (item.Approved || 0), 0)
-                          .toFixed(2)}{" "}
-                        /{" "}
-                        {pastBlockSummary.reduce(
-                          (sum, item) => sum + (item.ApprovedCount || 0),
-                          0
-                        )}
-                      </td>
-                      <td
-                        className="border-2 border-black px-2 py-1 text-center"
-                        style={{ color: "black" }}
-                      >
-                        {pastBlockSummary.reduce(
-                          (sum, item) => sum + (item.Granted || 0),
-                          0
-                        ).toFixed(2)}
-                      </td>
-                      <td
-                        className="border-2 border-black px-2 py-1 text-center"
-                        style={{ color: "black" }}
-                      >
-                        {pastBlockSummary.reduce(
+                  <tr className="bg-[#ff914d] text-white font-bold">
+                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-[12px] md:text-[16px]">
+                      Totals
+                    </td>
+                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                      {pastBlockSummary
+                        .reduce((sum, item) => sum + (item.Demanded || 0), 0)
+                        .toFixed(2)}{" "}
+                      /{" "}
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.DemandsCount || 0),
+                        0
+                      )}
+                    </td>
+                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                      {pastBlockSummary
+                        .reduce((sum, item) => sum + (item.Approved || 0), 0)
+                        .toFixed(2)}{" "}
+                      /{" "}
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.ApprovedCount || 0),
+                        0
+                      )}
+                    </td>
+                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                      {pastBlockSummary
+                        .reduce((sum, item) => sum + (item.Applied || 0), 0)
+                        .toFixed(2)}{" "}
+                      /{" "}
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.AppliedCount || 0),
+                        0
+                      )}
+                    </td>
+                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                      {pastBlockSummary
+                        .reduce((sum, item) => sum + (item.Granted || 0), 0)
+                        .toFixed(2)}{" "}
+                      /{" "}
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.GrantedCount || 0),
+                        0
+                      )}
+                    </td>
+                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                      {pastBlockSummary
+                        .reduce(
                           (sum, item) => sum + (item.PercentGranted || 0),
                           0
-                        ).toFixed(2)}
-                      </td>
-                      <td
-                        className="border-2 border-black px-2 py-1 text-center"
-                        style={{ color: "black" }}
-                      >
-                        {pastBlockSummary.reduce(
-                          (sum, item) => sum + (item.Availed || 0),
-                          0
-                        ).toFixed(2)}{" "}
-                        /{" "}
-                        {pastBlockSummary.reduce(
-                          (sum, item) => sum + (item.AvailedCount || 0),
-                          0
-                        )}
-                      </td>
-                      <td
-                        className="border-2 border-black px-2 py-1 text-center"
-                        style={{ color: "black" }}
-                      >
-                        {pastBlockSummary.reduce(
+                        )
+                        .toFixed(2)}
+                    </td>
+
+                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                      {pastBlockSummary
+                        .reduce((sum, item) => sum + (item.Availed || 0), 0)
+                        .toFixed(2)}{" "}
+                      /{" "}
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.AvailedCount || 0),
+                        0
+                      )}
+                    </td>
+                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                      {pastBlockSummary
+                        .reduce(
                           (sum, item) => sum + (item.PercentAvailed || 0),
                           0
-                        ).toFixed(2)}
-                      </td>
-                    </tr>
-                  </>
+                        )
+                        .toFixed(2)}
+                    </td>
+                    <td
+                      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                      onClick={() => {
+                        setActiveFilter("notGranted");
+                        setActiveSection(null); // Show all sections for total
+                        toast.success("Viewing all Not Granted requests");
+                      }}
+                    >
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.NotGrantedCount || 0),
+                        0
+                      )}
+                    </td>
+                    <td
+                      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                      onClick={() => {
+                        setActiveFilter("notAvailed");
+                        setActiveSection(null); // Show all sections for total
+                        toast.success("Viewing all Not Availed requests");
+                      }}
+                    >
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.NotAvailedCount || 0),
+                        0
+                      )}
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>
           </div>
         </div>
+
+        <div className="flex flex-col md:flex-row w-full mt-8 gap-4 mb-2 ">
+          <button
+            onClick={handleDownloadDepartmentCount}
+            className="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1 shadow border border-green-800 text-[12px] md:text-base flex items-center"
+            disabled={detailedData.length === 0}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4 md:h-5 md:w-5 mr-1"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+              />
+            </svg>
+            Download Count (XLSX)
+          </button>
+
+          <div className="bg-[#ff914d] text-[16px] md:text-[24px] font-bold border-2 border-black px-2 py-1 text-center">
+            Department Wise Request Count
+          </div>
+          {/* Department Count Filter Display */}
+          {departmentCountFilter && (
+            <div className="w-full flex flex-col sm:flex-row justify-center items-center gap-4 my-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="bg-blue-100 border border-blue-300 px-4 py-2 rounded-lg">
+                <span className="text-blue-700 font-bold text-sm md:text-base">
+                  Filtering: {departmentCountFilter.department}
+                  {departmentCountFilter.supportingDepartment !== "-"
+                    ? ` + ${departmentCountFilter.supportingDepartment}`
+                    : ""}
+                  ({departmentCountFilter.filterType.toUpperCase()})
+                </span>
+              </div>
+              <button
+                onClick={() => setDepartmentCountFilter(null)}
+                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm font-bold flex items-center gap-2"
+              >
+                <span>✕</span>
+                Clear Department Filter
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="w-full overflow-x-auto ">
+          <table className="w-full border-2 border-black min-w-[800px]">
+            <thead>
+              <tr className="bg-[#f7c7ac] text-black text-[14px] md:text-[24px] font-bold">
+                <th className="border-2 border-black px-1 md:px-2 py-2">
+                  Location
+                </th>
+                <th className="border-2 border-black px-1 md:px-2 py-2">
+                  Department
+                </th>
+                <th className="border-2 border-black px-1 md:px-2 py-2">
+                  Supporting Department
+                </th>
+                <th className="border-2 border-black px-1 md:px-2 py-2">
+                  Total Block Requested
+                </th>
+                <th className="border-2 border-black px-1 md:px-2 py-2">
+                  Total Block Sanctioned
+                </th>
+                <th className="border-2 border-black px-1 md:px-2 py-2">
+                  Total Block Availed
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {/* ENGG Rows */}
+              <tr className="bg-white font-bold">
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  MAS
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  ENGG
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  -
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "ENGG",
+                      supportingDepartment: "-",
+                      filterType: "requested",
+                    });
+                    toast.success(
+                      "Showing requested ENGG blocks (no supporting departments)"
+                    );
+                  }}
+                >
+                  {enggTotal}
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "ENGG",
+                      supportingDepartment: "-",
+                      filterType: "sanctioned",
+                    });
+                    toast.success(
+                      "Showing sanctioned ENGG blocks (no supporting departments)"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "ENGG" &&
+                        block.isSanctioned &&
+                        block.powerBlockRequired === false &&
+                        block.sntDisconnectionRequired === false
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "ENGG",
+                      supportingDepartment: "-",
+                      filterType: "availed",
+                    });
+                    toast.success(
+                      "Showing availed ENGG blocks (no supporting departments)"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "ENGG" &&
+                        block.AvailedTimeFrom !== null &&
+                        block.AvailedTimeTo !== null &&
+                        block.powerBlockRequired === false &&
+                        block.sntDisconnectionRequired === false
+                    ).length
+                  }
+                </td>
+              </tr>
+
+              <tr className="bg-[#f4dcf1] font-bold">
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  MAS
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  ENGG
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  S&T
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "ENGG",
+                      supportingDepartment: "S&T",
+                      filterType: "requested",
+                    });
+                    toast.success(
+                      "Showing requested ENGG blocks with S&T support"
+                    );
+                  }}
+                >
+                  {enggWithSnt}
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "ENGG",
+                      supportingDepartment: "S&T",
+                      filterType: "sanctioned",
+                    });
+                    toast.success(
+                      "Showing sanctioned ENGG blocks with S&T support"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "ENGG" &&
+                        block.sntDisconnectionRequired === true &&
+                        block.isSanctioned &&
+                        block.powerBlockRequired === false &&
+                        block.enggDisconnectionsRequired === false
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "ENGG",
+                      supportingDepartment: "S&T",
+                      filterType: "availed",
+                    });
+                    toast.success(
+                      "Showing availed ENGG blocks with S&T support"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "ENGG" &&
+                        block.sntDisconnectionRequired === true &&
+                        block.AvailedTimeFrom !== null &&
+                        block.AvailedTimeTo !== null &&
+                        block.powerBlockRequired === false &&
+                        block.enggDisconnectionsRequired === false
+                    ).length
+                  }
+                </td>
+              </tr>
+
+              <tr className="bg-white font-bold">
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  MAS
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  ENGG
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  TRD
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "ENGG",
+                      supportingDepartment: "TRD",
+                      filterType: "requested",
+                    });
+                    toast.success(
+                      "Showing requested ENGG blocks with TRD support"
+                    );
+                  }}
+                >
+                  {enggWithPower}
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "ENGG",
+                      supportingDepartment: "TRD",
+                      filterType: "sanctioned",
+                    });
+                    toast.success(
+                      "Showing sanctioned ENGG blocks with TRD support"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "ENGG" &&
+                        block.powerBlockRequired === true &&
+                        block.isSanctioned
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "ENGG",
+                      supportingDepartment: "TRD",
+                      filterType: "availed",
+                    });
+                    toast.success(
+                      "Showing availed ENGG blocks with TRD support"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "ENGG" &&
+                        block.powerBlockRequired === true &&
+                        block.AvailedTimeFrom !== null &&
+                        block.AvailedTimeTo !== null
+                    ).length
+                  }
+                </td>
+              </tr>
+
+              <tr className="bg-[#f4dcf1] font-bold">
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  MAS
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  ENGG
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  S&T and TRD
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "ENGG",
+                      supportingDepartment: "S&T and TRD",
+                      filterType: "requested",
+                    });
+                    toast.success(
+                      "Showing requested ENGG blocks with S&T and TRD support"
+                    );
+                  }}
+                >
+                  {enggWithSntAndPower}
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "ENGG",
+                      supportingDepartment: "S&T and TRD",
+                      filterType: "sanctioned",
+                    });
+                    toast.success(
+                      "Showing sanctioned ENGG blocks with S&T and TRD support"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "ENGG" &&
+                        block.sntDisconnectionRequired === true &&
+                        block.powerBlockRequired === true &&
+                        block.isSanctioned
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "ENGG",
+                      supportingDepartment: "S&T and TRD",
+                      filterType: "availed",
+                    });
+                    toast.success(
+                      "Showing availed ENGG blocks with S&T and TRD support"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "ENGG" &&
+                        block.sntDisconnectionRequired === true &&
+                        block.powerBlockRequired === true &&
+                        block.AvailedTimeFrom !== null &&
+                        block.AvailedTimeTo !== null
+                    ).length
+                  }
+                </td>
+              </tr>
+
+              {/* TRD Rows */}
+              <tr className="bg-white font-bold">
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  MAS
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  TRD
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  -
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "TRD",
+                      supportingDepartment: "-",
+                      filterType: "requested",
+                    });
+                    toast.success("Showing requested TRD blocks");
+                  }}
+                >
+                  {trdTotal}
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "TRD",
+                      supportingDepartment: "-",
+                      filterType: "sanctioned",
+                    });
+                    toast.success("Showing sanctioned TRD blocks");
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "TRD" && block.isSanctioned
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "TRD",
+                      supportingDepartment: "-",
+                      filterType: "availed",
+                    });
+                    toast.success("Showing availed TRD blocks");
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "TRD" &&
+                        block.AvailedTimeFrom !== null &&
+                        block.AvailedTimeTo !== null
+                    ).length
+                  }
+                </td>
+              </tr>
+
+              {/* S&T Rows */}
+              <tr className="bg-[#f4dcf1] font-bold">
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  MAS
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  S&T
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  -
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "S&T",
+                      supportingDepartment: "-",
+                      filterType: "requested",
+                    });
+                    toast.success(
+                      "Showing requested S&T blocks (no supporting departments)"
+                    );
+                  }}
+                >
+                  {sntTotal}
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "S&T",
+                      supportingDepartment: "-",
+                      filterType: "sanctioned",
+                    });
+                    toast.success(
+                      "Showing sanctioned S&T blocks (no supporting departments)"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "S&T" && block.isSanctioned
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "S&T",
+                      supportingDepartment: "-",
+                      filterType: "availed",
+                    });
+                    toast.success(
+                      "Showing availed S&T blocks (no supporting departments)"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "S&T" &&
+                        block.AvailedTimeFrom !== null &&
+                        block.AvailedTimeTo !== null
+                    ).length
+                  }
+                </td>
+              </tr>
+
+              <tr className="bg-white font-bold">
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  MAS
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  S&T
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  ENGG
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "S&T",
+                      supportingDepartment: "ENGG",
+                      filterType: "requested",
+                    });
+                    toast.success(
+                      "Showing requested S&T blocks with ENGG support"
+                    );
+                  }}
+                >
+                  {sntWithEngg}
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "S&T",
+                      supportingDepartment: "ENGG",
+                      filterType: "sanctioned",
+                    });
+                    toast.success(
+                      "Showing sanctioned S&T blocks with ENGG support"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "S&T" &&
+                        block.enggDisconnectionsRequired === true &&
+                        block.isSanctioned
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "S&T",
+                      supportingDepartment: "ENGG",
+                      filterType: "availed",
+                    });
+                    toast.success(
+                      "Showing availed S&T blocks with ENGG support"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "S&T" &&
+                        block.enggDisconnectionsRequired === true &&
+                        block.AvailedTimeFrom !== null &&
+                        block.AvailedTimeTo !== null
+                    ).length
+                  }
+                </td>
+              </tr>
+
+              <tr className="bg-[#f4dcf1] font-bold">
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  MAS
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  S&T
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  TRD
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "S&T",
+                      supportingDepartment: "TRD",
+                      filterType: "requested",
+                    });
+                    toast.success(
+                      "Showing requested S&T blocks with TRD support"
+                    );
+                  }}
+                >
+                  {sntWithPower}
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "S&T",
+                      supportingDepartment: "TRD",
+                      filterType: "sanctioned",
+                    });
+                    toast.success(
+                      "Showing sanctioned S&T blocks with TRD support"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "S&T" &&
+                        block.powerBlockRequired === true &&
+                        block.isSanctioned
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "S&T",
+                      supportingDepartment: "TRD",
+                      filterType: "availed",
+                    });
+                    toast.success(
+                      "Showing availed S&T blocks with TRD support"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "S&T" &&
+                        block.powerBlockRequired === true &&
+                        block.AvailedTimeFrom !== null &&
+                        block.AvailedTimeTo !== null
+                    ).length
+                  }
+                </td>
+              </tr>
+
+              <tr className="bg-white font-bold">
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  MAS
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  S&T
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  ENGG and TRD
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "S&T",
+                      supportingDepartment: "ENGG and TRD",
+                      filterType: "requested",
+                    });
+                    toast.success(
+                      "Showing requested S&T blocks with ENGG and TRD support"
+                    );
+                  }}
+                >
+                  {sntWithEnggAndPower}
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "S&T",
+                      supportingDepartment: "ENGG and TRD",
+                      filterType: "sanctioned",
+                    });
+                    toast.success(
+                      "Showing sanctioned S&T blocks with ENGG and TRD support"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "S&T" &&
+                        block.enggDisconnectionsRequired === true &&
+                        block.powerBlockRequired === true &&
+                        block.isSanctioned
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "S&T",
+                      supportingDepartment: "ENGG and TRD",
+                      filterType: "availed",
+                    });
+                    toast.success(
+                      "Showing availed S&T blocks with ENGG and TRD support"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "S&T" &&
+                        block.enggDisconnectionsRequired === true &&
+                        block.powerBlockRequired === true &&
+                        block.AvailedTimeFrom !== null &&
+                        block.AvailedTimeTo !== null
+                    ).length
+                  }
+                </td>
+              </tr>
+
+              {/* Total Row */}
+              <tr className="bg-[#ff914d] text-white font-bold">
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-[12px] md:text-[16px]"
+                  colSpan={3}
+                >
+                  Total
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {totalRequested}
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {totalSanctioned}
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {totalAvailed}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
         {/* (B) Summary of Upcoming Blocks */}
         <div className="w-full mt-8">
           <div className="my-2">
@@ -938,108 +2211,83 @@ export default function GenerateReportPage() {
               </div>
             </div>
           </div>
-          <div className="overflow-x-auto w-full max-w-full">
-            {/* <table className="w-full border-2 border-black mt-1 text-sm">
+          <div className="w-full mt-4 overflow-x-auto">
+            <table className="w-full border-2 border-black min-w-[900px] text-[12px] md:text-[20px]">
               <thead>
-                <tr className="bg-[#e49edd] text-black text-lg font-bold">
-                  <th className="border-2 border-black px-2 py-1">Section</th>
-                  <th className="border-2 border-black px-2 py-1">Date</th>
-                  <th className="border-2 border-black px-2 py-1">Type</th>
-                  <th className="border-2 border-black px-2 py-1">Duration</th>
-                  <th className="border-2 border-black px-2 py-1">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUpcomingBlocks.length === 0 ? (
-                  <tr><td colSpan={5} className="text-center py-4" style={{color:"black"}}>No data found.</td></tr>
-                ) : filteredUpcomingBlocks.slice(0, 200).map((block: DetailedData, idx: number) => {
-                  // Status color logic
-                  let statusLabel = '';
-                  let statusStyle = { background: '#fff', color: '#222' };
-                  if (block.Status === 'APPROVED') {
-                    statusLabel = 'Pending with Optg';
-                    statusStyle = { background: '#fff86b', color: '#222' };
-                  } else if (block.Status === 'PENDING') {
-                    statusLabel = 'Pending with dept control';
-                    statusStyle = { background: '#d47ed4', color: '#222' };
-                  } else if (block.Status === 'REJECTED') {
-                    statusLabel = 'Returned by Optg';
-                    statusStyle = { background: '#ff4e36', color: '#fff' };
-                  } else {
-                    statusLabel = block.Status;
-                  }
-                  return (
-                    <tr key={idx} className="bg-white hover:bg-[#F3F3F3]">
-                      <td className="border-2 border-black px-2 py-1 font-bold text-black">{block.Section}</td>
-                      <td className="border-2 border-black px-2 py-1 text-black">{formatDateB(block.Date)}</td>
-                      <td className="border-2 border-black px-2 py-1 text-black">{block.Type}</td>
-                      <td className="border-2 border-black px-2 py-1 text-black">{block.Duration}</td>
-                      <td className="border-2 border-black px-2 py-1 font-bold text-center text-black" style={statusStyle}>{statusLabel}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table> */}
-
-            <table className="w-full border-2 border-black mt-1 text-[24px]">
-              <thead>
-                <tr className="bg-[#e49edd] text-black text-lg font-bold">
-                  <th className="border-2 border-black px-2 py-1">Date</th>
-                  <th className="border-2 border-black px-2 py-1">ID</th>
-                  <th className="border-2 border-black px-2 py-1">
+                <tr className="bg-[#e49edd] text-black text-[12px] md:text-[20px] font-bold">
+                  <th className="border-2 border-black px-1 md:px-2 py-2">
+                    S.No
+                  </th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">
+                    Date
+                  </th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">
+                    Department
+                  </th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">
+                    RequestId
+                  </th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">
                     Block Section
                   </th>
-                  <th className="border-2 border-black px-2 py-1">Type</th>
-                  <th className="border-2 border-black px-2 py-1">Depo</th>
-
-                  <th className="border-2 border-black px-2 py-1">Activity</th>
-                  <th className="border-2 border-black px-2 py-1">
-                    Demand time
+                  <th className="border-2 border-black px-1 md:px-2 py-2">
+                    Depo
                   </th>
-                  <th className="border-2 border-black px-2 py-1">
-                    Sanctioned time
+                  <th className="border-2 border-black px-1 md:px-2 py-2">
+                    Type
                   </th>
-                  <th className="border-2 border-black px-2 py-1">
+                  <th className="border-2 border-black px-1 md:px-2 py-2">
+                    Activity
+                  </th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">
                     Availed time
                   </th>
-                  <th className="border-2 border-black px-2 py-1">
+                  <th className="border-2 border-black px-1 md:px-2 py-2">
                     Station ID
                   </th>
-                  <th className="border-2 border-black px-2 py-1">Status</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">
+                    Status
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {filteredUpcomingBlocks.length === 0 ? (
                   <tr className="bg-white">
-                    <td
-                      colSpan={5}
-                      className="text-center py-4"
-                      style={{ color: "black" }}
-                    >
+                    <td colSpan={9} className="text-center py-4 text-black">
                       No data found.
                     </td>
                   </tr>
                 ) : (
-                  filteredUpcomingBlocks
+                  filteredBlocks
                     .slice(0, 200)
                     .map((block: any, idx: number) => {
-                      // Status color logic
                       let statusLabel = "";
                       let statusStyle = { background: "#fff", color: "#222" };
-                      if (block.Status === "APPROVED") {
-                        statusLabel = "Pending with Optg";
+                      if (
+                        block.Status === "APPROVED" &&
+                        block.isSanctioned &&
+                        block.userResponse === null
+                      ) {
+                        statusLabel =
+                          "Sanctioned, Pending with SSE For Acceptance";
                         statusStyle = { background: "#fff86b", color: "#222" };
-                      } else if (block.Status === "PENDING") {
-                        statusLabel = "Pending with dept control";
+                      } else if (
+                        block.userResponse === "ACCEPTED" ||
+                        block.overAllStatus === "Sanctioned and Accepted"
+                      ) {
+                        statusLabel = "Sanctioned and Accepted by SSE";
                         statusStyle = { background: "#d47ed4", color: "#222" };
-                      } else if (block.Status === "REJECTED") {
-                        statusLabel = "Returned by Optg";
+                      } else if (
+                        block.isSanctioned === true &&
+                        block.userAcceptanceForSanction === false &&
+                        block.userResponse !== "ACCEPTED"
+                      ) {
+                        statusLabel = "Sanctioned and Rejected by SSE";
                         statusStyle = { background: "#ff4e36", color: "#fff" };
                       } else {
-                        statusLabel = block.Status;
+                        statusLabel = block.overAllStatus || block.Status;
                       }
 
-                      // Row background alternates between pink and white
                       const rowBgColor =
                         idx % 2 === 0 ? "bg-white" : "bg-[#f5d0f2]";
 
@@ -1048,10 +2296,16 @@ export default function GenerateReportPage() {
                           key={idx}
                           className={`${rowBgColor} hover:bg-[#F3F3F3]`}
                         >
-                          <td className="border-2 border-black px-2 py-1 text-black">
-                            {formatDateB(block.Date)}
+                          <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px] text-center">
+                            {idx + 1}
                           </td>
-                          <td className="border-2 border-black px-2 py-1 font-bold text-black">
+                          <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
+                            {dayjs(block.Date).format("DD-MM-YY")}
+                          </td>
+                          <td className="border-2 border-black px-1 md:px-2 py-2 font-bold text-black text-[10px] md:text-[14px]">
+                            {block.selectedDepartment}
+                          </td>
+                          <td className="border-2 border-black px-1 md:px-2 py-2 font-bold text-black text-[10px] md:text-[14px]">
                             <Link
                               href={`/view-request/${block.id}`}
                               className="block w-full h-full"
@@ -1059,34 +2313,20 @@ export default function GenerateReportPage() {
                               {block.DivisionId}
                             </Link>
                           </td>
-                          <td className="border-2 border-black px-2 py-1 font-bold text-black">
+
+                          <td className="border-2 border-black px-1 md:px-2 py-2 font-bold text-black text-[10px] md:text-[14px]">
                             {block.MissionBlock}
                           </td>
-                          <td className="border-2 border-black px-2 py-1 text-black">
+                          <td className="border-2 border-black px-1 md:px-2 py-2 font-bold text-black text-[10px] md:text-[14px]">
+                            {block.selectedDepo}
+                          </td>
+                          <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
                             {block.Type}
                           </td>
-                          <td className="border-2 border-black px-2 py-1 text-black">
-                            {block.selectedDepo || "N/A"}
-                          </td>
-                          <td className="border-2 border-black px-2 py-1 text-black max-w-[200px] break-words">
+                          <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
                             {block.Activity}
                           </td>
-                          <td className="border-2 border-black px-2 py-1 text-black">
-                            {formatTime(block.DemandedTimeFrom)} to{" "}
-                            {formatTime(block.DemandedTimeTo)}
-                          </td>
-                          <td className="border-2 border-black px-2 py-1 text-black">
-                            {block.SanctionedTimeFrom &&
-                              block.SanctionedTimeTo ? (
-                              <>
-                                {formatTime(block.SanctionedTimeFrom)} to{" "}
-                                {formatTime(block.SanctionedTimeTo)}
-                              </>
-                            ) : (
-                              "Not Optimized Yet"
-                            )}
-                          </td>
-                          <td className="border-2 border-black px-2 py-1 text-black">
+                          <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
                             {block.AvailedTimeFrom && block.AvailedTimeTo ? (
                               <>
                                 {formatTime(block.AvailedTimeFrom)} to{" "}
@@ -1096,11 +2336,11 @@ export default function GenerateReportPage() {
                               "Not Availed Yet"
                             )}
                           </td>
-                          <td className="border-2 border-black px-2 py-1 font-bold text-black">
+                          <td className="border-2 border-black px-1 md:px-2 py-2 font-bold text-black text-[10px] md:text-[14px]">
                             {block.stationId || "N/A"}
                           </td>
                           <td
-                            className="border-2 border-black px-2 py-1 font-bold text-center text-black"
+                            className="border-2 border-black px-1 md:px-2 py-2 font-bold text-center text-black text-[10px] md:text-[14px]"
                             style={statusStyle}
                           >
                             {statusLabel}
