@@ -3,6 +3,10 @@ import axiosInstance from "@/app/utils/axiosInstance";
 import { MajorSection } from "@/app/lib/store";
 
 export interface UserGenerateReportParams {
+  durationValue: any;
+  durationOperator: any;
+  globalActivity: any;
+  globalWorkType: any;
   startDate: string;
   endDate: string;
   majorSections: string[];
@@ -75,7 +79,11 @@ export const userGenerateService = {
         `&endDate=${params.endDate}` +
         `&majorSections=${params.majorSections.join(",")}` +
         `&blockType=${params.blockType.join(",")}` +
-        `&userId=${params.userId}`
+        `&userId=${params.userId}`+
+              `&globalWorkType=${params.globalWorkType}` +
+        `&globalActivity=${params.globalActivity}` +
+       `&durationOperator=${params.durationOperator}` +
+        `&durationValue=${params.durationValue}`
     );
     return response.data;
   },
