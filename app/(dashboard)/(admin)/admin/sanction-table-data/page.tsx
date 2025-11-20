@@ -2303,7 +2303,7 @@ const handleDownloadDepartmentCount = () => {
                   filteredBlocks.slice(0, 200).map((block: any, idx: number) => {
                     let statusLabel = "";
                     let statusStyle = { background: "#fff", color: "#222" };
-                    if (block.Status === "APPROVED" && block.isSanctioned&&block.userResponse===null) {
+                    if (block.Status === "APPROVED" && block.isSanctioned&&block.userResponse===null&&block.AvailedTimeFrom===null&&block.AvailedTimeTo===null&&block.userAcceptanceForSanction===false) {
                       statusLabel = "Sanctioned, Pending with SSE For Acceptance";
                       statusStyle = { background: "#fff86b", color: "#222" };
                     }  else if (block.userResponse === "ACCEPTED"|| block.overAllStatus === "Sanctioned and Accepted") {
