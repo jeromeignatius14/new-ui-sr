@@ -2258,7 +2258,8 @@ const activityOptions = getActivityOptions();
     if (!formData.missionBlock)
       errors.missionBlock = "Mission block is required";
     if (!formData.workType) errors.workType = "Work type is required";
-    if (!formData.activity) errors.activity = "Activity is required";
+    // if (!formData.activity) errors.activity = "Activity is required";
+    
     if (!formData.corridorTypeSelection)
       errors.corridorTypeSelection = "Corridor type is required";
 
