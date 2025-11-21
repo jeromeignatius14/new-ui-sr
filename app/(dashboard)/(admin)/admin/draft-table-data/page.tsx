@@ -15,7 +15,7 @@ import {
 } from "date-fns";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { UserRequest } from "@/app/service/api/manager";
+import { managerService, UserRequest } from "@/app/service/api/manager";
 import { useOptimizeRequests } from "@/app/service/query/optimise";
 import { flattenRecords } from "@/app/lib/optimse";
 import { WeeklySwitcher } from "@/app/components/ui/WeeklySwitcher";
@@ -362,27 +362,63 @@ export default function OptimiseTablePage() {
     // Always return the current week's Monday
     return startOfWeek(new Date(), { weekStartsOn: 1 });
   });
+// Add this after your existing state declarations
+const [departmentCounts, setDepartmentCounts] = useState({
+  ENGG: 0,
+  "S&T": 0,
+  TRD: 0,
+  ALL: 0
+});
+
+// Add this useEffect to calculate department counts
 
   // Add this effect to synchronize week start properly
-  useEffect(() => {
-    const dateParam = searchParams.get("date");
-    if (!dateParam) {
-      // If no date parameter, ensure we're using current week
-      const currentWeekMonday = startOfWeek(new Date(), { weekStartsOn: 1 });
-      setCurrentWeekStart(currentWeekMonday);
-    } else {
-      // If date parameter exists, ensure it's properly set as week start
-      const parsedDate = new Date(dateParam);
-      if (!isNaN(parsedDate.getTime())) {
-        setCurrentWeekStart(startOfWeek(parsedDate, { weekStartsOn: 1 }));
+  // useEffect(() => {
+  //   const dateParam = searchParams.get("date");
+  //   if (!dateParam) {
+  //     // If no date parameter, ensure we're using current week
+  //     const currentWeekMonday = startOfWeek(new Date(), { weekStartsOn: 1 });
+  //     setCurrentWeekStart(currentWeekMonday);
+  //   } else {
+  //     // If date parameter exists, ensure it's properly set as week start
+  //     const parsedDate = new Date(dateParam);
+  //     if (!isNaN(parsedDate.getTime())) {
+  //       setCurrentWeekStart(startOfWeek(parsedDate, { weekStartsOn: 1 }));
+  //     }
+  //   }
+  // }, [searchParams]);
+  // Replace the existing useEffect that synchronizes week start (around line 110)
+// Add this useEffect to handle URL parameter changes
+useEffect(() => {
+  const dateParam = searchParams.get("date");
+  const deptParam = searchParams.get("dept");
+  
+  console.log('🔄 URL parameters changed:', { dateParam, deptParam });
+  
+  if (dateParam) {
+    const parsedDate = new Date(dateParam);
+    if (!isNaN(parsedDate.getTime())) {
+      const weekStartDate = startOfWeek(parsedDate, { weekStartsOn: 1 });
+      if (weekStartDate.getTime() !== currentWeekStart.getTime()) {
+        console.log('🔄 Updating currentWeekStart from URL:', weekStartDate);
+        setCurrentWeekStart(weekStartDate);
       }
     }
-  }, [searchParams]);
-  useEffect(() => {
-    const params = new URLSearchParams();
-    params.set("date", format(currentWeekStart, "yyyy-MM-dd"));
-    router.push(`?${params.toString()}`, { scroll: false });
-  }, [currentWeekStart, router]);
+  }
+  
+  if (deptParam && deptParam !== deptFilter) {
+    const decodedDept = decodeURIComponent(deptParam);
+    if (["ENGG", "S&T", "TRD"].includes(decodedDept)) {
+      console.log('🔄 Updating deptFilter from URL:', decodedDept);
+      setDeptFilter(decodedDept);
+    }
+  }
+}, [searchParams]);
+  // useEffect(() => {
+  //   const params = new URLSearchParams();
+  //   params.set("date", format(currentWeekStart, "yyyy-MM-dd"));
+  //   router.push(`?${params.toString()}`, { scroll: false });
+  // }, [currentWeekStart, router]);
 
   // Edit state
   // Edit state
@@ -433,6 +469,7 @@ const [editFormData, setEditFormData] = useState<{
       router.push(`?${params.toString()}`, { scroll: false });
     }
   }, [deptFilter, router, searchParams]);
+  
 
   // Helper function to check if request matches time slot
   const matchesTimeSlot = (request: UserRequest): boolean => {
@@ -478,16 +515,43 @@ const [editFormData, setEditFormData] = useState<{
   const { weekStart, weekEnd } = getWeekBoundaries(currentWeekStart);
   const finalWeekStart = isUrgentMode ? currentWeekStart : weekStart;
   const finalWeekEnd = isUrgentMode ? currentWeekStart : weekEnd;
+  
   // Fetch approved requests data
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["approved-requests", currentWeekStart, isUrgentMode],
-    queryFn: () =>
-      adminService.getApprovedRequests(
-        format(finalWeekStart, "yyyy-MM-dd"),
-        format(finalWeekEnd, "yyyy-MM-dd"),
-        5000
-      ),
-  });
+  // const { data, isLoading, error, refetch } = useQuery({
+  //   queryKey: ["approved-requests", currentWeekStart, isUrgentMode],
+  //   queryFn: () =>
+  //     adminService.getApprovedRequests(
+  //       format(finalWeekStart, "yyyy-MM-dd"),
+  //       format(finalWeekEnd, "yyyy-MM-dd"),
+  //       5000
+  //     ),
+  // });
+
+// Replace the useQuery hook with this:
+const { data, isLoading, error, refetch } = useQuery({
+  queryKey: ["approved-requests", currentWeekStart, isUrgentMode, deptFilter],
+  queryFn: () => {
+    const { weekStart, weekEnd } = getWeekBoundaries(currentWeekStart);
+    const finalWeekStart = isUrgentMode ? currentWeekStart : weekStart;
+    const finalWeekEnd = isUrgentMode ? currentWeekStart : weekEnd;
+    
+    console.log('📊 Query fetching for week:', {
+      currentWeekStart,
+      finalWeekStart,
+      finalWeekEnd,
+      deptFilter
+    });
+    
+    return adminService.getApprovedRequests(
+      format(finalWeekStart, "yyyy-MM-dd"),
+      format(finalWeekEnd, "yyyy-MM-dd"),
+      5000
+    );
+  },
+});
+
+
+  
 
   const handleRejectClick = (requestId: string) => {
     setCurrentRequestId(requestId);
@@ -593,6 +657,51 @@ const [editFormData, setEditFormData] = useState<{
       return reqDate >= today;
     }
   );
+// Add this after your existing state declarations
+const { data: allRequestsData, refetch: refetchAllRequests } = useQuery({
+  queryKey: ["all-draft-requests"],
+  queryFn: () =>
+    managerService.getUserRequestsByAdmin(1, 10000),
+});
+
+
+
+// Count logic for today and future draft requests
+useEffect(() => {
+  if (allRequestsData?.data?.requests) {
+    const counts = {
+      ENGG: 0,
+      "S&T": 0,
+      TRD: 0,
+      ALL: 0
+    };
+// Add this debug useEffect
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to start of today
+
+    // Count only today and future requests with Draft: true and isSanctioned: false
+    allRequestsData.data.requests.forEach((request: UserRequest) => {
+      if (request.Draft === true && request.isSanctioned === false) {
+        // Check if request date is today or in future
+        const requestDate = new Date(request.date);
+        requestDate.setHours(0, 0, 0, 0);
+        
+        if (requestDate >= today) {
+          const dept = request.selectedDepartment;
+          if (dept === "ENGG") counts.ENGG++;
+          else if (dept === "S&T") counts["S&T"]++;
+          else if (dept === "TRD") counts.TRD++;
+          
+          counts.ALL++;
+        }
+      }
+    });
+
+    setDepartmentCounts(counts);
+  }
+}, [allRequestsData?.data?.requests]);
+
 
   const urgentRequestsFiltered = pendingRequests
     .filter((r: UserRequest) => {
@@ -920,7 +1029,10 @@ const [editFormData, setEditFormData] = useState<{
       );
       if (response.success) {
         alert("Optimization status updated successfully!");
-        refetch();
+           await Promise.all([
+        refetch(),
+        refetchAllRequests()
+      ]);
       } else {
         alert("Failed to update optimization status");
       }
@@ -963,7 +1075,10 @@ const [editFormData, setEditFormData] = useState<{
       );
       if (response.success) {
         alert("Optimization status updated successfully!");
-        refetch();
+        await Promise.all([
+        refetch(),
+        refetchAllRequests()
+      ])
       } else {
         alert("Failed to update optimization status");
       }
@@ -1156,6 +1271,10 @@ const handleSaveInlineEdit = async (requestId: string) => {
       optimizeTimeTo: optimizeTimeToISO,
       sanctionedRemark: editFormData.remark,
     });
+       await Promise.all([
+      refetch(), // Main table data
+      refetchAllRequests() // All requests data for nearest date calculation
+    ]);
 
     // Reset editing state
     handleCancelInlineEdit();
@@ -1386,7 +1505,221 @@ const formatTimeForInput = (dateString: string) => {
   const [modifyReturnOpenId, setModifyReturnOpenId] = useState<string | null>(
     null
   );
+const DepartmentCountDisplay = () => {
+  const handleDepartmentClick = (dept: string) => {
+    // Set the department filter
+    setDeptFilter(dept);
+    setWorkTypeFilter("ALL");
+    setActivityFilter("ALL");
+    setShowDeptDropdown(false);
 
+    // Update URL parameter
+    if (dept !== "ALL") {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("dept", encodeURIComponent(dept));
+      router.push(`?${params.toString()}`, { scroll: false });
+    } else {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("dept");
+      router.push(`?${params.toString()}`, { scroll: false });
+    }
+    
+    // Find and navigate to the earliest requests
+    navigateToEarliestRequests(dept);
+  };
+// Add this state after your other state declarations
+const [isNavigating, setIsNavigating] = useState(false);
+
+// Update the navigate function to use this state - SINGLE FUNCTION
+const navigateToEarliestRequests = async (selectedDept: string) => {
+  if (!allRequestsData?.data?.requests || isNavigating) return;
+  
+  setIsNavigating(true);
+  
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Get all draft requests for the selected department
+    const relevantRequests = allRequestsData.data.requests.filter((request: UserRequest) => {
+      if (request.Draft !== true || request.isSanctioned !== false) return false;
+      if (selectedDept !== "ALL" && request.selectedDepartment !== selectedDept) return false;
+      
+      const requestDate = new Date(request.date);
+      requestDate.setHours(0, 0, 0, 0);
+      return requestDate >= today;
+    });
+
+    if (relevantRequests.length === 0) {
+      setIsNavigating(false);
+      return;
+    }
+
+    // Find the earliest date
+    const earliestDate = relevantRequests.reduce((earliest: Date, request: UserRequest) => {
+      const requestDate = new Date(request.date);
+      return requestDate < earliest ? requestDate : earliest;
+    }, new Date(relevantRequests[0].date));
+
+    // Calculate the week start for navigation (Monday of that week)
+    const targetWeekStart = startOfWeek(earliestDate, { weekStartsOn: 1 });
+    
+    console.log('🎯 Navigating to week containing:', earliestDate);
+    console.log('📅 Week start (Monday):', targetWeekStart);
+
+    // Check if we're already on the target week
+    const currentWeekMonday = startOfWeek(currentWeekStart, { weekStartsOn: 1 });
+    const targetWeekMonday = startOfWeek(targetWeekStart, { weekStartsOn: 1 });
+    
+    if (currentWeekMonday.getTime() === targetWeekMonday.getTime()) {
+      console.log('✅ Already on correct week, just filtering');
+      // Just update the department filter
+      setDeptFilter(selectedDept);
+      setWorkTypeFilter("ALL");
+      setActivityFilter("ALL");
+      
+      // Update URL with department only
+      const params = new URLSearchParams();
+      params.set("date", format(currentWeekStart, "yyyy-MM-dd"));
+      if (selectedDept !== "ALL") {
+        params.set("dept", encodeURIComponent(selectedDept));
+      }
+      await router.push(`?${params.toString()}`, { scroll: false });
+      
+      // Highlight the section
+      setTimeout(() => highlightDepartmentRequests(selectedDept), 300);
+      return;
+    }
+
+    console.log('🔄 Navigating to new week');
+    
+    // Build URL parameters
+    const params = new URLSearchParams();
+    params.set("date", format(targetWeekStart, "yyyy-MM-dd"));
+    if (selectedDept !== "ALL") {
+      params.set("dept", encodeURIComponent(selectedDept));
+    }
+
+    // Update URL first, then state
+    await router.push(`?${params.toString()}`, { scroll: false });
+    
+    // Wait a bit for URL to update, then update state
+    setTimeout(() => {
+      setCurrentWeekStart(targetWeekStart);
+      setDeptFilter(selectedDept);
+      setWorkTypeFilter("ALL");
+      setActivityFilter("ALL");
+      
+      if (isUrgentMode) {
+        setSelectedDate(earliestDate);
+      }
+      
+      // Force refetch after state update
+      refetch();
+      
+      // Highlight after navigation
+      setTimeout(() => {
+        highlightDepartmentRequests(selectedDept);
+      }, 500);
+    }, 100);
+    
+  } catch (error) {
+    console.error('Navigation error:', error);
+  } finally {
+    // Re-enable navigation after a short delay
+    setTimeout(() => setIsNavigating(false), 1000);
+  }
+};
+
+  const highlightDepartmentRequests = (selectedDept: string) => {
+    const tables = [
+      { selector: '[data-table-type="urgent"]', name: "Urgent Blocks" },
+      { selector: '[data-table-type="corridor"]', name: "Corridor Requests" },
+      { selector: '[data-table-type="combined"]', name: "Combined Requests" },
+      { selector: '[data-table-type="non-corridor"]', name: "Non-Corridor Requests" }
+    ];
+
+    for (const table of tables) {
+      const tableElement = document.querySelector(table.selector);
+      if (tableElement) {
+        tableElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        tableElement.classList.add('bg-yellow-50');
+        setTimeout(() => tableElement.classList.remove('bg-yellow-50'), 3000);
+        break;
+      }
+    }
+  };
+
+  // Keep the original function that returns string only
+const getNearestDateForDepartment = (dept: string): string => {
+  if (!allRequestsData?.data?.requests) return "Loading...";
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const relevantRequests = allRequestsData.data.requests.filter((request: UserRequest) => {
+    if (request.Draft !== true || request.isSanctioned !== false) return false;
+    if (dept !== "ALL" && request.selectedDepartment !== dept) return false;
+    
+    const requestDate = new Date(request.date);
+    requestDate.setHours(0, 0, 0, 0);
+    return requestDate >= today;
+  });
+
+  if (relevantRequests.length === 0) return "No draft requests";
+
+  const earliestDate = relevantRequests.reduce((earliest: Date, request: UserRequest) => {
+    const requestDate = new Date(request.date);
+    return requestDate < earliest ? requestDate : earliest;
+  }, new Date(relevantRequests[0].date));
+
+  // Format the date for display
+  const formattedDate = dayjs(earliestDate).format("DD-MM-YY");
+  
+  console.log(`Nearest date for ${dept}:`, formattedDate, 'from', relevantRequests.length, 'requests');
+  
+  return `Nearest: ${formattedDate}`;
+};
+
+  // const getCountDisplayText = (dept: string) => {
+  //   const count = departmentCounts[dept as keyof typeof departmentCounts];
+  //   return `${count} draft${count !== 1 ? 's' : ''}`;
+  // };
+
+// In the DepartmentCountDisplay component, update the return statement:
+return (
+  <div className="flex justify-center gap-6 mb-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-300 rounded-lg shadow-sm">
+    {(['ALL', 'ENGG', 'S&T', 'TRD'] as const).map((dept) => (
+      <button 
+        key={dept}
+        className={`flex flex-col items-center gap-1 px-4 py-2 border border-gray-300 rounded transition-colors group relative ${
+          isNavigating 
+            ? 'bg-gray-100 cursor-not-allowed opacity-50' 
+            : 'bg-white hover:bg-gray-50'
+        }`}
+        onClick={() => handleDepartmentClick(dept)}
+        disabled={isNavigating}
+      >
+        <span className="font-semibold text-gray-700">
+          {dept === 'ALL' ? 'Total Drafts:' : `${dept}:`}
+        </span>
+        <span className="font-bold text-lg text-gray-900">
+          {departmentCounts[dept]}
+        </span>
+        {/* <span className="text-xs text-gray-500">
+          {getCountDisplayText(dept)}
+        </span> */}
+        {isNavigating && (
+          <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+          </div>
+        )}
+    
+      </button>
+    ))}
+  </div>
+);
+};
   if (isLoading) {
     return (
       <div className="min-h-screen text-black bg-white p-3 border border-black flex items-center justify-center">
@@ -1634,6 +1967,7 @@ const TableSelectionControls = ({
             Clear All
           </button>
         </div>
+        <DepartmentCountDisplay />
       </div>
       {/* Week Switcher at the top */}
       <div className="border-b-2 border-[#13529e] pb-3 flex justify-between items-center mb-4">
@@ -1785,7 +2119,7 @@ const TableSelectionControls = ({
             minDate={startOfWeek(currentWeekStart, { weekStartsOn: 1 })}
             maxDate={addDays(weekStart, 7)}
           /> */}
-        <div className="overflow-x-auto max-h-[70vh] overflow-y-auto rounded-lg border border-gray-300 shadow-sm mt-4">
+        <div className="overflow-x-auto max-h-[70vh] overflow-y-auto rounded-lg border border-gray-300 shadow-sm mt-4" data-table-type="urgent">
           <table className="w-full border-collapse text-black bg-white">
             <thead
               className={`sticky top-0 ${
@@ -2119,7 +2453,7 @@ const TableSelectionControls = ({
       isBulkSanctioning={isBulkSanctioning}
     />
   </div>
-        <div className="overflow-x-auto max-h-[70vh] overflow-y-auto rounded-lg border border-gray-300 shadow-sm">
+        <div className="overflow-x-auto max-h-[70vh] overflow-y-auto rounded-lg border border-gray-300 shadow-sm" data-table-type="corridor">
           <table className="w-full border-collapse text-black bg-white">
             <thead className="sticky top-0 z-10 bg-gray-100 shadow">
               <tr className="bg-gray-50">
@@ -2433,7 +2767,7 @@ className={`transition-colors ${
       isBulkSanctioning={isBulkSanctioning}
     />
   </div>
-        <div className="overflow-x-auto max-h-[70vh] overflow-y-auto rounded-lg border border-gray-300 shadow-sm">
+          <div className="overflow-x-auto max-h-[70vh] overflow-y-auto rounded-lg border border-gray-300 shadow-sm" data-table-type="combined">
           <table className="w-full border-collapse text-black bg-white">
             <thead className="sticky top-0 z-10 bg-gray-100 shadow">
               <tr className="bg-gray-50">
@@ -2740,7 +3074,7 @@ className={`transition-colors ${
       isBulkSanctioning={isBulkSanctioning}
     />
   </div>
-        <div className="overflow-x-auto max-h-[70vh] overflow-y-auto rounded-lg border border-gray-300 shadow-sm">
+  <div className="overflow-x-auto max-h-[70vh] overflow-y-auto rounded-lg border border-gray-300 shadow-sm" data-table-type="non-corridor">
           <table className="w-full border-collapse text-black bg-white">
             <thead className="sticky top-0 z-10 bg-gray-100 shadow">
               <tr className="bg-gray-50">
