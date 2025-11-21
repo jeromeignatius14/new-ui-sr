@@ -73,14 +73,14 @@ interface DetailedData {
   Status: string;
 }
 
-const locationOptions: OptionType[] = [
-  { value: "MAS", label: "MAS" },
-  { value: "SA", label: "SA" },
-  { value: "MCU", label: "MCU" },
-  { value: "TPJ", label: "TPJ" },
-  { value: "PGT", label: "PGT" },
-  { value: "TVC", label: "TVC" },
-];
+// const locationOptions: OptionType[] = [
+//   { value: "{userLocations}", label: "{userLocations}" },
+//   { value: "SA", label: "SA" },
+//   { value: "MCU", label: "MCU" },
+//   { value: "TPJ", label: "TPJ" },
+//   { value: "PGT", label: "PGT" },
+//   { value: "TVC", label: "TVC" },
+// ];
 
 const blockTypeOptions: OptionType[] = [
   { value: "All", label: "All" },
@@ -218,7 +218,7 @@ const sseDropdownRef = useRef<HTMLDivElement>(null);
     formState: { errors },
   } = useForm<FormData>();
   const { data: session } = useSession();
-
+const userLocations = session?.user?.location ;
   // Parameters for the query
   const [queryParams, setQueryParams] = useState({
     startDate: "",
@@ -872,7 +872,7 @@ const handleDownloadDepartmentCount = () => {
     const excelData = [
       // ENGG Rows
       {
-        "Location": "MAS",
+        "Location": {userLocations},
         "Department": "ENGG",
         "Supporting Department": "-",
         "Total Block Requested": enggTotal,
@@ -880,7 +880,7 @@ const handleDownloadDepartmentCount = () => {
         "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
       },
       {
-        "Location": "MAS",
+        "Location": {userLocations},
         "Department": "ENGG",
         "Supporting Department": "S&T",
         "Total Block Requested": enggWithSnt,
@@ -888,7 +888,7 @@ const handleDownloadDepartmentCount = () => {
         "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
       },
       {
-        "Location": "MAS",
+        "Location": {userLocations},
         "Department": "ENGG",
         "Supporting Department": "TRD",
         "Total Block Requested": enggWithPower,
@@ -896,7 +896,7 @@ const handleDownloadDepartmentCount = () => {
         "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
       },
       {
-        "Location": "MAS",
+        "Location": {userLocations},
         "Department": "ENGG",
         "Supporting Department": "S&T and TRD",
         "Total Block Requested": enggWithSntAndPower,
@@ -906,7 +906,7 @@ const handleDownloadDepartmentCount = () => {
       
       // TRD Rows
       {
-        "Location": "MAS",
+        "Location": {userLocations},
         "Department": "TRD",
         "Supporting Department": "-",
         "Total Block Requested": trdTotal,
@@ -916,7 +916,7 @@ const handleDownloadDepartmentCount = () => {
       
       // S&T Rows
       {
-        "Location": "MAS",
+        "Location": {userLocations},
         "Department": "S&T",
         "Supporting Department": "-",
         "Total Block Requested": sntTotal,
@@ -924,7 +924,7 @@ const handleDownloadDepartmentCount = () => {
         "Total Block Availed":detailedData.filter(block => block.selectedDepartment === "S&T" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
       },
       {
-        "Location": "MAS",
+        "Location": {userLocations},
         "Department": "S&T",
         "Supporting Department": "ENGG",
         "Total Block Requested": sntWithEngg,
@@ -932,7 +932,7 @@ const handleDownloadDepartmentCount = () => {
         "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
       },
       {
-        "Location": "MAS",
+        "Location": {userLocations},
         "Department": "S&T",
         "Supporting Department": "TRD",
         "Total Block Requested": sntWithPower,
@@ -940,7 +940,7 @@ const handleDownloadDepartmentCount = () => {
         "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
       },
       {
-        "Location": "MAS",
+        "Location": {userLocations},
         "Department": "S&T",
         "Supporting Department": "ENGG and TRD",
         "Total Block Requested": sntWithEnggAndPower,
@@ -1707,7 +1707,7 @@ const handleDownloadDepartmentCount = () => {
 <tbody>
   {/* ENGG Rows */}
   <tr className="bg-white font-bold">
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">-</td>
     <td 
@@ -1752,7 +1752,7 @@ const handleDownloadDepartmentCount = () => {
   </tr>
   
   <tr className="bg-[#f4dcf1] font-bold">
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
     <td 
@@ -1797,7 +1797,7 @@ const handleDownloadDepartmentCount = () => {
   </tr>
   
   <tr className="bg-white font-bold">
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">TRD</td>
     <td 
@@ -1842,7 +1842,7 @@ const handleDownloadDepartmentCount = () => {
   </tr>
   
   <tr className="bg-[#f4dcf1] font-bold">
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T and TRD</td>
     <td 
@@ -1888,7 +1888,7 @@ const handleDownloadDepartmentCount = () => {
 
   {/* TRD Rows */}
   <tr className="bg-white font-bold">
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">TRD</td>
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">-</td>
     <td 
@@ -1934,7 +1934,7 @@ const handleDownloadDepartmentCount = () => {
 
   {/* S&T Rows */}
   <tr className="bg-[#f4dcf1] font-bold">
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">-</td>
     <td 
@@ -1979,7 +1979,7 @@ const handleDownloadDepartmentCount = () => {
   </tr>
   
   <tr className="bg-white font-bold">
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
     <td 
@@ -2024,7 +2024,7 @@ const handleDownloadDepartmentCount = () => {
   </tr>
   
   <tr className="bg-[#f4dcf1] font-bold">
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">TRD</td>
     <td 
@@ -2069,7 +2069,7 @@ const handleDownloadDepartmentCount = () => {
   </tr>
   
   <tr className="bg-white font-bold">
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG and TRD</td>
     <td 
