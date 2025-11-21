@@ -81,14 +81,14 @@ interface DetailedData {
   userId?: string;
 }
 
-const locationOptions: OptionType[] = [
-  { value: "MAS", label: "MAS" },
-  { value: "SA", label: "SA" },
-  { value: "MCU", label: "MCU" },
-  { value: "TPJ", label: "TPJ" },
-  { value: "PGT", label: "PGT" },
-  { value: "TVC", label: "TVC" },
-];
+// const locationOptions: OptionType[] = [
+//   { value: {userLocations}, label: {userLocations} },
+//   { value: "SA", label: "SA" },
+//   { value: "MCU", label: "MCU" },
+//   { value: "TPJ", label: "TPJ" },
+//   { value: "PGT", label: "PGT" },
+//   { value: "TVC", label: "TVC" },
+// ];
 
 const blockTypeOptions: OptionType[] = [
   { value: "All", label: "All" },
@@ -193,7 +193,7 @@ export default function GenerateReportPage() {
   const [selectedBlockTypes, setSelectedBlockTypes] = useState<string[]>([]);
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
   const [selectedMajorSections, setSelectedMajorSections] = useState<string[]>([
-    "MAS-GDR",
+    "{userLocations}-GDR",
   ]);
   const [majorSectionOptions, setMajorSectionOptions] = useState<OptionType[]>(
     []
@@ -223,6 +223,8 @@ const durationDropdownRef = useRef<HTMLDivElement>(null);
     formState: { errors },
   } = useForm<FormData>();
   const { data: session } = useSession();
+const userLocations = session?.user?.location ;
+
   useEffect(() => {
     if (session?.user?.department) {
       setSelectedDepartments([session.user.department]);
@@ -862,7 +864,7 @@ const clearGlobalFilters = () => {
       const excelData = [
         // ENGG Rows
         {
-          Location: "MAS",
+          Location: {userLocations},
           Department: "ENGG",
           "Supporting Department": "-",
           "Total Block Requested": enggTotal,
@@ -877,7 +879,7 @@ const clearGlobalFilters = () => {
           ).length,
         },
         {
-          Location: "MAS",
+          Location: {userLocations},
           Department: "ENGG",
           "Supporting Department": "S&T",
           "Total Block Requested": enggWithSnt,
@@ -896,7 +898,7 @@ const clearGlobalFilters = () => {
           ),
         },
         {
-          Location: "MAS",
+          Location: {userLocations},
           Department: "ENGG",
           "Supporting Department": "TRD",
           "Total Block Requested": enggWithPower,
@@ -915,7 +917,7 @@ const clearGlobalFilters = () => {
           ),
         },
         {
-          Location: "MAS",
+          Location: {userLocations},
           Department: "ENGG",
           "Supporting Department": "S&T and TRD",
           "Total Block Requested": enggWithSntAndPower,
@@ -938,7 +940,7 @@ const clearGlobalFilters = () => {
 
         // TRD Rows
         {
-          Location: "MAS",
+          Location: {userLocations},
           Department: "TRD",
           "Supporting Department": "-",
           "Total Block Requested": trdTotal,
@@ -955,7 +957,7 @@ const clearGlobalFilters = () => {
 
         // S&T Rows
         {
-          Location: "MAS",
+          Location: {userLocations},
           Department: "S&T",
           "Supporting Department": "-",
           "Total Block Requested": sntTotal,
@@ -970,7 +972,7 @@ const clearGlobalFilters = () => {
           ),
         },
         {
-          Location: "MAS",
+          Location: {userLocations},
           Department: "S&T",
           "Supporting Department": "ENGG",
           "Total Block Requested": sntWithEngg,
@@ -989,7 +991,7 @@ const clearGlobalFilters = () => {
           ),
         },
         {
-          Location: "MAS",
+          Location: {userLocations},
           Department: "S&T",
           "Supporting Department": "TRD",
           "Total Block Requested": sntWithPower,
@@ -1008,7 +1010,7 @@ const clearGlobalFilters = () => {
           ),
         },
         {
-          Location: "MAS",
+          Location: {userLocations},
           Department: "S&T",
           "Supporting Department": "ENGG and TRD",
           "Total Block Requested": sntWithEnggAndPower,
@@ -1735,7 +1737,7 @@ const clearGlobalFilters = () => {
               {/* ENGG Rows */}
               <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {userLocations}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -1809,7 +1811,7 @@ const clearGlobalFilters = () => {
 
               <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {userLocations}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -1885,7 +1887,7 @@ const clearGlobalFilters = () => {
 
               <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {userLocations}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -1957,7 +1959,7 @@ const clearGlobalFilters = () => {
 
               <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {userLocations}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -2032,7 +2034,7 @@ const clearGlobalFilters = () => {
               {/* TRD Rows */}
               <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {userLocations}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   TRD
@@ -2096,7 +2098,7 @@ const clearGlobalFilters = () => {
               {/* S&T Rows */}
               <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {userLocations}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -2165,7 +2167,7 @@ const clearGlobalFilters = () => {
 
               <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {userLocations}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -2237,7 +2239,7 @@ const clearGlobalFilters = () => {
 
               <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {userLocations}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -2309,7 +2311,7 @@ const clearGlobalFilters = () => {
 
               <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {userLocations}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
