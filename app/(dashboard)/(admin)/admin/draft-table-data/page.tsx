@@ -2007,7 +2007,7 @@ const TableSelectionControls = ({
                 <span className="text-black font-medium">ENGG</span>
               </div>
               <div className="flex items-center gap-3 py-1">
-                <div className="w-5 h-5 bg-yellow-200 border border-gray-400 rounded-sm"></div>
+                <div className="w-5 h-5 bg-blue-200 border border-gray-400 rounded-sm"></div>
                 <span className="text-black font-medium">TRD</span>
               </div>
               <div className="flex items-center gap-3 py-1">
