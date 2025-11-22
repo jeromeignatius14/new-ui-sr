@@ -104,44 +104,44 @@ const hasInProgressBlock = requestsData?.data?.requests?.find(
   }
 
   // Custom manager dashboard UI
-  if (session?.user?.role === "SENIOR_OFFICER" || session?.user?.role === "JUNIOR_OFFICER") {
-    return (
-      <div className="min-h-screen w-full flex flex-col items-center bg-[#fffbe9]">
-        {/* Header */}
-        <div className="w-full border border-black bg-yellow-200 flex items-center justify-center relative p-2" style={{ minHeight: 60 }}>
-          <span className="absolute left-4 top-1/2 -translate-y-1/2">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 32 32" stroke="black" strokeWidth={2} className="w-9 h-9"><rect x="6" y="12" width="20" height="12" rx="2" fill="#fffbe9" stroke="black" strokeWidth="2" /><path d="M4 14L16 4L28 14" stroke="black" strokeWidth="2" fill="none" /></svg>
-          </span>
-          <span className="text-2xl font-bold text-black">Home</span>
-        </div>
-        {/* RBMS badge */}
-        <div className="w-full flex justify-center mt-4">
-          <div className="bg-green-200 rounded-2xl px-8 py-2">
-            <span className="text-4xl font-extrabold text-[#b07be0] tracking-wide">RBMS-{session?.user?.location}-DIVN</span>
-          </div>
-        </div>
-        {/* Designation bar */}
-        <div className="w-full flex justify-center mt-4">
-          <div className="bg-[#ffeaea] rounded-full px-6 py-2 border border-black flex flex-col items-center" style={{ maxWidth: '90vw' }}>
-            <span className="text-xs font-semibold text-gray-700 tracking-wide">MANAGER DESIGNATION:<span className="text-sm font-bold text-black">{session?.user?.name || ''}</span></span>
-          </div>
-        </div>
-        {/* Navigation buttons */}
-        <ManagerQuickLinks />
-        {/* Logout button */}
-        <div className="w-full flex justify-center mt-10 mb-4">
-          <form action="/auth/login" method="get" onSubmit={async (e) => { e.preventDefault(); await import('next-auth/react').then(mod => mod.signOut({ redirect: true, callbackUrl: '/auth/login' })); }}>
-            <button type="submit" className="flex items-center gap-2 bg-[#dbe6fd] border border-black rounded px-6 py-2 text-lg font-bold text-black shadow hover:bg-[#c7d7f7] transition">
-              <span className="inline-block w-7 h-7 bg-white rounded-full border border-black flex items-center justify-center">
-                <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' strokeWidth={2} className='w-5 h-5'><path strokeLinecap='round' strokeLinejoin='round' d='M6 18L18 6M6 6l12 12' /></svg>
-              </span>
-              Logout
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
+  // if (session?.user?.role === "SENIOR_OFFICER" || session?.user?.role === "JUNIOR_OFFICER") {
+  //   return (
+  //     <div className="min-h-screen w-full flex flex-col items-center bg-[#fffbe9]">
+  //       {/* Header */}
+  //       <div className="w-full border border-black bg-yellow-200 flex items-center justify-center relative p-2" style={{ minHeight: 60 }}>
+  //         <span className="absolute left-4 top-1/2 -translate-y-1/2">
+  //           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 32 32" stroke="black" strokeWidth={2} className="w-9 h-9"><rect x="6" y="12" width="20" height="12" rx="2" fill="#fffbe9" stroke="black" strokeWidth="2" /><path d="M4 14L16 4L28 14" stroke="black" strokeWidth="2" fill="none" /></svg>
+  //         </span>
+  //         <span className="text-2xl font-bold text-black">Home</span>
+  //       </div>
+  //       {/* RBMS badge */}
+  //       <div className="w-full flex justify-center mt-4">
+  //         <div className="bg-green-200 rounded-2xl px-8 py-2">
+  //           <span className="text-4xl font-extrabold text-[#b07be0] tracking-wide">RBMS-{session?.user?.location}-DIVN</span>
+  //         </div>
+  //       </div>
+  //       {/* Designation bar */}
+  //       <div className="w-full flex justify-center mt-4">
+  //         <div className="bg-[#ffeaea] rounded-full px-6 py-2 border border-black flex flex-col items-center" style={{ maxWidth: '90vw' }}>
+  //           <span className="text-xs font-semibold text-gray-700 tracking-wide">MANAGER DESIGNATION:<span className="text-sm font-bold text-black">{session?.user?.name || ''}</span></span>
+  //         </div>
+  //       </div>
+  //       {/* Navigation buttons */}
+  //       <ManagerQuickLinks />
+  //       {/* Logout button */}
+  //       <div className="w-full flex justify-center mt-10 mb-4">
+  //         <form action="/auth/login" method="get" onSubmit={async (e) => { e.preventDefault(); await import('next-auth/react').then(mod => mod.signOut({ redirect: true, callbackUrl: '/auth/login' })); }}>
+  //           <button type="submit" className="flex items-center gap-2 bg-[#dbe6fd] border border-black rounded px-6 py-2 text-lg font-bold text-black shadow hover:bg-[#c7d7f7] transition">
+  //             <span className="inline-block w-7 h-7 bg-white rounded-full border border-black flex items-center justify-center">
+  //               <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black' strokeWidth={2} className='w-5 h-5'><path strokeLinecap='round' strokeLinejoin='round' d='M6 18L18 6M6 6l12 12' /></svg>
+  //             </span>
+  //             Logout
+  //           </button>
+  //         </form>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
 
   // if (session?.user?.role === "BRANCH_OFFICER" && session?.user.email === "b@mail.com") {
@@ -438,7 +438,7 @@ if (session?.user?.role === "PUNCTUALITY_CONTROLLER") {
     );
   }
 
-  if (session?.user?.role === "BRANCH_OFFICER") {
+  if (session?.user?.role === "BRANCH_OFFICER"||session?.user?.role === "SENIOR_OFFICER" || session?.user?.role === "JUNIOR_OFFICER") {
     return (
       <div className="min-h-screen w-full flex flex-col items-center bg-[#fffbe9]">
         {/* Header */}
