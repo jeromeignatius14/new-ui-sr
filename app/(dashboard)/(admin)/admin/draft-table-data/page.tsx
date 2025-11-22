@@ -2007,7 +2007,7 @@ const TableSelectionControls = ({
                 <span className="text-black font-medium">ENGG</span>
               </div>
               <div className="flex items-center gap-3 py-1">
-                <div className="w-5 h-5 bg-yellow-200 border border-gray-400 rounded-sm"></div>
+                <div className="w-5 h-5 bg-blue-200 border border-gray-400 rounded-sm"></div>
                 <span className="text-black font-medium">TRD</span>
               </div>
               <div className="flex items-center gap-3 py-1">
@@ -2225,7 +2225,7 @@ const TableSelectionControls = ({
 
                     // TRD Department
                     else if (selectedDepartment === "TRD"&&(request.sntDisconnectionRequired|| request.powerBlockRequired || request.enggDisconnectionsRequired)) {
-                      return "bg-yellow-200"; // Pure TRD
+                      return "bg-blue-200"; // Pure TRD
                     }
 
                     // S&T Department with combinations
@@ -2556,7 +2556,7 @@ className={`transition-colors ${
       (request.sntDisconnectionRequired ||
         request.powerBlockRequired ||
         request.enggDisconnectionsRequired)
-    ? "bg-yellow-200"
+    ? "bg-blue-200"
     : "bg-white-200"
 }`}
 
@@ -2861,7 +2861,7 @@ className={`transition-colors ${
       (request.sntDisconnectionRequired ||
         request.powerBlockRequired ||
         request.enggDisconnectionsRequired)
-    ? "bg-yellow-200"
+    ? "bg-blue-200"
     : "bg-white-200"
 }`}
 
@@ -3168,7 +3168,7 @@ className={`transition-colors ${
       (request.sntDisconnectionRequired ||
         request.powerBlockRequired ||
         request.enggDisconnectionsRequired)
-    ? "bg-yellow-200"
+    ? "bg-blue-200"
     : "bg-white-200"
 }`}
 
