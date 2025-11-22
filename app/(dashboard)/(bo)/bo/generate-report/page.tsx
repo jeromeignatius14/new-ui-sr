@@ -8,7 +8,7 @@ import { format } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useGenerateReport } from "@/app/service/query/hq";
-import { MajorSection } from "@/app/lib/store";
+import { MajorSection,depot } from "@/app/lib/store";
 import { useSession } from "next-auth/react";
 import dayjs from "dayjs";
 import formatTime from "@/app/utils/formatTime";
@@ -224,30 +224,67 @@ const userLocations = session?.user?.location ;
   });
 
   // Get user's location and department from session and set up major section options
-  useEffect(() => {
-    if (session?.user?.location) {
-      const userLocation = session.user.location;
-      setSelectedLocations([userLocation]);
+  // useEffect(() => {
+  //   if (session?.user?.location) {
+  //     const userLocation = session.user.location;
+  //     setSelectedLocations([userLocation]);
 
-      // Set up major section options based on user's location
-      if (MajorSection[userLocation as keyof typeof MajorSection]) {
-        const sections =
-          MajorSection[userLocation as keyof typeof MajorSection];
-        const options = sections.map((section) => ({
-          value: section,
-          label: section,
-        }));
-        setMajorSectionOptions([{ value: "All", label: "All" }, ...options]);
-      }
+  //     // Set up major section options based on user's location
+  //     if (MajorSection[userLocation as keyof typeof MajorSection]) {
+  //       const sections =
+  //         MajorSection[userLocation as keyof typeof MajorSection];
+  //       const options = sections.map((section) => ({
+  //         value: section,
+  //         label: section,
+  //       }));
+  //       setMajorSectionOptions([{ value: "All", label: "All" }, ...options]);
+  //     }
+  //   }
+
+  //   // Set department from session
+  //   if (session?.user?.department) {
+  //     const userDepartment = session.user.department;
+  //     setSelectedDepartments([userDepartment]);
+  //   }
+  // }, [session]);
+// Get user's location and department from session and set up major section options
+useEffect(() => {
+  if (session?.user?.location) {
+    const userLocation = session.user.location;
+    const userDepot = session?.user?.depot;
+    const userDept = session?.user?.department ?? "";
+
+    setSelectedLocations([userLocation]);
+
+    // Set up major section options based on user's location and depot
+    if (MajorSection[userLocation as keyof typeof MajorSection]) {
+      const locationSections = MajorSection[userLocation as keyof typeof MajorSection];
+      
+      // Filter sections based on depot like in your example
+      const filteredSections = userDepot === "OVERALL" 
+        ? locationSections 
+        : locationSections.filter((section) => {
+            const depotData: any = depot[section as keyof typeof depot];
+            if (!depotData) return false;
+            if (!(userDept in depotData)) return false;
+            return depotData[userDept].includes(userDepot);
+          });
+
+      const options = filteredSections.map((section) => ({
+        value: section,
+        label: section,
+      }));
+      
+      setMajorSectionOptions([{ value: "All", label: "All" }, ...options]);
     }
+  }
 
-    // Set department from session
-    if (session?.user?.department) {
-      const userDepartment = session.user.department;
-      setSelectedDepartments([userDepartment]);
-    }
-  }, [session]);
-
+  // Set department from session
+  if (session?.user?.department) {
+    const userDepartment = session.user.department;
+    setSelectedDepartments([userDepartment]);
+  }
+}, [session]);
   // Reset work type filter when departments change
 useEffect(() => {
   const availableWorkTypes = getWorkTypesForDepartments(selectedDepartments);
@@ -964,7 +1001,10 @@ const handleDownloadDepartmentCount = () => {
       {/* Block Summary Report Title */}
       <div className="w-full bg-[#b7e3ee] flex flex-col items-center pt-2 pb-1">
         <span className="text-[18px] md:text-[24px] font-extrabold text-black text-center px-2">
-          BRANCH OFFICER
+            {session?.user?.role === "BRANCH_OFFICER" ? "BRANCH OFFICER" : 
+   session?.user?.role === "JUNIOR_OFFICER" ? "JUNIOR OFFICER" :
+   session?.user?.role === "SENIOR_OFFICER" ? "SENIOR OFFICER" :
+   "OFFICER"}
         </span>
         <span className="text-[16px] md:text-[24px] font-bold text-black">BLOCK SUMMARY REPORT(Granted/Availed/Pending)</span>
         <div className="mt-2 bg-[#7be09b] px-4 md:px-6 py-1 rounded-2xl">
