@@ -3743,18 +3743,6 @@ const activityOptions = getActivityOptions();
                     ? selected.map((opt: any) => opt.value)
                     : [];
 
-                  // Update this line to check user department with max 6 for TRD
-                  // const maxSelections = userDepartment === "TRD" ? 6 : 2;
-                  // if (values.length <= maxSelections) {
-                  //   setBlockSectionValue(values);
-                  //   setFormData((prev) => ({
-                  //     ...prev,
-                  //     missionBlock: values.join(","),
-                  //     processedLineSections: (
-                  //       prev.processedLineSections || []
-                  //     ).filter((s: any) => values.includes(s.block)),
-                  //   }));
-                  // }
                   if (userDepartment !== "TRD" && values.length > 2) {
                     return;
                   }
@@ -3832,24 +3820,12 @@ const activityOptions = getActivityOptions();
                     padding: 0,
                   }),
                 }}
-                // placeholder="Select up to 2 Block Sections/Yards"
-                // placeholder={
-                //   userDepartment === "TRD"
-                //     ? "Select up to 6 Block Sections/Yards"
-                //     : "Select up to 2 Block Sections/Yards"
-                // }
-
-
                 placeholder={
                   userDepartment === "TRD"
                     ? "Select Block Sections/Yards"
                     : "Select up to 2 Block Sections/Yards"
                 }
                 closeMenuOnSelect={false}
-                // isOptionDisabled={() => blockSectionValue.length >= 2}
-                // isOptionDisabled={() =>
-                //   blockSectionValue.length >= (userDepartment === "TRD" ? 6 : 2)
-                // }
                 isOptionDisabled={() =>
                   userDepartment !== "TRD" && blockSectionValue.length >= 2
                 }
@@ -3861,203 +3837,6 @@ const activityOptions = getActivityOptions();
                 </span>
               )}
             </div>
-            {/* Lines/Roads Multi-select for each selected block section/yard */}
-            {/* {blockSectionValue.map((block: string, idx: number) => {
-              const isYard = block.includes("-YD");
-              const lineOrRoadOptions = isYard
-                ? getAllRoadsForYard(block).map((road: string) => ({
-                  value: road,
-                  label: road,
-                }))
-                : (lineData[block as keyof typeof lineData] || []).map(
-                  (line: string) => ({
-                    value: line,
-                    label: line,
-                  })
-                );
-              const sectionEntry: any =
-                (formData.processedLineSections || []).find(
-                  (s: any) => s.block === block
-                ) || {};
-              return (
-                <div key={block} className="flex flex-col gap-1 w-full">
-                  <span className="text-[24px] font-bold text-black mb-1">
-                    Select {isYard ? "Road(s)" : "Line(s)"} for{" "}
-                    <span className="text-[#3a506b]">{block}</span>
-                  </span>
-                  <div className="flex flex-row items-center gap-3 w-full">
-                    <Select
-                      isMulti
-                      name={`lineOrRoad-${block}`}
-                      options={lineOrRoadOptions}
-                      value={(() => {
-                        const selectedValues: {
-                          value: string;
-                          label: string;
-                        }[] = [];
-                        if (isYard) {
-                          if (
-                            sectionEntry &&
-                            typeof sectionEntry.road === "string" &&
-                            sectionEntry.road
-                          ) {
-                            selectedValues.push({
-                              value: sectionEntry.road,
-                              label: sectionEntry.road,
-                            });
-                          }
-                          if (
-                            sectionEntry &&
-                            typeof sectionEntry.otherRoads === "string" &&
-                            sectionEntry.otherRoads
-                          ) {
-                            const otherRoadList = sectionEntry.otherRoads
-                              .split(",")
-                              .map((road: string) => road.trim())
-                              .filter(Boolean);
-                            selectedValues.push(
-                              ...otherRoadList.map((road: string) => ({
-                                value: road,
-                                label: road,
-                              }))
-                            );
-                          }
-                        } else {
-                          if (
-                            sectionEntry &&
-                            typeof sectionEntry.lineName === "string" &&
-                            sectionEntry.lineName
-                          ) {
-                            selectedValues.push({
-                              value: sectionEntry.lineName,
-                              label: sectionEntry.lineName,
-                            });
-                          }
-                          if (
-                            sectionEntry &&
-                            typeof sectionEntry.otherLines === "string" &&
-                            sectionEntry.otherLines
-                          ) {
-                            const otherLineList = sectionEntry.otherLines
-                              .split(",")
-                              .map((line: string) => line.trim())
-                              .filter(Boolean);
-                            selectedValues.push(
-                              ...otherLineList.map((line: string) => ({
-                                value: line,
-                                label: line,
-                              }))
-                            );
-                          }
-                        }
-                        return selectedValues;
-                      })()}
-                      onChange={(selected) => {
-                        const values = selected
-                          ? selected.map((opt: any) => opt.value)
-                          : [];
-                        if (isYard) {
-                          handleRoadSelection(block, values.join(","));
-                        } else {
-                          handleLineNameSelection(block, values);
-                        }
-                      }}
-                      classNamePrefix="react-select"
-                      menuPortalTarget={
-                        typeof window !== "undefined" ? document.body : null
-                      }
-                      styles={{
-                        control: (base) => ({
-                          ...base,
-                          backgroundColor: "#e6f7fa",
-                          borderColor: "black",
-                          borderWidth: 2,
-                          borderRadius: 12,
-                          minHeight: "44px",
-                          fontWeight: "bold",
-                          fontSize: "24px",
-                          boxShadow: "none",
-                          padding: "0 2px",
-                        }),
-                        menu: (base) => ({ ...base, zIndex: 9999 }),
-                        multiValue: (base) => ({
-                          ...base,
-                          backgroundColor: isYard ? "#e6f7fa" : "#f6fff6",
-                          color: "black",
-                          fontWeight: "bold",
-                          fontSize: "22px",
-                          border: "1.5px solid #b6e6c6",
-                          borderRadius: 8,
-                          marginRight: 4,
-                        }),
-                        multiValueLabel: (base) => ({
-                          ...base,
-                          color: "black",
-                          fontWeight: "bold",
-                          fontSize: "24px",
-                          padding: "2px 8px",
-                        }),
-                        multiValueRemove: (base) => ({
-                          ...base,
-                          color: "#e07a5f",
-                          ":hover": {
-                            backgroundColor: "#f6fff6",
-                            color: "#b91c1c",
-                          },
-                        }),
-                        option: (base, state) => ({
-                          ...base,
-                          backgroundColor: state.isSelected
-                            ? "#b6e6f7"
-                            : state.isFocused
-                              ? "#b6e6f799"
-                              : "#e6f7fa",
-                          color: "black",
-                          fontWeight: "bold",
-                          fontSize: "22px",
-                          padding: "4px 8px",
-                        }),
-                        placeholder: (base) => ({
-                          ...base,
-                          color: "black",
-                          fontWeight: "bold",
-                          fontSize: "24px",
-                        }),
-                        dropdownIndicator: (base) => ({
-                          ...base,
-                          color: "black",
-                          fontSize: "24px",
-                          padding: 0,
-                        }),
-                      }}
-                      placeholder={isYard ? "Select Road(s)" : "Select Line(s)"}
-                      closeMenuOnSelect={false}
-                      required
-                    />
-                    {renderError(`${block}.lineName`)}
-                    {renderError(`${block}.road`)}
-                    {renderError(`${block}.stream`)}
-                  </div>
-                </div>
-              );
-            })} */}
-            {/* Corridor for this section info bar (only once, after all lines/roads selects) */}
-            {/* <div
-              className="w-full mt-3 mb-2 px-4 py-2 rounded-lg border-2 border-[#e07a5f] bg-[#ffd6d6] flex flex-col items-center justify-center shadow-sm whitespace-nowrap overflow-x-auto min-w-0"
-              style={{ boxSizing: "border-box" }}
-            >
-              <span className="text-[26px] font-bold text-black text-center mr-4">
-                Corridor for this section
-              </span>
-              <span className="text-[24px] font-bold text-black text-center">
-                {corridorTime?.from || "--:--"}
-                <span className="mx-2">TO</span>
-                {corridorTime?.to || "--:--"}
-              </span>
-            </div> */}
-
-
-
             {blockSectionValue.map((block: string, idx: number) => {
               const isYard = block.includes("-YD");
               const lineOrRoadOptions = isYard
@@ -4255,15 +4034,6 @@ const activityOptions = getActivityOptions();
                       <option value="">--</option>
                       {[...Array(24).keys()].map((h) => {
                         const hourStr = h.toString().padStart(2, "0");
-                        // If selected date is today, disable past hours
-                        // if (isToday(formData.date)) {
-                        //   const now = new Date();
-                        //   const currentHour = now.getHours();
-                        //   // Only allow hours that are at least current hour + 1
-                        //   if (h < currentHour + 1) {
-                        //     return null; // Skip rendering this option
-                        //   }
-                        // }
                         if (isToday(formData.date)) {
                           const now = new Date();
                           const currentHour = now.getHours();
@@ -4405,7 +4175,8 @@ const activityOptions = getActivityOptions();
                 </span>
               </div>
               {/* Site Location row */}
-              <div className="flex flex-row items-center gap-4 w-full pl-1">
+              {getDisplayInfo(blockSectionValue[0])?.text === 'Corridor for this section' &&(
+ <div className="flex flex-row items-center gap-4 w-full pl-1">
                 <div className="flex flex-col items-center bg-gradient-to-b from-[#fffbe9] to-[#fff7d6] border-2 border-[#b7cbe8] rounded-xl px-4 py-5 space-y-4 w-full shadow-md hover:shadow-lg transition-shadow duration-200">
                   <div className="flex flex-col items-center space-y-2">
                     <span className="font-bold text-[#2c3e50] text-[24px] leading-none tracking-wide">
@@ -4475,6 +4246,8 @@ const activityOptions = getActivityOptions();
                   </div>
                 </div>
               </div>
+              )}
+             
             </div>
           </div>
 
@@ -5005,16 +4778,15 @@ const activityOptions = getActivityOptions();
         name="assetName"
         value={formData.assetName || ""}
         onChange={handleInputChange}
-        required
         placeholder="Asset Name"
         className="w-full border-2 border-[#2c3e50] rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200"
         aria-label="Asset Name"
       />
-      {errors.assetName && (
+      {/* {errors.assetName && (
         <span className="text-[24px] text-[#e07a5f] font-medium mt-2 block">
           {errors.assetName}
         </span>
-      )}
+      )} */}
     </div>
     
     {/* Asset Number input */}
@@ -5024,16 +4796,15 @@ const activityOptions = getActivityOptions();
         name="assetNumber"
         value={formData.assetNumber || ""}
         onChange={handleInputChange}
-        required
         placeholder="Asset Number"
         className="w-full border-2 border-[#2c3e50] rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200"
         aria-label="Asset Number"
       />
-      {errors.assetNumber && (
+      {/* {errors.assetNumber && (
         <span className="text-[24px] text-[#e07a5f] font-medium mt-2 block">
           {errors.assetNumber}
         </span>
-      )}
+      )} */}
     </div>
   </div>
 </div>

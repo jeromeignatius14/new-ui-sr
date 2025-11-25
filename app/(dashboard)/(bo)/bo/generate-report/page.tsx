@@ -261,14 +261,24 @@ useEffect(() => {
     if (MajorSection[userLocation as keyof typeof MajorSection]) {
       const locationSections = MajorSection[userLocation as keyof typeof MajorSection];
       
-      // Filter sections based on depot like in your example
+      // Filter sections based on depot - modified logic to handle multiple depots
       const filteredSections = userDepot === "OVERALL" 
         ? locationSections 
         : locationSections.filter((section) => {
             const depotData: any = depot[section as keyof typeof depot];
             if (!depotData) return false;
             if (!(userDept in depotData)) return false;
-            return depotData[userDept].includes(userDepot);
+            
+            // Get all depots for this section and department
+            const sectionDepots = depotData[userDept];
+            
+            if (userDepot.includes(',')) {
+              const userDepots = userDepot.split(',').map(d => d.trim());
+              return userDepots.some(depot => sectionDepots.includes(depot));
+            }
+            
+            // For single depot, check inclusion
+            return sectionDepots.includes(userDepot);
           });
 
       const options = filteredSections.map((section) => ({
