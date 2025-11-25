@@ -58,7 +58,7 @@ export let blockSection = {
   'VPT-MEJ': [
     "VPT-TY", "TY-SRT", "SRT-NLL", "NLL-CVP", "CVP-KDU", "KDU-MEJ",
 
-    "VPT Jn-YD", "TY-YD", "SRT-YD", "NLL-YD", "CVP-YD", "KDU-YD", "MEJ-YD"
+    "VPT-YD", "TY-YD", "SRT-YD", "NLL-YD", "CVP-YD", "KDU-YD", "MEJ-YD"
   ],
  'MEJ-TN': [
     "MEJ-TIP", "TIP-MVN", "MVN-TN", "TN-MVTS/MVNP", "TN-MVN/MVTS", "MVN-MMDR",
@@ -493,7 +493,7 @@ export const streamData = {
     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
     "both direction not affected": []
   },
-  "VPT Jn-YD": {
+  "VPT-YD": {
     "up direction affected": [],
     "down direction affected": [],
     "both direction affected": [
@@ -1192,7 +1192,7 @@ export const depot: DepotStructure = {
     },
   
     "MDU-VPT": {
-      "TRD": ["VPT"],
+      "TRD": ["VPT","CVP"],
       "S&T": ["South-MDU"],
       "ENGG": ["VPT", "BG-MDU"]
     },
