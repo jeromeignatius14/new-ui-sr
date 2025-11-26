@@ -694,6 +694,7 @@ if (activeSummaryFilters.searchId) {
         </button>
       </Link>
 
+
       {/* View Summary of Upcoming Blocks CTA */}
       <div className="flex justify-center mb-8 w-full">
         {/* <div className="w-full max-w-4xl rounded-2xl border-4 border-[#00B4D8] bg-[#CAF0F8] shadow-lg p-0"> */}
@@ -1005,7 +1006,11 @@ if (activeSummaryFilters.searchId) {
       </Link>
 
        
-
+   <Link href="/admin/traffic-controller-manage-user" className="mb-8">
+        <button className="w-fit px-10 rounded-full bg-[#c7c7f7] border border-black py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
+          MANAGE USERS
+        </button>
+      </Link>
       {/* Sticky Action Bar at Bottom */}
       <div className=" w-full bg-white border-t-2 border-[#A084E8] py-4 flex flex-col justify-center items-center gap-8 z-50 ">
         {/* <Link
