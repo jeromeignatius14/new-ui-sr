@@ -289,9 +289,9 @@ export let blockSection = {
   ],
 
   'MAQ-MAJN-PADIL-TOK': [
-    "MAQ-NTVT", "NTVT-MAJN", "MAJN-PADIL", "PADIL-JOKATTE", "JOKATTE-TOK",
+    "MAQ-NTVT", "NTVT-MAJN", "MAJN-PADIL", "PADIL-JOKATTE", "JOKATTE-TOK","JOKTTE-PNMB",
 
-    "MAQ-YD", "NTVT-YD", "MAJN-YD", "PADIL-YD", "JOKATTE-YD", "TOK-YD"
+    "MAQ-YD", "NTVT-YD", "MAJN-YD", "PADIL-YD", "JOKATTE-YD", "PNMB-YD","TOK-YD"
   ],
 
   'SRR-NIL': [
