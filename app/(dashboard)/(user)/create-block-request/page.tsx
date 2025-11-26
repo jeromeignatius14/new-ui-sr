@@ -1956,10 +1956,10 @@ const activityOptions = getActivityOptions();
 
     // Corridor-specific validations
     if (formData.corridorTypeSelection === "Corridor") {
-      if (!formData.workLocationFrom)
-        errors.workLocationFrom = "Work location from is required";
-      if (!formData.workLocationTo)
-        errors.workLocationTo = "Work location to is required";
+      // if (!formData.workLocationFrom)
+      //   errors.workLocationFrom = "Work location from is required";
+      // if (!formData.workLocationTo)
+      //   errors.workLocationTo = "Work location to is required";
 
       // Enhanced site location validation with range checking
       // if (formData.workLocationFrom && formData.workLocationTo) {
@@ -3898,7 +3898,6 @@ const activityOptions = getActivityOptions();
                         maxLength={7}
                         placeholder="From"
                         className={`border-2 ${errors.workLocationFrom ?  'border-[#2c3e50]' : 'border-[#2c3e50]'} rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] w-[120px] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200`}
-                        required
                       />
                       {/* <div className="h-8 mt-1 flex items-center justify-center">
                         <span className={`text-xs text-center max-w-[120px] leading-tight ${errors.workLocationFrom ? 'text-red-500' : 'text-transparent'}`}>
@@ -3926,7 +3925,6 @@ const activityOptions = getActivityOptions();
                         maxLength={7}
                         placeholder="To"
                         className={`border-2 ${errors.workLocationTo ? 'border-[#2c3e50]' : 'border-[#2c3e50]'} rounded-lg px-3 py-2 text-[24px] font-bold text-[#2c3e50] placeholder-[#95a5a6] focus:outline-none focus:ring-2 focus:ring-[#3498db] w-[120px] text-center bg-white shadow-inner hover:bg-[#f8f9fa] transition-colors duration-200`}
-                        required
                       />
                       {/* <div className="h-8 mt-1 flex items-center justify-center">
                         <span className={`text-xs text-center max-w-[120px] leading-tight ${errors.workLocationTo ? 'text-red-500' : 'text-transparent'}`}>
