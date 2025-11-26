@@ -1743,15 +1743,15 @@ const handleOptimize = async () => {
                            selectedDepartment,
                          } = request;
                          if (selectedDepartment === "ENGG"&&(request.sntDisconnectionRequired|| request.powerBlockRequired || request.enggDisconnectionsRequired)) {
-                             return "bg-red-200"; // Pure ENGG         
+                             return "bg-gray-200"; // Pure ENGG         
                          }
                          // TRD Department
                          else if (selectedDepartment === "TRD"&&(request.sntDisconnectionRequired|| request.powerBlockRequired || request.enggDisconnectionsRequired)) {
-                           return "bg-blue-200"; // Pure TRD
+                           return "bg-gray-200"; // Pure TRD
                          }
                          // S&T Department with combinations
                          else if (selectedDepartment === "S&T"&&(request.sntDisconnectionRequired|| request.powerBlockRequired || request.enggDisconnectionsRequired)) { 
-                             return "bg-green-200"; // Pure S&T        
+                             return "bg-gray-200"; // Pure S&T        
                          }
                          return "bg-white-200";
                        };
@@ -2096,17 +2096,17 @@ className={`transition-colors ${
   (request.sntDisconnectionRequired ||
     request.powerBlockRequired ||
     request.enggDisconnectionsRequired)
-    ? "bg-red-200"
+    ? "bg-gray-200"
     : request.selectedDepartment === "S&T" &&
       (request.sntDisconnectionRequired ||
         request.powerBlockRequired ||
         request.enggDisconnectionsRequired)
-    ? "bg-green-200"
+    ? "bg-gray-200"
     : request.selectedDepartment === "TRD" &&
       (request.sntDisconnectionRequired ||
         request.powerBlockRequired ||
         request.enggDisconnectionsRequired)
-    ? "bg-blue-200"
+    ? "bg-gray-200"
     : "bg-white-200"
 }`}
                   >
@@ -2480,17 +2480,17 @@ className={`transition-colors ${
   (request.sntDisconnectionRequired ||
     request.powerBlockRequired ||
     request.enggDisconnectionsRequired)
-    ? "bg-red-200"
+    ? "bg-gray-200"
     : request.selectedDepartment === "S&T" &&
       (request.sntDisconnectionRequired ||
         request.powerBlockRequired ||
         request.enggDisconnectionsRequired)
-    ? "bg-green-200"
+    ? "bg-gray-200"
     : request.selectedDepartment === "TRD" &&
       (request.sntDisconnectionRequired ||
         request.powerBlockRequired ||
         request.enggDisconnectionsRequired)
-    ? "bg-blue-200"
+    ? "bg-gray-200"
     : "bg-white-200"
 }`}
                   >
@@ -2787,17 +2787,17 @@ className={`transition-colors ${
   (request.sntDisconnectionRequired ||
     request.powerBlockRequired ||
     request.enggDisconnectionsRequired)
-    ? "bg-red-200"
+    ? "bg-gray-200"
     : request.selectedDepartment === "S&T" &&
       (request.sntDisconnectionRequired ||
         request.powerBlockRequired ||
         request.enggDisconnectionsRequired)
-    ? "bg-green-200"
+    ? "bg-gray-200"
     : request.selectedDepartment === "TRD" &&
       (request.sntDisconnectionRequired ||
         request.powerBlockRequired ||
         request.enggDisconnectionsRequired)
-    ? "bg-blue-200"
+    ? "bg-gray-200"
     : "bg-white-200"
 }`}
                   >
