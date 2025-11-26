@@ -2543,6 +2543,7 @@ const clearGlobalFilters = () => {
                         block.isSanctioned === true &&
                         block.userAcceptanceForSanction === false &&
                         block.userResponse !== "ACCEPTED"
+                        &&block.overAllStatus==="Sanctioned"
                       ) {
                         statusLabel = "Sanctioned and Rejected by SSE";
                         statusStyle = { background: "#ff4e36", color: "#fff" };
