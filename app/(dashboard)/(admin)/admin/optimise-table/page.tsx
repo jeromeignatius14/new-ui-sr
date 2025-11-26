@@ -1761,7 +1761,7 @@ const handleOptimize = async () => {
         return (
           <tr 
             key={`request-${request.id}-${request.date}`} 
-            className={`hover:bg-blue-50 transition-colors ${rowColor}`}
+            className={`hover:bg-gray-100 transition-colors ${rowColor}`}
           >
               <td className="border border-black p-2 text-[24px]">
           <input
@@ -1799,13 +1799,13 @@ const handleOptimize = async () => {
     <span>{request.selectedDepartment}</span>
     <div className="flex gap-1">
       {request.sntDisconnectionRequired && (
-        <span className="bg-red-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">S</span>
+        <span className="bg-green-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">S</span>
       )}
       {request.powerBlockRequired && (
-        <span className="bg-yellow-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">T</span>
+        <span className="bg-blue-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">T</span>
       )}
       {request.enggDisconnectionsRequired && (
-        <span className="bg-green-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">E</span>
+        <span className="bg-red-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">E</span>
       )}
     </div>
   </div>
@@ -2096,12 +2096,12 @@ className={`transition-colors ${
   (request.sntDisconnectionRequired ||
     request.powerBlockRequired ||
     request.enggDisconnectionsRequired)
-    ? "bg-green-200"
+    ? "bg-red-200"
     : request.selectedDepartment === "S&T" &&
       (request.sntDisconnectionRequired ||
         request.powerBlockRequired ||
         request.enggDisconnectionsRequired)
-    ? "bg-red-200"
+    ? "bg-green-200"
     : request.selectedDepartment === "TRD" &&
       (request.sntDisconnectionRequired ||
         request.powerBlockRequired ||
@@ -2146,13 +2146,13 @@ className={`transition-colors ${
     <span>{request.selectedDepartment}</span>
     <div className="flex gap-1">
       {request.sntDisconnectionRequired && (
-        <span className="bg-red-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">S</span>
+        <span className="bg-green-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">S</span>
       )}
       {request.powerBlockRequired && (
-        <span className="bg-yellow-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">T</span>
+        <span className="bg-blue-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">T</span>
       )}
       {request.enggDisconnectionsRequired && (
-        <span className="bg-green-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">E</span>
+        <span className="bg-red-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">E</span>
       )}
     </div>
   </div>
@@ -2480,12 +2480,12 @@ className={`transition-colors ${
   (request.sntDisconnectionRequired ||
     request.powerBlockRequired ||
     request.enggDisconnectionsRequired)
-    ? "bg-green-200"
+    ? "bg-red-200"
     : request.selectedDepartment === "S&T" &&
       (request.sntDisconnectionRequired ||
         request.powerBlockRequired ||
         request.enggDisconnectionsRequired)
-    ? "bg-red-200"
+    ? "bg-green-200"
     : request.selectedDepartment === "TRD" &&
       (request.sntDisconnectionRequired ||
         request.powerBlockRequired ||
@@ -2523,13 +2523,13 @@ className={`transition-colors ${
     <span>{request.selectedDepartment}</span>
     <div className="flex gap-1">
       {request.sntDisconnectionRequired && (
-        <span className="bg-red-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">S</span>
+        <span className="bg-green-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">S</span>
       )}
       {request.powerBlockRequired && (
-        <span className="bg-yellow-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">T</span>
+        <span className="bg-blue-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">T</span>
       )}
       {request.enggDisconnectionsRequired && (
-        <span className="bg-green-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">E</span>
+        <span className="bg-red-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">E</span>
       )}
     </div>
   </div>
@@ -2787,12 +2787,12 @@ className={`transition-colors ${
   (request.sntDisconnectionRequired ||
     request.powerBlockRequired ||
     request.enggDisconnectionsRequired)
-    ? "bg-green-200"
+    ? "bg-red-200"
     : request.selectedDepartment === "S&T" &&
       (request.sntDisconnectionRequired ||
         request.powerBlockRequired ||
         request.enggDisconnectionsRequired)
-    ? "bg-red-200"
+    ? "bg-green-200"
     : request.selectedDepartment === "TRD" &&
       (request.sntDisconnectionRequired ||
         request.powerBlockRequired ||
@@ -2830,13 +2830,13 @@ className={`transition-colors ${
     <span>{request.selectedDepartment}</span>
     <div className="flex gap-1">
       {request.sntDisconnectionRequired && (
-        <span className="bg-red-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">S</span>
+        <span className="bg-green-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">S</span>
       )}
       {request.powerBlockRequired && (
-        <span className="bg-yellow-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">T</span>
+        <span className="bg-blue-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">T</span>
       )}
       {request.enggDisconnectionsRequired && (
-        <span className="bg-green-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">E</span>
+        <span className="bg-red-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">E</span>
       )}
     </div>
   </div>
