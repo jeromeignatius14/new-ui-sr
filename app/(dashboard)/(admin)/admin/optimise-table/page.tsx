@@ -1491,15 +1491,15 @@ const handleOptimize = async () => {
       <h3 className="text-black font-bold text-sm mb-3 pb-2 border-b border-gray-200">Department Colors</h3>
         <div className="grid grid-cols-1 gap-2 text-sm">
               <div className="flex items-center gap-3 py-1">
-                <div className="w-5 h-5 bg-red-200 border border-gray-400 rounded-sm"></div>
+                <div className="w-5 h-5 bg-red-400 border border-gray-400 rounded-sm"></div>
                 <span className="text-black font-medium">ENGG</span>
               </div>
               <div className="flex items-center gap-3 py-1">
-                <div className="w-5 h-5 bg-blue-200 border border-gray-400 rounded-sm"></div>
+                <div className="w-5 h-5 bg-blue-400 border border-gray-400 rounded-sm"></div>
                 <span className="text-black font-medium">TRD</span>
               </div>
               <div className="flex items-center gap-3 py-1">
-                <div className="w-5 h-5 bg-green-200 border border-gray-400 rounded-sm"></div>
+                <div className="w-5 h-5 bg-green-400 border border-gray-400 rounded-sm"></div>
                 <span className="text-black font-medium">S&T</span>
               </div>
             </div>
