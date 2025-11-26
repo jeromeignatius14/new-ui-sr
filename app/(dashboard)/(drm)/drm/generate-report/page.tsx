@@ -2309,7 +2309,7 @@ const handleDownloadDepartmentCount = () => {
                     }  else if (block.userResponse === "ACCEPTED"|| block.overAllStatus === "Sanctioned and Accepted") {
                       statusLabel = "Sanctioned and Accepted by SSE";
                       statusStyle = { background: "#d47ed4", color: "#222" };
-                    } else if ( block.isSanctioned === true&&block.userAcceptanceForSanction===false&&block.userResponse!=="ACCEPTED" ) {
+                    } else if ( block.isSanctioned === true&&block.userAcceptanceForSanction===false&&block.userResponse!=="ACCEPTED"&&block.overAllStatus==="Sanctioned" ) {
                       statusLabel = "Sanctioned and Rejected by SSE";
                       statusStyle = { background: "#ff4e36", color: "#fff" };
                     } else {
