@@ -179,28 +179,37 @@ export default function AddSmModal({ isOpen, onClose, onSubmit, department = "EN
                         {phoneExists === false && <span className="text-base font-bold text-green-600 ml-2">CUG available</span>}
                     </div>
                     
-                    <div>
-                        <label className="block font-semibold mb-1">Depot</label>
-                        <select
-                            className="w-full border border-black rounded px-2 py-1"
-                            value={depot}
-                            onChange={e => setDepot(e.target.value)}
-                            required
-                        >
-                            <option value="">Select Depot</option>
-                            {departmentDepot[department] ?
-                                departmentDepot[department].map(dep => (
-                                    <option key={dep} value={dep}>{dep}</option>
-                                ))
-                                :
-                                Object.entries(depotOnLocation).map(([loc, depots]) =>
-                                    depots.map(dep => (
-                                        <option key={dep} value={dep}>{dep}</option>
-                                    ))
-                                )
-                            }
-                        </select>
-                    </div>
+<div>
+  <label className="block font-semibold mb-1">Station Code</label>
+  <input
+    type="text"
+    className="w-full border border-black rounded px-2 py-1"
+    value={depot}
+    onChange={e => {
+      const target = e.target as HTMLInputElement;
+      // Allow only alphabets and single spaces
+      let filteredValue = target.value.replace(/[^a-zA-Z\s]/g, '');
+      // Prevent multiple consecutive spaces
+      filteredValue = filteredValue.replace(/\s+/g, ' ');
+      setDepot(filteredValue);
+    }}
+    onBlur={e => {
+      const target = e.target as HTMLInputElement;
+      // Final cleanup on blur - trim whitespace
+      const trimmedValue = target.value.trim();
+      setDepot(trimmedValue);
+    }}
+    onKeyDown={e => {
+      const target = e.target as HTMLInputElement;
+      // Prevent space at the beginning
+      if (e.key === ' ' && (!target.value || target.value.endsWith(' '))) {
+        e.preventDefault();
+      }
+    }}
+    placeholder="Enter Station Code"
+    required
+  />
+</div>
                     
                     <div className="flex justify-center gap-4 mt-6">
                         <button
