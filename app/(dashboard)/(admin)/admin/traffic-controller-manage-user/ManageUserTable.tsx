@@ -137,7 +137,7 @@ export default function ManageUsersTable() {
           <table className="min-w-[700px] w-full text-black text-base border-collapse rounded-xl overflow-hidden border-2 border-black bg-[#F5E7B2]">
             <thead>
               <tr className="bg-[#D6F3FF] text-black font-bold">
-                <th className="border-2 border-black px-2 py-1">Sr. no.</th>
+                <th className="border-2 border-black px-2 py-1">Sn. no.</th>
                 <th className="border-2 border-black px-2 py-1">Name</th>
                 <th className="border-2 border-black px-2 py-1">CUG</th>
                 <th className="border-2 border-black px-2 py-1">Depot</th>
