@@ -1186,30 +1186,30 @@ export const depot: DepotStructure = {
     },
   
     "DG-PLNI-POY": {
-      "TRD": ["PLNI", "UDT"],
+      "TRD": ["PLNI", "UDT","DG"],
       "S&T": ["PLNI"],
       "ENGG": ["DG", "PLNI"]
     },
   
     "MDU-VPT": {
-      "TRD": ["VPT","CVP"],
+      "TRD": ["VPT","MDU"],
       "S&T": ["South-MDU"],
       "ENGG": ["VPT", "BG-MDU"]
     },
   
     "VPT-MEJ": {
-      "TRD": ["CVP"],
+      "TRD": ["CVP","VPT","TEN","TN"],
       "S&T": ["VPT"],
       "ENGG": ["TN", "VPT"]
     },
    "MEJ-TN": {
-      "TRD": ["TN"],
+      "TRD": ["TN","CVP"],
       "S&T": ["TEN","TN"],
       "ENGG": ["TN", "TEN"]
     },
   
     "MEJ-TEN": {
-      "TRD": ["TEN"],
+      "TRD": ["TEN","CVP"],
       "S&T": ["TEN"],
       "ENGG": ["TEN"]
     },
