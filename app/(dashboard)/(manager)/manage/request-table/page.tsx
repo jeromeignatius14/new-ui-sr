@@ -913,7 +913,7 @@ const updateQueryParams = (updates: Record<string, string | string[] | null>) =>
     }
     // Returned by Optg (red)
     if (
-     request.isSanctioned === true&&request.userAcceptanceForSanction===false&&request.userResponse!=="ACCEPTED"
+     request.isSanctioned === true&&request.userAcceptanceForSanction===false&&request.userResponse!=="ACCEPTED"&&request.overAllStatus==="Sanctioned"
     ) {
       return {
         label: "Sanctioned and Rejected by SSE",
@@ -1135,7 +1135,7 @@ const updateQueryParams = (updates: Record<string, string | string[] | null>) =>
         return "Sanctioned and Accepted by SSE";
       }
       // Sanctioned and Rejected by SSE (red)
-      if (request.isSanctioned === true && request.userAcceptanceForSanction === false && request.userResponse !== "ACCEPTED") {
+      if (request.isSanctioned === true && request.userAcceptanceForSanction === false && request.userResponse !== "ACCEPTED"&&request.overAllStatus==="Sanctioned") {
         return "Sanctioned and Rejected by SSE";
       }
       // Return original status if none of the above conditions match
