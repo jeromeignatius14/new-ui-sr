@@ -208,6 +208,15 @@ const durationDropdownRef = useRef<HTMLDivElement>(null);
 const globalWorkTypeDropdownRef = useRef<HTMLDivElement>(null);
 const globalActivityDropdownRef = useRef<HTMLDivElement>(null);
 const sseDropdownRef = useRef<HTMLDivElement>(null);
+  const scrollToUpcomingBlocks = () => {
+    const upcomingBlocksTable = document.getElementById('upcoming-blocks-table');
+    if (upcomingBlocksTable) {
+      upcomingBlocksTable.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+  };
   
   const router = useRouter();
   const {
@@ -1466,6 +1475,7 @@ const handleDownloadDepartmentCount = () => {
                          onClick={() => {
     setActiveFilter("demanded");
     setActiveSection(summary.Department || summary.Section);
+    scrollToUpcomingBlocks(); 
   }}
                       >
                         {summary.Demanded.toFixed(2)} / {summary.DemandsCount}
@@ -1475,6 +1485,7 @@ const handleDownloadDepartmentCount = () => {
                         onClick={() => {
                           setActiveFilter("approved");
                           setActiveSection(summary.Department || summary.Section);
+                          scrollToUpcomingBlocks();
                         }}
                       >
                         {summary.Approved.toFixed(2)} / {summary.ApprovedCount}
@@ -1483,6 +1494,7 @@ const handleDownloadDepartmentCount = () => {
                          onClick={() => {
                           setActiveFilter("applied");
                           setActiveSection(summary.Department || summary.Section);
+                          scrollToUpcomingBlocks();
                         }}
                       >
                         {summary.Applied.toFixed(2)} /{summary.AppliedCount}
@@ -1492,6 +1504,7 @@ const handleDownloadDepartmentCount = () => {
                         onClick={() => {
                           setActiveFilter("granted");
                           setActiveSection(summary.Department || summary.Section);
+                          scrollToUpcomingBlocks();
                         }}
                       >
                         {summary.Granted.toFixed(2)} /{summary.GrantedCount}
@@ -1507,6 +1520,7 @@ const handleDownloadDepartmentCount = () => {
                         onClick={() => {
                           setActiveFilter("availed");
                           setActiveSection(summary.Department || summary.Section);
+                          scrollToUpcomingBlocks();
                         }}
                       >
                         {summary.Availed.toFixed(2)} / {summary.AvailedCount}
@@ -1523,6 +1537,7 @@ const handleDownloadDepartmentCount = () => {
     // For example, filter the upcoming blocks to show only not granted requests
     setActiveFilter("notGranted");
     setActiveSection(summary.Department || summary.Section);
+    scrollToUpcomingBlocks();
     toast.success(`Viewing Not Granted for: ${summary.Department || summary.Section}`);
   }}
 >
@@ -1534,6 +1549,7 @@ const handleDownloadDepartmentCount = () => {
     // You can define what happens when Not Availed is clicked
     setActiveFilter("notAvailed");
     setActiveSection(summary.Department || summary.Section);
+    scrollToUpcomingBlocks();
     toast.success(`Viewing Not Availed for: ${summary.Department || summary.Section}`);
   }}
 >
@@ -1547,7 +1563,14 @@ const handleDownloadDepartmentCount = () => {
                 {pastBlockSummary.length > 0 && (
                   <tr className="bg-[#ff914d] text-white font-bold">
                     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-[12px] md:text-[16px]">Totals</td>
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                    <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+
+                         onClick={() => {
+        setActiveFilter("demanded");
+        setActiveSection(null); // Show all sections for total
+        scrollToUpcomingBlocks();
+      }}
+                    >
                       {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Demanded || 0), 0)
                         .toFixed(2)}{" "}
@@ -1557,7 +1580,12 @@ const handleDownloadDepartmentCount = () => {
                         0
                       )}
                     </td>
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                    <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                         onClick={() => {
+        setActiveFilter("approved");
+        setActiveSection(null);
+        scrollToUpcomingBlocks();
+      }}>
                       {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Approved || 0), 0)
                         .toFixed(2)}{" "}
@@ -1567,7 +1595,12 @@ const handleDownloadDepartmentCount = () => {
                         0
                       )}
                     </td>
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                    <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                       onClick={() => {
+        setActiveFilter("applied");
+        setActiveSection(null);
+        scrollToUpcomingBlocks();
+      }}>
                       {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.Applied || 0),
                         0
@@ -1577,7 +1610,12 @@ const handleDownloadDepartmentCount = () => {
                         0
                       )}
                     </td>
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                    <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                        onClick={() => {
+        setActiveFilter("granted");
+        setActiveSection(null);
+        scrollToUpcomingBlocks();
+      }}>
                       {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.Granted || 0),
                         0
@@ -1594,7 +1632,12 @@ const handleDownloadDepartmentCount = () => {
                       ).toFixed(2)}
                     </td>
                     
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                    <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                       onClick={() => {
+        setActiveFilter("availed");
+        setActiveSection(null);
+        scrollToUpcomingBlocks();
+      }}>
                       {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.Availed || 0),
                         0
@@ -1616,7 +1659,7 @@ const handleDownloadDepartmentCount = () => {
   onClick={() => {
     setActiveFilter("notGranted");
     setActiveSection(null); // Show all sections for total
-    toast.success("Viewing all Not Granted requests");
+    scrollToUpcomingBlocks();
   }}
 >
   {pastBlockSummary.reduce(
@@ -1629,7 +1672,7 @@ const handleDownloadDepartmentCount = () => {
   onClick={() => {
     setActiveFilter("notAvailed");
     setActiveSection(null); // Show all sections for total
-    toast.success("Viewing all Not Availed requests");
+    scrollToUpcomingBlocks();
   }}
 >
   {pastBlockSummary.reduce(
@@ -2135,7 +2178,7 @@ const handleDownloadDepartmentCount = () => {
       </div>
 
       {/* === PAGE 2: (B) SUMMARY OF UPCOMING BLOCKS - FULL WIDTH === */}
-      <div className="w-full bg-white flex flex-col py-4">
+      <div className="w-full bg-white flex flex-col py-4" id="upcoming-blocks-table">
         <div className="w-full px-2 md:px-4 flex-1">
           <div className="my-2 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
             <button
