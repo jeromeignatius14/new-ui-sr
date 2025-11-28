@@ -5135,7 +5135,7 @@ export const depot: DepotStructure = {
   "CUP J-VRI": {
     'TRD': ["CUP J", "VRI"],
     'S&T': ["CUP J", "VRI-B"],
-    'ENGG': ["BVR","BRI-TPJ"]
+    'ENGG': ["BVR","BRI-TPJ","VRI-B"]
   },
 
   "TPJ-TP": {
