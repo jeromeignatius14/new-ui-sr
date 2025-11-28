@@ -17,6 +17,8 @@ export interface RequestResponse {
 }
 
 export interface RequestItem {
+  Status?: String;
+  userAcceptanceForSanction?: boolean;
   freshCautions?: any;
   tpcRemarks?: string;
   AppliedTimeTo?: any;
