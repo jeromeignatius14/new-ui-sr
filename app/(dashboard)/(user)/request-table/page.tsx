@@ -1141,7 +1141,7 @@ export default function RequestTablePage() {
                       {(request.isSanctioned === true&&(request.userResponse===null||request.userResponse==="ACCEPTED")) ? (
                         <>
                           {
-                            request.userResponse === "ACCEPTED"|| request.overAllStatus === "Sanctioned and Accepted" ? (
+                            request.overAllStatus==="Sanctioned and Accepted by SSE" ? (
                               <div className="px-2 py-1 bg-green-100 text-green-800 mx-auto">
                                 Sanctioned and Accepted
                               </div>
@@ -1149,13 +1149,13 @@ export default function RequestTablePage() {
                               // Only show Accept/Reject buttons if the request belongs to current user
                               request.userId === session?.user?.id ?
                                 AcceptOrRejectButton(request) :
-                                <span className="text-gray-500">{request.overAllStatus === "Sanctioned" ? "Sanctioned, Pending for Acceptance" : request.overAllStatus || "Pending"}</span>
+                                <span className="text-gray-500">{request.overAllStatus === "Sanctioned Pending with SSE" ? "Sanctioned, Pending for Acceptance" : request.overAllStatus || "Pending"}</span>
                             )}
                         </>
                       ) : (
                         <>
                           <span className="text-gray-500">
-                            {(request.isSanctioned === true&&request.userAcceptanceForSanction===false&&request.userResponse!=="ACCEPTED")?"Sanctioned and rejected by user":request.overAllStatus}
+                            {(request.overAllStatus==="Sanctioned and Rejected by SSE")?"Sanctioned and rejected by user":request.overAllStatus}
                           </span>
                           {/* {(() => {
     if (request.managerAcceptance === false&&request.remarkByManager===null ) {
@@ -1382,7 +1382,7 @@ export default function RequestTablePage() {
 
                             </>
                           ) : request.isSanctioned ? (
-                            request.userResponse === "ACCEPTED"||request.overAllStatus === "Sanctioned and Accepted" ? (
+                            request.overAllStatus==="Sanctioned and Accepted by SSE" ? (
                               <div className="px-2 py-1 bg-green-100 text-green-800 mx-auto">
                                 Sanctioned and Accepted
                               </div>
@@ -1456,7 +1456,7 @@ export default function RequestTablePage() {
                             )
                               : (
                                 <span className="bg-green-100 p-2 text-green-600">
-                                  {request.overAllStatus === "Sanctioned" ? "Sanctioned, Pending for Acceptance" : request.overAllStatus || "Pending"}
+                                  {request.overAllStatus === "Sanctioned Pending with SSE" ? "Sanctioned, Pending for Acceptance" : request.overAllStatus || "Pending"}
                                 </span>
                               )
                           }
@@ -1623,7 +1623,7 @@ export default function RequestTablePage() {
 
                             </>
                           ) : request.isSanctioned ? (
-                            request.userResponse === "ACCEPTED"||request.overAllStatus === "Sanctioned and Accepted" ? (
+                            request.overAllStatus==="Sanctioned and Accepted by SSE" ? (
                               <div className="px-2 py-1 bg-green-100 text-green-800 mx-auto">
                                 Sanctioned and Accepted
                               </div>
@@ -1697,7 +1697,7 @@ export default function RequestTablePage() {
                             )
                               : (
                                 <span className="bg-green-100 p-2 text-green-600">
-                                  {request.overAllStatus === "Sanctioned" ? "Sanctioned, Pending for Acceptance" : request.overAllStatus || "Pending"}
+                                  {request.overAllStatus === "Sanctioned Pending with SSE" ? "Sanctioned, Pending for Acceptance" : request.overAllStatus || "Pending"}
                                 </span>
                               )
                           }
