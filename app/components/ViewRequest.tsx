@@ -157,30 +157,22 @@ const isAvailedTimeExceeded = (request: any): boolean => {
 const getSanctionStatus = (block:any) => {
   // 1) Sanctioned → Pending with SSE
   if (
-    block.status === "APPROVED" &&
-    block.isSanctioned &&
-    block.userResponse === null &&
-    block.AvailedTimeFrom === null &&
-    block.AvailedTimeTo === null &&
-    block.userAcceptanceForSanction === false
+block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance"
   ) {
     return "Sanctioned, Pending with SSE For Acceptance";
   }
 
   // 2) Accepted by SSE
   if (
-    block.userResponse === "ACCEPTED" ||
-    block.overAllStatus === "Sanctioned and Accepted"
+    block.overAllStatus === "Sanctioned and Accepted by SSE"
   ) {
     return "Sanctioned and Accepted by SSE";
   }
 
   // 3) Rejected by SSE
   if (
-    block.isSanctioned === true &&
-    block.userAcceptanceForSanction === false &&
-   block.userResponse !== null && block.userResponse !== "ACCEPTED"&&
-    block.overAllStatus === "Sanctioned"
+
+    block.overAllStatus === "Sanctioned and Rejected by SSE"
   ) {
     return "Sanctioned and Rejected by SSE";
   }
