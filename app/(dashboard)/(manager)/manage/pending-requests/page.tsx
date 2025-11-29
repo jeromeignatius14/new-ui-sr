@@ -110,7 +110,7 @@ export default function PendingRequestsPage() {
 const sessionDepartment = session?.user?.department; // ENGG | S&T | TRD | undefined
 
 const pendingDisconnectionRequests =
-  (Array.isArray(data?.data?.specialDeptRequests) ? data.data.specialDeptRequests : [])
+  (Array.isArray(data?.data?.requests) ? data.data.specialDeptRequests : [])
     .filter((r: UserRequest) => {
       // Base filters
       const isPending = r.status === 'PENDING';
