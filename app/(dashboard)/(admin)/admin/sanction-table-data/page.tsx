@@ -2781,12 +2781,26 @@ export default function GenerateReportPage() {
   const [showGlobalWorkTypeDropdown, setShowGlobalWorkTypeDropdown] = useState(false);
   const [showGlobalActivityDropdown, setShowGlobalActivityDropdown] = useState(false);
   const [showDurationDropdown, setShowDurationDropdown] = useState(false);
-  const [departmentCountFilter, setDepartmentCountFilter] = useState<{
-    department: string;
-    supportingDepartment: string;
-    filterType: 'requested' | 'sanctioned' | 'availed';
-  } | null>(null);
-
+  // const [departmentCountFilter, setDepartmentCountFilter] = useState<{
+  //   department: string;
+  //   supportingDepartment: string;
+  //   filterType: 'requested' | 'sanctioned' | 'availed';
+  // } | null>(null);
+const [departmentCountFilter, setDepartmentCountFilter] = useState<{
+  department: string;
+  supportingDepartment: string;
+  filterType: 'requested' | 'sanctioned' | 'availed';
+} | null>(() => {
+  const params = new URLSearchParams(searchParams);
+  const deptFilter = params.get('deptFilter');
+  if (!deptFilter) return null;
+  
+  try {
+    return JSON.parse(deptFilter);
+  } catch {
+    return null;
+  }
+});
   const durationDropdownRef = useRef<HTMLDivElement>(null);
   const globalWorkTypeDropdownRef = useRef<HTMLDivElement>(null);
   const globalActivityDropdownRef = useRef<HTMLDivElement>(null);
@@ -2897,7 +2911,9 @@ export default function GenerateReportPage() {
     if (sseFilter && sseFilter !== "All") {
       params.set('sseFilter', sseFilter);
     }
-
+ if (departmentCountFilter) {
+    params.set('deptFilter', JSON.stringify(departmentCountFilter));
+  }
     const newUrl = `${window.location.pathname}?${params.toString()}`;
     window.history.replaceState(null, '', newUrl);
   }, [
@@ -2914,9 +2930,26 @@ export default function GenerateReportPage() {
     activeSection,
     upcomingSectionFilter,
     upcomingDivisionIdSearch,
-    sseFilter
+    sseFilter,
+    departmentCountFilter
   ]);
-
+// === ADD THIS HELPER FUNCTION ===
+const handleDepartmentFilterClick = (
+  department: string, 
+  supportingDepartment: string, 
+  filterType: 'requested' | 'sanctioned' | 'availed'
+) => {
+  setDepartmentCountFilter({
+    department,
+    supportingDepartment,
+    filterType
+  });
+  setActiveFilter("all"); // Reset status filter
+  setActiveSection(null); // Reset section filter
+  scrollToUpcomingBlocks();
+  toast.success(`Showing ${filterType} ${department} blocks${supportingDepartment !== "-" ? ` with ${supportingDepartment} support` : ''}`);
+};
+// === END HELPER FUNCTION ===
   useEffect(() => {
     if (session?.user?.location) {
       const userLocation = session.user.location;
@@ -4341,46 +4374,24 @@ export default function GenerateReportPage() {
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">-</td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => {
-        setDepartmentCountFilter({
-          department: "ENGG",
-          supportingDepartment: "-",
-          filterType: 'requested'
-        });
-           setActiveFilter("all"); // RESET status filter
-         setActiveSection(null);
-        toast.success("Showing requested ENGG blocks (no supporting departments)");
-      }}
+ onClick={() => handleDepartmentFilterClick("ENGG", "-", 'requested')}
     >
       {enggTotal}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => {
-        setDepartmentCountFilter({
-          department: "ENGG",
-          supportingDepartment: "-",
-          filterType: 'sanctioned'
-        });
-           setActiveFilter("all"); // RESET status filter
-    setActiveSection(null);
-        toast.success("Showing sanctioned ENGG blocks (no supporting departments)");
-      }}
+  
+
+ onClick={() => handleDepartmentFilterClick("ENGG", "-", 'sanctioned')}
+
     >
       {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.isSanctioned && block.powerBlockRequired === false && block.sntDisconnectionRequired === false).length}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => {
-        setDepartmentCountFilter({
-          department: "ENGG",
-          supportingDepartment: "-",
-          filterType: 'availed'
-        });
-           setActiveFilter("all"); // RESET status filter
-    setActiveSection(null);
-        toast.success("Showing availed ENGG blocks (no supporting departments)");
-      }}
+   
+ onClick={() => handleDepartmentFilterClick("ENGG", "-", 'availed')}
+
     >
       {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null && block.powerBlockRequired === false && block.sntDisconnectionRequired === false).length}
     </td>
@@ -4392,46 +4403,25 @@ export default function GenerateReportPage() {
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => {
-        setDepartmentCountFilter({
-          department: "ENGG",
-          supportingDepartment: "S&T",
-          filterType: 'requested'
-        });
-           setActiveFilter("all"); // RESET status filter
-    setActiveSection(null);
-        toast.success("Showing requested ENGG blocks with S&T support");
-      }}
+   
+ onClick={() => handleDepartmentFilterClick("ENGG", "S&T", 'requested')}
+
     >
       {enggWithSnt}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => {
-        setDepartmentCountFilter({
-          department: "ENGG",
-          supportingDepartment: "S&T",
-          filterType: 'sanctioned'
-        });
-           setActiveFilter("all"); // RESET status filter
-    setActiveSection(null);
-        toast.success("Showing sanctioned ENGG blocks with S&T support");
-      }}
+ 
+ onClick={() => handleDepartmentFilterClick("ENGG", "S&T", 'sanctioned')}
+
     >
       {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.isSanctioned && block.powerBlockRequired === false && block.enggDisconnectionsRequired === false).length}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => {
-        setDepartmentCountFilter({
-          department: "ENGG",
-          supportingDepartment: "S&T",
-          filterType: 'availed'
-        });
-           setActiveFilter("all"); // RESET status filter
-    setActiveSection(null);
-        toast.success("Showing availed ENGG blocks with S&T support");
-      }}
+   
+ onClick={() => handleDepartmentFilterClick("ENGG", "S&T", 'availed')}
+
     >
       {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null && block.powerBlockRequired === false && block.enggDisconnectionsRequired === false).length}
     </td>
@@ -4443,46 +4433,25 @@ export default function GenerateReportPage() {
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">TRD</td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => {
-        setDepartmentCountFilter({
-          department: "ENGG",
-          supportingDepartment: "TRD",
-          filterType: 'requested'
-        });
-           setActiveFilter("all"); // RESET status filter
-    setActiveSection(null);
-        toast.success("Showing requested ENGG blocks with TRD support");
-      }}
+   
+ onClick={() => handleDepartmentFilterClick("ENGG", "TRD", 'requested')}
+
     >
       {enggWithPower}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => {
-        setDepartmentCountFilter({
-          department: "ENGG",
-          supportingDepartment: "TRD",
-          filterType: 'sanctioned'
-        });
-           setActiveFilter("all"); // RESET status filter
-    setActiveSection(null);
-        toast.success("Showing sanctioned ENGG blocks with TRD support");
-      }}
+   
+ onClick={() => handleDepartmentFilterClick("ENGG", "TRD", 'sanctioned')}
+
     >
       {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.isSanctioned).length}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => {
-        setDepartmentCountFilter({
-          department: "ENGG",
-          supportingDepartment: "TRD",
-          filterType: 'availed'
-        });
-           setActiveFilter("all"); // RESET status filter
-    setActiveSection(null);
-        toast.success("Showing availed ENGG blocks with TRD support");
-      }}
+   
+ onClick={() => handleDepartmentFilterClick("ENGG", "TRD", 'availed')}
+
     >
       {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
     </td>
@@ -4494,46 +4463,25 @@ export default function GenerateReportPage() {
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T and TRD</td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => {
-        setDepartmentCountFilter({
-          department: "ENGG",
-          supportingDepartment: "S&T and TRD",
-          filterType: 'requested'
-        });
-           setActiveFilter("all"); // RESET status filter
-    setActiveSection(null);
-        toast.success("Showing requested ENGG blocks with S&T and TRD support");
-      }}
+
+ onClick={() => handleDepartmentFilterClick("ENGG", "S&T and TRD", 'requested')}
+
     >
       {enggWithSntAndPower}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => {
-        setDepartmentCountFilter({
-          department: "ENGG",
-          supportingDepartment: "S&T and TRD",
-          filterType: 'sanctioned'
-        });
-           setActiveFilter("all"); // RESET status filter
-    setActiveSection(null);
-        toast.success("Showing sanctioned ENGG blocks with S&T and TRD support");
-      }}
+ 
+ onClick={() => handleDepartmentFilterClick("ENGG", "S&T and TRD", 'sanctioned')}
+
     >
       {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.powerBlockRequired === true && block.isSanctioned).length}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => {
-        setDepartmentCountFilter({
-          department: "ENGG",
-          supportingDepartment: "S&T and TRD",
-          filterType: 'availed'
-        });
-           setActiveFilter("all"); // RESET status filter
-    setActiveSection(null);
-        toast.success("Showing availed ENGG blocks with S&T and TRD support");
-      }}
+
+ onClick={() => handleDepartmentFilterClick("ENGG", "S&T and TRD", 'availed')}
+
     >
       {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
     </td>
@@ -4546,46 +4494,25 @@ export default function GenerateReportPage() {
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">-</td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => {
-        setDepartmentCountFilter({
-          department: "TRD",
-          supportingDepartment: "-",
-          filterType: 'requested'
-        });
-           setActiveFilter("all"); // RESET status filter
-    setActiveSection(null);
-        toast.success("Showing requested TRD blocks");
-      }}
+ 
+ onClick={() => handleDepartmentFilterClick("TRD", "-", 'requested')}
+
     >
       {trdTotal}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => {
-        setDepartmentCountFilter({
-          department: "TRD",
-          supportingDepartment: "-",
-          filterType: 'sanctioned'
-        });
-           setActiveFilter("all"); // RESET status filter
-    setActiveSection(null);
-        toast.success("Showing sanctioned TRD blocks");
-      }}
+
+ onClick={() => handleDepartmentFilterClick("TRD", "-", 'sanctioned')}
+
     >
       {detailedData.filter(block => block.selectedDepartment === "TRD" && block.isSanctioned).length}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => {
-        setDepartmentCountFilter({
-          department: "TRD",
-          supportingDepartment: "-",
-          filterType: 'availed'
-        });
-           setActiveFilter("all"); // RESET status filter
-    setActiveSection(null);
-        toast.success("Showing availed TRD blocks");
-      }}
+
+ onClick={() => handleDepartmentFilterClick("TRD", "-", 'availed')}
+
     >
       {detailedData.filter(block => block.selectedDepartment === "TRD" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
     </td>
@@ -4598,46 +4525,25 @@ export default function GenerateReportPage() {
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">-</td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => {
-        setDepartmentCountFilter({
-          department: "S&T",
-          supportingDepartment: "-",
-          filterType: 'requested'
-        });
-           setActiveFilter("all"); // RESET status filter
-    setActiveSection(null);
-        toast.success("Showing requested S&T blocks (no supporting departments)");
-      }}
+  
+ onClick={() => handleDepartmentFilterClick("S&T", "-", 'requested')}
+
     >
       {sntTotal}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => {
-        setDepartmentCountFilter({
-          department: "S&T",
-          supportingDepartment: "-",
-          filterType: 'sanctioned'
-        });
-           setActiveFilter("all"); // RESET status filter
-    setActiveSection(null);
-        toast.success("Showing sanctioned S&T blocks (no supporting departments)");
-      }}
+   
+ onClick={() => handleDepartmentFilterClick("S&T", "-", 'sanctioned')}
+
     >
       {detailedData.filter(block => block.selectedDepartment === "S&T" && block.isSanctioned).length}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => {
-        setDepartmentCountFilter({
-          department: "S&T",
-          supportingDepartment: "-",
-          filterType: 'availed'
-        });
-           setActiveFilter("all"); // RESET status filter
-    setActiveSection(null);
-        toast.success("Showing availed S&T blocks (no supporting departments)");
-      }}
+
+ onClick={() => handleDepartmentFilterClick("S&T", "-", 'availed')}
+
     >
       {detailedData.filter(block => block.selectedDepartment === "S&T" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
     </td>
@@ -4649,46 +4555,25 @@ export default function GenerateReportPage() {
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => {
-        setDepartmentCountFilter({
-          department: "S&T",
-          supportingDepartment: "ENGG",
-          filterType: 'requested'
-        });
-           setActiveFilter("all"); // RESET status filter
-    setActiveSection(null);
-        toast.success("Showing requested S&T blocks with ENGG support");
-      }}
+
+ onClick={() => handleDepartmentFilterClick("S&T", "ENGG", 'requested')}
+
     >
       {sntWithEngg}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => {
-        setDepartmentCountFilter({
-          department: "S&T",
-          supportingDepartment: "ENGG",
-          filterType: 'sanctioned'
-        });
-           setActiveFilter("all"); // RESET status filter
-    setActiveSection(null);
-        toast.success("Showing sanctioned S&T blocks with ENGG support");
-      }}
+
+ onClick={() => handleDepartmentFilterClick("S&T", "ENGG", 'sanctioned')}
+
     >
       {detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.isSanctioned).length}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => {
-        setDepartmentCountFilter({
-          department: "S&T",
-          supportingDepartment: "ENGG",
-          filterType: 'availed'
-        });
-           setActiveFilter("all"); // RESET status filter
-    setActiveSection(null);
-        toast.success("Showing availed S&T blocks with ENGG support");
-      }}
+  
+ onClick={() => handleDepartmentFilterClick("S&T", "ENGG", 'availed')}
+
     >
       {detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
     </td>
@@ -4700,46 +4585,25 @@ export default function GenerateReportPage() {
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">TRD</td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => {
-        setDepartmentCountFilter({
-          department: "S&T",
-          supportingDepartment: "TRD",
-          filterType: 'requested'
-        });
-           setActiveFilter("all"); // RESET status filter
-    setActiveSection(null);
-        toast.success("Showing requested S&T blocks with TRD support");
-      }}
+  
+ onClick={() => handleDepartmentFilterClick("S&T", "TRD", 'requested')}
+
     >
       {sntWithPower}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => {
-        setDepartmentCountFilter({
-          department: "S&T",
-          supportingDepartment: "TRD",
-          filterType: 'sanctioned'
-        });
-           setActiveFilter("all"); // RESET status filter
-    setActiveSection(null);
-        toast.success("Showing sanctioned S&T blocks with TRD support");
-      }}
+  
+ onClick={() => handleDepartmentFilterClick("S&T", "TRD", 'sanctioned')}
+
     >
       {detailedData.filter(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.isSanctioned).length}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => {
-        setDepartmentCountFilter({
-          department: "S&T",
-          supportingDepartment: "TRD",
-          filterType: 'availed'
-        });
-           setActiveFilter("all"); // RESET status filter
-    setActiveSection(null);
-        toast.success("Showing availed S&T blocks with TRD support");
-      }}
+   
+ onClick={() => handleDepartmentFilterClick("S&T", "TRD", 'availed')}
+
     >
       {detailedData.filter(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
     </td>
@@ -4751,46 +4615,25 @@ export default function GenerateReportPage() {
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG and TRD</td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => {
-        setDepartmentCountFilter({
-          department: "S&T",
-          supportingDepartment: "ENGG and TRD",
-          filterType: 'requested'
-        });
-           setActiveFilter("all"); // RESET status filter
-    setActiveSection(null);
-        toast.success("Showing requested S&T blocks with ENGG and TRD support");
-      }}
+
+ onClick={() => handleDepartmentFilterClick("S&T", "ENGG and TRD", 'requested')}
+
     >
       {sntWithEnggAndPower}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => {
-        setDepartmentCountFilter({
-          department: "S&T",
-          supportingDepartment: "ENGG and TRD",
-          filterType: 'sanctioned'
-        });
-           setActiveFilter("all"); // RESET status filter
-    setActiveSection(null);
-        toast.success("Showing sanctioned S&T blocks with ENGG and TRD support");
-      }}
+
+ onClick={() => handleDepartmentFilterClick("S&T", "ENGG and TRD", 'sanctioned')}
+
     >
       {detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.powerBlockRequired === true && block.isSanctioned).length}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => {
-        setDepartmentCountFilter({
-          department: "S&T",
-          supportingDepartment: "ENGG and TRD",
-          filterType: 'availed'
-        });
-           setActiveFilter("all"); // RESET status filter
-    setActiveSection(null);
-        toast.success("Showing availed S&T blocks with ENGG and TRD support");
-      }}
+ 
+ onClick={() => handleDepartmentFilterClick("S&T", "ENGG and TRD", 'availed')}
+
     >
       {detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
     </td>
