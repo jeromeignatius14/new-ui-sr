@@ -272,7 +272,7 @@ export default function AdminRequestTablePage() {
       !r.isSanctioned &&
       r.selectedDepartment === "TRD" &&
       (r.overAllStatus === "with optg.") &&
-      reqDate > today
+      reqDate >=today
     );
   }).length;
   // const handleDownloadCSV = () => {
