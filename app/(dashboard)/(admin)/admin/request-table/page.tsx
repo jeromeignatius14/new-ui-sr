@@ -233,7 +233,7 @@ export default function AdminRequestTablePage() {
     return (
       !r.isSanctioned &&
       (r.overAllStatus === "with optg.") &&
-      reqDate > today
+      reqDate >=today
     );
   }).length;
 
@@ -246,7 +246,7 @@ export default function AdminRequestTablePage() {
       !r.isSanctioned &&
       r.selectedDepartment === "ENGG" &&
       (r.overAllStatus === "with optg.") &&
-      reqDate > today
+      reqDate >=today
     );
   }).length;
 
@@ -259,41 +259,22 @@ export default function AdminRequestTablePage() {
       !r.isSanctioned &&
       r.selectedDepartment === "S&T" &&
       (r.overAllStatus === "with optg.") &&
-      reqDate > today
+      reqDate >=today
     );
   }).length;
 
   const TRDRequest = allRequests.filter((r: UserRequest) => {
     if (!r.date) return false;
 
-  const reqDate = new Date(r.date);
-  reqDate.setHours(0, 0, 0, 0);
-  return (
-    !r.isSanctioned &&
-    r.selectedDepartment === "TRD" &&
-    (r.overAllStatus === "with optg.") &&
-    reqDate > today
-  );
-}).length;
-
-  // const SandTRequest = allRequests.filter((r: UserRequest) => {
-  //   if (r.isSanctioned) return false;
-  //   if (!r.date) return false;
-  //   if ( r.selectedDepartment !== "S&T") return false;
-  //   const reqDate = new Date(r.date);
-  //   reqDate.setHours(0, 0, 0, 0);
-  //   return reqDate > today;
-  // }).length;
-
-  // const TRDRequest = allRequests.filter((r: UserRequest) => {
-  //   if (r.isSanctioned) return false;
-  //   if (!r.date) return false;
-  //   if ( r.selectedDepartment !== "TRD") return false;
-  //   const reqDate = new Date(r.date);
-  //   reqDate.setHours(0, 0, 0, 0);
-  //   return reqDate > today;
-  // }).length;
-
+    const reqDate = new Date(r.date);
+    reqDate.setHours(0, 0, 0, 0);
+    return (
+      !r.isSanctioned &&
+      r.selectedDepartment === "TRD" &&
+      (r.overAllStatus === "with optg.") &&
+      reqDate >=today
+    );
+  }).length;
   // const handleDownloadCSV = () => {
   //   try {
   //     if (!filteredRequests || filteredRequests.length === 0) {
