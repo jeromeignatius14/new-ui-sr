@@ -45,6 +45,8 @@ export interface RequestItem {
     | null;
   AvailedTimeTo?: any;
   AvailedTimeFrom?: any;
+  Status?: String;
+  userAcceptanceForSanction?: boolean;
   freshCautions?: any;
   tpcRemarks?: string;
   AppliedTimeTo?: any;
