@@ -110,8 +110,8 @@ const pendingDisconnectionRequests =
   (Array.isArray(data?.data?.requests) ? data.data.specialDeptRequests : [])
     .filter((r: UserRequest) => {
       // Base filters
-      const isPending = r.status === 'PENDING';
-      const isManagerPending = r.managerAcceptance === false;
+    //   const isPending = r.status === 'PENDING';
+    //   const isManagerPending = r.managerAcceptance === false;
       const hasDisconnection =
         r.powerBlockRequired === true ||
         r.sntDisconnectionRequired === true ||
@@ -127,8 +127,16 @@ const pendingDisconnectionRequests =
       } else if (sessionDepartment === "TRD") {
         deptMatch = r.powerBlockRequired === true;
       }
+     const today = new Date();
+      today.setHours(0, 0, 0, 0); // Set to start of day for accurate comparison
+      
+      const requestDate = new Date(r.date);
+      requestDate.setHours(0, 0, 0, 0); // Also normalize request date
+      
+      const isTodayOrFuture = requestDate >= today;
+    //   return isPending && isManagerPending && hasDisconnection && deptMatch;
+      return  hasDisconnection && deptMatch&&isTodayOrFuture;
 
-      return isPending && isManagerPending && hasDisconnection && deptMatch;
     })
     .sort((a: UserRequest, b: UserRequest) => {
       return new Date(a.date).getTime() - new Date(b.date).getTime();
