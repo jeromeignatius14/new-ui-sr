@@ -154,6 +154,33 @@ const isAvailedTimeExceeded = (request: any): boolean => {
   
   return availedDuration > grantedDuration;
 };
+const getSanctionStatus = (block:any) => {
+  // 1) Sanctioned → Pending with SSE
+  if (
+block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance"
+  ) {
+    return "Sanctioned, Pending with SSE For Acceptance";
+  }
+
+  // 2) Accepted by SSE
+  if (
+    block.overAllStatus === "Sanctioned and Accepted by SSE"
+  ) {
+    return "Sanctioned and Accepted by SSE";
+  }
+
+  // 3) Rejected by SSE
+  if (
+
+    block.overAllStatus === "Sanctioned and Rejected by SSE"
+  ) {
+    return "Sanctioned and Rejected by SSE";
+  }
+
+  // 4) fallback — DO NOT use overAllStatus (as you said)
+  return block.status || block.overAllStatus || "N/A";
+};
+
 
   return (
     <div className="bg-white p-3 border border-black mb-3 text-black">
@@ -212,7 +239,7 @@ const isAvailedTimeExceeded = (request: any): boolean => {
       : getStatusBadgeClass(request.status)
   }`}
 >
-  Status: {isAvailedTimeExceeded(request) ? 'BLOCK BURST' : request.overAllStatus}
+  Status: {isAvailedTimeExceeded(request) ? 'BLOCK BURST' : getSanctionStatus(request)}
 </span>
       </div>
 

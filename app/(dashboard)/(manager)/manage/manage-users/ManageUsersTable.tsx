@@ -428,7 +428,20 @@ export default function ManageUsersTable() {
         onClose={() => setDeleteModalUser(null)}
         onConfirm={handleDeleteUser}
         title="Delete SSE"
-        message={`Are you sure you want to delete ${deleteModalUser?.name}? This action cannot be undone.`}
+        // message={`Are you sure you want to delete ${deleteModalUser?.name}? This action cannot be undone.`}
+        message={
+  deleteModalUser
+    ? (() => {
+        const jeList = jesData[deleteModalUser.id] || [];
+        const count = jeList.length;
+
+        return count > 0
+          ? `This SSE has ${count} Junior Engineer(s) under them. They will also be deleted.\n\nAre you sure you want to delete ${deleteModalUser.name}? This action cannot be undone.`
+          : `Are you sure you want to delete ${deleteModalUser.name}? This action cannot be undone.`;
+      })()
+    : ""
+}
+
         confirmLabel="Delete"
         cancelLabel="Cancel"
         isLoading={!!deletingUserId}

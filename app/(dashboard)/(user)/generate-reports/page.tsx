@@ -2524,30 +2524,19 @@ const clearGlobalFilters = () => {
                     .slice(0, 200)
                     .map((block: any, idx: number) => {
                       let statusLabel = "";
-                      let statusStyle = { background: "#fff", color: "#222" };
-                      if (
-                       block.Status === "APPROVED" && block.isSanctioned&&block.userResponse===null&&block.AvailedTimeFrom===null&&block.AvailedTimeTo===null&&block.userAcceptanceForSanction===false
-                      ) {
-                        statusLabel =
-                          "Sanctioned, Pending with SSE For Acceptance";
-                        statusStyle = { background: "#fff86b", color: "#222" };
-                      } else if (
-                        block.userResponse === "ACCEPTED" ||
-                        block.overAllStatus === "Sanctioned and Accepted"
-                      ) {
-                        statusLabel = "Sanctioned and Accepted by SSE";
-                        statusStyle = { background: "#d47ed4", color: "#222" };
-                      } else if (
-                        block.isSanctioned === true &&
-                        block.userAcceptanceForSanction === false &&
-                        block.userResponse !== "ACCEPTED"
-                        &&block.overAllStatus==="Sanctioned"
-                      ) {
-                        statusLabel = "Sanctioned and Rejected by SSE";
-                        statusStyle = { background: "#ff4e36", color: "#fff" };
-                      } else {
-                        statusLabel = block.overAllStatus || block.Status;
-                      }
+                   let statusStyle = { background: "#fff", color: "#222" };
+                    if (block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance") {
+                      statusLabel = "Sanctioned, Pending with SSE For Acceptance";
+                      statusStyle = { background: "#fff86b", color: "#222" };
+                    }  else if (block.overAllStatus==="Sanctioned and Rejected by SSE") {
+                      statusLabel = "Sanctioned and Accepted by SSE";
+                      statusStyle = { background: "#d47ed4", color: "#222" };
+                    } else if ( block.overAllStatus==="Sanctioned and Rejected by SSE") {
+                      statusLabel = "Sanctioned and Rejected by SSE";
+                      statusStyle = { background: "#ff4e36", color: "#fff" };
+                    } else {
+                      statusLabel = block.overAllStatus || block.Status;
+                    }
 
                       const rowBgColor =
                         idx % 2 === 0 ? "bg-white" : "bg-[#f5d0f2]";
