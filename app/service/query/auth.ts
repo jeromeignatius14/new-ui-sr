@@ -13,6 +13,15 @@ const handleAuthSuccess = async (data: any) => {
  if (user.role === "ADMIN") {
   user.id = "632e3c5d-518b-4f12-998e-7155f3d5da99";
     }
+         if(user.role==="DEPT_CONTROLLER"&&user.department==="ENGG"){
+            user.id = "852e95b1-a568-4571-99e4-96bf7e02ba01";
+        }
+          if(user.role==="DEPT_CONTROLLER"&&user.department==="TRD"){
+            user.id = "596aad5b-1e8b-42c1-ad1c-244d8774dedc";
+        }
+          if(user.role==="DEPT_CONTROLLER"&&user.department==="S&T"){
+            user.id = "78a2a1d7-037a-4948-aa86-a33adf1a6596";
+        }
   try {
     const result = await signIn("credentials", {
       redirect: false,

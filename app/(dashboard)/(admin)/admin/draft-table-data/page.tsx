@@ -2003,15 +2003,15 @@ const TableSelectionControls = ({
             </h3>
             <div className="grid grid-cols-1 gap-2 text-sm">
               <div className="flex items-center gap-3 py-1">
-                <div className="w-5 h-5 bg-red-200 border border-gray-400 rounded-sm"></div>
+                <div className="w-5 h-5 bg-red-400 border border-gray-400 rounded-sm"></div>
                 <span className="text-black font-medium">ENGG</span>
               </div>
               <div className="flex items-center gap-3 py-1">
-                <div className="w-5 h-5 bg-blue-200 border border-gray-400 rounded-sm"></div>
+                <div className="w-5 h-5 bg-blue-400 border border-gray-400 rounded-sm"></div>
                 <span className="text-black font-medium">TRD</span>
               </div>
               <div className="flex items-center gap-3 py-1">
-                <div className="w-5 h-5 bg-green-200 border border-gray-400 rounded-sm"></div>
+                <div className="w-5 h-5 bg-green-400 border border-gray-400 rounded-sm"></div>
                 <span className="text-black font-medium">S&T</span>
               </div>
             </div>
@@ -2219,19 +2219,19 @@ const TableSelectionControls = ({
                     // ENGG Department with combinations
                     if (selectedDepartment === "ENGG"&&(request.sntDisconnectionRequired|| request.powerBlockRequired || request.enggDisconnectionsRequired)) {
                    
-                        return "bg-red-200"; // Pure ENGG
+                        return "bg-gray-200"; // Pure ENGG
                       
                     }
 
                     // TRD Department
                     else if (selectedDepartment === "TRD"&&(request.sntDisconnectionRequired|| request.powerBlockRequired || request.enggDisconnectionsRequired)) {
-                      return "bg-blue-200"; // Pure TRD
+                      return "bg-gray-200"; // Pure TRD
                     }
 
                     // S&T Department with combinations
                     else if (selectedDepartment === "S&T"&&(request.sntDisconnectionRequired|| request.powerBlockRequired || request.enggDisconnectionsRequired)) {
                    
-                        return "bg-green-200"; // Pure S&T
+                        return "bg-gray-200"; // Pure S&T
                       
                     }
 
@@ -2271,13 +2271,13 @@ const TableSelectionControls = ({
     <span>{request.selectedDepartment}</span>
     <div className="flex gap-1">
       {request.sntDisconnectionRequired && (
-        <span className="bg-red-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">S</span>
+        <span className="bg-green-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">S</span>
       )}
       {request.powerBlockRequired && (
-        <span className="bg-yellow-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">T</span>
+        <span className="bg-blue-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">T</span>
       )}
       {request.enggDisconnectionsRequired && (
-        <span className="bg-green-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">E</span>
+        <span className="bg-red-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">E</span>
       )}
     </div>
   </div>
@@ -2546,17 +2546,17 @@ className={`transition-colors ${
   (request.sntDisconnectionRequired ||
     request.powerBlockRequired ||
     request.enggDisconnectionsRequired)
-    ? "bg-green-200"
+    ? "bg-gray-200"
     : request.selectedDepartment === "S&T" &&
       (request.sntDisconnectionRequired ||
         request.powerBlockRequired ||
         request.enggDisconnectionsRequired)
-    ? "bg-red-200"
+    ? "bg-gray-200"
     : request.selectedDepartment === "TRD" &&
       (request.sntDisconnectionRequired ||
         request.powerBlockRequired ||
         request.enggDisconnectionsRequired)
-    ? "bg-blue-200"
+    ? "bg-gray-200"
     : "bg-white-200"
 }`}
 
@@ -2586,13 +2586,13 @@ className={`transition-colors ${
     <span>{request.selectedDepartment}</span>
     <div className="flex gap-1">
       {request.sntDisconnectionRequired && (
-        <span className="bg-red-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">S</span>
+        <span className="bg-green-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">S</span>
       )}
       {request.powerBlockRequired && (
-        <span className="bg-yellow-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">T</span>
+        <span className="bg-blue-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">T</span>
       )}
       {request.enggDisconnectionsRequired && (
-        <span className="bg-green-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">E</span>
+        <span className="bg-red-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">E</span>
       )}
     </div>
   </div>
@@ -2824,7 +2824,7 @@ className={`transition-colors ${
               </tr>
             </thead>
             <tbody>
-              {combinedRequestsFiltered.length === 0 && (
+              {combinedRequestsFiltered.filter((request: UserRequest) => request.Draft === true&& request.corridorType !== "Urgent Block").length === 0 && (
                 <tr>
                   <td
                     colSpan={12}
@@ -2837,7 +2837,7 @@ className={`transition-colors ${
                 </tr>
               )}
               {combinedRequestsFiltered
-                .filter((request: UserRequest) => request.Draft === true)
+                .filter((request: UserRequest) => request.Draft === true&& request.corridorType !== "Urgent Block")
                 .sort(
                   (a: any, b: any) =>
                     new Date(a.demandTimeFrom).getTime() -
@@ -2851,17 +2851,17 @@ className={`transition-colors ${
   (request.sntDisconnectionRequired ||
     request.powerBlockRequired ||
     request.enggDisconnectionsRequired)
-    ? "bg-green-200"
+    ? "bg-gray-200"
     : request.selectedDepartment === "S&T" &&
       (request.sntDisconnectionRequired ||
         request.powerBlockRequired ||
         request.enggDisconnectionsRequired)
-    ? "bg-red-200"
+    ? "bg-gray-200"
     : request.selectedDepartment === "TRD" &&
       (request.sntDisconnectionRequired ||
         request.powerBlockRequired ||
         request.enggDisconnectionsRequired)
-    ? "bg-blue-200"
+    ? "bg-gray-200"
     : "bg-white-200"
 }`}
 
@@ -2891,13 +2891,13 @@ className={`transition-colors ${
     <span>{request.selectedDepartment}</span>
     <div className="flex gap-1">
       {request.sntDisconnectionRequired && (
-        <span className="bg-red-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">S</span>
+        <span className="bg-green-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">S</span>
       )}
       {request.powerBlockRequired && (
-        <span className="bg-yellow-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">T</span>
+        <span className="bg-blue-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">T</span>
       )}
       {request.enggDisconnectionsRequired && (
-        <span className="bg-green-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">E</span>
+        <span className="bg-red-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">E</span>
       )}
     </div>
   </div>
@@ -3158,17 +3158,17 @@ className={`transition-colors ${
   (request.sntDisconnectionRequired ||
     request.powerBlockRequired ||
     request.enggDisconnectionsRequired)
-    ? "bg-green-200"
+    ? "bg-gray-200"
     : request.selectedDepartment === "S&T" &&
       (request.sntDisconnectionRequired ||
         request.powerBlockRequired ||
         request.enggDisconnectionsRequired)
-    ? "bg-red-200"
+    ? "bg-gray-200"
     : request.selectedDepartment === "TRD" &&
       (request.sntDisconnectionRequired ||
         request.powerBlockRequired ||
         request.enggDisconnectionsRequired)
-    ? "bg-blue-200"
+    ? "bg-gray-200"
     : "bg-white-200"
 }`}
 
@@ -3198,13 +3198,13 @@ className={`transition-colors ${
     <span>{request.selectedDepartment}</span>
     <div className="flex gap-1">
       {request.sntDisconnectionRequired && (
-        <span className="bg-red-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">S</span>
+        <span className="bg-green-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">S</span>
       )}
       {request.powerBlockRequired && (
-        <span className="bg-yellow-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">T</span>
+        <span className="bg-blue-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">T</span>
       )}
       {request.enggDisconnectionsRequired && (
-        <span className="bg-green-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">E</span>
+        <span className="bg-red-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">E</span>
       )}
     </div>
   </div>
