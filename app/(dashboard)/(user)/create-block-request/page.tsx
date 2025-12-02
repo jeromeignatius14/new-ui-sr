@@ -1137,7 +1137,7 @@ const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
 
   // const selectedDepo = "AJJE";   //temprory fix we need to change it
 
-  const userDepot = session?.user.depot;
+  const userDepot = session?.user.depot||"";
   const userDept = session?.user.department ?? "";
 
   const locationSections =
@@ -1145,16 +1145,32 @@ const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
       ? MajorSection[userLocation as keyof typeof MajorSection]
       : [];
 
+  // const majorSectionOptions =
+  //   userDepot === "OVERALL"
+  //     ? locationSections
+  //     : locationSections.filter((section) => {
+  //       const depotData: any = depot[section as keyof typeof depot];
+  //       if (!depotData) return false;
+
+  //       if (!(userDept in depotData)) return false;
+
+  //       return depotData[userDept].includes(userDepot);
+  //     });
   const majorSectionOptions =
-    userDepot === "OVERALL"
-      ? locationSections
-      : locationSections.filter((section) => {
+  userDepot === "OVERALL"
+    ? locationSections
+    : locationSections.filter((section) => {
         const depotData: any = depot[section as keyof typeof depot];
         if (!depotData) return false;
 
         if (!(userDept in depotData)) return false;
 
-        return depotData[userDept].includes(userDepot);
+        // FIX: Handle multiple depots
+        const userDepots = userDepot.split(',').map(d => d.trim());
+        const sectionDepots = depotData[userDept];
+        
+        // Check if ANY user depot exists in section depots
+        return userDepots.some(depot => sectionDepots.includes(depot));
       });
 
   const selectedMajorSection = formData.selectedSection;
