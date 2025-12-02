@@ -228,40 +228,40 @@ export default function AdminRequestTablePage() {
   const TotalRequests = allRequests.filter((r: UserRequest) => {
     if (!r.date) return false;
 
-  const reqDate = new Date(r.date);
-  reqDate.setHours(0, 0, 0, 0);
-  return (
-    !r.isSanctioned &&
-    (r.overAllStatus === "with optg.")&&
-    reqDate >= today
-  );
-}).length;
+    const reqDate = new Date(r.date);
+    reqDate.setHours(0, 0, 0, 0);
+    return (
+      !r.isSanctioned &&!r.Draft&&
+      (r.overAllStatus === "with optg."||"with optg") &&
+      reqDate >=today
+    );
+  }).length;
 
   const ENGGRequest = allRequests.filter((r: UserRequest) => {
     if (!r.date) return false;
 
-  const reqDate = new Date(r.date);
-  reqDate.setHours(0, 0, 0, 0);
-  return (
-    !r.isSanctioned &&
-    r.selectedDepartment === "ENGG" &&
-    (r.overAllStatus === "with optg.")&&
-    reqDate >= today
-  );
-}).length;
+    const reqDate = new Date(r.date);
+    reqDate.setHours(0, 0, 0, 0);
+    return (
+      !r.isSanctioned &&!r.Draft&&
+      r.selectedDepartment === "ENGG" &&
+      (r.overAllStatus === "with optg."||"with optg") &&
+      reqDate >=today
+    );
+  }).length;
 
   const SandTRequest = allRequests.filter((r: UserRequest) => {
     if (!r.date) return false;
 
-  const reqDate = new Date(r.date);
-  reqDate.setHours(0, 0, 0, 0);
-  return (
-    !r.isSanctioned &&
-    r.selectedDepartment === "S&T" &&
-    (r.overAllStatus === "with optg.")&&
-    reqDate >= today
-  );
-}).length;
+    const reqDate = new Date(r.date);
+    reqDate.setHours(0, 0, 0, 0);
+    return (
+      !r.isSanctioned &&!r.Draft&&
+      r.selectedDepartment === "S&T" &&
+      (r.overAllStatus === "with optg."||"with optg") &&
+      reqDate >=today
+    );
+  }).length;
 
   const TRDRequest = allRequests.filter((r: UserRequest) => {
     if (!r.date) return false;
@@ -269,9 +269,9 @@ export default function AdminRequestTablePage() {
     const reqDate = new Date(r.date);
     reqDate.setHours(0, 0, 0, 0);
     return (
-      !r.isSanctioned &&
+      !r.isSanctioned &&!r.Draft&&
       r.selectedDepartment === "TRD" &&
-      (r.overAllStatus === "with optg.") &&
+      (r.overAllStatus === "with optg."||"with optg") &&
       reqDate >=today
     );
   }).length;
