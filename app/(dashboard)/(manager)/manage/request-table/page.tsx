@@ -898,14 +898,14 @@ const updateQueryParams = (updates: Record<string, string | string[] | null>) =>
   // Status mapping function for table display
   function getDisplayStatus(request: UserRequest) {
     // Sanctioned (light green)
-    if (request.status === "APPROVED" && request.isSanctioned&&request.userResponse===null) {
+    if (request.overAllStatus==="Sanctioned, Pending with SSE For Acceptance") {
       return {
         label: "Sanctioned, Pending with SSE For Acceptance",
         style: { background:   "#fff86b", color: "#11332b" },
       };
     }
     // Pending with OPTG (yellow)
-    if (request.userResponse === "ACCEPTED"|| request.overAllStatus === "Sanctioned and Accepted") {
+    if (request.overAllStatus === "Sanctioned and Accepted by SSE") {
       return {
         label: "Sanctioned and Accepted by SSE",
         style: { background: "#B2FBA5", color: "#222" },
@@ -913,7 +913,7 @@ const updateQueryParams = (updates: Record<string, string | string[] | null>) =>
     }
     // Returned by Optg (red)
     if (
-     request.isSanctioned === true&&request.userAcceptanceForSanction===false&&request.userResponse!=="ACCEPTED"&&request.overAllStatus==="Sanctioned"
+      request.overAllStatus === "Sanctioned and Rejected by SSE"
     ) {
       return {
         label: "Sanctioned and Rejected by SSE",
@@ -1127,23 +1127,23 @@ const updateQueryParams = (updates: Record<string, string | string[] | null>) =>
     // Function to get status label (same as your UI logic)
     const getStatusLabel = (request:any) => {
       // Sanctioned Pending with SSE (yellow)
-      if (request.status === "APPROVED" && request.isSanctioned && request.userResponse === null) {
+      if (request.overAllStatus==="Sanctioned, Pending with SSE For Acceptance") {
         return "Sanctioned Pending with SSE";
       }
       // Sanctioned and Accepted by SSE (green)
-      if (request.userResponse === "ACCEPTED" || request.overAllStatus === "Sanctioned and Accepted") {
+      if (request.overAllStatus === "Sanctioned and Accepted by SSE") {
         return "Sanctioned and Accepted by SSE";
       }
       // Sanctioned and Rejected by SSE (red)
-      if (request.isSanctioned === true && request.userAcceptanceForSanction === false && request.userResponse !== "ACCEPTED"&&request.overAllStatus==="Sanctioned") {
+      if (request.overAllStatus === "Sanctioned and Rejected by SSE") {
         return "Sanctioned and Rejected by SSE";
       }
       // Return original status if none of the above conditions match
-      return request.status || "N/A";
+      return request.overAllStatus||request.status || "N/A";
     };
 
     // Map data to Excel rows
-    const rows = filteredRequests.filter(request=>request.isSanctioned===true && request.overAllStatus==="Sanctioned").map((request) => {
+    const rows = filteredRequests.filter(request=>request.isSanctioned===true && request.overAllStatus==="Sanctioned Pending with SSE").map((request) => {
       // Function to get exact time as stored in DB
       const getExactTime = (dateString: string | null) => {
         if (!dateString) return "N/A";
@@ -1523,7 +1523,7 @@ const updateQueryParams = (updates: Record<string, string | string[] | null>) =>
   ) : (
     filteredRequests.filter((request: UserRequest) => request.isSanctioned === true).length > 0 ? (
     filteredRequests
-      .filter((request: UserRequest) => request.isSanctioned === true&& request.overAllStatus==="Sanctioned")
+      .filter((request: UserRequest) => request.isSanctioned === true)
       .sort((a, b) => new Date(a.sanctionedTimeFrom || a.optimizeTimeFrom || a.demandTimeFrom).getTime() - new Date(b.sanctionedTimeFrom || b.optimizeTimeFrom || b.demandTimeTo).getTime())
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .map((request: UserRequest, index: number) => {
