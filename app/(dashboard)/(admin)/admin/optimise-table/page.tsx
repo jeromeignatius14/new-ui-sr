@@ -2439,7 +2439,7 @@ className={`transition-colors ${
                 </tr>
               </thead>
               <tbody>
-                {combinedRequestsFiltered.length === 0 && (
+                {combinedRequestsFiltered.filter((request: UserRequest) => request.Draft === false&& request.corridorType !== "Urgent Block").length === 0 && (
                   <tr>
                     <td
                       colSpan={12}
@@ -2451,7 +2451,7 @@ className={`transition-colors ${
                     </td>
                   </tr>
                 )}
-                {combinedRequestsFiltered.filter((request: UserRequest) => request.Draft === false).sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
+                {combinedRequestsFiltered.filter((request: UserRequest) => request.Draft === false&& request.corridorType !== "Urgent Block").sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
                   <tr
    key={`request-${request.id}-${request.date}`}
 className={`transition-colors ${
