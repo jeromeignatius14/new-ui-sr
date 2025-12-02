@@ -212,8 +212,8 @@ export default function AdminRequestTablePage() {
     const reqDate = new Date(r.date);
     reqDate.setHours(0, 0, 0, 0);
     return (
-      !r.isSanctioned &&
-      (r.overAllStatus === "with optg.") &&
+      !r.isSanctioned &&!r.Draft&&
+      (r.overAllStatus === "with optg."||"with optg") &&
       reqDate >=today
     );
   }).length;
@@ -224,9 +224,9 @@ export default function AdminRequestTablePage() {
     const reqDate = new Date(r.date);
     reqDate.setHours(0, 0, 0, 0);
     return (
-      !r.isSanctioned &&
+      !r.isSanctioned &&!r.Draft&&
       r.selectedDepartment === "ENGG" &&
-      (r.overAllStatus === "with optg.") &&
+      (r.overAllStatus === "with optg."||"with optg") &&
       reqDate >=today
     );
   }).length;
@@ -237,9 +237,9 @@ export default function AdminRequestTablePage() {
     const reqDate = new Date(r.date);
     reqDate.setHours(0, 0, 0, 0);
     return (
-      !r.isSanctioned &&
+      !r.isSanctioned &&!r.Draft&&
       r.selectedDepartment === "S&T" &&
-      (r.overAllStatus === "with optg.") &&
+      (r.overAllStatus === "with optg."||"with optg") &&
       reqDate >=today
     );
   }).length;
@@ -250,9 +250,9 @@ export default function AdminRequestTablePage() {
     const reqDate = new Date(r.date);
     reqDate.setHours(0, 0, 0, 0);
     return (
-      !r.isSanctioned &&
+      !r.isSanctioned &&!r.Draft&&
       r.selectedDepartment === "TRD" &&
-      (r.overAllStatus === "with optg.") &&
+      (r.overAllStatus === "with optg."||"with optg") &&
       reqDate >=today
     );
   }).length;
