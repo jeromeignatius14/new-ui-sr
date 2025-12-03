@@ -2700,7 +2700,11 @@ const getOperatorSymbol = (operator: string): string => {
   };
   return operatorMap[operator] || operator;
 };
-
+const clearReportDataFromStorage = () => {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem(STORAGE_KEY);
+  }
+}
 export default function GenerateReportPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -4917,7 +4921,10 @@ const handleDepartmentFilterClick = (
           <div className="flex justify-center">
             <button
               className="flex items-center gap-2 bg-[#cfd4ff] border-2 border-black rounded-[50%] px-6 md:px-8 py-2 text-[16px] md:text-[24px] font-bold text-black"
-              onClick={() => router.push("/")}
+                                        onClick={() => {
+    clearReportDataFromStorage(); // Clear localStorage
+    router.push("/"); // Navigate
+  }}
             >
               Back
             </button>
