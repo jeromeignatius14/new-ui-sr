@@ -2280,17 +2280,18 @@ const handleDownloadDepartmentCount = () => {
           <div className="w-full mt-4 overflow-x-auto">
             <table className="w-full border-2 border-black min-w-[900px] text-[12px] md:text-[20px]">
               <thead>
-                <tr className="bg-[#e49edd] text-black text-[12px] md:text-[20px] font-bold">
+         <tr className="bg-[#e49edd] text-black text-[12px] md:text-[20px] font-bold">
                   <th className="border-2 border-black px-1 md:px-2 py-2">S.No</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">RequestId</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Date</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Department</th>
-                  <th className="border-2 border-black px-1 md:px-2 py-2">RequestId</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Block Section</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Depo</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Type</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Activity</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Demanded time</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Sanctioned time</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Availed time</th>
-                  <th className="border-2 border-black px-1 md:px-2 py-2">Station ID</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Status</th>
                 </tr>
               </thead>
@@ -2325,13 +2326,7 @@ const handleDownloadDepartmentCount = () => {
                          <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px] text-center">
                 {idx + 1}
               </td>
-                        <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
-                          {dayjs(block.Date).format("DD-MM-YY")}
-                        </td>
-                         <td className="border-2 border-black px-1 md:px-2 py-2 font-bold text-black text-[10px] md:text-[14px]">
-                          {block.selectedDepartment}
-                        </td>
-                        <td className="border-2 border-black px-1 md:px-2 py-2 font-bold text-black text-[10px] md:text-[14px]">
+                 <td className="border-2 border-black px-1 md:px-2 py-2 font-bold text-black text-[10px] md:text-[14px]">
                           <Link
                             href={`/admin/view-request/${block.id}?from=sanction-table-data`}
                             className="block w-full h-full"
@@ -2339,6 +2334,13 @@ const handleDownloadDepartmentCount = () => {
                             {block.DivisionId}
                           </Link>
                         </td>
+                        <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
+                          {dayjs(block.Date).format("DD-MM-YY")}
+                        </td>
+                         <td className="border-2 border-black px-1 md:px-2 py-2 font-bold text-black text-[10px] md:text-[14px]">
+                          {block.selectedDepartment}
+                        </td>
+                     
                         
                         <td className="border-2 border-black px-1 md:px-2 py-2 font-bold text-black text-[10px] md:text-[14px]">
                           {block.MissionBlock}
@@ -2352,6 +2354,26 @@ const handleDownloadDepartmentCount = () => {
                         <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
                           {block.Activity}
                         </td>
+                                                    <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
+                                                  {block.DemandedTimeFrom && block.DemandedTimeTo ? (
+                                                    <>
+                                                      {formatTime(block.DemandedTimeFrom)} to{" "}
+                                                      {formatTime(block.DemandedTimeTo)}
+                                                    </>
+                                                  ) : (
+                                                    "Not Availed Yet"
+                                                  )}
+                                                </td> 
+                                                          <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
+                                                  {block.SanctionedTimeFrom && block.SanctionedTimeTo ? (
+                                                    <>
+                                                      {formatTime(block.SanctionedTimeFrom)} to{" "}
+                                                      {formatTime(block.SanctionedTimeTo)}
+                                                    </>
+                                                  ) : (
+                                                    "Not Availed Yet"
+                                                  )}
+                                                </td> 
                         <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
                           {block.AvailedTimeFrom && block.AvailedTimeTo ? (
                             <>
@@ -2362,9 +2384,7 @@ const handleDownloadDepartmentCount = () => {
                             "Not Availed Yet"
                           )}
                         </td>  
-                        <td className="border-2 border-black px-1 md:px-2 py-2 font-bold text-black text-[10px] md:text-[14px]">
-                          {block.stationId || "N/A"}
-                        </td>
+                      
                         <td
                           className="border-2 border-black px-1 md:px-2 py-2 font-bold text-center text-black text-[10px] md:text-[14px]"
                           style={statusStyle}

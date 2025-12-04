@@ -79,14 +79,14 @@ export default function ViewRequest() {
     }
   };
 
-  const getStatusBadgeClass = (status: string) => {
+  const getStatusBadgeClass = (overAllStatus: string|String) => {
     if (request && isAvailedTimeExceeded(request)) {
     return "bg-red-100 text-red-800 border border-black";
   }
-    switch (status) {
-      case "APPROVED":
+    switch (overAllStatus) {
+      case "Sanctioned and Accepted by SSE":
         return "bg-green-100 text-green-800 border border-black";
-      case "REJECTED":
+      case "Sanctioned and Rejected by SSE":
         return "bg-red-100 text-red-800 border border-black";
       case "PENDING":
       default:
@@ -178,7 +178,7 @@ block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance"
   }
 
   // 4) fallback — DO NOT use overAllStatus (as you said)
-  return block.status || block.overAllStatus || "N/A";
+  return  block.overAllStatus || "N/A";
 };
 
 
@@ -236,7 +236,7 @@ block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance"
   className={`px-2 py-0.5 text-sm ${
     isAvailedTimeExceeded(request) 
       ? 'bg-red-100 text-red-800 border border-black' 
-      : getStatusBadgeClass(request.status)
+      : getStatusBadgeClass(request.overAllStatus)
   }`}
 >
   Status: {isAvailedTimeExceeded(request) ? 'BLOCK BURST' : getSanctionStatus(request)}
