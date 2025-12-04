@@ -991,6 +991,7 @@ interface MultiSelectDepotProps {
   majorSection: string;
   blockSections: string[];
   disabled?: boolean;
+  required?: boolean;
 }
 
 function MultiSelectDepot({
@@ -999,7 +1000,8 @@ function MultiSelectDepot({
   onDepotsChange,
   majorSection,
   blockSections,
-  disabled = false
+  disabled = false,
+  required = false
 }: MultiSelectDepotProps) {
   // Get available depots: combine auto-assigned depots + all depot options for this major section
   const getAvailableDepots = () => {
@@ -1055,6 +1057,7 @@ function MultiSelectDepot({
       <div className="flex flex-row flex-wrap gap-1 w-full items-center justify-center">
         <span className="text-black font-bold text-2xl">
           Assign To:
+          {required && <span className="text-red-600 ml-1">*</span>}
         </span>
         <div className="flex flex-col space-y-2 w-full items-center justify-center">
           {/* Selected Depots as Tags */}
@@ -2352,6 +2355,9 @@ const activityOptions = getActivityOptions();
         errors.powerBlockKmTo = "KM To is required for Power Block";
       if (!formData.powerBlockRoad)
         errors.powerBlockRoad = "Road No. is required for Power Block";
+        if (selectedTRDDepots.length === 0) { // Check selectedTRDDepots directly
+    errors.powerBlockDisconnectionAssignTo = "Please assign at least one TRD depot";
+  }
     }
 
     // S&T Disconnection validations
@@ -2368,6 +2374,9 @@ const activityOptions = getActivityOptions();
       if (!formData.sntDisconnectionSignalNo)
         errors.sntDisconnectionSignalNo =
           "Signal No. is required for S&T Disconnection";
+             if (selectedSTDepots.length === 0) {
+      errors.sntDisconnectionAssignTo = "Please assign at least one S&T depot for Disconnection";
+    }
     }
 
     if (Object.keys(errors).length > 0) {
@@ -5170,6 +5179,17 @@ const activityOptions = getActivityOptions();
                         ...formData,
                         powerBlockRequired: value,
                       });
+                       if (!value) {
+    setSelectedTRDDepots([]);
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors.powerBlockDisconnectionAssignTo;
+      delete newErrors.powerBlockKmFrom;
+      delete newErrors.powerBlockKmTo;
+      delete newErrors.powerBlockRoad;
+      return newErrors;
+    });
+  }
                     }}
                     className="ml-2 pr-8 border-2  border-black  
                 px-1 my-3 text-2xl font-bold bg-white text-black placeholder-black"
@@ -5223,10 +5243,22 @@ const activityOptions = getActivityOptions();
                       <MultiSelectDepot
                         department="TRD"
                         selectedDepots={selectedTRDDepots}
-                        onDepotsChange={setSelectedTRDDepots}
+                        // onDepotsChange={setSelectedTRDDepots}
+                          onDepotsChange={(depots) => {
+    setSelectedTRDDepots(depots);
+    // Clear error when user selects a depot
+    if (depots.length > 0 && errors.powerBlockDisconnectionAssignTo) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.powerBlockDisconnectionAssignTo;
+        return newErrors;
+      });
+    }
+  }}
                         majorSection={formData.selectedSection}
                         blockSections={blockSectionValue}
                         disabled={false}
+                         required={formData.powerBlockRequired}
                       />
                       {errors.powerBlockDisconnectionAssignTo && (
                         <span className="text-xs text-red-700 font-medium mt-1 block">
@@ -5254,6 +5286,16 @@ const activityOptions = getActivityOptions();
                           ...formData,
                           sntDisconnectionRequired: e.target.value === "Y",
                         })
+                          if (!value) {
+            setSelectedSTDepots([]);
+            setErrors(prev => {
+              const newErrors = { ...prev };
+              delete newErrors.sntDisconnectionAssignTo;
+              delete newErrors.sntDisconnectionPointNo;
+              delete newErrors.sntDisconnectionSignalNo;
+              return newErrors;
+            });
+          }
                       }}
                       className="ml-2 pr-8 border-2  border-black rounded px-1 my-3 text-2xl font-bold bg-white text-black placeholder-black"
                       style={{
@@ -5527,7 +5569,18 @@ const activityOptions = getActivityOptions();
                       <MultiSelectDepot
                         department="S&T"
                         selectedDepots={selectedSTDepots}
-                        onDepotsChange={setSelectedSTDepots}
+                        // onDepotsChange={setSelectedSTDepots}
+                                                 onDepotsChange={(depots) => {
+    setSelectedSTDepots(depots);
+    // Clear error when user selects a depot
+    if (depots.length > 0 && errors.sntDisconnectionAssignTo) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.sntDisconnectionAssignTo;
+        return newErrors;
+      });
+    }
+  }}
                         majorSection={formData.selectedSection}
                         blockSections={blockSectionValue}
                         disabled={false}
