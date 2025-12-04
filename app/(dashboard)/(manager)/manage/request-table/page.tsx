@@ -921,36 +921,36 @@ const updateQueryParams = (updates: Record<string, string | string[] | null>) =>
       };
     }
     // Not-availed/availed/cancelled (white)
-    if (["NOT_AVAILED", "AVAILED", "CANCELLED"].includes(request.userStatus)) {
-      return {
-        label: "Not-availed/availed/cancelled",
-        style: { background: "#fff", color: "#222" },
-      };
-    }
-    // Returned to applicant (light blue)
-    if (request.status === "REJECTED" && request.managerAcceptance === false) {
-      return {
-        label: "Returned to applicant",
-        style: { background: "#8ee0ef", color: "#11332b" },
-      };
-    }
-    // Pending with me (purple)
-    if (request.status === "PENDING" && request.managerAcceptance === false) {
-      return {
-        label: "Pending with me",
-        style: { background: "#f69697", color: "#222" },
-      };
-    }
-    // Burst (orange)
-    if (request.status === "BURST") {
-      return {
-        label: "Burst",
-        style: { background: "#ff944c", color: "#fff" },
-      };
-    }
+    // if (["NOT_AVAILED", "AVAILED", "CANCELLED"].includes(request.userStatus)) {
+    //   return {
+    //     label: "Not-availed/availed/cancelled",
+    //     style: { background: "#fff", color: "#222" },
+    //   };
+    // }
+    // // Returned to applicant (light blue)
+    // if (request.status === "REJECTED" && request.managerAcceptance === false) {
+    //   return {
+    //     label: "Returned to applicant",
+    //     style: { background: "#8ee0ef", color: "#11332b" },
+    //   };
+    // }
+    // // Pending with me (purple)
+    // if (request.status === "PENDING" && request.managerAcceptance === false) {
+    //   return {
+    //     label: "Pending with me",
+    //     style: { background: "#f69697", color: "#222" },
+    //   };
+    // }
+    // // Burst (orange)
+    // if (request.status === "BURST") {
+    //   return {
+    //     label: "Burst",
+    //     style: { background: "#ff944c", color: "#fff" },
+    //   };
+    // }
     // Default fallback (white)
     return {
-      label: request.status,
+      label: request.overAllStatus,
       style: { background: "#fff", color: "#222" },
     };
   }
