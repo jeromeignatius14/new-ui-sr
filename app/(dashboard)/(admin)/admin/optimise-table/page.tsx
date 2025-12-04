@@ -537,22 +537,22 @@ const urgentRequestsFiltered = pendingRequests
 
     // Handle cases where all three flags are true
     if (r.powerBlockRequired && r.sntDisconnectionRequired && r.enggDisconnectionsRequired) {
-      return (r.trdActionsNeeded && r.sigActionsNeeded) || 
-             (r.allTrdAcceptance === "ACCEPTED" && r.allSntAcceptance === "ACCEPTED" && r.allEnggAcceptance === "ACCEPTED");
+      return ((r.trdActionsNeeded && r.sigActionsNeeded) || 
+             (r.allTrdAcceptance === "ACCEPTED" && r.allSntAcceptance === "ACCEPTED" && r.allEnggAcceptance === "ACCEPTED"));
     }
 
     // Handle powerBlockRequired case
-    if (r.powerBlockRequired) {
+    if (r.powerBlockRequired&&((r.enggDisconnectionsRequired===true&&r.allEnggAcceptance === "ACCEPTED")||(r.enggDisconnectionsRequired===false))&&((r.sntDisconnectionRequired===true&&r.allSntAcceptance === "ACCEPTED")||(r.sntDisconnectionRequired===false))) {
       return r.trdActionsNeeded || r.allTrdAcceptance === "ACCEPTED";
     }
 
     // Handle enggDisconnectionsRequired case
-    if (r.enggDisconnectionsRequired) {
+    if (r.enggDisconnectionsRequired&&((r.powerBlockRequired===true&&r.allTrdAcceptance === "ACCEPTED")||(r.powerBlockRequired===false))&&((r.sntDisconnectionRequired===true&&r.allSntAcceptance === "ACCEPTED")||(r.sntDisconnectionRequired===false))) {
       return r.allEnggAcceptance === "ACCEPTED";
     }
 
     // Handle sntDisconnectionRequired case
-    if (r.sntDisconnectionRequired) {
+    if (r.sntDisconnectionRequired&&((r.powerBlockRequired===true&&r.allTrdAcceptance === "ACCEPTED")||(r.powerBlockRequired===false))&&((r.enggDisconnectionsRequired===true&&r.allEnggAcceptance === "ACCEPTED")||(r.enggDisconnectionsRequired===false))) {
       return r.sigActionsNeeded || r.allSntAcceptance === "ACCEPTED";
     }
 
@@ -590,21 +590,33 @@ const urgentRequestsFiltered = pendingRequests
       return (r.trdActionsNeeded && r.sigActionsNeeded) || (allTrdAcceptance && allSntAcceptance && allEnggAcceptance);
     }
 
-    // Handle powerBlockRequired case
-    if (r.powerBlockRequired) {
-      return r.trdActionsNeeded || allTrdAcceptance;
+    // // Handle powerBlockRequired case
+    // if (r.powerBlockRequired) {
+    //   return r.trdActionsNeeded || allTrdAcceptance;
+    // }
+
+    // // Handle enggDisconnectionsRequired case
+    // if (r.enggDisconnectionsRequired) {
+    //   return allEnggAcceptance;
+    // }
+
+    // // Handle sntDisconnectionRequired case
+    // if (r.sntDisconnectionRequired) {
+    //   return r.sigActionsNeeded || allSntAcceptance;
+    // }
+    if (r.powerBlockRequired&&((r.enggDisconnectionsRequired===true&&r.allEnggAcceptance === "ACCEPTED")||(r.enggDisconnectionsRequired===false))&&((r.sntDisconnectionRequired===true&&r.allSntAcceptance === "ACCEPTED")||(r.sntDisconnectionRequired===false))) {
+      return r.trdActionsNeeded || r.allTrdAcceptance === "ACCEPTED";
     }
 
     // Handle enggDisconnectionsRequired case
-    if (r.enggDisconnectionsRequired) {
-      return allEnggAcceptance;
+    if (r.enggDisconnectionsRequired&&((r.powerBlockRequired===true&&r.allTrdAcceptance === "ACCEPTED")||(r.powerBlockRequired===false))&&((r.sntDisconnectionRequired===true&&r.allSntAcceptance === "ACCEPTED")||(r.sntDisconnectionRequired===false))) {
+      return r.allEnggAcceptance === "ACCEPTED";
     }
 
     // Handle sntDisconnectionRequired case
-    if (r.sntDisconnectionRequired) {
-      return r.sigActionsNeeded || allSntAcceptance;
+    if (r.sntDisconnectionRequired&&((r.powerBlockRequired===true&&r.allTrdAcceptance === "ACCEPTED")||(r.powerBlockRequired===false))&&((r.enggDisconnectionsRequired===true&&r.allEnggAcceptance === "ACCEPTED")||(r.enggDisconnectionsRequired===false))) {
+      return r.sigActionsNeeded || r.allSntAcceptance === "ACCEPTED";
     }
-
     // If neither special flag is true, just return the status
     return true;
   })
@@ -636,21 +648,33 @@ const nonCorridorRequestsFiltered = pendingRequests
       return (r.trdActionsNeeded && r.sigActionsNeeded) || (allTrdAcceptance && allSntAcceptance && allEnggAcceptance);
     }
 
-    // Handle powerBlockRequired case
-    if (r.powerBlockRequired) {
-      return r.trdActionsNeeded || allTrdAcceptance;
+    // // Handle powerBlockRequired case
+    // if (r.powerBlockRequired) {
+    //   return r.trdActionsNeeded || allTrdAcceptance;
+    // }
+
+    // // Handle enggDisconnectionsRequired case
+    // if (r.enggDisconnectionsRequired) {
+    //   return allEnggAcceptance;
+    // }
+
+    // // Handle sntDisconnectionRequired case
+    // if (r.sntDisconnectionRequired) {
+    //   return r.sigActionsNeeded || allSntAcceptance;
+    // }
+    if (r.powerBlockRequired&&((r.enggDisconnectionsRequired===true&&r.allEnggAcceptance === "ACCEPTED")||(r.enggDisconnectionsRequired===false))&&((r.sntDisconnectionRequired===true&&r.allSntAcceptance === "ACCEPTED")||(r.sntDisconnectionRequired===false))) {
+      return r.trdActionsNeeded || r.allTrdAcceptance === "ACCEPTED";
     }
 
     // Handle enggDisconnectionsRequired case
-    if (r.enggDisconnectionsRequired) {
-      return allEnggAcceptance;
+    if (r.enggDisconnectionsRequired&&((r.powerBlockRequired===true&&r.allTrdAcceptance === "ACCEPTED")||(r.powerBlockRequired===false))&&((r.sntDisconnectionRequired===true&&r.allSntAcceptance === "ACCEPTED")||(r.sntDisconnectionRequired===false))) {
+      return r.allEnggAcceptance === "ACCEPTED";
     }
 
     // Handle sntDisconnectionRequired case
-    if (r.sntDisconnectionRequired) {
-      return r.sigActionsNeeded || allSntAcceptance;
+    if (r.sntDisconnectionRequired&&((r.powerBlockRequired===true&&r.allTrdAcceptance === "ACCEPTED")||(r.powerBlockRequired===false))&&((r.enggDisconnectionsRequired===true&&r.allEnggAcceptance === "ACCEPTED")||(r.enggDisconnectionsRequired===false))) {
+      return r.sigActionsNeeded || r.allSntAcceptance === "ACCEPTED";
     }
-
     // If neither special flag is true, just return the status
     return true;
   })
@@ -680,21 +704,33 @@ const combinedRequestsFiltered = pendingRequests
       return (r.trdActionsNeeded && r.sigActionsNeeded) || (allTrdAcceptance && allSntAcceptance && allEnggAcceptance);
     }
 
-    // Handle powerBlockRequired case
-    if (r.powerBlockRequired) {
-      return r.trdActionsNeeded || allTrdAcceptance;
+    // // Handle powerBlockRequired case
+    // if (r.powerBlockRequired) {
+    //   return r.trdActionsNeeded || allTrdAcceptance;
+    // }
+
+    // // Handle enggDisconnectionsRequired case
+    // if (r.enggDisconnectionsRequired) {
+    //   return allEnggAcceptance;
+    // }
+
+    // // Handle sntDisconnectionRequired case
+    // if (r.sntDisconnectionRequired) {
+    //   return r.sigActionsNeeded || allSntAcceptance;
+    // }
+    if (r.powerBlockRequired&&((r.enggDisconnectionsRequired===true&&r.allEnggAcceptance === "ACCEPTED")||(r.enggDisconnectionsRequired===false))&&((r.sntDisconnectionRequired===true&&r.allSntAcceptance === "ACCEPTED")||(r.sntDisconnectionRequired===false))) {
+      return r.trdActionsNeeded || r.allTrdAcceptance === "ACCEPTED";
     }
 
     // Handle enggDisconnectionsRequired case
-    if (r.enggDisconnectionsRequired) {
-      return allEnggAcceptance;
+    if (r.enggDisconnectionsRequired&&((r.powerBlockRequired===true&&r.allTrdAcceptance === "ACCEPTED")||(r.powerBlockRequired===false))&&((r.sntDisconnectionRequired===true&&r.allSntAcceptance === "ACCEPTED")||(r.sntDisconnectionRequired===false))) {
+      return r.allEnggAcceptance === "ACCEPTED";
     }
 
     // Handle sntDisconnectionRequired case
-    if (r.sntDisconnectionRequired) {
-      return r.sigActionsNeeded || allSntAcceptance;
+    if (r.sntDisconnectionRequired&&((r.powerBlockRequired===true&&r.allTrdAcceptance === "ACCEPTED")||(r.powerBlockRequired===false))&&((r.enggDisconnectionsRequired===true&&r.allEnggAcceptance === "ACCEPTED")||(r.enggDisconnectionsRequired===false))) {
+      return r.sigActionsNeeded || r.allSntAcceptance === "ACCEPTED";
     }
-
     // If neither special flag is true, just return the status
     return true;
   })
