@@ -6,6 +6,24 @@ import { signIn } from "next-auth/react";
 import { handleUserRedirect } from "@/app/utils/routeHandler";
 
 const handleAuthSuccess = async (data: any) => {
+      let user = data.data.user;
+
+    
+ if (user.role === "ADMIN"&&user.location==="TVC") {
+  user.id = "7d2be6c1-3f59-4b92-97a1-9b0e4fd7c94b";
+    }
+    if (user.role === "ADMIN"&&user.location==="MDU") {
+  user.id = "f9c20e1a-4c63-4f3a-a8e4-7e3ef0d10f79";
+    }
+    if (user.role === "ADMIN"&&user.location==="SA") {
+  user.id = "e2c3b1d6-2a75-4f9d-8e21-91f27cbfe987";
+    }
+    if (user.role === "ADMIN"&&user.location==="PGT") {
+  user.id = "3a6fcb3d-8b79-4de7-9702-c74d5a3fe5d2";
+    }
+    if (user.role === "ADMIN"&&user.location==="TPJ") {
+  user.id = "8f0bbcf2-8ad1-44b6-9f85-44c2f7abdeaf";
+    }
   try {
     const result = await signIn("credentials", {
       redirect: false,
