@@ -289,9 +289,9 @@ export let blockSection = {
   ],
 
   'MAQ-MAJN-PADIL-TOK': [
-    "MAQ-NTVT", "NTVT-MAJN", "MAJN-PADIL", "PADIL-JOKATTE", "JOKATTE-TOK","JOKTTE-PNMB",
+    "MAQ-NTVT", "NTVT-MAJN", "MAJN-PADIL", "PADIL-JOKT", "JOKT-TOK","JOKT-PNMB",
 
-    "MAQ-YD", "NTVT-YD", "MAJN-YD", "PADIL-YD", "JOKATTE-YD", "PNMB-YD","TOK-YD"
+    "MAQ-YD", "NTVT-YD", "MAJN-YD", "PADIL-YD", "JOKT-YD", "PNMB-YD","TOK-YD"
   ],
 
   'SRR-NIL': [
@@ -1206,7 +1206,7 @@ export const streamData = {
     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
     "both direction not affected": []
   },
-    "JOKATTE-YD": {
+    "JOKT-YD": {
     "up direction affected": [],
     "down direction affected": [],
     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
@@ -1886,8 +1886,8 @@ export let lineData = {
   "MAQ-NTVT": ["Single"],
   "NTVT-MAJN": ["UP", "DN"],
   "MAJN-PADIL": ["UP", "DN"],
-  "PADIL-JOKATTE": ["UP", "DN"],
-  "JOKATTE-TOK": ["Single"],
+  "PADIL-JOKT": ["UP", "DN"],
+  "JOKT-TOK": ["Single"],
 
   // SRR-NIL Section
   "SRR-AAM": ["Single"],
