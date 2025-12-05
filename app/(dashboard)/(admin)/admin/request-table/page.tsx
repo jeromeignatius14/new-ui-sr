@@ -232,7 +232,7 @@ export default function AdminRequestTablePage() {
     reqDate.setHours(0, 0, 0, 0);
     return (
       !r.isSanctioned &&!r.Draft&&
-      (r.overAllStatus === "with optg."||"with optg") &&
+      (r.overAllStatus === "with optg."||r.overAllStatus ==="with optg") &&
       reqDate >=today
     );
   }).length;
@@ -245,7 +245,7 @@ export default function AdminRequestTablePage() {
     return (
       !r.isSanctioned &&!r.Draft&&
       r.selectedDepartment === "ENGG" &&
-      (r.overAllStatus === "with optg."||"with optg") &&
+      (r.overAllStatus === "with optg."||r.overAllStatus ==="with optg") &&
       reqDate >=today
     );
   }).length;
@@ -258,7 +258,7 @@ export default function AdminRequestTablePage() {
     return (
       !r.isSanctioned &&!r.Draft&&
       r.selectedDepartment === "S&T" &&
-      (r.overAllStatus === "with optg."||"with optg") &&
+      (r.overAllStatus === "with optg."||r.overAllStatus ==="with optg") &&
       reqDate >=today
     );
   }).length;
@@ -271,7 +271,7 @@ export default function AdminRequestTablePage() {
     return (
       !r.isSanctioned &&!r.Draft&&
       r.selectedDepartment === "TRD" &&
-      (r.overAllStatus === "with optg."||"with optg") &&
+      (r.overAllStatus === "with optg."||r.overAllStatus ==="with optg") &&
       reqDate >=today
     );
   }).length;
