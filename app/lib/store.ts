@@ -537,6 +537,12 @@ export const streamData = {
     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5"],
     "both direction not affected": []
   },
+   "MEJ-YD": {
+    "up direction affected": [],
+    "down direction affected": [],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5"],
+    "both direction not affected": []
+  },
   "TIP-YD": {
     "up direction affected": [],
     "down direction affected": [],
