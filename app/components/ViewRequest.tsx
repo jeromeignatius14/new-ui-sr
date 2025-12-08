@@ -6,13 +6,23 @@ import { userRequestService } from "@/app/service/api/user-request";
 import { format, parseISO } from "date-fns";
 import Link from "next/link";
 import { useState } from "react";
-
+import { useSession } from "next-auth/react";
 export default function ViewRequest() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const id = params.id as string;
+  const { data: session } = useSession();
+  // Add these lines after your existing states
+const [showEditModal, setShowEditModal] = useState(false);
+const [isEditing, setIsEditing] = useState(false);
+const [editFormData, setEditFormData] = useState({
+  date: "",
+  demandTimeFrom: "",
+  demandTimeTo: "",
+  tpcRemarks: ""
+});
   const [isDeleting, setIsDeleting] = useState(false);
 
   const sourcePage = searchParams.get("from") || "request-table";
@@ -26,11 +36,164 @@ export default function ViewRequest() {
         return `/request-table?date=${date}`;
     }
   };
-
   const { data, isLoading, error } = useQuery({
     queryKey: ["request", id],
     queryFn: () => userRequestService.getById(id),
   });
+// Add these functions after handleDelete function
+
+// Handle edit form change for text inputs
+const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const { name, value } = e.target;
+  setEditFormData(prev => ({
+    ...prev,
+    [name]: value
+  }));
+};
+
+// Handle time change for hour/minute selects
+const handleTimeChange = (field: 'demandTimeFrom' | 'demandTimeTo', type: 'hour' | 'minute', value: string) => {
+  setEditFormData(prev => {
+    const currentTime = prev[field] || "00:00";
+    const [currentHour, currentMinute] = currentTime.split(":");
+    
+    let newTime = "";
+    if (type === 'hour') {
+      newTime = `${value.padStart(2, '0')}:${currentMinute || "00"}`;
+    } else {
+      newTime = `${currentHour || "00"}:${value.padStart(2, '0')}`;
+    }
+    
+    return {
+      ...prev,
+      [field]: newTime
+    };
+  });
+};
+
+// Calculate duration between two times
+const getDuration = (fromTime: string, toTime: string): string => {
+  if (!fromTime || !toTime) return "--";
+  
+  try {
+    const [fromHours, fromMinutes] = fromTime.split(":").map(Number);
+    const [toHours, toMinutes] = toTime.split(":").map(Number);
+    
+    const fromTotalMinutes = fromHours * 60 + fromMinutes;
+    const toTotalMinutes = toHours * 60 + toMinutes;
+    
+    if (toTotalMinutes <= fromTotalMinutes) return "Invalid";
+    
+    const durationMinutes = toTotalMinutes - fromTotalMinutes;
+    const hours = Math.floor(durationMinutes / 60);
+    const minutes = durationMinutes % 60;
+    
+    return `${hours}h ${minutes}m`;
+  } catch {
+    return "Invalid";
+  }
+};
+// Open edit modal and populate data - ADD THIS FUNCTION
+const handleEditClick = () => {
+  if (data?.data) {
+    const request = data.data;
+    // Format date as YYYY-MM-DD for input[type="date"]
+    const date = request.date ? new Date(request.date) : new Date();
+    const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+    // Get time values, ensuring they're in HH:MM format
+    let timeFrom = "00:00";
+    let timeTo = "00:00";
+
+    if (request.demandTimeFrom) {
+      try {
+        const fromDate = new Date(request.demandTimeFrom);
+        if (!isNaN(fromDate.getTime())) {
+          const hours = fromDate.getUTCHours().toString().padStart(2, '0');
+          const minutes = fromDate.getUTCMinutes().toString().padStart(2, '0');
+          timeFrom = `${hours}:${minutes}`;
+        } else if (request.demandTimeFrom.includes(':')) {
+          // Already in HH:MM format
+          timeFrom = request.demandTimeFrom.substring(0, 5);
+        }
+      } catch (e) {
+        console.error("Error formatting time from:", e);
+      }
+    }
+
+    if (request.demandTimeTo) {
+      try {
+        const toDate = new Date(request.demandTimeTo);
+        if (!isNaN(toDate.getTime())) {
+          const hours = toDate.getUTCHours().toString().padStart(2, '0');
+          const minutes = toDate.getUTCMinutes().toString().padStart(2, '0');
+          timeTo = `${hours}:${minutes}`;
+        } else if (request.demandTimeTo.includes(':')) {
+          // Already in HH:MM format
+          timeTo = request.demandTimeTo.substring(0, 5);
+        }
+      } catch (e) {
+        console.error("Error formatting time to:", e);
+      }
+    }
+
+    setEditFormData({
+      date: formattedDate,
+      demandTimeFrom: timeFrom,
+      demandTimeTo: timeTo,
+      tpcRemarks: request.tpcRemarks || ""
+    });
+    setShowEditModal(true);
+  }
+};
+
+// Save edited data - ADD THIS FUNCTION
+const handleSaveEdit = async () => {
+  if (!data?.data) return;
+
+  // Validate time range
+  if (editFormData.demandTimeFrom && editFormData.demandTimeTo) {
+    const [fromHours, fromMinutes] = editFormData.demandTimeFrom.split(":").map(Number);
+    const [toHours, toMinutes] = editFormData.demandTimeTo.split(":").map(Number);
+
+    const fromTotal = fromHours * 60 + fromMinutes;
+    const toTotal = toHours * 60 + toMinutes;
+
+    if (toTotal <= fromTotal) {
+      alert("End time must be after start time");
+      return;
+    }
+  }
+
+  setIsEditing(true);
+  try {
+    // Format the date and time values as ISO date-time strings
+    // This is the same format as in PendingRequestsPage
+    const formattedData = {
+      date: `${editFormData.date}T00:00:00.000Z`,
+      demandTimeFrom: `${editFormData.date}T${editFormData.demandTimeFrom}:00.000Z`,
+      demandTimeTo: `${editFormData.date}T${editFormData.demandTimeTo}:00.000Z`,
+      tpcRemarks: editFormData.tpcRemarks || ""
+    };
+
+    console.log("Sending update data:", formattedData);
+
+    // Call your update API - make sure you have this method in userRequestService
+    await userRequestService.update(id, formattedData);
+
+    // Invalidate queries to refresh data
+    queryClient.invalidateQueries({ queryKey: ["request", id] });
+    queryClient.invalidateQueries({ queryKey: ["requests"] });
+
+    setShowEditModal(false);
+    alert("Request updated successfully");
+  } catch (error) {
+    console.error("Failed to update request:", error);
+    alert("Failed to update request. Please try again.");
+  } finally {
+    setIsEditing(false);
+  }
+};
 
   const formatDate = (dateString: string) => {
     try {
@@ -213,12 +376,20 @@ block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance"
 
           {request.status === "PENDING" && (
             <>
-              <Link
+              {/* <Link
                 href={`/edit-request/${id}`}
                 className="px-3 py-1 text-sm bg-[#13529e] text-white border border-black"
               >
                 Edit Request
-              </Link>
+              </Link> */}
+              {session?.user?.role==="DEPT_CONTROLLER"&&
+                            <button
+      onClick={handleEditClick}
+      className="px-3 py-1 text-sm bg-[#13529e] text-white border border-black"
+    >
+      Edit Request
+    </button>}
+ 
               <button
                 onClick={handleDelete}
                 disabled={isDeleting}
@@ -996,6 +1167,153 @@ block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance"
       <div className="text-[10px] text-gray-600 mt-2 border-t border-black pt-1">
         © {new Date().getFullYear()} Indian Railways. All Rights Reserved.
       </div>
+          {showEditModal && (
+          <div className="fixed inset-0 backdrop-blur-lg flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-lg p-6 max-w-md w-full">
+          <h3 className="text-lg font-bold mb-4 text-black">Edit Request</h3>
+
+          {/* Date Input */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Date of Block
+            </label>
+            <input
+              type="date"
+              name="date"
+              value={editFormData.date}
+              onChange={handleEditFormChange}
+              className="w-full p-2 border border-gray-300 rounded text-black"
+              min={(() => {
+                const today = new Date();
+                return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+              })()}
+              max={(() => {
+                const today = new Date();
+                today.setDate(today.getDate() + 30);
+                return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+              })()}
+              required
+            />
+          </div>
+
+          {/* Time From Input */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Demand Time From
+            </label>
+            <div className="flex items-center">
+              <select
+                value={editFormData.demandTimeFrom ? editFormData.demandTimeFrom.split(":")[0] : ""}
+                onChange={(e) => handleTimeChange('demandTimeFrom', 'hour', e.target.value)}
+                className="w-20 p-2 border border-gray-300 rounded-l text-black"
+              >
+                <option value="">--</option>
+                {[...Array(24).keys()].map((h) => (
+                  <option key={h} value={h.toString().padStart(2, '0')}>
+                    {h.toString().padStart(2, '0')}
+                  </option>
+                ))}
+              </select>
+              <span className="px-2 text-gray-700">:</span>
+              <select
+                value={editFormData.demandTimeFrom ? editFormData.demandTimeFrom.split(":")[1] : ""}
+                onChange={(e) => handleTimeChange('demandTimeFrom', 'minute', e.target.value)}
+                className="w-20 p-2 border border-gray-300 rounded-r text-black"
+              >
+                <option value="">--</option>
+                {[...Array(12).keys()].map((m) => (
+                  <option key={m} value={(m * 5).toString().padStart(2, '0')}>
+                    {(m * 5).toString().padStart(2, '0')}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Time To Input */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Demand Time To
+            </label>
+            <div className="flex items-center">
+              <select
+                value={editFormData.demandTimeTo ? editFormData.demandTimeTo.split(":")[0] : ""}
+                onChange={(e) => handleTimeChange('demandTimeTo', 'hour', e.target.value)}
+                className="w-20 p-2 border border-gray-300 rounded-l text-black"
+              >
+                <option value="">--</option>
+                {[...Array(24).keys()].map((h) => (
+                  <option key={h} value={h.toString().padStart(2, '0')}>
+                    {h.toString().padStart(2, '0')}
+                  </option>
+                ))}
+              </select>
+              <span className="px-2 text-gray-700">:</span>
+              <select
+                value={editFormData.demandTimeTo ? editFormData.demandTimeTo.split(":")[1] : ""}
+                onChange={(e) => handleTimeChange('demandTimeTo', 'minute', e.target.value)}
+                className="w-20 p-2 border border-gray-300 rounded-r text-black"
+              >
+                <option value="">--</option>
+                {[...Array(12).keys()].map((m) => (
+                  <option key={m} value={(m * 5).toString().padStart(2, '0')}>
+                    {(m * 5).toString().padStart(2, '0')}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Duration Display */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Duration
+            </label>
+            <div className="p-2 border border-gray-300 rounded bg-gray-50 text-black">
+              {getDuration(editFormData.demandTimeFrom || "", editFormData.demandTimeTo || "") || "--"}
+            </div>
+          </div>
+          
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Department Controller Remarks
+            </label>
+            <textarea
+              name="tpcRemarks"
+              value={editFormData.tpcRemarks || ""}
+              onChange={handleEditFormChange}
+              className="w-full p-2 border border-gray-300 rounded text-black"
+              rows={3}
+              placeholder="Enter Department Controller remarks..."
+            />
+          </div>
+          
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => {
+                setShowEditModal(false);
+                setEditFormData({
+                  date: "",
+                  demandTimeFrom: "",
+                  demandTimeTo: "",
+                  tpcRemarks: ""
+                });
+              }}
+              className="px-4 py-2 text-sm bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveEdit}
+              disabled={isEditing}
+              className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+            >
+              {isEditing ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     </div>
   );
 }
