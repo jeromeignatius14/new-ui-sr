@@ -277,9 +277,7 @@ function OverdueBlockModal({ requests, onAccept, onReject, onClose }: OverdueBlo
                   placeholder="Please provide details about why the block needs adjustment..."
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  Examples: "Extension required", "Work not completed", "Need additional time", etc.
-                </p>
+            
               </div>
 
               <div className="flex gap-3 justify-end">
