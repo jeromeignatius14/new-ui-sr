@@ -517,7 +517,7 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
   reqDate.setHours(0, 0, 0, 0);
 
   // Include requests for today and future dates
-  return reqDate >= today
+  return reqDate 
   });
 
 
@@ -1685,7 +1685,15 @@ const handleOptimize = async () => {
         {/* Urgent Blocks Section - now at the top */}
         <div className="mt-4 mb-8">
          
-          <h2 className="border-b-2 pb-2 border-[#13529e] text-[24px] font-semibold text-[#13529e]">Urgent Blocks</h2>
+          <h2 className="border-b-2 pb-2 border-[#13529e] text-[24px] font-semibold text-[#13529e]">  Urgent Blocks (
+    {
+      urgentRequestsFiltered.filter((request: UserRequest) => {
+        const requestDate =
+          typeof request.date === "string" ? parseISO(request.date) : request.date;
+        return isSameDay(requestDate, selectedDate) && request.Draft === false;
+      }).length
+    }
+  )</h2>
           <div className="flex justify-end py-2 gap-2">
             <button
               onClick={() => {
@@ -2021,7 +2029,7 @@ const handleOptimize = async () => {
 
         {/* Corridor Requests Section (with its own controls) */}
         <div className="mb-8">
-          <h2 className="text-[24px] font-semibold mb-2 text-[#13529e]">Corridor Requests</h2>
+          <h2 className="text-[24px] font-semibold mb-2 text-[#13529e]">Corridor Requests ({corridorRequestsFiltered.filter((request: UserRequest) => request.Draft === false).sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).length})</h2>
           <div className="flex justify-end py-2 gap-2">
             <button
               onClick={() => {
@@ -2455,7 +2463,7 @@ className={`transition-colors ${
 )}
 
                <div className="mb-8">
-          <h2 className="text-[24px] font-semibold mb-2 text-[#13529e]">Combined Requests (Multiple Line Selected)</h2>
+          <h2 className="text-[24px] font-semibold mb-2 text-[#13529e]">Combined Requests (Multiple Line Selected) ({combinedRequestsFiltered.filter((request: UserRequest) => request.Draft === false&& request.corridorType !== "Urgent Block").length })</h2>
           <div className="overflow-x-auto max-h-[70vh] overflow-y-auto rounded-lg border border-gray-300 shadow-sm">
             <table className="w-full border-collapse text-black bg-white">
               <thead className="sticky top-0 z-10 bg-gray-100 shadow">
@@ -2762,7 +2770,7 @@ className={`transition-colors ${
 
         {/* Non-Corridor Requests Section */}
         <div className="mb-8">
-          <h2 className="text-[24px] font-semibold mb-2 text-[#13529e]">Non-Corridor Requests</h2>
+          <h2 className="text-[24px] font-semibold mb-2 text-[#13529e]">Non-Corridor Requests ({nonCorridorRequestsFiltered.filter((request: UserRequest) => request.Draft === false).sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).length})</h2>
           <div className="overflow-x-auto max-h-[70vh] overflow-y-auto rounded-lg border border-gray-300 shadow-sm">
             <table className="w-full border-collapse text-black bg-white">
               <thead className="sticky top-0 z-10 bg-gray-100 shadow">
