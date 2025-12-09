@@ -44,9 +44,10 @@ export default function EditRequestsPage() {
     const userId = session?.user?.id;
     const allRequests = Array.isArray(requests?.data?.requests) ? requests.data.requests : [];
     const now = new Date();
+     now.setHours(0, 0, 0, 0);
     let userRequests = allRequests.filter((req: any) => {
         const blockDate = new Date(req.date);
-        return req.userId === userId && blockDate > now;
+        return (req.userId === userId)&&(blockDate >= now);
     });
     userRequests = userRequests.sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
