@@ -4,7 +4,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axiosInstance from "@/app/utils/axiosInstance";
 import { userRequestService } from "../api/user-request";
 import { UserRequestInput } from "@/app/validation/user-request";
+import {
+  format,
+  addDays,
 
+} from "date-fns";
 export interface RequestResponse {
   status: boolean;
   message: string;
@@ -169,19 +173,40 @@ export function useGetUserRequestById(id: string) {
   });
 }
 
-export function useGetUserRequests(
-  page = 1,
-  limit = 10,
-  dateRange?: DateRangeFilter
-) {
-  const queryParams = new URLSearchParams();
-  queryParams.append("page", page.toString());
-  queryParams.append("limit", limit.toString());
+// export function useGetUserRequests(page = 1, limit = 10, dateRange?: DateRangeFilter) {
+//     const queryParams = new URLSearchParams();
+//     queryParams.append('page', page.toString());
+//     queryParams.append('limit', limit.toString());
 
-  if (dateRange) {
-    queryParams.append("startDate", dateRange.startDate);
-    queryParams.append("endDate", dateRange.endDate);
-  }
+//     if (dateRange) {
+//         queryParams.append('startDate', dateRange.startDate);
+//         queryParams.append('endDate', dateRange.endDate);
+//     }
+
+//     return useQuery<RequestResponse>({
+//         queryKey: ['user-requests', page, limit, dateRange],
+//         queryFn: async () => {
+//             const response = await axiosInstance.get(`/api/user-request/user?${queryParams.toString()}`);
+//             return response.data;
+//         },
+//     });
+// }
+export function useGetUserRequests(page = 1, limit = 10, dateRange?: DateRangeFilter) {
+    const queryParams = new URLSearchParams();
+    queryParams.append('page', page.toString());
+    queryParams.append('limit', limit.toString());
+
+    if (dateRange) {
+        queryParams.append('startDate', dateRange.startDate);
+        queryParams.append('endDate', dateRange.endDate);
+    } else {
+        // Default dates: today to today + 10 days
+        const today = new Date();
+        const endDate = addDays(today, 10);
+        
+        queryParams.append('startDate', format(today, "yyyy-MM-dd"));
+        queryParams.append('endDate', format(endDate, "yyyy-MM-dd"));
+    }
 
   return useQuery<RequestResponse>({
     queryKey: ["user-requests", page, limit, dateRange],
@@ -193,7 +218,6 @@ export function useGetUserRequests(
     },
   });
 }
-
 export function useGetWeeklyUserRequests(weekRange: DateRangeFilter) {
   return useGetUserRequests(1, 100, weekRange);
 }

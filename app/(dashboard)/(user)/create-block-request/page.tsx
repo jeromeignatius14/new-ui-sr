@@ -4062,7 +4062,7 @@ const activityOptions = getActivityOptions();
                         if (isToday(formData.date)) {
                           const now = new Date();
                           const currentHour = now.getHours();
-                          if (h < currentHour + 1 && h !== 0) {
+                          if (h < currentHour && h !== 0) {
                             return null;
                           }
                         }
