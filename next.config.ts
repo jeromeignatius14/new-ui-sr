@@ -11,12 +11,8 @@ const nextConfig = withPWA({
   experimental: {
     appDir: true,
   },
-  webpack: (config:any) => {
-    return config;
-  },
-
-  // Disable Turbopack to stop the build error
-  turbopack: false,
 });
 
 module.exports = nextConfig;
+
+
