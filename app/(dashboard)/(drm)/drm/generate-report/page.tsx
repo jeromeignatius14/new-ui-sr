@@ -897,15 +897,6 @@ if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false
          "Station ID": block.stationId || "N/A",
          "Duration": block.Duration || "N/A",
          "Section": block.Section || "N/A",
-         "SSE Name": block.userName || "N/A",
-         "Corridor Type": block.corridorType || "N/A",
-         "Power Block Required": block.powerBlockRequired ? "Yes" : "No",
-         "S&T Disconnection Required": block.sntDisconnectionRequired ? "Yes" : "No",
-         "Engg Disconnections Required": block.enggDisconnectionsRequired ? "Yes" : "No",
-         "Is Sanctioned": block.isSanctioned ? "Yes" : "No",
-         "Is Granted": block.isGranted ? "Yes" : "No",
-         "Is Applied": block.isApplied ? "Yes" : "No",
-         "User Response": block.userResponse || "N/A"
        };
      });
  
