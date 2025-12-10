@@ -4262,10 +4262,19 @@ const handleDownloadUpcomingBlocks = () => {
                       )}
                     </td>
                     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                      {pastBlockSummary.reduce(
-                        (sum, item) => sum + (item.PercentGranted || 0),
-                        0
-                      ).toFixed(2)}
+                                             {(() => {
+    const totalApplied = pastBlockSummary.reduce(
+      (sum, item) => sum + (item.Applied || 0),
+      0
+    );
+    const totalGranted = pastBlockSummary.reduce(
+      (sum, item) => sum + (item.Granted || 0),
+      0
+    );
+    return totalApplied > 0 
+      ? ((totalGranted / totalApplied) * 100).toFixed(2)
+      : "0.00";
+  })()}%
                     </td>
                     
                     <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
