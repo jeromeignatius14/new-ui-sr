@@ -621,7 +621,7 @@ block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance"
         request.processedLineSections.length > 0 && (
           <div className="border border-black p-3 mb-4">
             <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
-              Block Sections Detail
+              Block Sections Detail111
             </h2>
             {/* <div className="space-y-3">
               {request.processedLineSections.map((section, index) => (
@@ -689,7 +689,7 @@ block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance"
                         </div>
                       )}
                     </div>
-                  ) : section.type === "yard" ? (
+                  ) : (section.type === "yard"||section.type==="road") ? (
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <span className="text-xs font-medium">Road:</span>
