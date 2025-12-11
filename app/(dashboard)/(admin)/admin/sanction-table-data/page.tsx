@@ -3406,19 +3406,18 @@ const handleDepartmentFilterClick = (
 
 const handleDownloadUpcomingBlocks = () => {
   try {
-    // Use the SAME filtered data that's shown in the 3rd table
-    const dataToDownload = filteredBlocks; // This is what's actually shown in the table
-    
+    const dataToDownload = filteredBlocks;
+
     if (dataToDownload.length === 0) {
       toast.error("No data available to download");
       return;
     }
 
-    const excelData = dataToDownload.map((block: any, index: number) => {
+    const excelData = dataToDownload.map((block: any) => {
       let statusLabel = "";
       if (block.overAllStatus === "Sanctioned, Pending with SSE For Acceptance") {
         statusLabel = "Sanctioned, Pending with SSE For Acceptance";
-      } else if (block.overAllStatus === "Sanctioned and Rejected by SSE") {
+      } else if (block.overAllStatus === "Sanctioned and Accepted by SSE") {
         statusLabel = "Sanctioned and Accepted by SSE";
       } else if (block.overAllStatus === "Sanctioned and Rejected by SSE") {
         statusLabel = "Sanctioned and Rejected by SSE";
@@ -3462,83 +3461,14 @@ const handleDownloadUpcomingBlocks = () => {
     const workbook = XLSX.utils.book_new();
     const worksheet = XLSX.utils.json_to_sheet(excelData);
 
-    // Build header with all active filter information
-    const headerRows = [
-      [`FILTERED BLOCKS REPORT`],
-      [`Generated on: ${format(new Date(), "dd/MM/yyyy HH:mm:ss")}`],
-      [`Date Range: ${formatDisplayDate(watch("startDate"))} to ${formatDisplayDate(watch("endDate"))}`],
-      [`Department: ${selectedDepartments.join(", ")}`],
+    // Column widths (keep)
+    worksheet["!cols"] = [
+      { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 25 }, { wch: 12 },
+      { wch: 12 }, { wch: 30 }, { wch: 25 }, { wch: 25 }, { wch: 25 },
+      { wch: 35 }, { wch: 15 }, { wch: 10 }, { wch: 15 }, { wch: 20 },
+      { wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 25 }, { wch: 15 },
+      { wch: 15 }, { wch: 15 }, { wch: 15 }
     ];
-
-    // Add section filter info
-    if (upcomingSectionFilter && upcomingSectionFilter !== "All") {
-      headerRows.push([`Section Filter: ${upcomingSectionFilter}`]);
-    }
-    
-    if (activeSection) {
-      headerRows.push([`Active Section: ${activeSection}`]);
-    }
-
-    // Add activeFilter info (from first table)
-    if (activeFilter && activeFilter !== "all") {
-      headerRows.push([`Status Filter: ${activeFilter.toUpperCase()}`]);
-    }
-
-    // Add department count filter info (from second table)
-    if (departmentCountFilter) {
-      const { department, supportingDepartment, filterType } = departmentCountFilter;
-      headerRows.push([
-        `Department Filter: ${department} ${supportingDepartment !== "-" ? `+ ${supportingDepartment}` : ''} (${filterType})`
-      ]);
-    }
-
-    // Add search filter info
-    if (upcomingDivisionIdSearch) {
-      headerRows.push([`ID Search: ${upcomingDivisionIdSearch}`]);
-    }
-
-    // Add SSE filter info
-    if (sseFilter !== "All") {
-      headerRows.push([`SSE Filter: ${sseFilter}`]);
-    }
-
-    headerRows.push(
-      [`Total Records in Table: ${dataToDownload.length}`],
-      []
-    );
-
-    XLSX.utils.sheet_add_aoa(
-      worksheet,
-      headerRows,
-      { origin: "A1" }
-    );
-
-    const colWidths = [
-      { wch: 15 },   // Request ID
-      { wch: 12 },   // Date
-      { wch: 15 },   // Department
-      { wch: 25 },   // Block Section
-      { wch: 12 },   // Depo
-      { wch: 12 },   // Type
-      { wch: 30 },   // Activity
-      { wch: 25 },   // Demanded Time
-      { wch: 25 },   // Sanctioned Time
-      { wch: 25 },   // Availed Time
-      { wch: 35 },   // Status
-      { wch: 15 },   // Station ID
-      { wch: 10 },   // Duration
-      { wch: 15 },   // Section
-      { wch: 20 },   // SSE Name
-      { wch: 15 },   // Corridor Type
-      { wch: 20 },   // Power Block Required
-      { wch: 25 },   // S&T Disconnection Required
-      { wch: 25 },   // Engg Disconnections Required
-      { wch: 15 },   // Is Sanctioned
-      { wch: 15 },   // Is Granted
-      { wch: 15 },   // Is Applied
-      { wch: 15 },   // User Response
-    ];
-    worksheet["!cols"] = colWidths;
 
     XLSX.utils.book_append_sheet(workbook, worksheet, "Filtered Blocks");
 
@@ -3546,43 +3476,29 @@ const handleDownloadUpcomingBlocks = () => {
       bookType: "xlsx",
       type: "array",
     });
-    
+
     const blob = new Blob([excelBuffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
-    
+
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    
-    // Create descriptive filename
+
     let filename = "blocks";
-    
-    // Add filter info to filename
-    if (activeFilter && activeFilter !== "all") {
-      filename += `_${activeFilter}`;
-    }
-    
-    if (departmentCountFilter) {
-      const { department, supportingDepartment, filterType } = departmentCountFilter;
-      filename += `_${department}${supportingDepartment !== "-" ? `_${supportingDepartment.replace(/[^a-zA-Z0-9]/g, '')}` : ''}_${filterType}`;
-    }
-    
-    if (activeSection) {
-      filename += `_${activeSection.replace(/[^a-zA-Z0-9]/g, '')}`;
-    }
-    
+
     link.download = `${filename}_${format(new Date(), "dd-MM-yyyy")}.xlsx`;
-    
+
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 
-    toast.success(`Downloaded ${dataToDownload.length} records (matching table view)`);
+    toast.success(`Downloaded ${dataToDownload.length} records`);
   } catch (error) {
     console.error("Download error:", error);
     toast.error("Failed to download Excel file. Please try again.");
   }
 };
+
 
   const handleDownloadDepartmentCount = () => {
     try {
@@ -4337,10 +4253,19 @@ const handleDownloadUpcomingBlocks = () => {
                       )}
                     </td>
                     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                      {pastBlockSummary.reduce(
-                        (sum, item) => sum + (item.PercentGranted || 0),
-                        0
-                      ).toFixed(2)}
+                                             {(() => {
+    const totalApplied = pastBlockSummary.reduce(
+      (sum, item) => sum + (item.Applied || 0),
+      0
+    );
+    const totalGranted = pastBlockSummary.reduce(
+      (sum, item) => sum + (item.Granted || 0),
+      0
+    );
+    return totalApplied > 0 
+      ? ((totalGranted / totalApplied) * 100).toFixed(2)
+      : "0.00";
+  })()}%
                     </td>
                     
                     <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
@@ -4927,7 +4852,7 @@ const handleDownloadUpcomingBlocks = () => {
                     if (block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance") {
                       statusLabel = "Sanctioned, Pending with SSE For Acceptance";
                       statusStyle = { background: "#fff86b", color: "#222" };
-                    }  else if (block.overAllStatus==="Sanctioned and Rejected by SSE") {
+                    }  else if (block.overAllStatus==="Sanctioned and Accepted by SSE") {
                       statusLabel = "Sanctioned and Accepted by SSE";
                       statusStyle = { background: "#d47ed4", color: "#222" };
                     } else if ( block.overAllStatus==="Sanctioned and Rejected by SSE") {
