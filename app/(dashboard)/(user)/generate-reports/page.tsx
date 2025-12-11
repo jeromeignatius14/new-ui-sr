@@ -793,7 +793,7 @@ const clearGlobalFilters = () => {
                   block.AvailedTimeTo
                 )}`
               : "Not Available",
-          Status: statusLabel,
+          Status: block.overAllStatus,
         };
       });
 
@@ -804,7 +804,7 @@ const clearGlobalFilters = () => {
       XLSX.utils.sheet_add_aoa(
         worksheet,
         [
-          [`(B) Summary of Upcoming Blocks`],
+         
           [], // Empty row for spacing
         ],
         { origin: "A1" }
