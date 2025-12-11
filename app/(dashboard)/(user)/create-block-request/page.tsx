@@ -1364,13 +1364,21 @@ const activityOptions = getActivityOptions();
     return targetDate >= nextWeekMonday && targetDate <= nextWeekSunday;
   };
 
-  const isPastThursdayCutoff = (): boolean => {
-    const now = new Date();
-    const dayOfWeek = now.getUTCDay();
-    const hour = now.getUTCHours();
+  // const isPastThursdayCutoff = (): boolean => {
+  //   const now = new Date();
+  //   const dayOfWeek = now.getUTCDay();
+  //   const hour = now.getUTCHours();
 
-    return (dayOfWeek === 4 && hour >= 22) || dayOfWeek > 4;
-  };
+  //   return (dayOfWeek === 4 && hour >= 22) || dayOfWeek > 4;
+  // };
+const isPastThursdayCutoff = () => {
+  const now = new Date();
+  const thursday = new Date();
+  thursday.setDate(now.getDate() - now.getDay() + 4); // Thursday
+  thursday.setHours(22, 0, 0, 0); 
+
+  return now > thursday;
+};
 
   // const getCorridorTypeRestrictions = (
   //   dateString: string
@@ -1405,40 +1413,86 @@ const activityOptions = getActivityOptions();
   //   return { urgentOnly, urgentAllowed, message };
   // };
 
-  const getCorridorTypeRestrictions = (
-    dateString: string
-  ): {
-    urgentOnly: boolean;
-    urgentAllowed: boolean;
-    message: string;
-    corridorTypeAllowed: boolean;
-  } => {
-    if (!dateString) {
-      return {
-        urgentOnly: false,
-        urgentAllowed: false,
-        message: "",
-        corridorTypeAllowed: false,
-      };
-    }
+  // const getCorridorTypeRestrictions = (
+  //   dateString: string
+  // ): {
+  //   urgentOnly: boolean;
+  //   urgentAllowed: boolean;
+  //   message: string;
+  //   corridorTypeAllowed: boolean;
+  // } => {
+  //   if (!dateString) {
+  //     return {
+  //       urgentOnly: false,
+  //       urgentAllowed: false,
+  //       message: "",
+  //       corridorTypeAllowed: false,
+  //     };
+  //   }
 
-    const isUrgentTimeframe = isWithinNextTwoDays(dateString);
-    const isNextWeek = isDateInNextWeek(dateString);
-    const pastThursdayCutoff = isPastThursdayCutoff();
-    const urgentAllowed = isUrgentTimeframe;
-    const urgentOnly = isUrgentTimeframe;
-    const corridorTypeAllowed = !(isNextWeek && pastThursdayCutoff);
-    let message = "";
-    if (isUrgentTimeframe) {
-      message =
-        "Dates within today and next 2 days must be Urgent Block requests.";
-    } else if (isNextWeek && pastThursdayCutoff) {
-      message =
-        "Week 2 requests after Thursday 22:00 cutoff must be Urgent Block requests.";
-    }
+  //   const isUrgentTimeframe = isWithinNextTwoDays(dateString);
+  //   const isNextWeek = isDateInNextWeek(dateString);
+  //   const pastThursdayCutoff = isPastThursdayCutoff();
+  //   const urgentAllowed = isUrgentTimeframe;
+  //   const urgentOnly = isUrgentTimeframe;
+  //   const corridorTypeAllowed = !(isNextWeek && pastThursdayCutoff);
+  //   let message = "";
+  //   if (isUrgentTimeframe) {
+  //     message =
+  //       "Dates within today and next 2 days must be Urgent Block requests.";
+  //   } else if (isNextWeek && pastThursdayCutoff) {
+  //     message =
+  //       "Week 2 requests after Thursday 22:00 cutoff must be Urgent Block requests.";
+  //   }
 
-    return { urgentOnly, urgentAllowed, message, corridorTypeAllowed };
+  //   return { urgentOnly, urgentAllowed, message, corridorTypeAllowed };
+  // };
+const getCorridorTypeRestrictions = (dateString: string) => {
+  if (!dateString) {
+    return {
+      urgentOnly: false,
+      urgentAllowed: false,
+      message: "",
+      corridorTypeAllowed: false,
+    };
+  }
+
+  // 1. Urgent logic
+  const urgentOnly = isWithinNextTwoDays(dateString);
+
+  // 2. Calculate diffDays for blocking logic
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const target = new Date(dateString);
+  target.setHours(0, 0, 0, 0);
+
+  const diffDays = Math.floor(
+    (target.getTime() - today.getTime()) / (24 * 60 * 60 * 1000)
+  );
+
+  // 3. Thursday cutoff check
+  const isPastCutoff = isPastThursdayCutoff();
+
+  // 4. After cutoff → block 14–21 (diffDays 3–10)
+  if (isPastCutoff && diffDays >= 3 && diffDays <= 10) {
+    return {
+      urgentOnly: false,
+      urgentAllowed: false,
+      message: "Not a valid date",
+      corridorTypeAllowed: false,
+    };
+  }
+
+  // 5. Normal output before cutoff
+  return {
+    urgentOnly,
+    urgentAllowed: urgentOnly,
+    message: "",
+    corridorTypeAllowed: !urgentOnly,
   };
+};
+
 
   const isBlockedCurrentWeekDate = (dateString: string): boolean => {
     const today = new Date();
