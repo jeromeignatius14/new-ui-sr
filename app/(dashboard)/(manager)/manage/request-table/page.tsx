@@ -1096,17 +1096,27 @@ const updateQueryParams = (updates: Record<string, string | string[] | null>) =>
   //     alert("Failed to generate Excel file. Please check console for details.");
   //   }
   // };
-  const handleDownloadExcel = async () => {
+const handleDownloadExcel = async () => {
   try {
     if (!filteredRequests || filteredRequests.length === 0) {
       alert("No data available to download!");
       return;
     }
 
-    // Import xlsx library dynamically to reduce bundle size
+    // Get all sanctioned requests
+    const sanctionedRequests = filteredRequests.filter(request => 
+      request.isSanctioned === true
+    );
+
+    if (sanctionedRequests.length === 0) {
+      alert("No sanctioned requests found to download!");
+      return;
+    }
+
+    console.log(`Exporting ${sanctionedRequests.length} sanctioned requests`);
+
     const XLSX = await import("xlsx");
 
-    // Define Excel headers
     const headers = [
       "Date",
       "Request ID",
@@ -1122,38 +1132,16 @@ const updateQueryParams = (updates: Record<string, string | string[] | null>) =>
       "Work Location",
       "Remarks",
       "overAll Status",
-      ,
     ];
 
-    // Function to get status label (same as your UI logic)
-    const getStatusLabel = (request:any) => {
-      // Sanctioned Pending with SSE (yellow)
-      if (request.overAllStatus==="Sanctioned, Pending with SSE For Acceptance") {
-        return "Sanctioned Pending with SSE";
-      }
-      // Sanctioned and Accepted by SSE (green)
-      if (request.overAllStatus === "Sanctioned and Accepted by SSE") {
-        return "Sanctioned and Accepted by SSE";
-      }
-      // Sanctioned and Rejected by SSE (red)
-      if (request.overAllStatus === "Sanctioned and Rejected by SSE") {
-        return "Sanctioned and Rejected by SSE";
-      }
-      // Return original status if none of the above conditions match
-      return request.overAllStatus||request.status || "N/A";
-    };
-
-    // Map data to Excel rows
-    const rows = filteredRequests.filter(request=>request.isSanctioned===true && request.overAllStatus==="Sanctioned Pending with SSE").map((request) => {
-      // Function to get exact time as stored in DB
+    const rows = sanctionedRequests.map((request) => {
       const getExactTime = (dateString: string | null) => {
         if (!dateString) return "N/A";
-
         try {
-          // Extract exactly what's after 'T' and before '.'
-          const isoString = new Date(dateString).toISOString();
-          const timePart = isoString.split("T")[1].split(".")[0];
-          return timePart.substring(0, 5); // Get HH:MM
+          const date = new Date(dateString);
+          const hours = date.getUTCHours().toString().padStart(2, "0");
+          const minutes = date.getUTCMinutes().toString().padStart(2, "0");
+          return `${hours}:${minutes}`;
         } catch {
           return "N/A";
         }
@@ -1168,50 +1156,25 @@ const updateQueryParams = (updates: Record<string, string | string[] | null>) =>
         request.activity,
         getExactTime(request.demandTimeFrom),
         getExactTime(request.demandTimeTo),
-        getExactTime(request.sanctionedTimeFrom ?? null) || getExactTime(request.optimizeTimeFrom ?? null) || "N/A",
-        getExactTime(request.sanctionedTimeTo ?? null) || getExactTime(request.optimizeTimeTo ?? null) || "N/A",
+        getExactTime(request.sanctionedTimeFrom ?? null) || "N/A",
+        getExactTime(request.sanctionedTimeTo ?? null) || "N/A",
         request.corridorType,
         request.user?.name || "N/A",
         request.workLocationFrom,
         request.requestremarks,
-        getStatusLabel(request), // Use the same status logic as UI
+        request.overAllStatus || "N/A",
       ];
     });
 
-    // Create worksheet
     const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-
-    // Create workbook
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Block Requests");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Sanctioned Blocks");
 
-    const formatDateForFilename = (dateString: string) => {
-      const date = new Date(dateString);
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${day}/${month}/${year}`;
-    };
-
-    // Generate filename based on selected date range
-    let filename;
-    if (customDateRange.start && customDateRange.end) {
-      const startDate = formatDateForFilename(customDateRange.start);
-      const endDate = formatDateForFilename(customDateRange.end);
-      filename = `block_requests_${startDate}_to_${endDate}.xlsx`;
-    } else if (customDateRange.start) {
-      filename = `block_requests_${formatDateForFilename(customDateRange.start)}.xlsx`;
-    } else if (customDateRange.end) {
-      filename = `block_requests_${formatDateForFilename(customDateRange.end)}.xlsx`;
-    } else {
-      filename = `block_requests_${formatDateForFilename(new Date().toISOString())}.xlsx`;
-    }
-
-    // Generate Excel file and trigger download
+    const filename = `sanctioned_blocks_${new Date().toISOString().split('T')[0]}.xlsx`;
     XLSX.writeFile(workbook, filename);
+    
   } catch (error) {
     console.error("Download failed:", error);
-    alert("Failed to generate Excel file. Please check console for details.");
   }
 };
   // if (isLoading) {
