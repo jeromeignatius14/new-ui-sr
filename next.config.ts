@@ -11,7 +11,7 @@ const nextConfig = withPWA({
   experimental: {
     appDir: true,
   },
-  output: "standalone"
+   turbopack: {},
 });
 
 module.exports = nextConfig;
