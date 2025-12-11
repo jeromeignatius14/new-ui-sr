@@ -25,288 +25,288 @@ interface OverdueBlockModalProps {
   onClose: () => void;
 }
 
-function OverdueBlockModal({ requests, onAccept, onReject, onClose }: OverdueBlockModalProps) {
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState<any>(null);
-  const [rejectRemarks, setRejectRemarks] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+// function OverdueBlockModal({ requests, onAccept, onReject, onClose }: OverdueBlockModalProps) {
+//   const [showRejectModal, setShowRejectModal] = useState(false);
+//   const [selectedRequest, setSelectedRequest] = useState<any>(null);
+//   const [rejectRemarks, setRejectRemarks] = useState("");
+//   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Format date as dd/MM/yyyy
-  const formatDateIST = (dateString: string) => {
-    try {
-      const date = parseISO(dateString);
-      return format(date, 'dd/MM/yyyy');
-    } catch (error) {
-      return dateString;
-    }
-  };
+//   // Format date as dd/MM/yyyy
+//   const formatDateIST = (dateString: string) => {
+//     try {
+//       const date = parseISO(dateString);
+//       return format(date, 'dd/MM/yyyy');
+//     } catch (error) {
+//       return dateString;
+//     }
+//   };
 
-  // Show DB times as-is (06:30, 07:30)
-  const formatTimeIST = (dateString: string) => {
-    try {
-      // Extract time from "2025-12-04T06:30:00.000Z" → "06:30"
-      return dateString.substring(11, 16);
-    } catch (error) {
-      return dateString;
-    }
-  };
+//   // Show DB times as-is (06:30, 07:30)
+//   const formatTimeIST = (dateString: string) => {
+//     try {
+//       // Extract time from "2025-12-04T06:30:00.000Z" → "06:30"
+//       return dateString.substring(11, 16);
+//     } catch (error) {
+//       return dateString;
+//     }
+//   };
 
-  const handleAccept = async (requestId: string) => {
-    setIsSubmitting(true);
-    try {
-      await onAccept(requestId);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+//   const handleAccept = async (requestId: string) => {
+//     setIsSubmitting(true);
+//     try {
+//       await onAccept(requestId);
+//     } finally {
+//       setIsSubmitting(false);
+//     }
+//   };
 
-  const handleRejectClick = (request: any) => {
-    setSelectedRequest(request);
-    setShowRejectModal(true);
-  };
+//   const handleRejectClick = (request: any) => {
+//     setSelectedRequest(request);
+//     setShowRejectModal(true);
+//   };
 
-  const handleRejectSubmit = async () => {
-    if (!rejectRemarks.trim()) {
-      toast.error("Please provide remarks for rejection");
-      return;
-    }
-    if (!selectedRequest) return;
+//   const handleRejectSubmit = async () => {
+//     if (!rejectRemarks.trim()) {
+//       toast.error("Please provide remarks for rejection");
+//       return;
+//     }
+//     if (!selectedRequest) return;
     
-    setIsSubmitting(true);
-    try {
-      await onReject(selectedRequest.id, rejectRemarks);
-      setShowRejectModal(false);
-      setSelectedRequest(null);
-      setRejectRemarks("");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+//     setIsSubmitting(true);
+//     try {
+//       await onReject(selectedRequest.id, rejectRemarks);
+//       setShowRejectModal(false);
+//       setSelectedRequest(null);
+//       setRejectRemarks("");
+//     } finally {
+//       setIsSubmitting(false);
+//     }
+//   };
 
-  // CORRECT: Calculate overdue hours - Treat DB times as IST, compare with current Railway Time
-  const calculateOverdueHours = (sanctionedTimeTo: string) => {
-    try {
-      // 1. Current Railway Time (IST)
-      const now = new Date();
-      const nowIST = toZonedTime(now, 'Asia/Kolkata');
+//   // CORRECT: Calculate overdue hours - Treat DB times as IST, compare with current Railway Time
+//   const calculateOverdueHours = (sanctionedTimeTo: string) => {
+//     try {
+//       // 1. Current Railway Time (IST)
+//       const now = new Date();
+//       const nowIST = toZonedTime(now, 'Asia/Kolkata');
       
-      // 2. Extract time from DB string (e.g., "07:30" from "2025-12-05T07:30:00.000Z")
-      const dbTimeStr = sanctionedTimeTo.substring(11, 16); // "07:30"
-      const [dbHours, dbMinutes] = dbTimeStr.split(':').map(Number);
+//       // 2. Extract time from DB string (e.g., "07:30" from "2025-12-05T07:30:00.000Z")
+//       const dbTimeStr = sanctionedTimeTo.substring(11, 16); // "07:30"
+//       const [dbHours, dbMinutes] = dbTimeStr.split(':').map(Number);
       
-      // 3. Create a date object with DB time for TODAY (treating it as IST)
-      const todayIST = toZonedTime(new Date(), 'Asia/Kolkata');
-      const sanctionedEndIST = new Date(todayIST);
-      sanctionedEndIST.setHours(dbHours, dbMinutes, 0, 0);
+//       // 3. Create a date object with DB time for TODAY (treating it as IST)
+//       const todayIST = toZonedTime(new Date(), 'Asia/Kolkata');
+//       const sanctionedEndIST = new Date(todayIST);
+//       sanctionedEndIST.setHours(dbHours, dbMinutes, 0, 0);
       
-      // 4. Calculate difference
-      const diffMs = nowIST.getTime() - sanctionedEndIST.getTime();
+//       // 4. Calculate difference
+//       const diffMs = nowIST.getTime() - sanctionedEndIST.getTime();
       
-      if (diffMs <= 0) return 0;
+//       if (diffMs <= 0) return 0;
       
-      // Convert to full hours
-      const hours = Math.floor(diffMs / (1000 * 60 * 60));
+//       // Convert to full hours
+//       const hours = Math.floor(diffMs / (1000 * 60 * 60));
       
-      return hours;
-    } catch (error) {
-      console.error("Error calculating overdue hours:", error);
-      return 0;
-    }
-  };
+//       return hours;
+//     } catch (error) {
+//       console.error("Error calculating overdue hours:", error);
+//       return 0;
+//     }
+//   };
 
 
 
-  return (
-    <>
-      {/* Main Modal */}
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-hidden border border-gray-200 shadow-2xl">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-2xl font-bold">Overdue Block Notifications</h2>
-                <p className="text-blue-100 mt-1">
-                  {requests.length} block(s) require your attention
-                </p>
-              </div>
+//   return (
+//     <>
+//       {/* Main Modal */}
+//       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+//         <div className="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-hidden border border-gray-200 shadow-2xl">
+//           {/* Header */}
+//           <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6">
+//             <div className="flex justify-between items-center">
+//               <div>
+//                 <h2 className="text-2xl font-bold">Overdue Block Notifications</h2>
+//                 <p className="text-blue-100 mt-1">
+//                   {requests.length} block(s) require your attention
+//                 </p>
+//               </div>
          
-            </div>
+//             </div>
          
-          </div>
+//           </div>
 
-          {/* Content */}
-          <div className="p-6">
+//           {/* Content */}
+//           <div className="p-6">
     
 
-            {/* Table */}
-            <div className="overflow-x-auto rounded-lg border border-gray-200 mb-6">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      DATE
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      DIVISION ID
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      BLOCK
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      FROM (IST)
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      TO (IST)
-                    </th>
+//             {/* Table */}
+//             <div className="overflow-x-auto rounded-lg border border-gray-200 mb-6">
+//               <table className="min-w-full divide-y divide-gray-200">
+//                 <thead className="bg-gray-50">
+//                   <tr>
+//                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+//                       DATE
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+//                       DIVISION ID
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+//                       BLOCK
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+//                       FROM (IST)
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+//                       TO (IST)
+//                     </th>
                  
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      ACTIONS
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {requests.map((request) => {
-                    const overdueHours = calculateOverdueHours(request.sanctionedTimeTo);
+//                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+//                       ACTIONS
+//                     </th>
+//                   </tr>
+//                 </thead>
+//                 <tbody className="bg-white divide-y divide-gray-200">
+//                   {requests.map((request) => {
+//                     const overdueHours = calculateOverdueHours(request.sanctionedTimeTo);
                     
-                    return (
-                      <tr key={request.id} className="hover:bg-gray-50 transition-colors">
-                        {/* DATE */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {formatDateIST(request.date)}
-                          </div>
-                        </td>
+//                     return (
+//                       <tr key={request.id} className="hover:bg-gray-50 transition-colors">
+//                         {/* DATE */}
+//                         <td className="px-6 py-4 whitespace-nowrap">
+//                           <div className="text-sm font-medium text-gray-900">
+//                             {formatDateIST(request.date)}
+//                           </div>
+//                         </td>
                         
-                        {/* DIVISION ID */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900 font-medium">
-                            {request.divisionId}
-                          </div>
-                        </td>
+//                         {/* DIVISION ID */}
+//                         <td className="px-6 py-4 whitespace-nowrap">
+//                           <div className="text-sm text-gray-900 font-medium">
+//                             {request.divisionId}
+//                           </div>
+//                         </td>
                         
-                        {/* BLOCK */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-semibold text-blue-600">
-                            {request.missionBlock}
-                          </div>
-                        </td>
+//                         {/* BLOCK */}
+//                         <td className="px-6 py-4 whitespace-nowrap">
+//                           <div className="text-sm font-semibold text-blue-600">
+//                             {request.missionBlock}
+//                           </div>
+//                         </td>
                         
-                        {/* FROM (IST) */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            {formatTimeIST(request.sanctionedTimeFrom)}
-                          </div>
-                        </td>
+//                         {/* FROM (IST) */}
+//                         <td className="px-6 py-4 whitespace-nowrap">
+//                           <div className="text-sm text-gray-900">
+//                             {formatTimeIST(request.sanctionedTimeFrom)}
+//                           </div>
+//                         </td>
                         
-                        {/* TO (IST) */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            {formatTimeIST(request.sanctionedTimeTo)}
-                          </div>
-                        </td>
+//                         {/* TO (IST) */}
+//                         <td className="px-6 py-4 whitespace-nowrap">
+//                           <div className="text-sm text-gray-900">
+//                             {formatTimeIST(request.sanctionedTimeTo)}
+//                           </div>
+//                         </td>
                         
                      
                         
-                        {/* ACTIONS */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => handleAccept(request.id)}
-                              disabled={isSubmitting}
-                              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                              Accept
-                            </button>
+//                         {/* ACTIONS */}
+//                         <td className="px-6 py-4 whitespace-nowrap">
+//                           <div className="flex space-x-2">
+//                             <button
+//                               onClick={() => handleAccept(request.id)}
+//                               disabled={isSubmitting}
+//                               className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+//                             >
+//                               <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+//                               </svg>
+//                               Accept
+//                             </button>
                             
-                            <button
-                              onClick={() => handleRejectClick(request)}
-                              disabled={isSubmitting}
-                              className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                              Reject
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+//                             <button
+//                               onClick={() => handleRejectClick(request)}
+//                               disabled={isSubmitting}
+//                               className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+//                             >
+//                               <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+//                               </svg>
+//                               Reject
+//                             </button>
+//                           </div>
+//                         </td>
+//                       </tr>
+//                     );
+//                   })}
+//                 </tbody>
+//               </table>
+//             </div>
 
          
-          </div>
-        </div>
-      </div>
+//           </div>
+//         </div>
+//       </div>
 
-      {/* Reject Remarks Modal */}
-      {showRejectModal && selectedRequest && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[60] p-4">
-          <div className="bg-white rounded-xl max-w-md w-full overflow-hidden border border-gray-200 shadow-2xl">
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6">
-              <h3 className="text-xl font-bold">Provide Rejection Remarks</h3>
-            </div>
+//       {/* Reject Remarks Modal */}
+//       {showRejectModal && selectedRequest && (
+//         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[60] p-4">
+//           <div className="bg-white rounded-xl max-w-md w-full overflow-hidden border border-gray-200 shadow-2xl">
+//             <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6">
+//               <h3 className="text-xl font-bold">Provide Rejection Remarks</h3>
+//             </div>
             
-            <div className="p-6">
-              <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <p className="font-medium text-gray-800">Block: <span className="text-blue-600">{selectedRequest.missionBlock}</span></p>
-                <p className="text-sm text-gray-600 mt-1">
-                  Scheduled: {formatTimeIST(selectedRequest.sanctionedTimeFrom)} - {formatTimeIST(selectedRequest.sanctionedTimeTo)} IST
-                </p>
-                <p className="text-sm text-red-600 mt-1">
-                  Overdue by: {calculateOverdueHours(selectedRequest.sanctionedTimeTo)} hours
-                </p>
-              </div>
+//             <div className="p-6">
+//               <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+//                 <p className="font-medium text-gray-800">Block: <span className="text-blue-600">{selectedRequest.missionBlock}</span></p>
+//                 <p className="text-sm text-gray-600 mt-1">
+//                   Scheduled: {formatTimeIST(selectedRequest.sanctionedTimeFrom)} - {formatTimeIST(selectedRequest.sanctionedTimeTo)} IST
+//                 </p>
+//                 <p className="text-sm text-red-600 mt-1">
+//                   Overdue by: {calculateOverdueHours(selectedRequest.sanctionedTimeTo)} hours
+//                 </p>
+//               </div>
               
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Reason for rejection *
-                </label>
-                <textarea
-                  value={rejectRemarks}
-                  onChange={(e) => setRejectRemarks(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                  rows={4}
-                  placeholder="Please provide details about why the block needs adjustment..."
-                  required
-                />
+//               <div className="mb-4">
+//                 <label className="block text-sm font-medium text-gray-700 mb-2">
+//                   Reason for rejection *
+//                 </label>
+//                 <textarea
+//                   value={rejectRemarks}
+//                   onChange={(e) => setRejectRemarks(e.target.value)}
+//                   className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+//                   rows={4}
+//                   placeholder="Please provide details about why the block needs adjustment..."
+//                   required
+//                 />
             
-              </div>
+//               </div>
 
-              <div className="flex gap-3 justify-end">
-                <button
-                  onClick={() => {
-                    setShowRejectModal(false);
-                    setSelectedRequest(null);
-                    setRejectRemarks("");
-                  }}
-                  disabled={isSubmitting}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleRejectSubmit}
-                  disabled={isSubmitting || !rejectRemarks.trim()}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                >
-                  {isSubmitting ? "Submitting..." : "Submit Remarks"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
+//               <div className="flex gap-3 justify-end">
+//                 <button
+//                   onClick={() => {
+//                     setShowRejectModal(false);
+//                     setSelectedRequest(null);
+//                     setRejectRemarks("");
+//                   }}
+//                   disabled={isSubmitting}
+//                   className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition"
+//                 >
+//                   Cancel
+//                 </button>
+//                 <button
+//                   onClick={handleRejectSubmit}
+//                   disabled={isSubmitting || !rejectRemarks.trim()}
+//                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+//                 >
+//                   {isSubmitting ? "Submitting..." : "Submit Remarks"}
+//                 </button>
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+//       )}
+//     </>
+//   );
+// }
 export default function DashboardPage() {
   const { data: session, status } = useSession({
     required: true,
@@ -361,115 +361,73 @@ export default function DashboardPage() {
     },
   });
 
-  // Check if popup is needed for a request
-  // const checkIfPopupNeeded = (request: any) => {
-  //   if (!request.sanctionedTimeTo) {
-  //     return false;
-  //   }
-    
-  //   try {
-  //     // Current Railway Time (IST)
-  //     const now = new Date();
-  //     const nowIST = toZonedTime(now, 'Asia/Kolkata');
-      
-  //     // Extract time from DB string (treat as IST)
-  //     const dbTimeStr = request.sanctionedTimeTo.substring(11, 16);
-  //     const [dbHours, dbMinutes] = dbTimeStr.split(':').map(Number);
-      
-  //     // Create a date object with DB time for TODAY (treating it as IST)
-  //     const todayIST = toZonedTime(new Date(), 'Asia/Kolkata');
-  //     const sanctionedEndIST = new Date(todayIST);
-  //     sanctionedEndIST.setHours(dbHours, dbMinutes, 0, 0);
-      
-  //     // Check if current time is AFTER sanctioned end time
-  //     const isOverdue = nowIST > sanctionedEndIST;
-      
-  //     if (!isOverdue) {
-  //       return false;
-  //     }
-      
-  //     // Check if user has already responded
-  //     const hasResponded = (
-  //       request.userAcceptanceForSanction === true ||
-  //       (request.userAcceptanceForSanction === false && 
-  //        request.userResponse !== null && 
-  //        request.userResponse !== undefined && 
-  //        request.userResponse.trim() !== "")
-  //     );
-      
-  //     return !hasResponded;
-      
-  //   } catch (error) {
-  //     console.error("Error checking popup condition:", error);
-  //     return false;
-  //   }
-  // };
+
 // Check if popup is needed for a request - MODIFIED WITH 4-HOUR DELAY
-const checkIfPopupNeeded = (request: any) => {
-  if (!request.sanctionedTimeTo) {
-    return false;
-  }
+// const checkIfPopupNeeded = (request: any) => {
+//   if (!request.sanctionedTimeTo) {
+//     return false;
+//   }
   
-  try {
-    // Current Railway Time (IST)
-    const now = new Date();
-    const nowIST = toZonedTime(now, 'Asia/Kolkata');
+//   try {
+//     // Current Railway Time (IST)
+//     const now = new Date();
+//     const nowIST = toZonedTime(now, 'Asia/Kolkata');
     
-    // Extract time from DB string (treat as IST)
-    const dbTimeStr = request.sanctionedTimeTo.substring(11, 16);
-    const [dbHours, dbMinutes] = dbTimeStr.split(':').map(Number);
+//     // Extract time from DB string (treat as IST)
+//     const dbTimeStr = request.sanctionedTimeTo.substring(11, 16);
+//     const [dbHours, dbMinutes] = dbTimeStr.split(':').map(Number);
     
-    // Create a date object with DB time for TODAY (treating it as IST)
-    const todayIST = toZonedTime(new Date(), 'Asia/Kolkata');
-    const sanctionedEndIST = new Date(todayIST);
-    sanctionedEndIST.setHours(dbHours, dbMinutes, 0, 0);
+//     // Create a date object with DB time for TODAY (treating it as IST)
+//     const todayIST = toZonedTime(new Date(), 'Asia/Kolkata');
+//     const sanctionedEndIST = new Date(todayIST);
+//     sanctionedEndIST.setHours(dbHours, dbMinutes, 0, 0);
     
-    // Add 4 hours to sanctioned end time
-    const fourHoursAfterEnd = new Date(sanctionedEndIST.getTime());
-    fourHoursAfterEnd.setHours(fourHoursAfterEnd.getHours() + 4);
+//     // Add 4 hours to sanctioned end time
+//     const fourHoursAfterEnd = new Date(sanctionedEndIST.getTime());
+//     fourHoursAfterEnd.setHours(fourHoursAfterEnd.getHours() + 4);
     
-    // Check if current time is AFTER (sanctioned end time + 4 hours)
-    const isFourHoursOverdue = nowIST > fourHoursAfterEnd;
+//     // Check if current time is AFTER (sanctioned end time + 4 hours)
+//     const isFourHoursOverdue = nowIST > fourHoursAfterEnd;
     
-    if (!isFourHoursOverdue) {
-      return false;
-    }
+//     if (!isFourHoursOverdue) {
+//       return false;
+//     }
     
-    // Check if user has already responded
-    const hasResponded = (
-      request.userAcceptanceForSanction === true ||
-      (request.userAcceptanceForSanction === false && 
-       request.userResponse !== null && 
-       request.userResponse !== undefined && 
-       request.userResponse.trim() !== "")
-    );
+//     // Check if user has already responded
+//     const hasResponded = (
+//       request.userAcceptanceForSanction === true ||
+//       (request.userAcceptanceForSanction === false && 
+//        request.userResponse !== null && 
+//        request.userResponse !== undefined && 
+//        request.userResponse.trim() !== "")
+//     );
     
-    return !hasResponded;
+//     return !hasResponded;
     
-  } catch (error) {
-    console.error("Error checking popup condition:", error);
-    return false;
-  }
-};
+//   } catch (error) {
+//     console.error("Error checking popup condition:", error);
+//     return false;
+//   }
+// };
   // Check for overdue blocks
-  useEffect(() => {
-    if (requestsData?.data?.requests && (session?.user?.role === "USER" || session?.user?.role === "JE")) {
-      console.log('Checking for overdue blocks...');
+  // useEffect(() => {
+  //   if (requestsData?.data?.requests && (session?.user?.role === "USER" || session?.user?.role === "JE")) {
+  //     console.log('Checking for overdue blocks...');
       
-      const overdueRequests = requestsData.data.requests.filter((request: any) => {
-        return checkIfPopupNeeded(request);
-      });
+  //     const overdueRequests = requestsData.data.requests.filter((request: any) => {
+  //       return checkIfPopupNeeded(request);
+  //     });
 
-      console.log('Overdue requests found:', overdueRequests.length);
+  //     console.log('Overdue requests found:', overdueRequests.length);
 
-      // If there are overdue requests, show modal for all of them
-      if (overdueRequests.length > 0 && pendingRequests.length === 0) {
-        console.log('Setting pending requests and showing modal');
-        setPendingRequests(overdueRequests);
-        setShowAcceptanceModal(true);
-      }
-    }
-  }, [requestsData, pendingRequests, session?.user?.role]);
+  //     // If there are overdue requests, show modal for all of them
+  //     if (overdueRequests.length > 0 && pendingRequests.length === 0) {
+  //       console.log('Setting pending requests and showing modal');
+  //       setPendingRequests(overdueRequests);
+  //       setShowAcceptanceModal(true);
+  //     }
+  //   }
+  // }, [requestsData, pendingRequests, session?.user?.role]);
 
   const handleAccept = (id: string) => {
     acceptMutation.mutate(id);
@@ -491,20 +449,20 @@ const hasInProgressBlock = requestsData?.data?.requests?.find(
     ["inprogress", "in-progress"].includes(request.overAllStatus?.toLowerCase())
 );
 
-  if ((session?.user?.role === "USER" || session?.user?.role === "JE") &&
-      showAcceptanceModal && pendingRequests.length > 0) {
-    return (
-      <OverdueBlockModal
-        requests={pendingRequests}
-        onAccept={handleAccept}
-        onReject={handleReject}
-        onClose={() => {
-          setShowAcceptanceModal(false);
-          setPendingRequests([]);
-        }}
-      />
-    );
-  }
+  // if ((session?.user?.role === "USER" || session?.user?.role === "JE") &&
+  //     showAcceptanceModal && pendingRequests.length > 0) {
+  //   return (
+  //     <OverdueBlockModal
+  //       requests={pendingRequests}
+  //       onAccept={handleAccept}
+  //       onReject={handleReject}
+  //       onClose={() => {
+  //         setShowAcceptanceModal(false);
+  //         setPendingRequests([]);
+  //       }}
+  //     />
+  //   );
+  // }
 
   if (status === "loading") {
     return <Loader name="dashboard" />;

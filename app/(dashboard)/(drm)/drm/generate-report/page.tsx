@@ -2392,7 +2392,7 @@ const handleDownloadDepartmentCount = () => {
                     if (block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance") {
                       statusLabel = "Sanctioned, Pending with SSE For Acceptance";
                       statusStyle = { background: "#fff86b", color: "#222" };
-                    }  else if (block.overAllStatus==="Sanctioned and Rejected by SSE") {
+                    }  else if (block.overAllStatus==="Sanctioned and Accepted by SSE") {
                       statusLabel = "Sanctioned and Accepted by SSE";
                       statusStyle = { background: "#d47ed4", color: "#222" };
                     } else if ( block.overAllStatus==="Sanctioned and Rejected by SSE") {
