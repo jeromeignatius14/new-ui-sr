@@ -7757,7 +7757,7 @@ export let streamData = {
     "Up Direction Affected": ["Rd 1", "Rd 2"],
     "Down Direction Affected": ["Rd 3"],
     "Both Direction Affected": ["Rd 4","RD 5","RD 6","RD 7"],
-    "Both Direction Not Affected": []
+    "Both Direction Not Affected": [] 
   },
   "MCN-YD": {
     "Up Direction Affected": ["Rd 3"],
