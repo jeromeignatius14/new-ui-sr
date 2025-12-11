@@ -9,6 +9,7 @@ import { Loader } from "@/app/components/ui/Loader";
 import { format, parse, parseISO } from "date-fns";
 import { useDeleteUserRequest } from "@/app/service/mutation/user-request";
 import Select from "react-select";
+import { formatTimeToDatetime } from "@/app/lib/helper";
 
 interface FormData {
   isSanctioned: boolean;
@@ -222,18 +223,14 @@ export default function CreateBlockRequestPage() {
           sntDisconnectionLineTo: "",
         }),
         date: formData.date,
-        demandTimeFrom:
-          formData.date && formData.demandTimeFrom
-            ? new Date(
-                `${formData.date.split("T")[0]}T${formData.demandTimeFrom}:00`
-              ).toISOString()
-            : "",
-        demandTimeTo:
-          formData.date && formData.demandTimeTo
-            ? new Date(
-                `${formData.date.split("T")[0]}T${formData.demandTimeTo}:00`
-              ).toISOString()
-            : "",
+    demandTimeFrom: formatTimeToDatetime(
+             formData.date || "",
+             formData.demandTimeFrom || ""
+           ),
+           demandTimeTo: formatTimeToDatetime(
+             formData.date || "",
+             formData.demandTimeTo || ""
+           ),
         // processedLineSections: [
         //   {
         //     ...(userDataById?.data.processedLineSections?.[0] || {}),
