@@ -783,6 +783,7 @@ const handleDownloadExcel = async () => {
                 <th className="border-2 border-[#B57CF6] p-2">Date</th>
                 <th className="border-2 border-[#B57CF6] p-2">ID</th>
                 <th className="border-2 border-[#B57CF6] p-2">Block Section</th>
+                <th className="border-2 border-[#B57CF6] p-2">Depo</th>
                 <th className="border-2 border-[#B57CF6] p-2">Line/Road</th>
                 <th className="border-2 border-[#B57CF6] p-2">Demanded</th>
                 <th className="border-2 border-[#B57CF6] p-2">Sanctioned</th>
@@ -827,6 +828,9 @@ const handleDownloadExcel = async () => {
             </td>
             <td className="border border-[#B57CF6] p-2 text-center">
               {request.missionBlock}
+            </td>
+             <td className="border border-[#B57CF6] p-2 text-center">
+              {request.selectedDepo}
             </td>
             <td className="border border-[#B57CF6] p-2 text-center">
               {request.processedLineSections?.[0]?.lineName ||

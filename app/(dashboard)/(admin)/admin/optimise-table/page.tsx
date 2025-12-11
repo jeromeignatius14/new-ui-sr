@@ -745,7 +745,126 @@ const combinedRequestsFiltered = pendingRequests
     setTimeFrom("");
     setTimeTo("");
   };
+const handleOptimizeUrgent = () => {
+  // Check if any requests are selected
+  if (selectedRequestsForOptimization.size === 0) {
+    alert("Please select at least one request to optimize.");
+    return;
+  }
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  // Get urgent requests for selected date
+  const selectedUrgentRequests = urgentRequestsFiltered.filter((request: UserRequest) => {
+    const requestDate = typeof request.date === "string" ? parseISO(request.date) : request.date;
+    return isSameDay(requestDate, selectedDate) && (request.Draft === false);
+  });
+  
+  // Filter to only selected requests
+  const requestsToOptimize = selectedUrgentRequests.filter((request: UserRequest) => 
+    selectedRequestsForOptimization.has(request.id)
+  );
+
+  if (requestsToOptimize.length === 0) {
+    alert("No selected requests found for optimization.");
+    return;
+  }
+
+  // Check for past dates
+  const hasPastDates = requestsToOptimize.some((request: UserRequest) => {
+    const requestDate = new Date(request.date);
+    requestDate.setHours(0, 0, 0, 0);
+    return requestDate < today;
+  });
+
+  if (hasPastDates) {
+    setShowDateValidationAlert(true);
+    // Show specific message for urgent blocks
+    alert("Cannot optimize urgent blocks for past dates. Please select requests for today or future dates.");
+    return;
+  }
+
+  // Check for current/future dates only
+  const validRequests = requestsToOptimize.filter((request: UserRequest) => {
+    const requestDate = new Date(request.date);
+    requestDate.setHours(0, 0, 0, 0);
+    return requestDate >= today;
+  });
+
+  if (validRequests.length === 0) {
+    alert("No valid requests found. Please select requests for today or future dates.");
+    return;
+  }
+
+  // Proceed with optimization for valid requests
+  setIsOptimizeDialogOpen(true);
+  setIsUrgentRequests(true);
+};
+const handleOptimizeCorridor = () => {
+  // Check if any requests are selected
+  if (selectedRequestsForOptimization.size === 0) {
+    alert("Please select at least one request to optimize.");
+    return;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  // Get current week's Monday
+  const currentWeekMonday = startOfWeek(today, { weekStartsOn: 1 });
+  
+  // Get corridor requests
+  const corridorRequests = corridorRequestsFiltered.filter((request: UserRequest) => 
+    request.Draft === false
+  );
+  
+  // Filter to only selected requests
+  const requestsToOptimize = corridorRequests.filter((request: UserRequest) => 
+    selectedRequestsForOptimization.has(request.id)
+  );
+
+  if (requestsToOptimize.length === 0) {
+    alert("No selected requests found for optimization.");
+    return;
+  }
+
+  // Check if any requests are for past weeks (before current week Monday)
+  const hasPastWeekDates = requestsToOptimize.some((request: UserRequest) => {
+    const requestDate = new Date(request.date);
+    requestDate.setHours(0, 0, 0, 0);
+    const requestWeekMonday = startOfWeek(requestDate, { weekStartsOn: 1 });
+    
+    // Compare week Mondays to check if it's a past week
+    return requestWeekMonday < currentWeekMonday;
+  });
+
+  if (hasPastWeekDates) {
+    const alertMessage = `Cannot optimize corridor blocks for past weeks.
+    
+Please ensure all selected requests are scheduled for the current week (${format(currentWeekMonday, "dd MMM")}) or future weeks.`;
+    
+    alert(alertMessage);
+    return;
+  }
+
+  // Check for valid requests (current week Monday onwards)
+  const validRequests = requestsToOptimize.filter((request: UserRequest) => {
+    const requestDate = new Date(request.date);
+    requestDate.setHours(0, 0, 0, 0);
+    const requestWeekMonday = startOfWeek(requestDate, { weekStartsOn: 1 });
+    return requestWeekMonday >= currentWeekMonday;
+  });
+
+  if (validRequests.length === 0) {
+    alert(`No valid requests found. Please select requests for the week starting ${format(currentWeekMonday, "dd MMM yyyy")} or later.`);
+    return;
+  }
+
+  // Proceed with optimization for valid requests
+  setIsOptimizeDialogOpen(true);
+  setIsUrgentRequests(false);
+};
   // Update mutation
   const updateOptimizedTimes = useMutation({
     mutationFn: (data: {
@@ -1681,21 +1800,7 @@ const handleOptimize = async () => {
   )</h2>
           <div className="flex justify-end py-2 gap-2">
             <button
-              onClick={() => {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const hasPreviousDays = urgentRequestsFiltered.some((request: UserRequest) => {
-                  const reqDate = new Date(request.date);
-                  reqDate.setHours(0, 0, 0, 0);
-                  return reqDate < today;
-                });
-                if (hasPreviousDays) {
-                  setShowDateValidationAlert(true);
-                  return;
-                }
-                setIsOptimizeDialogOpen(true);
-                setIsUrgentRequests(true);
-              }}
+           onClick={handleOptimizeUrgent}
               className="px-3 py-1 text-[24px] bg-white text-[#13529e] border border-black cursor-pointer hover:bg-gray-50 flex items-center"
             >
               <svg className="w-6 h-6 mr-1" viewBox="0 0 20 20" fill="currentColor">
@@ -1953,6 +2058,7 @@ const handleOptimize = async () => {
                       // >
                       //   Modify
                       // </button>
+                      <>
                       <button
   className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
   onClick={() => {
@@ -1967,6 +2073,15 @@ const handleOptimize = async () => {
 >
   Modify
 </button>
+   <button
+                      className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
+                      onClick={() => {
+                        handleRejectClick(request.id);
+                        setModifyReturnOpenId(null);
+                      }}
+                    >
+                      Return
+                    </button></>
                     ) : (
                       <>
                         <button
@@ -2017,26 +2132,7 @@ const handleOptimize = async () => {
           <h2 className="text-[24px] font-semibold mb-2 text-[#13529e]">Corridor Requests ({corridorRequestsFiltered.filter((request: UserRequest) => request.Draft === false).sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).length})</h2>
           <div className="flex justify-end py-2 gap-2">
             <button
-              onClick={() => {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const nextWeekStart = new Date(today);
-                nextWeekStart.setDate(today.getDate() + (7 - today.getDay()));
-                nextWeekStart.setHours(0, 0, 0, 0);
-
-                const hasCurrentWeekDates = [...corridorRequestsFiltered].some((request: UserRequest) => {
-                  const reqDate = new Date(request.date);
-                  reqDate.setHours(0, 0, 0, 0);
-                  return reqDate < nextWeekStart;
-                });
-
-                if (hasCurrentWeekDates) {
-                  setShowDateValidationAlert(true);
-                  return;
-                }
-                setIsOptimizeDialogOpen(true);
-                setIsUrgentRequests(false);
-              }}
+            onClick={handleOptimizeCorridor}
               className="px-3 py-1 text-[24px] bg-white text-[#13529e] border border-black cursor-pointer hover:bg-gray-50 flex items-center"
             >
               <svg className="w-6 h-6 mr-1" viewBox="0 0 20 20" fill="currentColor">
@@ -2313,6 +2409,7 @@ className={`transition-colors ${
           // >
           //   Modify
           // </button>
+          <>
           <button
   className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
   onClick={() => {
@@ -2327,6 +2424,15 @@ className={`transition-colors ${
 >
   Modify
 </button>
+  <button
+          className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
+          onClick={() => {
+            handleRejectClick(request.id);
+            setModifyReturnOpenId(null);
+          }}
+        >
+          Return
+        </button></>
         ) : (
           <>
             <button
@@ -2685,6 +2791,7 @@ className={`transition-colors ${
           // >
           //   Modify
           // </button>
+          <>
           <button
   className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
   onClick={() => {
@@ -2697,6 +2804,16 @@ className={`transition-colors ${
 >
   Modify
 </button>
+ <button
+          className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
+          onClick={() => {
+            handleRejectClick(request.id);
+            setModifyReturnOpenId(null);
+          }}
+        >
+          Return
+        </button>
+        </>
         ) : (
           <>
             <button
@@ -2990,6 +3107,7 @@ className={`transition-colors ${
           // >
           //   Modify
           // </button>
+          <>
           <button
   className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
   onClick={() => {
@@ -3002,6 +3120,16 @@ className={`transition-colors ${
 >
   Modify
 </button>
+  <button
+          className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
+          onClick={() => {
+            handleRejectClick(request.id);
+            setModifyReturnOpenId(null);
+          }}
+        >
+          Return
+        </button>
+        </>
         ) : (
           <>
             <button
