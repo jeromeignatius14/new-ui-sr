@@ -3133,42 +3133,42 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
       "ENGG": "WJR"
     },
     "SHU-TUG": {
-      "S&T": "KPD E",
+      "S&T": "KPDE",
       "TRD": "WJR",
       "ENGG": "WJR"
     },
     "TUG-WJR": {
-      "S&T": "KPD E",
+      "S&T": "KPDE",
       "TRD": "WJR",
       "ENGG": "WJR"
     },
     "WJR-MCN": {
-      "S&T": "KPD E",
+      "S&T": "KPDE",
       "TRD": "WJR",
       "ENGG": "WJR"
     },
     "MCN-THL": {
-      "S&T": "KPD E",
+      "S&T": "KPDE",
       "TRD": "KPD",
       "ENGG": "KPD"
     },
     "THL-SVUR": {
-      "S&T": "KPD E",
+      "S&T": "KPDE",
       "TRD": "KPD",
       "ENGG": "KPD"
     },
     "SVUR-KPD": {
-      "S&T": "KPD E",
+      "S&T": "KPDE",
       "TRD": "KPD",
       "ENGG": "KPD"
     },
     "KPD-RAM": {
-      "S&T": "KPD E",
+      "S&T": "KPDE",
       "TRD": "KPD",
       "ENGG": "KPD"
     },
     "KPD-VLR": {
-      "S&T": "KPD E",
+      "S&T": "KPDE",
       "TRD": "KPD",
       "ENGG": "KPD"
     },
@@ -3194,47 +3194,47 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
       "ENGG": "WJR"
     },
     "SHU-YD": {
-      "S&T": "KPD E",
+      "S&T": "KPDE",
       "TRD": "WJR",
       "ENGG": "WJR"
     },
     "TUG-YD": {
-      "S&T": "KPD E",
+      "S&T": "KPDE",
       "TRD": "WJR",
       "ENGG": "WJR"
     },
     "WJR-YD": {
-      "S&T": "KPD E",
+      "S&T": "KPDE",
       "TRD": "WJR",
       "ENGG": "WJR"
     },
     "MCN-YD": {
-      "S&T": "KPD E",
+      "S&T": "KPDE",
       "TRD": "KPD",
       "ENGG": "KPD"
     },
     "THL-YD": {
-      "S&T": "KPD E",
+      "S&T": "KPDE",
       "TRD": "KPD",
       "ENGG": "KPD"
     },
     "SVUR-YD": {
-      "S&T": "KPD E",
+      "S&T": "KPDE",
       "TRD": "KPD",
       "ENGG": "KPD"
     },
     "KPD-YD": {
-      "S&T": "KPD E",
+      "S&T": "KPDE",
       "TRD": "KPD",
       "ENGG": "KPD"
     },
     "RAM-YD": {
-      "S&T": "KPD E",
+      "S&T": "KPDE",
       "TRD": "KPD",
       "ENGG": "KPD"
     },
     "VLR-YD": {
-      "S&T": "KPD E",
+      "S&T": "KPDE",
       "TRD": "KPD",
       "ENGG": "KPD"
     }
@@ -3309,32 +3309,32 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
   },
   "KPD-JTJ": {
     "KPD-LTI": {
-      "S&T": "KPD W",
+      "S&T": "KPDW",
       "TRD": "KPD",
       "ENGG": "KPD"
     },
     "LTI-KVN": {
-      "S&T": "KPD W",
+      "S&T": "KPDW",
       "TRD": "KPD",
       "ENGG": "KPD"
     },
     "KVN-GYM": {
-      "S&T": "KPD W",
+      "S&T": "KPDW",
       "TRD": "KPD",
       "ENGG": "KPD"
     },
     "GYM-VLT": {
-      "S&T": "KPD W",
+      "S&T": "KPDW",
       "TRD": "AB",
       "ENGG": "AB"
     },
     "VLT-MPI": {
-      "S&T": "KPD W",
+      "S&T": "KPDW",
       "TRD": "AB",
       "ENGG": "AB"
     },
     "MPI-PCKM": {
-      "S&T": "KPD W",
+      "S&T": "KPDW",
       "TRD": "AB",
       "ENGG": "AB"
     },
@@ -3380,32 +3380,32 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
     },
 
     "KPD-YD": {
-      "S&T": "KPD W",
+      "S&T": "KPDW",
       "TRD": "KPD",
       "ENGG": "KPD"
     },
     "LTI-YD": {
-      "S&T": "KPD W",
+      "S&T": "KPDW",
       "TRD": "KPD",
       "ENGG": "KPD"
     },
     "KVN-YD": {
-      "S&T": "KPD W",
+      "S&T": "KPDW",
       "TRD": "KPD",
       "ENGG": "KPD"
     },
     "GYM-YD": {
-      "S&T": "KPD W",
+      "S&T": "KPDW",
       "TRD": "AB",
       "ENGG": "AB"
     },
     "VLT-YD": {
-      "S&T": "KPD W",
+      "S&T": "KPDW",
       "TRD": "AB",
       "ENGG": "AB"
     },
     "MPI-YD": {
-      "S&T": "KPD W",
+      "S&T": "KPDW",
       "TRD": "AB",
       "ENGG": "AB"
     },
@@ -3814,60 +3814,60 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
   "MSB-VLCY": {
     "MSB-MCPK": {
       "S&T": "MSB",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "WST"
     },
     "MCPK-MTMY": {
       "S&T": "MSB",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "WST"
     },
     "MTMY-VLCY": {
       "S&T": "MSB",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "WST"
     },
 
     "MSB-YD": {
       "S&T": "MSB",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "WST"
     },
     "MCPK-YD": {
       "S&T": "MSB",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "WST"
     },
     "MTMY-YD": {
       "S&T": "MSB",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "WST"
     },
     "VLCY-YD": {
       "S&T": "MSB",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "WST"
     }
   },
   "MSB-VM": {
     "MSB-MS": {
       "S&T": "MS",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "MS"
     },
     "MS-MKK": {
       "S&T": "MS",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "MS"
     },
     "MKK-MBM": {
       "S&T": "MS",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "MS"
     },
     "MBM-STM": {
       "S&T": "MS",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "MS"
     },
     "STM-PV": {
@@ -3973,22 +3973,22 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
 
     "MSB-YD": {
       "S&T": "MS",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "MS"
     },
     "MS-YD": {
       "S&T": "MS",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "MS"
     },
     "MKK-YD": {
       "S&T": "MS",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "MS"
     },
     "MBM-YD": {
       "S&T": "MS",
-      "TRD": "MSO",
+      "TRD": "MS",
       "ENGG": "MS"
     },
     "STM-YD": {
@@ -7756,8 +7756,8 @@ export let streamData = {
   "WJR-YD": {
     "Up Direction Affected": ["Rd 1", "Rd 2"],
     "Down Direction Affected": ["Rd 3"],
-    "Both Direction Affected": ["Rd 4"],
-    "Both Direction Not Affected": []
+    "Both Direction Affected": ["Rd 4","RD 5","RD 6","RD 7"],
+    "Both Direction Not Affected": [] 
   },
   "MCN-YD": {
     "Up Direction Affected": ["Rd 3"],
