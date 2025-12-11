@@ -857,185 +857,91 @@ if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false
   //     toast.error("Failed to download Excel file. Please try again.");
   //   }
   // };
-  const handleDownloadUpcomingBlocks = () => {
-    try {
-      // Use the SAME filtered data that's shown in the 3rd table
-      const dataToDownload = filteredBlocks; // This is what's actually shown in the table
-      
-      if (dataToDownload.length === 0) {
-        toast.error("No data available to download");
-        return;
-      }
-  
-      const excelData = dataToDownload.map((block: any, index: number) => {
-        let statusLabel = "";
-        if (block.overAllStatus === "Sanctioned, Pending with SSE For Acceptance") {
-          statusLabel = "Sanctioned, Pending with SSE For Acceptance";
-        } else if (block.overAllStatus === "Sanctioned and Rejected by SSE") {
-          statusLabel = "Sanctioned and Accepted by SSE";
-        } else if (block.overAllStatus === "Sanctioned and Rejected by SSE") {
-          statusLabel = "Sanctioned and Rejected by SSE";
-        } else {
-          statusLabel = block.overAllStatus || block.Status;
-        }
-  
-        return {
-          "Request ID": block.DivisionId || "N/A",
-          "Date": block.Date ? dayjs(block.Date).format("DD-MM-YY") : "N/A",
-          "Department": block.selectedDepartment || "N/A",
-          "Block Section": block.MissionBlock || "N/A",
-          "Depo": block.selectedDepo || "N/A",
-          "Type": block.Type || "N/A",
-          "Activity": block.Activity || "N/A",
-          "Demanded Time": block.DemandedTimeFrom && block.DemandedTimeTo
-            ? `${formatTime(block.DemandedTimeFrom)} to ${formatTime(block.DemandedTimeTo)}`
-            : "Not Available",
-          "Sanctioned Time": block.SanctionedTimeFrom && block.SanctionedTimeTo
-            ? `${formatTime(block.SanctionedTimeFrom)} to ${formatTime(block.SanctionedTimeTo)}`
-            : "Not Available",
-          "Availed Time": block.AvailedTimeFrom && block.AvailedTimeTo
-            ? `${formatTime(block.AvailedTimeFrom)} to ${formatTime(block.AvailedTimeTo)}`
-            : "Not Available",
-          "Status": statusLabel,
-          "Station ID": block.stationId || "N/A",
-          "Duration": block.Duration || "N/A",
-          "Section": block.Section || "N/A",
-          "SSE Name": block.userName || "N/A",
-          "Corridor Type": block.corridorType || "N/A",
-          "Power Block Required": block.powerBlockRequired ? "Yes" : "No",
-          "S&T Disconnection Required": block.sntDisconnectionRequired ? "Yes" : "No",
-          "Engg Disconnections Required": block.enggDisconnectionsRequired ? "Yes" : "No",
-          "Is Sanctioned": block.isSanctioned ? "Yes" : "No",
-          "Is Granted": block.isGranted ? "Yes" : "No",
-          "Is Applied": block.isApplied ? "Yes" : "No",
-          "User Response": block.userResponse || "N/A"
-        };
-      });
-  
-      const workbook = XLSX.utils.book_new();
-      const worksheet = XLSX.utils.json_to_sheet(excelData);
-  
-      // Build header with all active filter information
-      const headerRows = [
-        [`FILTERED BLOCKS REPORT`],
-        [`Generated on: ${format(new Date(), "dd/MM/yyyy HH:mm:ss")}`],
-        [`Date Range: ${formatDisplayDate(watch("startDate"))} to ${formatDisplayDate(watch("endDate"))}`],
-        [`Department: ${selectedDepartments.join(", ")}`],
-      ];
-  
-      // Add section filter info
-      if (upcomingSectionFilter && upcomingSectionFilter !== "All") {
-        headerRows.push([`Section Filter: ${upcomingSectionFilter}`]);
-      }
-      
-      if (activeSection) {
-        headerRows.push([`Active Section: ${activeSection}`]);
-      }
-  
-      // Add activeFilter info (from first table)
-      if (activeFilter && activeFilter !== "all") {
-        headerRows.push([`Status Filter: ${activeFilter.toUpperCase()}`]);
-      }
-  
-      // Add department count filter info (from second table)
-      if (departmentCountFilter) {
-        const { department, supportingDepartment, filterType } = departmentCountFilter;
-        headerRows.push([
-          `Department Filter: ${department} ${supportingDepartment !== "-" ? `+ ${supportingDepartment}` : ''} (${filterType})`
-        ]);
-      }
-  
-      // Add search filter info
-      if (upcomingDivisionIdSearch) {
-        headerRows.push([`ID Search: ${upcomingDivisionIdSearch}`]);
-      }
-  
-      // Add SSE filter info
-      if (sseFilter !== "All") {
-        headerRows.push([`SSE Filter: ${sseFilter}`]);
-      }
-  
-      headerRows.push(
-        [`Total Records in Table: ${dataToDownload.length}`],
-        []
-      );
-  
-      XLSX.utils.sheet_add_aoa(
-        worksheet,
-        headerRows,
-        { origin: "A1" }
-      );
-  
-      const colWidths = [
-        { wch: 15 },   // Request ID
-        { wch: 12 },   // Date
-        { wch: 15 },   // Department
-        { wch: 25 },   // Block Section
-        { wch: 12 },   // Depo
-        { wch: 12 },   // Type
-        { wch: 30 },   // Activity
-        { wch: 25 },   // Demanded Time
-        { wch: 25 },   // Sanctioned Time
-        { wch: 25 },   // Availed Time
-        { wch: 35 },   // Status
-        { wch: 15 },   // Station ID
-        { wch: 10 },   // Duration
-        { wch: 15 },   // Section
-        { wch: 20 },   // SSE Name
-        { wch: 15 },   // Corridor Type
-        { wch: 20 },   // Power Block Required
-        { wch: 25 },   // S&T Disconnection Required
-        { wch: 25 },   // Engg Disconnections Required
-        { wch: 15 },   // Is Sanctioned
-        { wch: 15 },   // Is Granted
-        { wch: 15 },   // Is Applied
-        { wch: 15 },   // User Response
-      ];
-      worksheet["!cols"] = colWidths;
-  
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Filtered Blocks");
-  
-      const excelBuffer = XLSX.write(workbook, {
-        bookType: "xlsx",
-        type: "array",
-      });
-      
-      const blob = new Blob([excelBuffer], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-      
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      
-      // Create descriptive filename
-      let filename = "blocks";
-      
-      // Add filter info to filename
-      if (activeFilter && activeFilter !== "all") {
-        filename += `_${activeFilter}`;
-      }
-      
-      if (departmentCountFilter) {
-        const { department, supportingDepartment, filterType } = departmentCountFilter;
-        filename += `_${department}${supportingDepartment !== "-" ? `_${supportingDepartment.replace(/[^a-zA-Z0-9]/g, '')}` : ''}_${filterType}`;
-      }
-      
-      if (activeSection) {
-        filename += `_${activeSection.replace(/[^a-zA-Z0-9]/g, '')}`;
-      }
-      
-      link.download = `${filename}_${format(new Date(), "dd-MM-yyyy")}.xlsx`;
-      
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-  
-      toast.success(`Downloaded ${dataToDownload.length} records (matching table view)`);
-    } catch (error) {
-      console.error("Download error:", error);
-      toast.error("Failed to download Excel file. Please try again.");
-    }
-  };
+ const handleDownloadUpcomingBlocks = () => {
+   try {
+     const dataToDownload = filteredBlocks;
+ 
+     if (dataToDownload.length === 0) {
+       toast.error("No data available to download");
+       return;
+     }
+ 
+     const excelData = dataToDownload.map((block: any) => {
+       let statusLabel = "";
+       if (block.overAllStatus === "Sanctioned, Pending with SSE For Acceptance") {
+         statusLabel = "Sanctioned, Pending with SSE For Acceptance";
+       } else if (block.overAllStatus === "Sanctioned and Accepted by SSE") {
+         statusLabel = "Sanctioned and Accepted by SSE";
+       } else if (block.overAllStatus === "Sanctioned and Rejected by SSE") {
+         statusLabel = "Sanctioned and Rejected by SSE";
+       } else {
+         statusLabel = block.overAllStatus || block.Status;
+       }
+ 
+       return {
+         "Request ID": block.DivisionId || "N/A",
+         "Date": block.Date ? dayjs(block.Date).format("DD-MM-YY") : "N/A",
+         "Department": block.selectedDepartment || "N/A",
+         "Block Section": block.MissionBlock || "N/A",
+         "Depo": block.selectedDepo || "N/A",
+         "Type": block.Type || "N/A",
+         "Activity": block.Activity || "N/A",
+         "Demanded Time": block.DemandedTimeFrom && block.DemandedTimeTo
+           ? `${formatTime(block.DemandedTimeFrom)} to ${formatTime(block.DemandedTimeTo)}`
+           : "Not Available",
+         "Sanctioned Time": block.SanctionedTimeFrom && block.SanctionedTimeTo
+           ? `${formatTime(block.SanctionedTimeFrom)} to ${formatTime(block.SanctionedTimeTo)}`
+           : "Not Available",
+         "Availed Time": block.AvailedTimeFrom && block.AvailedTimeTo
+           ? `${formatTime(block.AvailedTimeFrom)} to ${formatTime(block.AvailedTimeTo)}`
+           : "Not Available",
+         "Status": statusLabel,
+         "Station ID": block.stationId || "N/A",
+         "Duration": block.Duration || "N/A",
+         "Section": block.Section || "N/A",
+       };
+     });
+ 
+     const workbook = XLSX.utils.book_new();
+     const worksheet = XLSX.utils.json_to_sheet(excelData);
+ 
+     // Column widths (keep)
+     worksheet["!cols"] = [
+       { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 25 }, { wch: 12 },
+       { wch: 12 }, { wch: 30 }, { wch: 25 }, { wch: 25 }, { wch: 25 },
+       { wch: 35 }, { wch: 15 }, { wch: 10 }, { wch: 15 }, { wch: 20 },
+       { wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 25 }, { wch: 15 },
+       { wch: 15 }, { wch: 15 }, { wch: 15 }
+     ];
+ 
+     XLSX.utils.book_append_sheet(workbook, worksheet, "Filtered Blocks");
+ 
+     const excelBuffer = XLSX.write(workbook, {
+       bookType: "xlsx",
+       type: "array",
+     });
+ 
+     const blob = new Blob([excelBuffer], {
+       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+     });
+ 
+     const link = document.createElement("a");
+     link.href = URL.createObjectURL(blob);
+ 
+     let filename = "blocks";
+ 
+     link.download = `${filename}_${format(new Date(), "dd-MM-yyyy")}.xlsx`;
+ 
+     document.body.appendChild(link);
+     link.click();
+     document.body.removeChild(link);
+ 
+     toast.success(`Downloaded ${dataToDownload.length} records`);
+   } catch (error) {
+     console.error("Download error:", error);
+     toast.error("Failed to download Excel file. Please try again.");
+   }
+ };
   // Get unique SSE names from your data
 const sseOptions = [...new Set(
   reportData?.data?.detailedData
