@@ -1634,7 +1634,14 @@ const handleDownloadDepartmentCount = () => {
                 {pastBlockSummary.length > 0 && (
                   <tr className="bg-[#ff914d] text-white font-bold">
                     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-[12px] md:text-[16px]">Totals</td>
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                               <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+
+                         onClick={() => {
+        setActiveFilter("demanded");
+        setActiveSection(null);
+        setDepartmentCountFilter(null);
+      }}
+                    >
                       {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Demanded || 0), 0)
                         .toFixed(2)}{" "}
@@ -1644,7 +1651,12 @@ const handleDownloadDepartmentCount = () => {
                         0
                       )}
                     </td>
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                                     <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                         onClick={() => {
+        setActiveFilter("approved");
+        setActiveSection(null);
+        setDepartmentCountFilter(null);
+      }}>
                       {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Approved || 0), 0)
                         .toFixed(2)}{" "}
@@ -1654,7 +1666,12 @@ const handleDownloadDepartmentCount = () => {
                         0
                       )}
                     </td>
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                                <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                       onClick={() => {
+        setActiveFilter("applied");
+        setActiveSection(null);
+        setDepartmentCountFilter(null);
+      }}>
                       {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.Applied || 0),
                         0
@@ -1664,7 +1681,12 @@ const handleDownloadDepartmentCount = () => {
                         0
                       )}
                     </td>
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                                 <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                        onClick={() => {
+        setActiveFilter("granted");
+        setActiveSection(null);
+        setDepartmentCountFilter(null);
+      }}>
                       {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.Granted || 0),
                         0
@@ -1675,13 +1697,27 @@ const handleDownloadDepartmentCount = () => {
                       )}
                     </td>
                     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                      {pastBlockSummary.reduce(
-                        (sum, item) => sum + (item.PercentGranted || 0),
-                        0
-                      ).toFixed(2)}
+                                                                  {(() => {
+    const totalApplied = pastBlockSummary.reduce(
+      (sum, item) => sum + (item.Applied || 0),
+      0
+    );
+    const totalGranted = pastBlockSummary.reduce(
+      (sum, item) => sum + (item.Granted || 0),
+      0
+    );
+    return totalApplied > 0 
+      ? ((totalGranted / totalApplied) * 100).toFixed(2)
+      : "0.00";
+  })()}%
                     </td>
                     
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                                    <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                       onClick={() => {
+        setActiveFilter("availed");
+        setActiveSection(null);
+        setDepartmentCountFilter(null);
+      }}>
                       {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.Availed || 0),
                         0
@@ -1911,7 +1947,7 @@ const handleDownloadDepartmentCount = () => {
         toast.success("Showing sanctioned ENGG blocks with TRD support");
       }}
     >
-      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.isSanctioned).length}
+      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.isSanctioned&&block.sntDisconnectionRequired === false).length}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
@@ -1924,7 +1960,7 @@ const handleDownloadDepartmentCount = () => {
         toast.success("Showing availed ENGG blocks with TRD support");
       }}
     >
-      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
+      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null&&block.sntDisconnectionRequired === false).length}
     </td>
   </tr>
   
@@ -2394,7 +2430,7 @@ const handleDownloadDepartmentCount = () => {
                     if (block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance") {
                       statusLabel = "Sanctioned, Pending with SSE For Acceptance";
                       statusStyle = { background: "#fff86b", color: "#222" };
-                    }  else if (block.overAllStatus==="Sanctioned and Rejected by SSE") {
+                    }  else if (block.overAllStatus==="Sanctioned and Accepted by SSE") {
                       statusLabel = "Sanctioned and Accepted by SSE";
                       statusStyle = { background: "#d47ed4", color: "#222" };
                     } else if ( block.overAllStatus==="Sanctioned and Rejected by SSE") {

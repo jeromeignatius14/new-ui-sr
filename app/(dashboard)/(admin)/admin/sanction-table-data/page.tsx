@@ -4473,7 +4473,7 @@ const handleDownloadUpcomingBlocks = () => {
  onClick={() => handleDepartmentFilterClick("ENGG", "TRD", 'sanctioned')}
 
     >
-      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.isSanctioned).length}
+      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.isSanctioned&&block.sntDisconnectionRequired === false).length}
     </td>
     <td 
       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
@@ -4481,7 +4481,7 @@ const handleDownloadUpcomingBlocks = () => {
  onClick={() => handleDepartmentFilterClick("ENGG", "TRD", 'availed')}
 
     >
-      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
+      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true&&block.sntDisconnectionRequired === false && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
     </td>
   </tr>
   
@@ -4861,7 +4861,7 @@ const handleDownloadUpcomingBlocks = () => {
                     if (block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance") {
                       statusLabel = "Sanctioned, Pending with SSE For Acceptance";
                       statusStyle = { background: "#fff86b", color: "#222" };
-                    }  else if (block.overAllStatus==="Sanctioned and Rejected by SSE") {
+                    }  else if (block.overAllStatus==="Sanctioned and Accepted by SSE") {
                       statusLabel = "Sanctioned and Accepted by SSE";
                       statusStyle = { background: "#d47ed4", color: "#222" };
                     } else if ( block.overAllStatus==="Sanctioned and Rejected by SSE") {
