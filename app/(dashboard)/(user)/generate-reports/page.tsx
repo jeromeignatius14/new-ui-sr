@@ -793,7 +793,7 @@ const clearGlobalFilters = () => {
                   block.AvailedTimeTo
                 )}`
               : "Not Available",
-          Status: statusLabel,
+          Status: block.overAllStatus,
         };
       });
 
@@ -804,7 +804,7 @@ const clearGlobalFilters = () => {
       XLSX.utils.sheet_add_aoa(
         worksheet,
         [
-          [`(B) Summary of Upcoming Blocks`],
+         
           [], // Empty row for spacing
         ],
         { origin: "A1" }
@@ -1599,12 +1599,19 @@ const clearGlobalFilters = () => {
                       )}
                     </td>
                     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                      {pastBlockSummary
-                        .reduce(
-                          (sum, item) => sum + (item.PercentGranted || 0),
-                          0
-                        )
-                        .toFixed(2)}
+                                                                   {(() => {
+    const totalApplied = pastBlockSummary.reduce(
+      (sum, item) => sum + (item.Applied || 0),
+      0
+    );
+    const totalGranted = pastBlockSummary.reduce(
+      (sum, item) => sum + (item.Granted || 0),
+      0
+    );
+    return totalApplied > 0 
+      ? ((totalGranted / totalApplied) * 100).toFixed(2)
+      : "0.00";
+  })()}%
                     </td>
 
                     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
@@ -1925,7 +1932,7 @@ const clearGlobalFilters = () => {
                     detailedData.filter(
                       (block) =>
                         block.selectedDepartment === "ENGG" &&
-                        block.powerBlockRequired === true &&
+                        block.powerBlockRequired === true &&block.sntDisconnectionRequired === false&&
                         block.isSanctioned
                     ).length
                   }
@@ -1949,7 +1956,7 @@ const clearGlobalFilters = () => {
                         block.selectedDepartment === "ENGG" &&
                         block.powerBlockRequired === true &&
                         block.AvailedTimeFrom !== null &&
-                        block.AvailedTimeTo !== null
+                        block.AvailedTimeTo !== null&&block.sntDisconnectionRequired === false
                     ).length
                   }
                 </td>
