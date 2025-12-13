@@ -74,7 +74,7 @@
 // }
 
 // const locationOptions: OptionType[] = [
-//   { value: "MAS", label: "MAS" },
+//   { value: "{userLocations}", label: "{userLocations}" },
 //   { value: "SA", label: "SA" },
 //   { value: "MCU", label: "MCU" },
 //   { value: "TPJ", label: "TPJ" },
@@ -813,7 +813,7 @@
 //     const excelData = [
 //       // ENGG Rows
 //       {
-//         "Location": "MAS",
+//         "Location": "{userLocations}",
 //         "Department": "ENGG",
 //         "Supporting Department": "-",
 //         "Total Block Requested": enggTotal,
@@ -821,7 +821,7 @@
 //         "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
 //       },
 //       {
-//         "Location": "MAS",
+//         "Location": "{userLocations}",
 //         "Department": "ENGG",
 //         "Supporting Department": "S&T",
 //         "Total Block Requested": enggWithSnt,
@@ -829,7 +829,7 @@
 //         "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
 //       },
 //       {
-//         "Location": "MAS",
+//         "Location": "{userLocations}",
 //         "Department": "ENGG",
 //         "Supporting Department": "TRD",
 //         "Total Block Requested": enggWithPower,
@@ -837,7 +837,7 @@
 //         "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
 //       },
 //       {
-//         "Location": "MAS",
+//         "Location": "{userLocations}",
 //         "Department": "ENGG",
 //         "Supporting Department": "S&T and TRD",
 //         "Total Block Requested": enggWithSntAndPower,
@@ -847,7 +847,7 @@
       
 //       // TRD Rows
 //       {
-//         "Location": "MAS",
+//         "Location": "{userLocations}",
 //         "Department": "TRD",
 //         "Supporting Department": "-",
 //         "Total Block Requested": trdTotal,
@@ -857,7 +857,7 @@
       
 //       // S&T Rows
 //       {
-//         "Location": "MAS",
+//         "Location": "{userLocations}",
 //         "Department": "S&T",
 //         "Supporting Department": "-",
 //         "Total Block Requested": sntTotal,
@@ -865,7 +865,7 @@
 //         "Total Block Availed":detailedData.filter(block => block.selectedDepartment === "S&T" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
 //       },
 //       {
-//         "Location": "MAS",
+//         "Location": "{userLocations}",
 //         "Department": "S&T",
 //         "Supporting Department": "ENGG",
 //         "Total Block Requested": sntWithEngg,
@@ -873,7 +873,7 @@
 //         "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
 //       },
 //       {
-//         "Location": "MAS",
+//         "Location": "{userLocations}",
 //         "Department": "S&T",
 //         "Supporting Department": "TRD",
 //         "Total Block Requested": sntWithPower,
@@ -881,7 +881,7 @@
 //         "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
 //       },
 //       {
-//         "Location": "MAS",
+//         "Location": "{userLocations}",
 //         "Department": "S&T",
 //         "Supporting Department": "ENGG and TRD",
 //         "Total Block Requested": sntWithEnggAndPower,
@@ -1633,7 +1633,7 @@
 // <tbody>
 //   {/* ENGG Rows */}
 //   <tr className="bg-white font-bold">
-//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">-</td>
 //     <td 
@@ -1678,7 +1678,7 @@
 //   </tr>
   
 //   <tr className="bg-[#f4dcf1] font-bold">
-//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
 //     <td 
@@ -1723,7 +1723,7 @@
 //   </tr>
   
 //   <tr className="bg-white font-bold">
-//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">TRD</td>
 //     <td 
@@ -1768,7 +1768,7 @@
 //   </tr>
   
 //   <tr className="bg-[#f4dcf1] font-bold">
-//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T and TRD</td>
 //     <td 
@@ -1814,7 +1814,7 @@
 
 //   {/* TRD Rows */}
 //   <tr className="bg-white font-bold">
-//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">TRD</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">-</td>
 //     <td 
@@ -1860,7 +1860,7 @@
 
 //   {/* S&T Rows */}
 //   <tr className="bg-[#f4dcf1] font-bold">
-//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">-</td>
 //     <td 
@@ -1905,7 +1905,7 @@
 //   </tr>
   
 //   <tr className="bg-white font-bold">
-//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
 //     <td 
@@ -1950,7 +1950,7 @@
 //   </tr>
   
 //   <tr className="bg-[#f4dcf1] font-bold">
-//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">TRD</td>
 //     <td 
@@ -1995,7 +1995,7 @@
 //   </tr>
   
 //   <tr className="bg-white font-bold">
-//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG and TRD</td>
 //     <td 
@@ -4491,7 +4491,7 @@ const handleDownloadDepartmentCount = () => {
   {/* ENGG Rows */}
               {session?.user?.department === "ENGG" &&( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {userLocations}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -4565,7 +4565,7 @@ const handleDownloadDepartmentCount = () => {
              
 {session?.user?.department === "ENGG" && ( <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {userLocations}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -4642,7 +4642,7 @@ const handleDownloadDepartmentCount = () => {
 {session?.user?.department === "ENGG" && (
      <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {userLocations}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -4716,7 +4716,7 @@ const handleDownloadDepartmentCount = () => {
 {session?.user?.department === "ENGG" && (
     <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {userLocations}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -4791,7 +4791,7 @@ const handleDownloadDepartmentCount = () => {
             {session?.user?.department === "TRD" && (
               <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {userLocations}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   TRD
@@ -4859,7 +4859,7 @@ const handleDownloadDepartmentCount = () => {
               {/* S&T Rows */}
               {session?.user?.department === "S&T" && (  <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {userLocations}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -4928,7 +4928,7 @@ const handleDownloadDepartmentCount = () => {
             
 {session?.user?.department === "S&T" && ( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {userLocations}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -5000,7 +5000,7 @@ const handleDownloadDepartmentCount = () => {
              
 {session?.user?.department === "S&T" && (<tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {userLocations}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -5072,7 +5072,7 @@ const handleDownloadDepartmentCount = () => {
               
 {session?.user?.department === "S&T" && ( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {userLocations}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T

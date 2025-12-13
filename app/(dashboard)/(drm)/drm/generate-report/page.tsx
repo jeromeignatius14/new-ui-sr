@@ -1966,7 +1966,7 @@ const handleDownloadDepartmentCount = () => {
   {/* ENGG Rows */}
               {session?.user?.department === "ENGG" &&( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {userLocations}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -2040,7 +2040,7 @@ const handleDownloadDepartmentCount = () => {
              
 {session?.user?.department === "ENGG" && ( <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {userLocations}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -2117,7 +2117,7 @@ const handleDownloadDepartmentCount = () => {
 {session?.user?.department === "ENGG" && (
      <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {userLocations}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -2191,7 +2191,7 @@ const handleDownloadDepartmentCount = () => {
 {session?.user?.department === "ENGG" && (
     <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {userLocations}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -2266,7 +2266,7 @@ const handleDownloadDepartmentCount = () => {
             {session?.user?.department === "TRD" && (
               <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {userLocations}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   TRD
@@ -2334,7 +2334,7 @@ const handleDownloadDepartmentCount = () => {
               {/* S&T Rows */}
               {session?.user?.department === "S&T" && (  <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {userLocations}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -2403,7 +2403,7 @@ const handleDownloadDepartmentCount = () => {
             
 {session?.user?.department === "S&T" && ( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {userLocations}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -2475,7 +2475,7 @@ const handleDownloadDepartmentCount = () => {
              
 {session?.user?.department === "S&T" && (<tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {userLocations}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -2547,7 +2547,7 @@ const handleDownloadDepartmentCount = () => {
               
 {session?.user?.department === "S&T" && ( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {userLocations}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
