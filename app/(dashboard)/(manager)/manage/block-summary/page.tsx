@@ -74,7 +74,7 @@
 // }
 
 // const locationOptions: OptionType[] = [
-//   { value: "MAS", label: "MAS" },
+//   { value: "{userLocations}", label: "{userLocations}" },
 //   { value: "SA", label: "SA" },
 //   { value: "MCU", label: "MCU" },
 //   { value: "TPJ", label: "TPJ" },
@@ -813,7 +813,7 @@
 //     const excelData = [
 //       // ENGG Rows
 //       {
-//         "Location": "MAS",
+//         "Location": "{userLocations}",
 //         "Department": "ENGG",
 //         "Supporting Department": "-",
 //         "Total Block Requested": enggTotal,
@@ -821,7 +821,7 @@
 //         "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
 //       },
 //       {
-//         "Location": "MAS",
+//         "Location": "{userLocations}",
 //         "Department": "ENGG",
 //         "Supporting Department": "S&T",
 //         "Total Block Requested": enggWithSnt,
@@ -829,7 +829,7 @@
 //         "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
 //       },
 //       {
-//         "Location": "MAS",
+//         "Location": "{userLocations}",
 //         "Department": "ENGG",
 //         "Supporting Department": "TRD",
 //         "Total Block Requested": enggWithPower,
@@ -837,7 +837,7 @@
 //         "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
 //       },
 //       {
-//         "Location": "MAS",
+//         "Location": "{userLocations}",
 //         "Department": "ENGG",
 //         "Supporting Department": "S&T and TRD",
 //         "Total Block Requested": enggWithSntAndPower,
@@ -847,7 +847,7 @@
       
 //       // TRD Rows
 //       {
-//         "Location": "MAS",
+//         "Location": "{userLocations}",
 //         "Department": "TRD",
 //         "Supporting Department": "-",
 //         "Total Block Requested": trdTotal,
@@ -857,7 +857,7 @@
       
 //       // S&T Rows
 //       {
-//         "Location": "MAS",
+//         "Location": "{userLocations}",
 //         "Department": "S&T",
 //         "Supporting Department": "-",
 //         "Total Block Requested": sntTotal,
@@ -865,7 +865,7 @@
 //         "Total Block Availed":detailedData.filter(block => block.selectedDepartment === "S&T" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
 //       },
 //       {
-//         "Location": "MAS",
+//         "Location": "{userLocations}",
 //         "Department": "S&T",
 //         "Supporting Department": "ENGG",
 //         "Total Block Requested": sntWithEngg,
@@ -873,7 +873,7 @@
 //         "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
 //       },
 //       {
-//         "Location": "MAS",
+//         "Location": "{userLocations}",
 //         "Department": "S&T",
 //         "Supporting Department": "TRD",
 //         "Total Block Requested": sntWithPower,
@@ -881,7 +881,7 @@
 //         "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
 //       },
 //       {
-//         "Location": "MAS",
+//         "Location": "{userLocations}",
 //         "Department": "S&T",
 //         "Supporting Department": "ENGG and TRD",
 //         "Total Block Requested": sntWithEnggAndPower,
@@ -1633,7 +1633,7 @@
 // <tbody>
 //   {/* ENGG Rows */}
 //   <tr className="bg-white font-bold">
-//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">-</td>
 //     <td 
@@ -1678,7 +1678,7 @@
 //   </tr>
   
 //   <tr className="bg-[#f4dcf1] font-bold">
-//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
 //     <td 
@@ -1723,7 +1723,7 @@
 //   </tr>
   
 //   <tr className="bg-white font-bold">
-//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">TRD</td>
 //     <td 
@@ -1768,7 +1768,7 @@
 //   </tr>
   
 //   <tr className="bg-[#f4dcf1] font-bold">
-//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T and TRD</td>
 //     <td 
@@ -1814,7 +1814,7 @@
 
 //   {/* TRD Rows */}
 //   <tr className="bg-white font-bold">
-//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">TRD</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">-</td>
 //     <td 
@@ -1860,7 +1860,7 @@
 
 //   {/* S&T Rows */}
 //   <tr className="bg-[#f4dcf1] font-bold">
-//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">-</td>
 //     <td 
@@ -1905,7 +1905,7 @@
 //   </tr>
   
 //   <tr className="bg-white font-bold">
-//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
 //     <td 
@@ -1950,7 +1950,7 @@
 //   </tr>
   
 //   <tr className="bg-[#f4dcf1] font-bold">
-//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">TRD</td>
 //     <td 
@@ -1995,7 +1995,7 @@
 //   </tr>
   
 //   <tr className="bg-white font-bold">
-//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
+//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG and TRD</td>
 //     <td 
@@ -4489,223 +4489,660 @@ const handleDownloadDepartmentCount = () => {
     </thead>
 <tbody>
   {/* ENGG Rows */}
-  <tr className="bg-white font-bold">
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">-</td>
-    <td 
-      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => handleDepartmentFilterClick("ENGG", "-", 'requested')}
-    >
-      {enggTotal}
-    </td>
-    <td 
-      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => handleDepartmentFilterClick("ENGG", "-", 'sanctioned')}
-    >
-      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.isSanctioned && block.powerBlockRequired === false && block.sntDisconnectionRequired === false).length}
-    </td>
-    <td 
-      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => handleDepartmentFilterClick("ENGG", "-", 'availed')}
-    >
-      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null && block.powerBlockRequired === false && block.sntDisconnectionRequired === false).length}
-    </td>
-  </tr>
-  
-  <tr className="bg-[#f4dcf1] font-bold">
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
-    <td 
-      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => handleDepartmentFilterClick("ENGG", "S&T", 'requested')}
-    >
-      {enggWithSnt}
-    </td>
-    <td 
-      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => handleDepartmentFilterClick("ENGG", "S&T", 'sanctioned')}
-    >
-      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.isSanctioned && block.powerBlockRequired === false && block.enggDisconnectionsRequired === false).length}
-    </td>
-    <td 
-      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => handleDepartmentFilterClick("ENGG", "S&T", 'availed')}
-    >
-      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null && block.powerBlockRequired === false && block.enggDisconnectionsRequired === false).length}
-    </td>
-  </tr>
-  
-  <tr className="bg-white font-bold">
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">TRD</td>
-    <td 
-      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => handleDepartmentFilterClick("ENGG", "TRD", 'requested')}
-    >
-      {enggWithPower}
-    </td>
-    <td 
-      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => handleDepartmentFilterClick("ENGG", "TRD", 'sanctioned')}
-    >
-      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.isSanctioned).length}
-    </td>
-    <td 
-      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => handleDepartmentFilterClick("ENGG", "TRD", 'availed')}
-    >
-      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
-    </td>
-  </tr>
-  
-  <tr className="bg-[#f4dcf1] font-bold">
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T and TRD</td>
-    <td 
-      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => handleDepartmentFilterClick("ENGG", "S&T and TRD", 'requested')}
-    >
-      {enggWithSntAndPower}
-    </td>
-    <td 
-      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => handleDepartmentFilterClick("ENGG", "S&T and TRD", 'sanctioned')}
-    >
-      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.powerBlockRequired === true && block.isSanctioned).length}
-    </td>
-    <td 
-      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => handleDepartmentFilterClick("ENGG", "S&T and TRD", 'availed')}
-    >
-      {detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
-    </td>
-  </tr>
+              {session?.user?.department === "ENGG" &&( <tr className="bg-white font-bold">
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {userLocations}
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  ENGG
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  -
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "ENGG",
+                      supportingDepartment: "-",
+                      filterType: "requested",
+                    });
+                    toast.success(
+                      "Showing requested ENGG blocks (no supporting departments)"
+                    );
+                  }}
+                >
+                  {enggTotal}
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "ENGG",
+                      supportingDepartment: "-",
+                      filterType: "sanctioned",
+                    });
+                    toast.success(
+                      "Showing sanctioned ENGG blocks (no supporting departments)"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "ENGG" &&
+                        block.isSanctioned &&
+                        block.powerBlockRequired === false &&
+                        block.sntDisconnectionRequired === false
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "ENGG",
+                      supportingDepartment: "-",
+                      filterType: "availed",
+                    });
+                    toast.success(
+                      "Showing availed ENGG blocks (no supporting departments)"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "ENGG" &&
+                        block.AvailedTimeFrom !== null &&
+                        block.AvailedTimeTo !== null &&
+                        block.powerBlockRequired === false &&
+                        block.sntDisconnectionRequired === false
+                    ).length
+                  }
+                </td>
+              </tr>)}
+             
+{session?.user?.department === "ENGG" && ( <tr className="bg-[#f4dcf1] font-bold">
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {userLocations}
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  ENGG
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  S&T
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "ENGG",
+                      supportingDepartment: "S&T",
+                      filterType: "requested",
+                    });
+                    toast.success(
+                      "Showing requested ENGG blocks with S&T support"
+                    );
+                  }}
+                >
+                  {enggWithSnt}
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "ENGG",
+                      supportingDepartment: "S&T",
+                      filterType: "sanctioned",
+                    });
+                    toast.success(
+                      "Showing sanctioned ENGG blocks with S&T support"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "ENGG" &&
+                        block.sntDisconnectionRequired === true &&
+                        block.isSanctioned &&
+                        block.powerBlockRequired === false &&
+                        block.enggDisconnectionsRequired === false
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "ENGG",
+                      supportingDepartment: "S&T",
+                      filterType: "availed",
+                    });
+                    toast.success(
+                      "Showing availed ENGG blocks with S&T support"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "ENGG" &&
+                        block.sntDisconnectionRequired === true &&
+                        block.AvailedTimeFrom !== null &&
+                        block.AvailedTimeTo !== null &&
+                        block.powerBlockRequired === false &&
+                        block.enggDisconnectionsRequired === false
+                    ).length
+                  }
+                </td>
+              </tr>)}
+             
+{session?.user?.department === "ENGG" && (
+     <tr className="bg-white font-bold">
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {userLocations}
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  ENGG
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  TRD
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "ENGG",
+                      supportingDepartment: "TRD",
+                      filterType: "requested",
+                    });
+                    toast.success(
+                      "Showing requested ENGG blocks with TRD support"
+                    );
+                  }}
+                >
+                  {enggWithPower}
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "ENGG",
+                      supportingDepartment: "TRD",
+                      filterType: "sanctioned",
+                    });
+                    toast.success(
+                      "Showing sanctioned ENGG blocks with TRD support"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "ENGG" &&
+                        block.powerBlockRequired === true &&block.sntDisconnectionRequired === false&&
+                        block.isSanctioned
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "ENGG",
+                      supportingDepartment: "TRD",
+                      filterType: "availed",
+                    });
+                    toast.success(
+                      "Showing availed ENGG blocks with TRD support"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "ENGG" &&
+                        block.powerBlockRequired === true &&
+                        block.AvailedTimeFrom !== null &&
+                        block.AvailedTimeTo !== null&&block.sntDisconnectionRequired === false
+                    ).length
+                  }
+                </td>
+              </tr>
+)}
+           
+{session?.user?.department === "ENGG" && (
+    <tr className="bg-[#f4dcf1] font-bold">
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {userLocations}
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  ENGG
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  S&T and TRD
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "ENGG",
+                      supportingDepartment: "S&T and TRD",
+                      filterType: "requested",
+                    });
+                    toast.success(
+                      "Showing requested ENGG blocks with S&T and TRD support"
+                    );
+                  }}
+                >
+                  {enggWithSntAndPower}
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "ENGG",
+                      supportingDepartment: "S&T and TRD",
+                      filterType: "sanctioned",
+                    });
+                    toast.success(
+                      "Showing sanctioned ENGG blocks with S&T and TRD support"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "ENGG" &&
+                        block.sntDisconnectionRequired === true &&
+                        block.powerBlockRequired === true &&
+                        block.isSanctioned
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "ENGG",
+                      supportingDepartment: "S&T and TRD",
+                      filterType: "availed",
+                    });
+                    toast.success(
+                      "Showing availed ENGG blocks with S&T and TRD support"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "ENGG" &&
+                        block.sntDisconnectionRequired === true &&
+                        block.powerBlockRequired === true &&
+                        block.AvailedTimeFrom !== null &&
+                        block.AvailedTimeTo !== null
+                    ).length
+                  }
+                </td>
+              </tr>
+)}
+            {session?.user?.department === "TRD" && (
+              <tr className="bg-white font-bold">
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {userLocations}
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  TRD
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  -
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "TRD",
+                      supportingDepartment: "-",
+                      filterType: "requested",
+                    });
+                    toast.success("Showing requested TRD blocks");
+                  }}
+                >
+                  {trdTotal}
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "TRD",
+                      supportingDepartment: "-",
+                      filterType: "sanctioned",
+                    });
+                    toast.success("Showing sanctioned TRD blocks");
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "TRD" && block.isSanctioned
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "TRD",
+                      supportingDepartment: "-",
+                      filterType: "availed",
+                    });
+                    toast.success("Showing availed TRD blocks");
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "TRD" &&
+                        block.AvailedTimeFrom !== null &&
+                        block.AvailedTimeTo !== null
+                    ).length
+                  }
+                </td>
+              </tr>
+            )}
 
-  {/* TRD Rows */}
-  <tr className="bg-white font-bold">
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">TRD</td>
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">-</td>
-    <td 
-      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => handleDepartmentFilterClick("TRD", "-", 'requested')}
-    >
-      {trdTotal}
-    </td>
-    <td 
-      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => handleDepartmentFilterClick("TRD", "-", 'sanctioned')}
-    >
-      {detailedData.filter(block => block.selectedDepartment === "TRD" && block.isSanctioned).length}
-    </td>
-    <td 
-      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => handleDepartmentFilterClick("TRD", "-", 'availed')}
-    >
-      {detailedData.filter(block => block.selectedDepartment === "TRD" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
-    </td>
-  </tr>
+             
+              
 
-  {/* S&T Rows */}
-  <tr className="bg-[#f4dcf1] font-bold">
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">-</td>
-    <td 
-      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => handleDepartmentFilterClick("S&T", "-", 'requested')}
-    >
-      {sntTotal}
-    </td>
-    <td 
-      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => handleDepartmentFilterClick("S&T", "-", 'sanctioned')}
-    >
-      {detailedData.filter(block => block.selectedDepartment === "S&T" && block.isSanctioned).length}
-    </td>
-    <td 
-      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => handleDepartmentFilterClick("S&T", "-", 'availed')}
-    >
-      {detailedData.filter(block => block.selectedDepartment === "S&T" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
-    </td>
-  </tr>
-  
-  <tr className="bg-white font-bold">
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
-    <td 
-      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => handleDepartmentFilterClick("S&T", "ENGG", 'requested')}
-    >
-      {sntWithEngg}
-    </td>
-    <td 
-      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => handleDepartmentFilterClick("S&T", "ENGG", 'sanctioned')}
-    >
-      {detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.isSanctioned).length}
-    </td>
-    <td 
-      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => handleDepartmentFilterClick("S&T", "ENGG", 'availed')}
-    >
-      {detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
-    </td>
-  </tr>
-  
-  <tr className="bg-[#f4dcf1] font-bold">
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">TRD</td>
-    <td 
-      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => handleDepartmentFilterClick("S&T", "TRD", 'requested')}
-    >
-      {sntWithPower}
-    </td>
-    <td 
-      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => handleDepartmentFilterClick("S&T", "TRD", 'sanctioned')}
-    >
-      {detailedData.filter(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.isSanctioned).length}
-    </td>
-    <td 
-      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => handleDepartmentFilterClick("S&T", "TRD", 'availed')}
-    >
-      {detailedData.filter(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
-    </td>
-  </tr>
-  
-  <tr className="bg-white font-bold">
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
-    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG and TRD</td>
-    <td 
-      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => handleDepartmentFilterClick("S&T", "ENGG and TRD", 'requested')}
-    >
-      {sntWithEnggAndPower}
-    </td>
-    <td 
-      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => handleDepartmentFilterClick("S&T", "ENGG and TRD", 'sanctioned')}
-    >
-      {detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.powerBlockRequired === true && block.isSanctioned).length}
-    </td>
-    <td 
-      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
-      onClick={() => handleDepartmentFilterClick("S&T", "ENGG and TRD", 'availed')}
-    >
-      {detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length}
-    </td>
-  </tr>
+              {/* S&T Rows */}
+              {session?.user?.department === "S&T" && (  <tr className="bg-[#f4dcf1] font-bold">
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {userLocations}
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  S&T
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  -
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "S&T",
+                      supportingDepartment: "-",
+                      filterType: "requested",
+                    });
+                    toast.success(
+                      "Showing requested S&T blocks (no supporting departments)"
+                    );
+                  }}
+                >
+                  {sntTotal}
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "S&T",
+                      supportingDepartment: "-",
+                      filterType: "sanctioned",
+                    });
+                    toast.success(
+                      "Showing sanctioned S&T blocks (no supporting departments)"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "S&T" && block.isSanctioned
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "S&T",
+                      supportingDepartment: "-",
+                      filterType: "availed",
+                    });
+                    toast.success(
+                      "Showing availed S&T blocks (no supporting departments)"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "S&T" &&
+                        block.AvailedTimeFrom !== null &&
+                        block.AvailedTimeTo !== null
+                    ).length
+                  }
+                </td>
+              </tr>)}
+            
+{session?.user?.department === "S&T" && ( <tr className="bg-white font-bold">
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {userLocations}
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  S&T
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  ENGG
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "S&T",
+                      supportingDepartment: "ENGG",
+                      filterType: "requested",
+                    });
+                    toast.success(
+                      "Showing requested S&T blocks with ENGG support"
+                    );
+                  }}
+                >
+                  {sntWithEngg}
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "S&T",
+                      supportingDepartment: "ENGG",
+                      filterType: "sanctioned",
+                    });
+                    toast.success(
+                      "Showing sanctioned S&T blocks with ENGG support"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "S&T" &&
+                        block.enggDisconnectionsRequired === true &&
+                        block.isSanctioned
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "S&T",
+                      supportingDepartment: "ENGG",
+                      filterType: "availed",
+                    });
+                    toast.success(
+                      "Showing availed S&T blocks with ENGG support"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "S&T" &&
+                        block.enggDisconnectionsRequired === true &&
+                        block.AvailedTimeFrom !== null &&
+                        block.AvailedTimeTo !== null
+                    ).length
+                  }
+                </td>
+              </tr>)}
+             
+{session?.user?.department === "S&T" && (<tr className="bg-[#f4dcf1] font-bold">
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {userLocations}
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  S&T
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  TRD
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "S&T",
+                      supportingDepartment: "TRD",
+                      filterType: "requested",
+                    });
+                    toast.success(
+                      "Showing requested S&T blocks with TRD support"
+                    );
+                  }}
+                >
+                  {sntWithPower}
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "S&T",
+                      supportingDepartment: "TRD",
+                      filterType: "sanctioned",
+                    });
+                    toast.success(
+                      "Showing sanctioned S&T blocks with TRD support"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "S&T" &&
+                        block.powerBlockRequired === true &&
+                        block.isSanctioned
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "S&T",
+                      supportingDepartment: "TRD",
+                      filterType: "availed",
+                    });
+                    toast.success(
+                      "Showing availed S&T blocks with TRD support"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "S&T" &&
+                        block.powerBlockRequired === true &&
+                        block.AvailedTimeFrom !== null &&
+                        block.AvailedTimeTo !== null
+                    ).length
+                  }
+                </td>
+              </tr>)}
+              
+{session?.user?.department === "S&T" && ( <tr className="bg-white font-bold">
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {userLocations}
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  S&T
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  ENGG and TRD
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "S&T",
+                      supportingDepartment: "ENGG and TRD",
+                      filterType: "requested",
+                    });
+                    toast.success(
+                      "Showing requested S&T blocks with ENGG and TRD support"
+                    );
+                  }}
+                >
+                  {sntWithEnggAndPower}
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "S&T",
+                      supportingDepartment: "ENGG and TRD",
+                      filterType: "sanctioned",
+                    });
+                    toast.success(
+                      "Showing sanctioned S&T blocks with ENGG and TRD support"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "S&T" &&
+                        block.enggDisconnectionsRequired === true &&
+                        block.powerBlockRequired === true &&
+                        block.isSanctioned
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setDepartmentCountFilter({
+                      department: "S&T",
+                      supportingDepartment: "ENGG and TRD",
+                      filterType: "availed",
+                    });
+                    toast.success(
+                      "Showing availed S&T blocks with ENGG and TRD support"
+                    );
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "S&T" &&
+                        block.enggDisconnectionsRequired === true &&
+                        block.powerBlockRequired === true &&
+                        block.AvailedTimeFrom !== null &&
+                        block.AvailedTimeTo !== null
+                    ).length
+                  }
+                </td>
+              </tr>)}
 
   {/* Total Row */}
   <tr className="bg-[#ff914d] text-white font-bold">
