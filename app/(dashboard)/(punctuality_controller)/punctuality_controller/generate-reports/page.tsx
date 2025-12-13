@@ -3940,7 +3940,7 @@ const handleDepartmentFilterClick = (
               <thead>
                 <tr className="bg-[#f7c7ac] text-black text-[14px] md:text-[24px] font-bold">
                   <th className="border-2 border-black px-1 md:px-2 py-2">Section</th>
-                  <th className="border-2 border-black px-1 md:px-2 py-2">Demanded (Hrs)/Blocks</th>
+                  {/* <th className="border-2 border-black px-1 md:px-2 py-2">Demanded (Hrs)/Blocks</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Approved (Hrs)/Blocks</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Applied (Hrs)/Blocks</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Granted (Hrs)/Blocks</th>
@@ -3948,7 +3948,142 @@ const handleDepartmentFilterClick = (
                   <th className="border-2 border-black px-1 md:px-2 py-2">Availed (Hrs)/Blocks</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">% Availed</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Not Granted</th>
-                  <th className="border-2 border-black px-1 md:px-2 py-2">Not Availed</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Not Availed</th> */}
+                                    <th className="border-2 border-black px-1 md:px-2 py-2">
+  <div className="flex flex-col items-center justify-center">
+    {/* First line */}
+    <div>Demanded</div>
+    
+    {/* Second line with icon */}
+    <div className="relative flex items-center justify-center group">
+      (Hrs)/Blocks
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      
+      {/* Tooltip */}
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+        Blocks demanded by SSE/JE
+      </div>
+    </div>
+  </div>
+</th>
+
+<th className="border-2 border-black px-1 md:px-2 py-2">
+  <div className="flex flex-col items-center justify-center">
+    <div>Approved</div>
+    <div className="relative flex items-center justify-center group">
+      (Hrs)/Blocks
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+        Blocks Sanctioned by the Traffic controller
+      </div>
+    </div>
+  </div>
+</th>
+
+<th className="border-2 border-black px-1 md:px-2 py-2">
+  <div className="flex flex-col items-center justify-center">
+    <div>Applied</div>
+    <div className="relative flex items-center justify-center group">
+      (Hrs)/Blocks
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+         Sanctioned blocks applied to a SM in block avail at site
+      </div>
+    </div>
+  </div>
+</th>
+
+<th className="border-2 border-black px-1 md:px-2 py-2">
+  <div className="flex flex-col items-center justify-center">
+    <div>Granted</div>
+    <div className="relative flex items-center justify-center group">
+      (Hrs)/Blocks
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+        Applied block Granted  by the station master
+      </div>
+    </div>
+  </div>
+</th>
+
+<th className="border-2 border-black px-1 md:px-2 py-2">
+  <div className="flex flex-col items-center justify-center">
+    <div>% Granted</div>
+    <div className="relative flex items-center justify-center group">
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+       Total blocks granted / total blocks availed
+      </div>
+    </div>
+  </div>
+</th>
+
+<th className="border-2 border-black px-1 md:px-2 py-2">
+  <div className="flex flex-col items-center justify-center">
+    <div>Availed</div>
+    <div className="relative flex items-center justify-center group">
+      (Hrs)/Blocks
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+        Grated blocks availed and closed by the SSE/JE
+      </div>
+    </div>
+  </div>
+</th>
+
+<th className="border-2 border-black px-1 md:px-2 py-2">
+  <div className="flex flex-col items-center justify-center">
+    <div>% Availed</div>
+    <div className="relative flex items-center justify-center group">
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+         Total blocks availed by total blocks granted
+      </div>
+    </div>
+  </div>
+</th>
+
+<th className="border-2 border-black px-1 md:px-2 py-2">
+  <div className="flex flex-col items-center justify-center">
+    <div>Not Granted</div>
+    <div className="relative flex items-center justify-center group">
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+        Sanctioned blocks applied by SSE/JE but rejected by the station master
+      </div>
+    </div>
+  </div>
+</th>
+
+<th className="border-2 border-black px-1 md:px-2 py-2">
+  <div className="flex flex-col items-center justify-center">
+    <div>Not Availed</div>
+    <div className="relative flex items-center justify-center group">
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+        Blocks rejected by SSE/JE after approved or granted
+      </div>
+    </div>
+  </div>
+</th>
 
                 </tr>
               </thead>
