@@ -1529,7 +1529,7 @@ const handleDownloadDepartmentCount = () => {
                   <th className="border-2 border-black px-1 md:px-2 py-2">% Availed</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Not Granted</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Not Availed</th> */}
-                                    <th className="border-2 border-black px-1 md:px-2 py-2">
+                  <th className="border-2 border-black px-1 md:px-2 py-2">
   <div className="flex flex-col items-center justify-center">
     {/* First line */}
     <div>Demanded</div>
@@ -1543,26 +1543,49 @@ const handleDownloadDepartmentCount = () => {
       
       {/* Tooltip */}
       <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
-        Blocks demanded by SSE/JE
+        Blocks Demanded by Engg/OHE/S&T
       </div>
     </div>
   </div>
 </th>
 
+
 <th className="border-2 border-black px-1 md:px-2 py-2">
   <div className="flex flex-col items-center justify-center">
-    <div>Approved</div>
+    <div>Sanctioned</div>
     <div className="relative flex items-center justify-center group">
       (Hrs)/Blocks
       <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
         i
       </span>
       <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
-        Blocks Sanctioned by the Traffic controller
+        Blocks Sanctioned by the Operating Dept.
       </div>
     </div>
   </div>
 </th>
+
+                  <th className="border-2 border-black px-1 md:px-2 py-2">
+  <div className="flex flex-col items-center justify-center">
+    {/* First line */}
+    <div>% Sanctioned</div>
+    
+    {/* Second line with icon */}
+    <div className="relative flex items-center justify-center group">
+     
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      
+      {/* Tooltip */}
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+       Total Block Sanctioned/Total Blocks Demanded
+      </div>
+    </div>
+  </div>
+</th>
+
+
 
 <th className="border-2 border-black px-1 md:px-2 py-2">
   <div className="flex flex-col items-center justify-center">
@@ -1573,7 +1596,7 @@ const handleDownloadDepartmentCount = () => {
         i
       </span>
       <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
-         Sanctioned blocks applied to a SM in block avail at site
+         Sanctioned Blocks applied to a SM from the site by SSE/JE
       </div>
     </div>
   </div>
@@ -1588,7 +1611,7 @@ const handleDownloadDepartmentCount = () => {
         i
       </span>
       <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
-        Applied block Granted  by the station master
+        Applied block Granted  by the SM
       </div>
     </div>
   </div>
@@ -1602,7 +1625,7 @@ const handleDownloadDepartmentCount = () => {
         i
       </span>
       <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
-       Total blocks granted / total blocks availed
+       Total Blocks Granted / Total Blocks Applied
       </div>
     </div>
   </div>
@@ -1617,7 +1640,7 @@ const handleDownloadDepartmentCount = () => {
         i
       </span>
       <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
-        Grated blocks availed and closed by the SSE/JE
+        Granted Blocks Availed and Cancelled by SSE/JE
       </div>
     </div>
   </div>
@@ -1631,7 +1654,7 @@ const handleDownloadDepartmentCount = () => {
         i
       </span>
       <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
-         Total blocks availed by total blocks granted
+         Total Blocks Availed/Total Block Granted
       </div>
     </div>
   </div>
@@ -1645,7 +1668,7 @@ const handleDownloadDepartmentCount = () => {
         i
       </span>
       <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
-        Sanctioned blocks applied by SSE/JE but rejected by the station master
+    Applied Blocks not granted by the SM
       </div>
     </div>
   </div>
@@ -1659,7 +1682,7 @@ const handleDownloadDepartmentCount = () => {
         i
       </span>
       <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
-        Blocks rejected by SSE/JE after approved or granted
+        Granted Blocks rejected by SSE/JE after Sanctioned/Grant
       </div>
     </div>
   </div>
@@ -1667,7 +1690,7 @@ const handleDownloadDepartmentCount = () => {
 
                 </tr>
               </thead>
-              <tbody>
+            <tbody>
                 {pastBlockSummary.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="text-center py-4 text-black">
@@ -1677,7 +1700,9 @@ const handleDownloadDepartmentCount = () => {
                 ) : (
                   pastBlockSummary.map((summary: any, idx: number) => (
                     <tr
-                      className={`font-bold ${idx % 2 === 0 ? "bg-[#f4dcf1]" : "bg-white"}`}
+                      className={`font-bold ${
+                        idx % 2 === 0 ? "bg-[#f4dcf1]" : "bg-white"
+                      }`}
                       key={idx}
                     >
                       <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
@@ -1685,10 +1710,12 @@ const handleDownloadDepartmentCount = () => {
                       </td>
                       <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
-                         onClick={() => {
-    setActiveFilter("demanded");
-    setActiveSection(summary.Department || summary.Section);
-  }}
+                        onClick={() => {
+                          setActiveFilter("demanded");
+                          setActiveSection(
+                            summary.Department || summary.Section
+                          );
+                        }}
                       >
                         {summary.Demanded.toFixed(2)} / {summary.DemandsCount}
                       </td>
@@ -1696,15 +1723,33 @@ const handleDownloadDepartmentCount = () => {
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
                         onClick={() => {
                           setActiveFilter("approved");
-                          setActiveSection(summary.Department || summary.Section);
+                          setActiveSection(
+                            summary.Department || summary.Section
+                          );
                         }}
                       >
                         {summary.Approved.toFixed(2)} / {summary.ApprovedCount}
                       </td>
-                      <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
-                         onClick={() => {
+                          <td
+                        className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                        onClick={() => {
+                          // setActiveFilter("approved");
+                          setActiveSection(
+                            summary.Department || summary.Section
+                          );
+                        }}
+                      >
+                         {summary.PercentSanctioned !== undefined
+                          ? summary.PercentSanctioned.toFixed(2) + "%"
+                          : ""}
+                      </td>
+                      <td
+                        className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                        onClick={() => {
                           setActiveFilter("applied");
-                          setActiveSection(summary.Department || summary.Section);
+                          setActiveSection(
+                            summary.Department || summary.Section
+                          );
                         }}
                       >
                         {summary.Applied.toFixed(2)} /{summary.AppliedCount}
@@ -1713,12 +1758,14 @@ const handleDownloadDepartmentCount = () => {
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
                         onClick={() => {
                           setActiveFilter("granted");
-                          setActiveSection(summary.Department || summary.Section);
+                          setActiveSection(
+                            summary.Department || summary.Section
+                          );
                         }}
                       >
                         {summary.Granted.toFixed(2)} /{summary.GrantedCount}
                       </td>
-                    
+
                       <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                         {summary.PercentGranted !== undefined
                           ? summary.PercentGranted.toFixed(2) + "%"
@@ -1728,7 +1775,9 @@ const handleDownloadDepartmentCount = () => {
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
                         onClick={() => {
                           setActiveFilter("availed");
-                          setActiveSection(summary.Department || summary.Section);
+                          setActiveSection(
+                            summary.Department || summary.Section
+                          );
                         }}
                       >
                         {summary.Availed.toFixed(2)} / {summary.AvailedCount}
@@ -1738,45 +1787,51 @@ const handleDownloadDepartmentCount = () => {
                           ? summary.PercentAvailed.toFixed(2) + "%"
                           : ""}
                       </td>
-<td
-  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
-  onClick={() => {
-    // You can define what happens when Not Granted is clicked
-    // For example, filter the upcoming blocks to show only not granted requests
-    setActiveFilter("notGranted");
-    setActiveSection(summary.Department || summary.Section);
-    toast.success(`Viewing Not Granted for: ${summary.Department || summary.Section}`);
-  }}
->
-  {summary.NotGrantedCount}
-</td>
-<td
-  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
-  onClick={() => {
-    // You can define what happens when Not Availed is clicked
-    setActiveFilter("notAvailed");
-    setActiveSection(summary.Department || summary.Section);
-    toast.success(`Viewing Not Availed for: ${summary.Department || summary.Section}`);
-  }}
->
-  {summary.NotAvailedCount}
-</td>
-                    
+                      <td
+                        className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                        onClick={() => {
+                          // You can define what happens when Not Granted is clicked
+                          // For example, filter the upcoming blocks to show only not granted requests
+                          setActiveFilter("notGranted");
+                          setActiveSection(
+                            summary.Department || summary.Section
+                          );
+                          toast.success(
+                            `Viewing Not Granted for: ${
+                              summary.Department || summary.Section
+                            }`
+                          );
+                        }}
+                      >
+                        {summary.NotGrantedCount}
+                      </td>
+                      <td
+                        className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                        onClick={() => {
+                          // You can define what happens when Not Availed is clicked
+                          setActiveFilter("notAvailed");
+                          setActiveSection(
+                            summary.Department || summary.Section
+                          );
+                          toast.success(
+                            `Viewing Not Availed for: ${
+                              summary.Department || summary.Section
+                            }`
+                          );
+                        }}
+                      >
+                        {summary.NotAvailedCount}
+                      </td>
                     </tr>
                   ))
                 )}
 
                 {pastBlockSummary.length > 0 && (
                   <tr className="bg-[#ff914d] text-white font-bold">
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-[12px] md:text-[16px]">Totals</td>
-                               <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
-
-                         onClick={() => {
-        setActiveFilter("demanded");
-        setActiveSection(null);
-        setDepartmentCountFilter(null);
-      }}
-                    >
+                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-[12px] md:text-[16px]">
+                      Totals
+                    </td>
+                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                       {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Demanded || 0), 0)
                         .toFixed(2)}{" "}
@@ -1785,13 +1840,8 @@ const handleDownloadDepartmentCount = () => {
                         (sum, item) => sum + (item.DemandsCount || 0),
                         0
                       )}
-                    </td>
-                                     <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
-                         onClick={() => {
-        setActiveFilter("approved");
-        setActiveSection(null);
-        setDepartmentCountFilter(null);
-      }}>
+                    </td>                 
+                          <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                       {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Approved || 0), 0)
                         .toFixed(2)}{" "}
@@ -1801,44 +1851,49 @@ const handleDownloadDepartmentCount = () => {
                         0
                       )}
                     </td>
-                                <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
-                       onClick={() => {
-        setActiveFilter("applied");
-        setActiveSection(null);
-        setDepartmentCountFilter(null);
-      }}>
-                      {pastBlockSummary.reduce(
-                        (sum, item) => sum + (item.Applied || 0),
-                        0
-                      ).toFixed(2)} /{" "}
+<td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+  {(() => {
+    const totalApproved = pastBlockSummary.reduce(
+      (sum, item) => sum + (item.ApprovedCount || 0),
+      0
+    );
+    const totalDemanded = pastBlockSummary.reduce(
+      (sum, item) => sum + (item.DemandsCount || 0),
+      0
+    );
+    return totalDemanded > 0 
+      ? ((totalApproved / totalDemanded) * 100).toFixed(2)
+      : "0.00";
+  })()}%
+</td>
+                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                      {pastBlockSummary
+                        .reduce((sum, item) => sum + (item.Applied || 0), 0)
+                        .toFixed(2)}{" "}
+                      /{" "}
                       {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.AppliedCount || 0),
                         0
                       )}
                     </td>
-                                 <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
-                        onClick={() => {
-        setActiveFilter("granted");
-        setActiveSection(null);
-        setDepartmentCountFilter(null);
-      }}>
-                      {pastBlockSummary.reduce(
-                        (sum, item) => sum + (item.Granted || 0),
-                        0
-                      ).toFixed(2)} /{" "}
+                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                      {pastBlockSummary
+                        .reduce((sum, item) => sum + (item.Granted || 0), 0)
+                        .toFixed(2)}{" "}
+                      /{" "}
                       {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.GrantedCount || 0),
                         0
                       )}
                     </td>
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                                                                  {(() => {
+                        <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                                                                   {(() => {
     const totalApplied = pastBlockSummary.reduce(
-      (sum, item) => sum + (item.Applied || 0),
+      (sum, item) => sum + (item.AppliedCount || 0),
       0
     );
     const totalGranted = pastBlockSummary.reduce(
-      (sum, item) => sum + (item.Granted || 0),
+      (sum, item) => sum + (item.GrantedCount || 0),
       0
     );
     return totalApplied > 0 
@@ -1846,55 +1901,58 @@ const handleDownloadDepartmentCount = () => {
       : "0.00";
   })()}%
                     </td>
-                    
-                                    <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
-                       onClick={() => {
-        setActiveFilter("availed");
-        setActiveSection(null);
-        setDepartmentCountFilter(null);
-      }}>
-                      {pastBlockSummary.reduce(
-                        (sum, item) => sum + (item.Availed || 0),
-                        0
-                      ).toFixed(2)}{" "}
+
+                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                      {pastBlockSummary
+                        .reduce((sum, item) => sum + (item.Availed || 0), 0)
+                        .toFixed(2)}{" "}
                       /{" "}
                       {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.AvailedCount || 0),
                         0
                       )}
                     </td>
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                      {pastBlockSummary.reduce(
-                        (sum, item) => sum + (item.PercentAvailed || 0),
-                        0
-                      ).toFixed(2)}
+                            <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                                                                                        {(() => {
+    const totalAvailed = pastBlockSummary.reduce(
+      (sum, item) => sum + (item.AvailedCount || 0),
+      0
+    );
+    const totalGranted = pastBlockSummary.reduce(
+      (sum, item) => sum + (item.GrantedCount || 0),
+      0
+    );
+    return totalAvailed > 0 
+      ? ((totalAvailed / totalGranted) * 100).toFixed(2)
+      : "0.00";
+  })()}%
                     </td>
-                  <td
-  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
-  onClick={() => {
-    setActiveFilter("notGranted");
-    setActiveSection(null); // Show all sections for total
-    toast.success("Viewing all Not Granted requests");
-  }}
->
-  {pastBlockSummary.reduce(
-    (sum, item) => sum + (item.NotGrantedCount || 0),
-    0
-  )}
-</td>
-<td
-  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
-  onClick={() => {
-    setActiveFilter("notAvailed");
-    setActiveSection(null); // Show all sections for total
-    toast.success("Viewing all Not Availed requests");
-  }}
->
-  {pastBlockSummary.reduce(
-    (sum, item) => sum + (item.NotAvailedCount || 0),
-    0
-  )}
-</td>
+                    <td
+                      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                      onClick={() => {
+                        setActiveFilter("notGranted");
+                        setActiveSection(null); // Show all sections for total
+                        toast.success("Viewing all Not Granted requests");
+                      }}
+                    >
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.NotGrantedCount || 0),
+                        0
+                      )}
+                    </td>
+                    <td
+                      className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                      onClick={() => {
+                        setActiveFilter("notAvailed");
+                        setActiveSection(null); // Show all sections for total
+                        toast.success("Viewing all Not Availed requests");
+                      }}
+                    >
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.NotAvailedCount || 0),
+                        0
+                      )}
+                    </td>
                   </tr>
                 )}
               </tbody>
