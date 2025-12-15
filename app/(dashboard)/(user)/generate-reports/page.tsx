@@ -1404,32 +1404,165 @@ const clearGlobalFilters = () => {
                     Section
                   </th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">
-                    Demanded (Hrs)/Blocks
-                  </th>
+  <div className="flex flex-col items-center justify-center">
+    {/* First line */}
+    <div>Demanded</div>
+    
+    {/* Second line with icon */}
+    <div className="relative flex items-center justify-center group">
+      (Hrs)/Blocks
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      
+      {/* Tooltip */}
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+        Blocks Demanded by Engg/OHE/S&T
+      </div>
+    </div>
+  </div>
+</th>
+
+
+<th className="border-2 border-black px-1 md:px-2 py-2">
+  <div className="flex flex-col items-center justify-center">
+    <div>Sanctioned</div>
+    <div className="relative flex items-center justify-center group">
+      (Hrs)/Blocks
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+        Blocks Sanctioned by the Operating Dept.
+      </div>
+    </div>
+  </div>
+</th>
+
                   <th className="border-2 border-black px-1 md:px-2 py-2">
-                    Approved (Hrs)/Blocks
-                  </th>
-                  <th className="border-2 border-black px-1 md:px-2 py-2">
-                    Applied (Hrs)/Blocks
-                  </th>
-                  <th className="border-2 border-black px-1 md:px-2 py-2">
-                    Granted (Hrs)/Blocks
-                  </th>
-                  <th className="border-2 border-black px-1 md:px-2 py-2">
-                    % Granted
-                  </th>
-                  <th className="border-2 border-black px-1 md:px-2 py-2">
-                    Availed (Hrs)/Blocks
-                  </th>
-                  <th className="border-2 border-black px-1 md:px-2 py-2">
-                    % Availed
-                  </th>
-                  <th className="border-2 border-black px-1 md:px-2 py-2">
-                    Not Granted
-                  </th>
-                  <th className="border-2 border-black px-1 md:px-2 py-2">
-                    Not Availed
-                  </th>
+  <div className="flex flex-col items-center justify-center">
+    {/* First line */}
+    <div>% Sanctioned</div>
+    
+    {/* Second line with icon */}
+    <div className="relative flex items-center justify-center group">
+     
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      
+      {/* Tooltip */}
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+       Total Block Sanctioned/Total Blocks Demanded
+      </div>
+    </div>
+  </div>
+</th>
+
+
+
+<th className="border-2 border-black px-1 md:px-2 py-2">
+  <div className="flex flex-col items-center justify-center">
+    <div>Applied</div>
+    <div className="relative flex items-center justify-center group">
+      (Hrs)/Blocks
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+         Sanctioned Blocks applied to a SM from the site by SSE/JE
+      </div>
+    </div>
+  </div>
+</th>
+
+<th className="border-2 border-black px-1 md:px-2 py-2">
+  <div className="flex flex-col items-center justify-center">
+    <div>Granted</div>
+    <div className="relative flex items-center justify-center group">
+      (Hrs)/Blocks
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+        Applied block Granted  by the SM
+      </div>
+    </div>
+  </div>
+</th>
+
+<th className="border-2 border-black px-1 md:px-2 py-2">
+  <div className="flex flex-col items-center justify-center">
+    <div>% Granted</div>
+    <div className="relative flex items-center justify-center group">
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+       Total Blocks Granted / Total Blocks Applied
+      </div>
+    </div>
+  </div>
+</th>
+
+<th className="border-2 border-black px-1 md:px-2 py-2">
+  <div className="flex flex-col items-center justify-center">
+    <div>Availed</div>
+    <div className="relative flex items-center justify-center group">
+      (Hrs)/Blocks
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+        Granted Blocks Availed and Cancelled by SSE/JE
+      </div>
+    </div>
+  </div>
+</th>
+
+<th className="border-2 border-black px-1 md:px-2 py-2">
+  <div className="flex flex-col items-center justify-center">
+    <div>% Availed</div>
+    <div className="relative flex items-center justify-center group">
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+         Total Blocks Availed/Total Block Granted
+      </div>
+    </div>
+  </div>
+</th>
+
+<th className="border-2 border-black px-1 md:px-2 py-2">
+  <div className="flex flex-col items-center justify-center">
+    <div>Not Granted</div>
+    <div className="relative flex items-center justify-center group">
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+    Applied Blocks not granted by the SM
+      </div>
+    </div>
+  </div>
+</th>
+
+<th className="border-2 border-black px-1 md:px-2 py-2">
+  <div className="flex flex-col items-center justify-center">
+    <div>Not Availed</div>
+    <div className="relative flex items-center justify-center group">
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+        Granted Blocks rejected by SSE/JE after Sanctioned/Grant
+      </div>
+    </div>
+  </div>
+</th>
+              
+          
                 </tr>
               </thead>
               <tbody>
@@ -1471,6 +1604,19 @@ const clearGlobalFilters = () => {
                         }}
                       >
                         {summary.Approved.toFixed(2)} / {summary.ApprovedCount}
+                      </td>
+                          <td
+                        className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                        onClick={() => {
+                          // setActiveFilter("approved");
+                          setActiveSection(
+                            summary.Department || summary.Section
+                          );
+                        }}
+                      >
+                         {summary.PercentSanctioned !== undefined
+                          ? summary.PercentSanctioned.toFixed(2) + "%"
+                          : ""}
                       </td>
                       <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
@@ -1569,8 +1715,8 @@ const clearGlobalFilters = () => {
                         (sum, item) => sum + (item.DemandsCount || 0),
                         0
                       )}
-                    </td>
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                    </td>                 
+                          <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                       {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Approved || 0), 0)
                         .toFixed(2)}{" "}
@@ -1580,6 +1726,21 @@ const clearGlobalFilters = () => {
                         0
                       )}
                     </td>
+<td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+  {(() => {
+    const totalApproved = pastBlockSummary.reduce(
+      (sum, item) => sum + (item.ApprovedCount || 0),
+      0
+    );
+    const totalDemanded = pastBlockSummary.reduce(
+      (sum, item) => sum + (item.DemandsCount || 0),
+      0
+    );
+    return totalDemanded > 0 
+      ? ((totalApproved / totalDemanded) * 100).toFixed(2)
+      : "0.00";
+  })()}%
+</td>
                     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                       {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Applied || 0), 0)
@@ -1600,14 +1761,14 @@ const clearGlobalFilters = () => {
                         0
                       )}
                     </td>
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                                         <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                                                                    {(() => {
     const totalApplied = pastBlockSummary.reduce(
-      (sum, item) => sum + (item.Applied || 0),
+      (sum, item) => sum + (item.AppliedCount || 0),
       0
     );
     const totalGranted = pastBlockSummary.reduce(
-      (sum, item) => sum + (item.Granted || 0),
+      (sum, item) => sum + (item.GrantedCount || 0),
       0
     );
     return totalApplied > 0 
@@ -1626,13 +1787,20 @@ const clearGlobalFilters = () => {
                         0
                       )}
                     </td>
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                      {pastBlockSummary
-                        .reduce(
-                          (sum, item) => sum + (item.PercentAvailed || 0),
-                          0
-                        )
-                        .toFixed(2)}
+                                                             <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                                                                                        {(() => {
+    const totalAvailed = pastBlockSummary.reduce(
+      (sum, item) => sum + (item.AvailedCount || 0),
+      0
+    );
+    const totalGranted = pastBlockSummary.reduce(
+      (sum, item) => sum + (item.GrantedCount || 0),
+      0
+    );
+    return totalAvailed > 0 
+      ? ((totalAvailed / totalGranted) * 100).toFixed(2)
+      : "0.00";
+  })()}%
                     </td>
                     <td
                       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
@@ -1742,7 +1910,7 @@ const clearGlobalFilters = () => {
             </thead>
             <tbody>
               {/* ENGG Rows */}
-              <tr className="bg-white font-bold">
+              {session?.user?.department === "ENGG" &&( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   {userLocations}
                 </td>
@@ -1814,9 +1982,9 @@ const clearGlobalFilters = () => {
                     ).length
                   }
                 </td>
-              </tr>
-
-              <tr className="bg-[#f4dcf1] font-bold">
+              </tr>)}
+             
+{session?.user?.department === "ENGG" && ( <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   {userLocations}
                 </td>
@@ -1890,9 +2058,10 @@ const clearGlobalFilters = () => {
                     ).length
                   }
                 </td>
-              </tr>
-
-              <tr className="bg-white font-bold">
+              </tr>)}
+             
+{session?.user?.department === "ENGG" && (
+     <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   {userLocations}
                 </td>
@@ -1963,8 +2132,10 @@ const clearGlobalFilters = () => {
                   }
                 </td>
               </tr>
-
-              <tr className="bg-[#f4dcf1] font-bold">
+)}
+           
+{session?.user?.department === "ENGG" && (
+    <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   {userLocations}
                 </td>
@@ -2037,8 +2208,8 @@ const clearGlobalFilters = () => {
                   }
                 </td>
               </tr>
-
-              {/* TRD Rows */}
+)}
+            {session?.user?.department === "TRD" && (
               <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   {userLocations}
@@ -2101,9 +2272,13 @@ const clearGlobalFilters = () => {
                   }
                 </td>
               </tr>
+            )}
+
+             
+              
 
               {/* S&T Rows */}
-              <tr className="bg-[#f4dcf1] font-bold">
+              {session?.user?.department === "S&T" && (  <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   {userLocations}
                 </td>
@@ -2170,9 +2345,9 @@ const clearGlobalFilters = () => {
                     ).length
                   }
                 </td>
-              </tr>
-
-              <tr className="bg-white font-bold">
+              </tr>)}
+            
+{session?.user?.department === "S&T" && ( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   {userLocations}
                 </td>
@@ -2242,9 +2417,9 @@ const clearGlobalFilters = () => {
                     ).length
                   }
                 </td>
-              </tr>
-
-              <tr className="bg-[#f4dcf1] font-bold">
+              </tr>)}
+             
+{session?.user?.department === "S&T" && (<tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   {userLocations}
                 </td>
@@ -2314,9 +2489,9 @@ const clearGlobalFilters = () => {
                     ).length
                   }
                 </td>
-              </tr>
-
-              <tr className="bg-white font-bold">
+              </tr>)}
+              
+{session?.user?.department === "S&T" && ( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   {userLocations}
                 </td>
@@ -2388,7 +2563,8 @@ const clearGlobalFilters = () => {
                     ).length
                   }
                 </td>
-              </tr>
+              </tr>)}
+             
 
               {/* Total Row */}
               <tr className="bg-[#ff914d] text-white font-bold">
@@ -2510,6 +2686,8 @@ const clearGlobalFilters = () => {
                   <th className="border-2 border-black px-1 md:px-2 py-2">
                     Activity
                   </th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Demanded time</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Sanctioned time</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">
                     Availed time
                   </th>
@@ -2585,6 +2763,26 @@ const clearGlobalFilters = () => {
                           <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
                             {block.Activity}
                           </td>
+                                                      <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
+                                                    {block.DemandedTimeFrom && block.DemandedTimeTo ? (
+                                                      <>
+                                                        {formatTime(block.DemandedTimeFrom)} to{" "}
+                                                        {formatTime(block.DemandedTimeTo)}
+                                                      </>
+                                                    ) : (
+                                                      "Not Availed Yet"
+                                                    )}
+                                                  </td> 
+                                                            <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
+                                                    {block.SanctionedTimeFrom && block.SanctionedTimeTo ? (
+                                                      <>
+                                                        {formatTime(block.SanctionedTimeFrom)} to{" "}
+                                                        {formatTime(block.SanctionedTimeTo)}
+                                                      </>
+                                                    ) : (
+                                                      "Not Availed Yet"
+                                                    )}
+                                                  </td> 
                           <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
                             {block.AvailedTimeFrom && block.AvailedTimeTo ? (
                               <>

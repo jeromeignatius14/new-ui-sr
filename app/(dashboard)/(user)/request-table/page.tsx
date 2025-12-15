@@ -1129,9 +1129,9 @@ export default function RequestTablePage() {
                       {(request.isSanctioned === true&&(request.userResponse===null||request.userResponse==="ACCEPTED")) ? (
                         <>
                           {
-                            request.overAllStatus==="Sanctioned and Accepted by SSE" ? (
+                            request.userAcceptanceForSanction===true ? (
                               <div className="px-2 py-1 bg-green-100 text-green-800 mx-auto">
-                                Sanctioned and Accepted
+                                {request.overAllStatus}
                               </div>
                             ) : (
                               // Only show Accept/Reject buttons if the request belongs to current user
@@ -1384,9 +1384,9 @@ export default function RequestTablePage() {
 
                             </>
                           ) : request.isSanctioned ? (
-                            request.overAllStatus==="Sanctioned and Accepted by SSE" ? (
+                            request.userAcceptanceForSanction===true  ? (
                               <div className="px-2 py-1 bg-green-100 text-green-800 mx-auto">
-                                Sanctioned and Accepted
+                                {request.overAllStatus}
                               </div>
                             ) : (<span className="bg-gray-100 p-2 text-gray-600 rounded">
                               Sanctioned and Pending for Acceptance
@@ -1647,9 +1647,9 @@ export default function RequestTablePage() {
 
                             </>
                           ) : request.isSanctioned ? (
-                            request.overAllStatus==="Sanctioned and Accepted by SSE" ? (
+                            request.userAcceptanceForSanction===true  ? (
                               <div className="px-2 py-1 bg-green-100 text-green-800 mx-auto">
-                                Sanctioned and Accepted
+                                {request.overAllStatus}
                               </div>
                             ) : (<span className="bg-gray-100 p-2 text-gray-600 rounded">
                                {request.userResponse !== "ACCEPTED" &&request.userAcceptanceForSanction === false 
