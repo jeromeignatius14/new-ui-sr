@@ -3819,7 +3819,886 @@ export type BlockSectionDepotAssignment = {
     };
   };
 };
-export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {}
+export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
+  "SRR-CHTS": {
+    "SRRB-VTK": {
+      "S&T": "TCR",
+      "ENGG": "TCR",
+      "TRD": "TCR"
+    },
+    "VTK-WKI": {
+      "S&T": "TCR",
+      "ENGG": "TCR",
+      "TRD": "TCR"
+    },
+    "WKI-MGK": {
+      "S&T": "TCR",
+      "ENGG": "TCR",
+      "TRD": "TCR"
+    },
+    "MGK-PNQ": {
+      "S&T": "TCR",
+      "ENGG": "TCR",
+      "TRD": "TCR"
+    },
+    "PNQ-TCR": {
+      "S&T": "TCR",
+      "ENGG": "TCR",
+      "TRD": "TCR"
+    },
+    "TCR-OLR": {
+      "S&T": "TCR",
+      "ENGG": "TCR",
+      "TRD": "CKI"
+    },
+
+    "OLR-PUK": {
+      "S&T": "AWY",
+      "ENGG": "CKI",
+      "TRD": "CKI"
+    },
+    "PUK-IJK": {
+      "S&T": "AWY",
+      "ENGG": "CKI",
+      "TRD": "CKI"
+    },
+    "IJK-CKI": {
+      "S&T": "AWY",
+      "ENGG": "CKI",
+      "TRD": "CKI"
+    },
+    "CKI-KUC": {
+      "S&T": "AWY",
+      "ENGG": "AWY",
+      "TRD": "CKI"
+    },
+    "KUC-AFK": {
+      "S&T": "AWY",
+      "ENGG": "AWY",
+      "TRD": "CKI"
+    },
+    "AFK-AWY": {
+      "S&T": "AWY",
+      "ENGG": "AWY",
+      "TRD": "CKI"
+    },
+    "AWY-KLMR": {
+      "S&T": "AWY",
+      "ENGG": "AWY",
+      "TRD": "CKI"
+    },
+    "KLMR-IPL": {
+      "S&T": "AWY",
+      "ENGG": "AWY",
+      "TRD": "ERS"
+    },
+    "IPL-VPDM": {
+      "S&T": "AWY",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+
+    "IPL-ERN": {
+      "S&T": "ERS",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+    "ERN-ERS": {
+      "S&T": "ERS",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+    "ERS-CHTS": {
+      "S&T": "ERS",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+
+    "ERN-ERSC": {
+      "S&T": "",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+    "ERSC-ERSC": {
+      "S&T": "",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+    "ERSC-ERSD": {
+      "S&T": "",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+    "ERSD-IPN": {
+      "S&T": "",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+    "ERSC-ERM": {
+      "S&T": "",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+    "ERM-ERSD": {
+      "S&T": "",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+    "ERM-IPN": {
+      "S&T": "",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+
+    "SRRB-YD": {
+      "S&T": "TCR",
+      "ENGG": "TCR",
+      "TRD": "TCR"
+    },
+    "VTK-YD": {
+      "S&T": "TCR",
+      "ENGG": "TCR",
+      "TRD": "TCR"
+    },
+    "WKI-YD": {
+      "S&T": "TCR",
+      "ENGG": "TCR",
+      "TRD": "TCR"
+    },
+    "MGK-YD": {
+      "S&T": "TCR",
+      "ENGG": "TCR",
+      "TRD": "TCR"
+    },
+    "PNQ-YD": {
+      "S&T": "TCR",
+      "ENGG": "TCR",
+      "TRD": "TCR"
+    },
+    "TCR-YD": {
+      "S&T": "TCR",
+      "ENGG": "TCR",
+      "TRD": "CKI"
+    },
+
+    "OLR-YD": {
+      "S&T": "AWY",
+      "ENGG": "CKI",
+      "TRD": "CKI"
+    },
+    "PUK-YD": {
+      "S&T": "AWY",
+      "ENGG": "CKI",
+      "TRD": "CKI"
+    },
+    "IJK-YD": {
+      "S&T": "AWY",
+      "ENGG": "CKI",
+      "TRD": "CKI"
+    },
+    "CKI-YD": {
+      "S&T": "AWY",
+      "ENGG": "AWY",
+      "TRD": "CKI"
+    },
+    "KUC-YD": {
+      "S&T": "AWY",
+      "ENGG": "AWY",
+      "TRD": "CKI"
+    },
+    "AFK-YD": {
+      "S&T": "AWY",
+      "ENGG": "AWY",
+      "TRD": "CKI"
+    },
+    "AWY-YD": {
+      "S&T": "AWY",
+      "ENGG": "AWY",
+      "TRD": "CKI"
+    },
+    "KLMR-YD": {
+      "S&T": "AWY",
+      "ENGG": "AWY",
+      "TRD": "ERS"
+    },
+    "IPL-YD": {
+      "S&T": "ERS",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+    "VPDM-YD": {
+      "S&T": "AWY",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+
+    "ERN-YD": {
+      "S&T": "ERS",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+    "ERS-YD": {
+      "S&T": "ERS",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+    "CHTS-YD": {
+      "S&T": "ERS",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+
+    "ERSC-YD": {
+      "S&T": "",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+    "ERSD-YD": {
+      "S&T": "",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+    "ERM-YD": {
+      "S&T": "",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+    "IPN-YD": {
+      "S&T": "",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    }
+  },
+  
+    "TCR-GUV": {
+      "TCR-PNQ": {
+        "S&T": "TCR",
+        "ENGG": "TCR",
+        "TRD": "TCR"
+      },
+      "PNQ-GUV": {
+        "S&T": "TCR",
+        "ENGG": "TCR",
+        "TRD": "TCR"
+      },
+
+      "TCR-YD": {
+        "S&T": "TCR",
+        "ENGG": "TCR",
+        "TRD": "TCR"
+      },
+      "PNQ-YD": {
+        "S&T": "TCR",
+        "ENGG": "TCR",
+        "TRD": "TCR"
+      },
+      "GUV-YD": {
+        "S&T": "TCR",
+        "ENGG": "TCR",
+        "TRD": "TCR"
+      }
+    },
+
+  "ERS-KTYM-KYJ": {
+    "ERS-ERSC": {
+      "S&T": "ERS",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+    "ERSC-ERSD": {
+      "S&T": "ERS",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+    "ERSD-TRTR": {
+      "S&T": "ERS",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+    "TRTR-MNTT": {
+      "S&T": "ERS",
+      "ENGG": "PVRD",
+      "TRD": "ERS"
+    },
+    "TRTR-IPN": {
+      "S&T": "ERS",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+    "MNTT-PVRD": {
+      "S&T": "KTYM",
+      "ENGG": "PVRD",
+      "TRD": "ERS"
+    },
+    "PVRD-VARD": {
+      "S&T": "KTYM",
+      "ENGG": "PVRD",
+      "TRD": "ERS"
+    },
+    "VARD-KRPP": {
+      "S&T": "KTYM",
+      "ENGG": "PVRD",
+      "TRD": "KTYM"
+    },
+    "KRPP-ETM": {
+      "S&T": "KTYM",
+      "ENGG": "PVRD",
+      "TRD": "KTYM"
+    },
+    "ETM-KTYM": {
+      "S&T": "KTYM",
+      "ENGG": "PVRD",
+      "TRD": "KTYM"
+    },
+    "KTYM-CGV": {
+      "S&T": "KTYM",
+      "ENGG": "KTYM",
+      "TRD": "KTYM"
+    },
+    "CGV-CGY": {
+      "S&T": "KTYM",
+      "ENGG": "KTYM",
+      "TRD": "KTYM"
+    },
+    "CGY-TRVL": {
+      "S&T": "KYJ",
+      "ENGG": "KTYM",
+      "TRD": "KTYM"
+    },
+    "TRVL-CNGR": {
+      "S&T": "KYJ",
+      "ENGG": "KTYM",
+      "TRD": "KYJ"
+    },
+    "CNGR-MVLK": {
+      "S&T": "KYJ",
+      "ENGG": "KTYM",
+      "TRD": "KYJ"
+    },
+    "MVLK-KYJ": {
+      "S&T": "KYJ",
+      "ENGG": "MVLK",
+      "TRD": "KYJ"
+    },
+
+    "ERS-YD": {
+      "S&T": "ERS",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+    "ERSC-YD": {
+      "S&T": "ERS",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+    "ERSD-YD": {
+      "S&T": "ERS",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+    "TRTR-YD": {
+      "S&T": "ERS",
+      "ENGG": "PVRD",
+      "TRD": "ERS"
+    },
+    "IPN-YD": {
+      "S&T": "ERS",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+
+    "MNTT-YD": {
+      "S&T": "KTYM",
+      "ENGG": "PVRD",
+      "TRD": "ERS"
+    },
+    "PVRD-YD": {
+      "S&T": "KTYM",
+      "ENGG": "PVRD",
+      "TRD": "ERS"
+    },
+    "VARD-YD": {
+      "S&T": "KTYM",
+      "ENGG": "PVRD",
+      "TRD": "KTYM"
+    },
+    "KRPP-YD": {
+      "S&T": "KTYM",
+      "ENGG": "PVRD",
+      "TRD": "KTYM"
+    },
+    "ETM-YD": {
+      "S&T": "KTYM",
+      "ENGG": "PVRD",
+      "TRD": "KTYM"
+    },
+
+    "KTYM-YD": {
+      "S&T": "KTYM",
+      "ENGG": "KTYM",
+      "TRD": "KTYM"
+    },
+    "CGV-YD": {
+      "S&T": "KTYM",
+      "ENGG": "KTYM",
+      "TRD": "KTYM"
+    },
+    "CGY-YD": {
+      "S&T": "KYJ",
+      "ENGG": "KTYM",
+      "TRD": "KTYM"
+    },
+    "TRVL-YD": {
+      "S&T": "KYJ",
+      "ENGG": "KTYM",
+      "TRD": "KYJ"
+    },
+    "CNGR-YD": {
+      "S&T": "KYJ",
+      "ENGG": "KTYM",
+      "TRD": "KYJ"
+    },
+    "MVLK-YD": {
+      "S&T": "KYJ",
+      "ENGG": "MVLK",
+      "TRD": "KYJ"
+    },
+    "KYJ-YD": {
+      "S&T": "KYJ",
+      "ENGG": "MVLK",
+      "TRD": "KYJ"
+    }
+  },
+  
+    "ERS-ALLP-KYJ": {
+      "ERS-KUMM": {
+        "S&T": "ERS",
+        "ENGG": "ERS",
+        "TRD": "ERS"
+      },
+      "KUMM-TUVR": {
+        "S&T": "ERS",
+        "ENGG": "ALLP",
+        "TRD": "ERS"
+      },
+      "TUVR-SRTL": {
+        "S&T": "ALLP",
+        "ENGG": "ALLP",
+        "TRD": "ERS"
+      },
+      "SRTL-MAKM": {
+        "S&T": "ALLP",
+        "ENGG": "ALLP",
+        "TRD": "ALLP"
+      },
+      "MAKM-ALLP": {
+        "S&T": "ALLP",
+        "ENGG": "ALLP",
+        "TRD": "ALLP"
+      },
+      "ALLP-AMPA": {
+        "S&T": "ALLP",
+        "ENGG": "ALLP",
+        "TRD": "ALLP"
+      },
+      "AMPA-HAD": {
+        "S&T": "ALLP",
+        "ENGG": "ALLP",
+        "TRD": "ALLP"
+      },
+      "HAD-CHPD": {
+        "S&T": "ALLP",
+        "ENGG": "ALLP",
+        "TRD": "KYJ"
+      },
+      "CHPD-KYJ": {
+        "S&T": "KYJ",
+        "ENGG": "ALLP",
+        "TRD": "KYJ"
+      },
+
+      "ERS-YD": {
+        "S&T": "ERS",
+        "ENGG": "ERS",
+        "TRD": "ERS"
+      },
+      "KUMM-YD": {
+        "S&T": "ERS",
+        "ENGG": "ALLP",
+        "TRD": "ERS"
+      },
+      "TUVR-YD": {
+        "S&T": "ALLP",
+        "ENGG": "ALLP",
+        "TRD": "ERS"
+      },
+      "SRTL-YD": {
+        "S&T": "ALLP",
+        "ENGG": "ALLP",
+        "TRD": "ALLP"
+      },
+      "MAKM-YD": {
+        "S&T": "ALLP",
+        "ENGG": "ALLP",
+        "TRD": "ALLP"
+      },
+      "ALLP-YD": {
+        "S&T": "ALLP",
+        "ENGG": "ALLP",
+        "TRD": "ALLP"
+      },
+      "AMPA-YD": {
+        "S&T": "ALLP",
+        "ENGG": "ALLP",
+        "TRD": "ALLP"
+      },
+      "HAD-YD": {
+        "S&T": "ALLP",
+        "ENGG": "ALLP",
+        "TRD": "KYJ"
+      },
+      "CHPD-YD": {
+        "S&T": "KYJ",
+        "ENGG": "ALLP",
+        "TRD": "KYJ"
+      },
+      "KYJ-YD": {
+        "S&T": "KYJ",
+        "ENGG": "ALLP",
+        "TRD": "KYJ"
+      }
+    },
+
+    "KYJ-QLN": {
+      "KYJ-OCR": {
+        "S&T": "KYJ",
+        "ENGG": "MVLK",
+        "TRD": "KYJ"
+      },
+      "OCR-KPY": {
+        "S&T": "KYJ",
+        "ENGG": "MVLK",
+        "TRD": "KYJ"
+      },
+      "KPY-STKT": {
+        "S&T": "KYJ",
+        "ENGG": "MVLK",
+        "TRD": "KYJ"
+      },
+      "STKT-PRND": {
+        "S&T": "KYJ",
+        "ENGG": "MVLK",
+        "TRD": "QLN"
+      },
+      "PRND-QLN": {
+        "S&T": "QLN",
+        "ENGG": "QLN",
+        "TRD": "QLN"
+      },
+
+      "KYJ-YD": {
+        "S&T": "KYJ",
+        "ENGG": "MVLK",
+        "TRD": "KYJ"
+      },
+      "OCR-YD": {
+        "S&T": "KYJ",
+        "ENGG": "MVLK",
+        "TRD": "KYJ"
+      },
+      "KPY-YD": {
+        "S&T": "KYJ",
+        "ENGG": "MVLK",
+        "TRD": "KYJ"
+      },
+      "STKT-YD": {
+        "S&T": "KYJ",
+        "ENGG": "MVLK",
+        "TRD": "QLN"
+      },
+      "PRND-YD": {
+        "S&T": "QLN",
+        "ENGG": "QLN",
+        "TRD": "QLN"
+      },
+      "QLN-YD": {
+        "S&T": "QLN",
+        "ENGG": "QLN",
+        "TRD": "QLN"
+      }
+    },
+
+    "QLN-TVC": {
+      "QLN-PVU": {
+        "S&T": "QLN",
+        "ENGG": "QLN",
+        "TRD": "QLN"
+      },
+      "PVU-VAK": {
+        "S&T": "QLN",
+        "ENGG": "VAK",
+        "TRD": "QLN"
+      },
+      "VAK-KVU": {
+        "S&T": "QLN",
+        "ENGG": "VAK",
+        "TRD": "KZK"
+      },
+      "KVU-MQU": {
+        "S&T": "QLN",
+        "ENGG": "VAK",
+        "TRD": "KZK"
+      },
+      "MQU-KZK": {
+        "S&T": "TVC",
+        "ENGG": "VAK",
+        "TRD": "KZK"
+      },
+      "KZK-TVCN": {
+        "S&T": "TVC",
+        "ENGG": "VAK",
+        "TRD": "KZK"
+      },
+      "TVCN-TVC": {
+        "S&T": "TVC",
+        "ENGG": "VAK",
+        "TRD": "KZK"
+      },
+
+      "QLN-YD": {
+        "S&T": "QLN",
+        "ENGG": "QLN",
+        "TRD": "QLN"
+      },
+      "PVU-YD": {
+        "S&T": "QLN",
+        "ENGG": "VAK",
+        "TRD": "QLN"
+      },
+      "VAK-YD": {
+        "S&T": "QLN",
+        "ENGG": "VAK",
+        "TRD": "KZK"
+      },
+      "KVU-YD": {
+        "S&T": "QLN",
+        "ENGG": "VAK",
+        "TRD": "KZK"
+      },
+      "MQU-YD": {
+        "S&T": "TVC",
+        "ENGG": "VAK",
+        "TRD": "KZK"
+      },
+      "KZK-YD": {
+        "S&T": "TVC",
+        "ENGG": "VAK",
+        "TRD": "KZK"
+      },
+      "TVC-YD": {
+        "S&T": "TVC",
+        "ENGG": "VAK",
+        "TRD": "KZK"
+      }
+    },
+
+  "TVC-NCJ": {
+    "TVC-TVCS": {
+      "S&T": "TVC",
+      "ENGG": "TVC",
+      "TRD": "KZK"
+    },
+    "TVCS-NYY": {
+      "S&T": "TVC",
+      "ENGG": "TVC",
+      "TRD": "KZK"
+    },
+    "NYY-PASA": {
+      "S&T": "TVC",
+      "ENGG": "TVC",
+      "TRD": "NCJ"
+    },
+    "PASA-KZT": {
+      "S&T": "TVC",
+      "ENGG": "TVC",
+      "TRD": "NCJ"
+    },
+    "KZT-ERL": {
+      "S&T": "TVC",
+      "ENGG": "TVC",
+      "TRD": "NCJ"
+    },
+    "ERL-NJT": {
+      "S&T": "NCJ",
+      "ENGG": "TVC",
+      "TRD": "NCJ"
+    },
+    "NJT-NCJ": {
+      "S&T": "NCJ",
+      "ENGG": "NCJ",
+      "TRD": "NCJ"
+    },
+
+    "TVC-YD": {
+      "S&T": "TVC",
+      "ENGG": "TVC",
+      "TRD": "KZK"
+    },
+    "TVCS-YD": {
+      "S&T": "TVC",
+      "ENGG": "TVC",
+      "TRD": "KZK"
+    },
+    "NYY-YD": {
+      "S&T": "TVC",
+      "ENGG": "TVC",
+      "TRD": "NCJ"
+    },
+    "PASA-YD": {
+      "S&T": "TVC",
+      "ENGG": "TVC",
+      "TRD": "NCJ"
+    },
+    "KZT-YD": {
+      "S&T": "TVC",
+      "ENGG": "TVC",
+      "TRD": "NCJ"
+    },
+    "ERL-YD": {
+      "S&T": "NCJ",
+      "ENGG": "TVC",
+      "TRD": "NCJ"
+    },
+    "NJT-YD": {
+      "S&T": "NCJ",
+      "ENGG": "NCJ",
+      "TRD": "NCJ"
+    },
+    "NCJ-YD": {
+      "S&T": "NCJ",
+      "ENGG": "NCJ",
+      "TRD": "NCJ"
+    }
+  },
+  "NCJ-TEN": {
+    "NCJ-AAY": {
+      "S&T": "NCJ",
+      "ENGG": "NCJ",
+      "TRD": "NCJ"
+    },
+    "AAY-NPK": {
+      "S&T": "NCJ",
+      "ENGG": "NCJ",
+      "TRD": "NNN"
+    },
+    "NPK-VLY": {
+      "S&T": "NCJ",
+      "ENGG": "NCJ",
+      "TRD": "NNN"
+    },
+    "VLY-NNN": {
+      "S&T": "NCJ",
+      "ENGG": "NCJ",
+      "TRD": "NNN"
+    },
+    "NNN-MP": {
+      "S&T": "NCJ",
+      "ENGG": "NCJ",
+      "TRD": "NNN"
+    },
+    "MP-TEN": {
+      "S&T": "NCJ",
+      "ENGG": "NCJ",
+      "TRD": "NNN"
+    },
+
+    "NCJ-YD": {
+      "S&T": "NCJ",
+      "ENGG": "NCJ",
+      "TRD": "NCJ"
+    },
+    "AAY-YD": {
+      "S&T": "NCJ",
+      "ENGG": "NCJ",
+      "TRD": "NNN"
+    },
+    "NPK-YD": {
+      "S&T": "NCJ",
+      "ENGG": "NCJ",
+      "TRD": "NNN"
+    },
+    "VLY-YD": {
+      "S&T": "NCJ",
+      "ENGG": "NCJ",
+      "TRD": "NNN"
+    },
+    "NNN-YD": {
+      "S&T": "NCJ",
+      "ENGG": "NCJ",
+      "TRD": "NNN"
+    },
+    "MP-YD": {
+      "S&T": "NCJ",
+      "ENGG": "NCJ",
+      "TRD": "NNN"
+    },
+    "TEN-YD": {
+      "S&T": "NCJ",
+      "ENGG": "NCJ",
+      "TRD": "NNN"
+    }
+  },
+
+  "NCJ-CAPE": {
+    "NCJ-CAPE": {
+      "S&T": "NCJ",
+      "ENGG": "NCJ",
+      "TRD": "NCJ"
+    },
+
+    "NCJ-YD": {
+      "S&T": "NCJ",
+      "ENGG": "NCJ",
+      "TRD": "NCJ"
+    },
+    "CAPE-YD": {
+      "S&T": "NCJ",
+      "ENGG": "NCJ",
+      "TRD": "NCJ"
+    }
+  },
+
+  "ERM-IPN": {
+    "ERM-ERSD": {
+      "S&T": "ERS",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+    "ERSD-IPN": {
+      "S&T": "ERS",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+
+    "ERM-YD": {
+      "S&T": "ERS",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+    "ERSD-YD": {
+      "S&T": "ERS",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    },
+    "IPN-YD": {
+      "S&T": "ERS",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    }
+  }
+
+}
+
 export const sectionsWithAlphanumericSiteLocation = [
 ""
 ];
