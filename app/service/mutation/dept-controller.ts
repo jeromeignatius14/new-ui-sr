@@ -10,7 +10,15 @@ export function useAddUser() {
     },
   });
 }
-
+export function useAddStation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deptControllerService.addStation,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["deptControllerStations"] });
+    },
+  });
+}
 export function useEditUser() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -31,7 +39,15 @@ export function useDeleteUser() {
     },
   });
 }
-
+export function useDeleteStation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deptControllerService.deleteStation,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["deptControllerStations"] });
+    },
+  });
+}
 export function useEditJE() {
   const queryClient = useQueryClient();
   return useMutation({
