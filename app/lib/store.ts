@@ -2355,7 +2355,574 @@ export type BlockSectionDepotAssignment = {
     };
   };
 };
-export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {}
+export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {  "TPJ-DG": {
+    "TPG-PUG": {
+      "S&T": "DG",
+      "TRD": "MPA",
+      "ENGG": "MPA"
+    },
+    "PUG-KLS": {
+      "S&T": "DG",
+      "TRD": "MPA",
+      "ENGG": "MPA"
+    },
+    "KLS-MPA": {
+      "S&T": "DG",
+      "TRD": "MPA",
+      "ENGG": "MPA"
+    },
+    "MPA-VPJ": {
+      "S&T": "DG",
+      "TRD": "MPA",
+      "ENGG": "MPA"
+    },
+    "VPJ-KFC": {
+      "S&T": "DG",
+      "TRD": "DG",
+      "ENGG": "MPA"
+    },
+    "KFC-AYR": {
+      "S&T": "DG",
+      "TRD": "DG",
+      "ENGG": "MPA"
+    },
+    "AYR-VDM": {
+      "S&T": "DG",
+      "TRD": "DG",
+      "ENGG": "DG"
+    },
+    "VDM-TMP": {
+      "S&T": "DG",
+      "TRD": "DG",
+      "ENGG": "DG"
+    },
+    "TMP-DG": {
+      "S&T": "DG",
+      "TRD": "DG",
+      "ENGG": "DG"
+    }
+  },
+  "DG-MDU": {
+    "DG-ABI": {
+      "S&T": "North/MDU",
+      "TRD": "DG",
+      "ENGG": "DG"
+    },
+    "ABI-KQN": {
+      "S&T": "North/MDU",
+      "TRD": "MDU",
+      "ENGG": "DG"
+    },
+    "KQN-VDP": {
+      "S&T": "North/MDU",
+      "TRD": "MDU",
+      "ENGG": "MG-MDU"
+    },
+    "VDP-SDN": {
+      "S&T": "North/MDU",
+      "TRD": "MDU",
+      "ENGG": "MG-MDU"
+    },
+    "SDN-SER": {
+      "S&T": "North/MDU",
+      "TRD": "MDU",
+      "ENGG": "MG-MDU"
+    },
+    "SER-KON": {
+      "S&T": "North/MDU",
+      "TRD": "MDU",
+      "ENGG": "MG-MDU"
+    },
+    "KON-MDU": {
+      "S&T": "North/MDU",
+      "TRD": "MDU",
+      "ENGG": "MG-MDU"
+    }
+  },
+
+  "DG-PLNI-POY": {
+    "DG-API": {
+      "S&T": "PLNI",
+      "TRD": "PLNI",
+      "ENGG": "DG"
+    },
+    "API-ODC": {
+      "S&T": "PLNI",
+      "TRD": "PLNI",
+      "ENGG": "DG"
+    },
+    "ODC-CHPT": {
+      "S&T": "PLNI",
+      "TRD": "PLNI",
+      "ENGG": "PLNI"
+    },
+    "CHPT-PLNI": {
+      "S&T": "PLNI",
+      "TRD": "PLNI",
+      "ENGG": "PLNI"
+    },
+    "PLNI-PPTR": {
+      "S&T": "PLNI",
+      "TRD": "PLNI",
+      "ENGG": "PLNI"
+    },
+    "PPTR-MVRD": {
+      "S&T": "PLNI",
+      "TRD": "PLNI",
+      "ENGG": "PLNI"
+    },
+    "MVRD-UDT": {
+      "S&T": "PLNI",
+      "TRD": "UDT",
+      "ENGG": "PLNI"
+    },
+    "UDT-GMGM": {
+      "S&T": "PLNI",
+      "TRD": "UDT",
+      "ENGG": "PLNI"
+    },
+    "GMGM-POY": {
+      "S&T": "PLNI",
+      "TRD": "UDT",
+      "ENGG": "PLNI"
+    }
+  },
+  "MDU-VPT": {
+    "MDU-TDN": {
+      "S&T": "South/MDU",
+      "TRD": "MDU",
+      "ENGG": "VPT"
+    },
+    "TDN-TMQ": {
+      "S&T": "South/MDU",
+      "TRD": "VPT",
+      "ENGG": "VPT"
+    },
+    "TMQ-KGD": {
+      "S&T": "South/MDU",
+      "TRD": "VPT",
+      "ENGG": "VPT"
+    },
+    "KGD-VPT": {
+      "S&T": "South/MDU",
+      "TRD": "VPT",
+      "ENGG": "VPT"
+    }
+  },
+  "VPT-MEJ": {
+    "VPT-TY": {
+      "S&T": "VPT",
+      "TRD": "VPT",
+      "ENGG": "VPT"
+    },
+    "TY-SRT": {
+      "S&T": "VPT",
+      "TRD": "VPT",
+      "ENGG": "VPT"
+    },
+    "SRT-NLL": {
+      "S&T": "VPT",
+      "TRD": "CVP",
+      "ENGG": "TN"
+    },
+    "NLL-CVP": {
+      "S&T": "VPT",
+      "TRD": "CVP",
+      "ENGG": "TN"
+    },
+    "CVP-KDU": {
+      "S&T": "VPT",
+      "TRD": "CVP",
+      "ENGG": "TN"
+    },
+    "KDU-MEJ": {
+      "S&T": "VPT",
+      "TRD": "CVP",
+      "ENGG": "TN"
+    }
+  },
+  "MEJ-TN": {
+    "MEJ-TIP": {
+      "S&T": "TEN",
+      "TRD": "TN",
+      "ENGG": "TN"
+    },
+    "TIP-MVN": {
+      "S&T": "TEN",
+      "TRD": "TN",
+      "ENGG": "TN"
+    },
+    "MVN-TN": {
+      "S&T": "TEN",
+      "TRD": "TN",
+      "ENGG": "TN"
+    },
+    "MVN-MVTS/MVNP": {
+      "S&T": "TEN",
+      "TRD": "TN",
+      "ENGG": "TN"
+    },
+    "TN-MVN/MVTS": {
+      "S&T": "TEN",
+      "TRD": "TN",
+      "ENGG": "TN"
+    },
+    "MVN-MMDR": {
+      "S&T": "TEN",
+      "TRD": "TN",
+      "ENGG": "TN"
+    }
+  },
+  "MEJ-TEN": {
+    "MEJ-GDN": {
+      "S&T": "TEN",
+      "TRD": "TEN",
+      "ENGG": "TEN"
+    },
+    "GDN-TAY": {
+      "S&T": "TEN",
+      "TRD": "TEN",
+      "ENGG": "TEN"
+    },
+    "TAY-TEN": {
+      "S&T": "TEN",
+      "TRD": "TEN",
+      "ENGG": "TEN"
+    }
+  },
+  "MDU-MNM": {
+    "MDU-ILA": {
+      "S&T": "North/MDU",
+      "TRD": "MDU",
+      "ENGG": "MD-MDU"
+    },
+    "ILA-TVN": {
+      "S&T": "North/MDU",
+      "TRD": "MNM",
+      "ENGG": "MD-MDU"
+    },
+    "TVN-TPC": {
+      "S&T": "North/MDU",
+      "TRD": "MNM",
+      "ENGG": "MD-MDU"
+    },
+    "TPC-MNM": {
+      "S&T": "North/MDU",
+      "TRD": "MNM",
+      "ENGG": "MNM"
+    }
+  },
+  "TPJ-KKDI-MNM": {
+    "TPJ-KRMG": {
+      "S&T": "KKDI",
+      "TRD": "PDKT",
+      "ENGG": "PDKT"
+    },
+    "KRMG-KRUR": {
+      "S&T": "KKDI",
+      "TRD": "PDKT",
+      "ENGG": "PDKT"
+    },
+    "KRUR-VEL": {
+      "S&T": "KKDI",
+      "TRD": "PDKT",
+      "ENGG": "PDKT"
+    },
+    "VEL-PDKT": {
+      "S&T": "KKDI",
+      "TRD": "PDKT",
+      "ENGG": "PDKT"
+    },
+    "PDKT-TYM": {
+      "S&T": "KKDI",
+      "TRD": "PDKT",
+      "ENGG": "PDKT"
+    },
+    "TYM-CTND": {
+      "S&T": "KKDI",
+      "TRD": "KKDI",
+      "ENGG": "PDKT"
+    },
+    "CTND-KKDI": {
+      "S&T": "KKDI",
+      "TRD": "KKDI",
+      "ENGG": "PDKT"
+    },
+    "KKDI-KAL": {
+      "S&T": "KKDI",
+      "TRD": "KKDI",
+      "ENGG": "SVGA"
+    },
+    "KAL-PNGI": {
+      "S&T": "KKDI",
+      "TRD": "KKDI",
+      "ENGG": "SVGA"
+    },
+    "PNGI-SVGA": {
+      "S&T": "KKDI",
+      "TRD": "KKDI",
+      "ENGG": "SVGA"
+    },
+    "SVGA-MEKM": {
+      "S&T": "MNM",
+      "TRD": "KKDI",
+      "ENGG": "SVGA"
+    },
+    "MEKM-MNM": {
+      "S&T": "MNM",
+      "TRD": "MNM",
+      "ENGG": "SVGA"
+    }
+  },
+
+  "MNM-RMM": {
+    "MNM-SUX": {
+      "S&T": "MNM",
+      "TRD": "MNM",
+      "ENGG": "SVGA"
+    },
+    "SUX-PMK": {
+      "S&T": "MNM",
+      "TRD": "MNM",
+      "ENGG": "SVGA"
+    },
+    "PMK-SQD": {
+      "S&T": "MNM",
+      "TRD": "RMD",
+      "ENGG": "MMM"
+    },
+    "SQD-RMD": {
+      "S&T": "MNM",
+      "TRD": "RMD",
+      "ENGG": "MMM"
+    },
+    "RMD-UCP": {
+      "S&T": "MNM",
+      "TRD": "RMD",
+      "ENGG": "MMM"
+    },
+    "UCP-MMM": {
+      "S&T": "MNM",
+      "TRD": "RMD",
+      "ENGG": "MMM"
+    },
+    "MMM-PBMB": {
+      "S&T": "MNM",
+      "TRD": "RMD",
+      "ENGG": "MMM"
+    },
+    "PBMB-RMM": {
+      "S&T": "MNM",
+      "TRD": "RMD",
+      "ENGG": "MMM"
+    }
+  },
+
+  "MNM-VPT": {
+    "MNM-NKK": {
+      "S&T": "MNM",
+      "TRD": "MNM",
+      "ENGG": "MNM"
+    },
+    "NKK-TCH": {
+      "S&T": "MNM",
+      "TRD": "MNM",
+      "ENGG": "MNM"
+    },
+    "TCH-APK": {
+      "S&T": "MNM",
+      "TRD": "MNM",
+      "ENGG": "MNM"
+    },
+    "APK-VPT": {
+      "S&T": "MNM",
+      "TRD": "VPT",
+      "ENGG": "MNM"
+    }
+  },
+
+  "VPT-SCT": {
+    "VPT-SVKS": {
+      "S&T": "VPT",
+      "TRD": "RJPM",
+      "ENGG": "SVKS"
+    },
+    "SVKS-SVPR": {
+      "S&T": "VPT",
+      "TRD": "RJPM",
+      "ENGG": "SVKS"
+    },
+    "SVPR-RJPM": {
+      "S&T": "VPT",
+      "TRD": "RJPM",
+      "ENGG": "SVKS"
+    },
+    "RJPM-SNKL": {
+      "S&T": "VPT",
+      "TRD": "RJPM",
+      "ENGG": "SVKS"
+    },
+    "SNKL-PBKS": {
+      "S&T": "TSI",
+      "TRD": "RJPM",
+      "ENGG": "SCT"
+    },
+    "PBKS-KDNL": {
+      "S&T": "TSI",
+      "TRD": "RJPM",
+      "ENGG": "SCT"
+    },
+    "KDNL-TSI": {
+      "S&T": "TSI",
+      "TRD": "SCT",
+      "ENGG": "SCT"
+    },
+    "TSI-SCT": {
+      "S&T": "TSI",
+      "TRD": "SCT",
+      "ENGG": "SCT"
+    }
+  },
+
+  "TEN-SCT": {
+    "TEN-SMD": {
+      "S&T": "TEN",
+      "TRD": "ASD",
+      "ENGG": "TEN"
+    },
+    "SMD-ASD": {
+      "S&T": "TEN",
+      "TRD": "ASD",
+      "ENGG": "TEN"
+    },
+    "ASD-KKY": {
+      "S&T": "TSI",
+      "TRD": "ASD",
+      "ENGG": "TEN"
+    },
+    "KKY-PCM": {
+      "S&T": "TSI",
+      "TRD": "ASD",
+      "ENGG": "SCT"
+    },
+    "PCM-TSI": {
+      "S&T": "TSI",
+      "TRD": "ASD",
+      "ENGG": "SCT"
+    },
+    "TSI-SCT": {
+      "S&T": "TSI",
+      "TRD": "SCT",
+      "ENGG": "SCT"
+    }
+  },
+
+  "SCT-PUU": {
+    "SCT-BJM": {
+      "S&T": "TSI",
+      "TRD": "SCT",
+      "ENGG": "SCT"
+    },
+    "BJM-AYVN": {
+      "S&T": "TSI",
+      "TRD": "SCT",
+      "ENGG": "SCT"
+    },
+    "AYVN-TML": {
+      "S&T": "TSI",
+      "TRD": "SCT",
+      "ENGG": "SCT"
+    },
+    "TML-EDN": {
+      "S&T": "TSI",
+      "TRD": "SCT",
+      "ENGG": "PUU"
+    },
+    "EDN-PUU": {
+      "S&T": "TSI",
+      "TRD": "PUU",
+      "ENGG": "PUU"
+    }
+  },
+  "PUU-QLN": {
+    "PUU-AVS": {
+      "S&T": "TSI",
+      "TRD": "PUU",
+      "ENGG": "PUU"
+    },
+    "AVS-KKZ": {
+      "S&T": "TSI",
+      "TRD": "PUU",
+      "ENGG": "PUU"
+    },
+    "KKZ-KUV": {
+      "S&T": "TSI",
+      "TRD": "PUU",
+      "ENGG": "PUU"
+    },
+    "KUV-KLQ": {
+      "S&T": "TSI",
+      "TRD": "PUU",
+      "ENGG": "PUU"
+    },
+    "KLQ-QLN": {
+      "S&T": "TSI",
+      "TRD": "PUU",
+      "ENGG": "PUU"
+    }
+  },
+
+  "TEN-TCN": {
+    "TEN-SDNR": {
+      "S&T": "TEN",
+      "TRD": "NZT",
+      "ENGG": "SVV"
+    },
+    "SDNR-SVV": {
+      "S&T": "TEN",
+      "TRD": "NZT",
+      "ENGG": "SVV"
+    },
+    "SVV-NZT": {
+      "S&T": "TEN",
+      "TRD": "NZT",
+      "ENGG": "SVV"
+    },
+    "NZT-ANY": {
+      "S&T": "TEN",
+      "TRD": "NZT",
+      "ENGG": "SVV"
+    },
+    "ANY-TCN": {
+      "S&T": "TEN",
+      "TRD": "NZT",
+      "ENGG": "SVV"
+    }
+  },
+
+  "MDU-BDNK": {
+    "MDU-USLP": {
+      "S&T": "South/MDU",
+      "TRD": "TE",
+      "ENGG": "ADPT"
+    },
+    "USLP-ADPT": {
+      "S&T": "South/MDU",
+      "TRD": "TE",
+      "ENGG": "ADPT"
+    },
+    "ADPT-TE": {
+      "S&T": "South/MDU",
+      "TRD": "TE",
+      "ENGG": "ADPT"
+    },
+    "TE-BDNK": {
+      "S&T": "South/MDU",
+      "TRD": "TE",
+      "ENGG": "ADPT"
+    }
+  }
+}
 export const sectionsWithAlphanumericSiteLocation = [
 ""
 ];
