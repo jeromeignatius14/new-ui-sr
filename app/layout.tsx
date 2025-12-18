@@ -5,7 +5,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import AddToHomeScreenPrompt from "./components/AddToHomeScreenPrompt";
 import NotificationsInit from './components/NotificationsInit';
-
+import packageJson from "../package.json";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -38,11 +38,16 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+         <small style={{"zIndex":9999,"backgroundColor":"#0000008f",position:"fixed",bottom:0,left:0}}>
+          Version:{packageJson.version}
+        </small>
         <Providers>
           <AddToHomeScreenPrompt /> 
           <NotificationsInit />
           {children}
         </Providers>
+   
+       
       </body>
     </html>
   );
