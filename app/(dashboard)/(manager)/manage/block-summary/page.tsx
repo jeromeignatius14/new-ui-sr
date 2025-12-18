@@ -2412,6 +2412,7 @@ interface PastBlockSummary {
 }
 
 interface DetailedData {
+  userAcceptanceForSanction: any;
   sntDisconnectionRequired?: boolean;
   powerBlockRequired?: boolean;
   enggDisconnectionsRequired?: boolean;
@@ -2520,6 +2521,10 @@ const clearReportDataFromStorage = () => {
 export default function GenerateReportPage() {
   const searchParams = useSearchParams(); // ADDED
   // const router = useRouter();
+    const [pcInstalledStation, setPcInstalledStation] = useState<boolean>(() => {
+    const params = new URLSearchParams(searchParams);
+    return params.get('pcInstalledStation') === 'true';
+  });
     const [upcomingSectionFilter, setUpcomingSectionFilter] = useState<string>(() => {
     const params = new URLSearchParams(searchParams);
     return params.get('upcomingSectionFilter') || "All";
@@ -2668,6 +2673,7 @@ const userLocations = session?.user?.location ;
     globalActivity: "ALL", 
     durationOperator: "ALL",
     durationValue: "",
+    pcInstalledStation: false,
   });
 
   // URL Persistence Effect - ADD THIS
@@ -2733,7 +2739,9 @@ const userLocations = session?.user?.location ;
     if (upcomingDivisionIdSearch) {
       params.set('divisionIdSearch', upcomingDivisionIdSearch);
     }
-
+      if (pcInstalledStation) {
+    params.set('pcInstalledStation', 'true');
+  }
     if (sseFilter && sseFilter !== "All") {
       params.set('sseFilter', sseFilter);
     }
@@ -2759,7 +2767,8 @@ const userLocations = session?.user?.location ;
     upcomingSectionFilter,
     upcomingDivisionIdSearch,
     sseFilter,
-    departmentCountFilter
+    departmentCountFilter,
+    pcInstalledStation
   ]);
 
   // Get user's location and department from session and set up major section options
@@ -2955,6 +2964,7 @@ const onSubmit = async (data: FormData) => {
       globalActivity: globalActivityFilter,
       durationOperator: durationFilter.operator,
       durationValue: durationFilter.value,
+      pcInstalledStation: pcInstalledStation,
     });
 
   } catch (error) {
@@ -3133,14 +3143,28 @@ const filteredBlocks = filteredUpcomingBlocks.filter((block) => {
 
   if( activeFilter === "availed" && block.AvailedTimeFrom===null) return false;
 if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false;
-  if (activeFilter === "notGranted" && block.isGranted !== false) return false;
-  if (activeFilter === "notAvailed" && !(
-    (!block.AvailedTimeFrom&&block.isSanctioned) ||
-    (!block.AvailedTimeTo&&block.isSanctioned) ||
-    (block.isApplied === null&&block.isGranted===true) ||
-    (block.isApplied === false) ||
-    (block.userResponse !== "ACCEPTED" && block.useAcceptanceForSanction === false && block.isSanctioned === true)
-  )) return false;
+        if (activeFilter === "notGranted" && 
+        !(block.isGranted === false && block.isApplied === true && block.isSanctioned === true)) {
+        return false;
+    }
+  // if (activeFilter === "notAvailed" && !(
+  //   (!block.AvailedTimeFrom&&block.isSanctioned) ||
+  //   (!block.AvailedTimeTo&&block.isSanctioned) ||
+  //   (block.isApplied === null&&block.isGranted===true) ||
+  //   (block.isApplied === false) ||
+  //   (block.userResponse !== "ACCEPTED" && block.useAcceptanceForSanction === false && block.isSanctioned === true)
+  // )) return false;
+      if (activeFilter === "notAvailed") {
+    const isNotAvailed = 
+        (block.isSanctioned && !block.userAcceptanceForSanction) ||
+        (block.isSanctioned && block.userAcceptanceForSanction && (!block.isApplied || block.isApplied === null)) ||
+        (block.isSanctioned && block.isApplied && block.isGranted && block.userAcceptanceForSanction && (!block.AvailedTimeFrom || block.AvailedTimeFrom == null));
+    
+    // Return false if it's NOT "not availed"
+    if (!isNotAvailed) {
+        return false;
+    }
+}
   // Filter by selected section
   if (activeSection && block.Section !== activeSection) return false;
     if (!filterBlocksByDepartmentCount(block)) return false;
@@ -3802,7 +3826,38 @@ const handleDownloadDepartmentCount = () => {
           {session?.user?.department}
         </div>
       </div>
-
+{/* === OC INSTALLED STATION FILTER (SEPARATE SECTION) === */}
+<div className="w-full max-w-screen-lg flex justify-center mb-4 px-2">
+  <div className="flex items-center gap-3 bg-white border border-gray-300 rounded-lg px-4 py-2 shadow-sm">
+    <span className="text-[14px] md:text-[16px] font-bold text-black">
+      PC Installed Station:
+    </span>
+    <button
+      onClick={() => setPcInstalledStation(!pcInstalledStation)}
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ${
+        pcInstalledStation ? 'bg-blue-600' : 'bg-gray-300'
+      }`}
+      title={pcInstalledStation ? "Filtering PC Installed Stations" : "Include all stations"}
+    >
+      <span
+        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 ${
+          pcInstalledStation ? 'translate-x-6' : 'translate-x-1'
+        }`}
+      />
+    </button>
+    <span className={`text-[14px] md:text-[16px] font-semibold ${
+      pcInstalledStation ? 'text-blue-600' : 'text-gray-600'
+    }`}>
+      {pcInstalledStation ? 'ON' : 'OFF'}
+    </span>
+    
+    {pcInstalledStation && (
+      <span className="text-[12px] md:text-[14px] text-green-600 font-medium ml-2">
+        ✓ Filtering PC Installed Stations
+      </span>
+    )}
+  </div>
+</div>
 {/* === GLOBAL FILTERS SECTION === */}
 <div className="w-full max-w-screen-lg flex flex-wrap justify-center gap-2 mb-4 px-2">
   {/* Work Type Filter */}
@@ -4588,7 +4643,15 @@ const handleDownloadDepartmentCount = () => {
                     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-[12px] md:text-[16px]">
                       Totals
                     </td>
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                                                            <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+
+                         onClick={() => {
+        setActiveFilter("demanded");
+        setActiveSection(null);
+        setDepartmentCountFilter(null);
+        scrollToUpcomingBlocks();
+      }}
+                    >
                       {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Demanded || 0), 0)
                         .toFixed(2)}{" "}
@@ -4598,7 +4661,13 @@ const handleDownloadDepartmentCount = () => {
                         0
                       )}
                     </td>                 
-                          <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                                                                       <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                         onClick={() => {
+        setActiveFilter("approved");
+        setActiveSection(null);
+        setDepartmentCountFilter(null);
+        scrollToUpcomingBlocks();
+      }}>
                       {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Approved || 0), 0)
                         .toFixed(2)}{" "}
@@ -4623,7 +4692,13 @@ const handleDownloadDepartmentCount = () => {
       : "0.00";
   })()}%
 </td>
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                                                            <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                       onClick={() => {
+        setActiveFilter("applied");
+        setActiveSection(null);
+        setDepartmentCountFilter(null);
+        scrollToUpcomingBlocks();
+      }}>
                       {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Applied || 0), 0)
                         .toFixed(2)}{" "}
@@ -4633,7 +4708,13 @@ const handleDownloadDepartmentCount = () => {
                         0
                       )}
                     </td>
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                                                            <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                        onClick={() => {
+        setActiveFilter("granted");
+        setActiveSection(null);
+        setDepartmentCountFilter(null);
+        scrollToUpcomingBlocks();
+      }}>
                       {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Granted || 0), 0)
                         .toFixed(2)}{" "}
@@ -4659,7 +4740,13 @@ const handleDownloadDepartmentCount = () => {
   })()}%
                     </td>
 
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                                                         <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                       onClick={() => {
+        setActiveFilter("availed");
+        setActiveSection(null);
+        setDepartmentCountFilter(null);
+        scrollToUpcomingBlocks();
+      }}>
                       {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Availed || 0), 0)
                         .toFixed(2)}{" "}
