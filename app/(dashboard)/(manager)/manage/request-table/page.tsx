@@ -1602,11 +1602,12 @@ const handleDownloadExcel = async () => {
     MANAGE USERS
   </button>
 </Link>
-<Link href="/manage/manage-pc">
+{session?.user.department==="S&T"&&<Link href="/manage/manage-pc">
   <button className="w-fit px-16 rounded-full bg-[#ffd180] border-2 border-black py-6 text-2xl font-extrabold text-black text-center shadow-lg hover:scale-105 transition min-w-[320px]">
     PC Installed In Stations
   </button>
-</Link>
+</Link>}
+
   <button
     onClick={async () => {
       const { signOut } = await import("next-auth/react");
