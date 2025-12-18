@@ -5,9 +5,18 @@ export const deptControllerService = {
     const res = await axios.get("/api/dept-controller/users");
     return res.data;
   },
+   async getStation() {
+    const res = await axios.get("/api/dept-controller/stations");
+    return res.data;
+  },
   async getJEsByUser(userId: string) {
     const res = await axios.get(`/api/dept-controller/users/${userId}/jes`);
     return res.data;
+  },
+   async addStation(data: {  depot: string }) {
+    return axios.post("/api/dept-controller/stations", {
+      depot: data.depot,
+    });
   },
   async addUser(data: { name: string; phone: string; depot: string; role: "SSE" | "JE"; managerId?: string; email: string }) {
     if (data.role === "JE" && data.managerId) {
@@ -31,6 +40,9 @@ export const deptControllerService = {
   },
   async deleteUser(userId: string) {
     return axios.delete(`/api/dept-controller/users/${userId}`);
+  },
+   async deleteStation(stationId: string) {
+    return axios.delete(`/api/dept-controller/stations/${stationId}`);
   },
   async editJE(jeId: string, data: Partial<{ name: string; phone: string; depot: string; managerId?: string }>) {
     return axios.patch(`/api/dept-controller/jes/${jeId}`, data);
