@@ -113,6 +113,7 @@ interface PastBlockSummary {
 }
 
 interface DetailedData {
+  userAcceptanceForSanction: boolean | undefined;
   sntDisconnectionRequired?: boolean;
   powerBlockRequired?: boolean;
   enggDisconnectionsRequired?: boolean;
@@ -784,14 +785,28 @@ const handleDepartmentFilterClick = (
 
     if( activeFilter === "availed" && block.AvailedTimeFrom===null) return false;
   if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false;
-    if (activeFilter === "notGranted" && block.isGranted !== false) return false;
-    if (activeFilter === "notAvailed" && !(
-      (!block.AvailedTimeFrom&&block.isSanctioned) ||
-      (!block.AvailedTimeTo&&block.isSanctioned) ||
-      (block.isApplied === null&&block.isGranted===true) ||
-      (block.isApplied === false) ||
-      (block.userResponse !== "ACCEPTED" && block.useAcceptanceForSanction === false && block.isSanctioned === true)
-    )) return false;
+      if (activeFilter === "notGranted" && 
+        !(block.isGranted === false && block.isApplied === true && block.isSanctioned === true)) {
+        return false;
+    }
+    // if (activeFilter === "notAvailed" && !(
+    //   (!block.AvailedTimeFrom&&block.isSanctioned) ||
+    //   (!block.AvailedTimeTo&&block.isSanctioned) ||
+    //   (block.isApplied === null&&block.isGranted===true) ||
+    //   (block.isApplied === false) ||
+    //   (block.userResponse !== "ACCEPTED" && block.useAcceptanceForSanction === false && block.isSanctioned === true)
+    // )) return false;
+    if (activeFilter === "notAvailed") {
+    const isNotAvailed = 
+        (block.isSanctioned && !block.userAcceptanceForSanction) ||
+        (block.isSanctioned && block.userAcceptanceForSanction && (!block.isApplied || block.isApplied === null)) ||
+        (block.isSanctioned && block.isApplied && block.isGranted && block.userAcceptanceForSanction && (!block.AvailedTimeFrom || block.AvailedTimeFrom == null));
+    
+    // Return false if it's NOT "not availed"
+    if (!isNotAvailed) {
+        return false;
+    }
+}
     if (activeSection && block.Section !== activeSection) return false;
       if (!filterBlocksByDepartmentCount(block)) return false;
     return true;
@@ -1924,7 +1939,15 @@ const handleDownloadUpcomingBlocks = () => {
                     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-[12px] md:text-[16px]">
                       Totals
                     </td>
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                                        <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+
+                         onClick={() => {
+        setActiveFilter("demanded");
+        setActiveSection(null);
+        setDepartmentCountFilter(null);
+        scrollToUpcomingBlocks();
+      }}
+                    >
                       {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Demanded || 0), 0)
                         .toFixed(2)}{" "}
@@ -1934,7 +1957,13 @@ const handleDownloadUpcomingBlocks = () => {
                         0
                       )}
                     </td>                 
-                          <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                                             <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                         onClick={() => {
+        setActiveFilter("approved");
+        setActiveSection(null);
+        setDepartmentCountFilter(null);
+        scrollToUpcomingBlocks();
+      }}>
                       {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Approved || 0), 0)
                         .toFixed(2)}{" "}
@@ -1959,7 +1988,13 @@ const handleDownloadUpcomingBlocks = () => {
       : "0.00";
   })()}%
 </td>
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                                        <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                       onClick={() => {
+        setActiveFilter("applied");
+        setActiveSection(null);
+        setDepartmentCountFilter(null);
+        scrollToUpcomingBlocks();
+      }}>
                       {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Applied || 0), 0)
                         .toFixed(2)}{" "}
@@ -1969,7 +2004,13 @@ const handleDownloadUpcomingBlocks = () => {
                         0
                       )}
                     </td>
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                                        <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                        onClick={() => {
+        setActiveFilter("granted");
+        setActiveSection(null);
+        setDepartmentCountFilter(null);
+        scrollToUpcomingBlocks();
+      }}>
                       {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Granted || 0), 0)
                         .toFixed(2)}{" "}
@@ -1995,7 +2036,13 @@ const handleDownloadUpcomingBlocks = () => {
   })()}%
                     </td>
 
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                                      <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                       onClick={() => {
+        setActiveFilter("availed");
+        setActiveSection(null);
+        setDepartmentCountFilter(null);
+        scrollToUpcomingBlocks();
+      }}>
                       {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Availed || 0), 0)
                         .toFixed(2)}{" "}
