@@ -6,7 +6,7 @@ import Select, { MultiValue } from "react-select";
 import { toast } from "react-hot-toast";
 import { format } from "date-fns";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useGenerateReport } from "@/app/service/query/hq";
 import { MajorSection } from "@/app/lib/store";
 import { useSession } from "next-auth/react";
@@ -15,6 +15,66 @@ import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import formatTime from "@/app/utils/formatTime";
 import * as XLSX from "xlsx";
+
+// === LOCALSTORAGE HELPERS ===
+const STORAGE_KEY = 'report-data';
+
+const saveReportDataToStorage = (data: any) => {
+  if (typeof window !== 'undefined') {
+    try {
+      // Only store essential data to prevent quota issues
+      const essentialData = {
+        pastBlockSummary: data.pastBlockSummary || [],
+        detailedData: data.detailedData?.slice(0, 1000) || [], // Limit to 1000 records
+        timestamp: new Date().getTime()
+      };
+      
+      // Check size before storing
+      const dataSize = JSON.stringify(essentialData).length;
+      if (dataSize > 4 * 1024 * 1024) { // 4MB limit
+        console.warn('Data too large for localStorage, storing only pastBlockSummary');
+        const smallerData = {
+          pastBlockSummary: data.pastBlockSummary || [],
+          timestamp: new Date().getTime()
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(smallerData));
+      } else {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(essentialData));
+      }
+    } catch (error) {
+      console.error("Error saving to localStorage:", error);
+      // If there's an error (likely quota exceeded), clear and try again with minimal data
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        pastBlockSummary: data.pastBlockSummary || [],
+        timestamp: new Date().getTime()
+      }));
+    }
+  }
+};
+
+const getReportDataFromStorage = () => {
+  if (typeof window !== 'undefined') {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch (error) {
+        console.error("Error parsing stored data:", error);
+        clearReportDataFromStorage(); // Clear corrupted data
+      }
+    }
+  }
+  return null;
+};
+
+const clearReportDataFromStorage = () => {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem(STORAGE_KEY);
+    console.log("LocalStorage cleared on back button click");
+  }
+};
+// === END LOCALSTORAGE HELPERS ===
 
 interface OptionType {
   value: string;
@@ -29,7 +89,6 @@ interface FormData {
   majorSection: OptionType[];
 }
 
-// Interfaces aligned with the API service
 interface PastBlockSummary {
   NotAvailedCount?: number;
   NotGrantedCount?: number;
@@ -54,6 +113,7 @@ interface PastBlockSummary {
 }
 
 interface DetailedData {
+  userAcceptanceForSanction: boolean | undefined;
   sntDisconnectionRequired?: boolean;
   powerBlockRequired?: boolean;
   enggDisconnectionsRequired?: boolean;
@@ -95,7 +155,7 @@ const departmentOptions: OptionType[] = [
   { value: "ST", label: "S & T" },
   { value: "TRD", label: "TRD" },
 ];
-// Add after your departmentOptions
+
 const globalFilterOptions = {
     workType: {
     'Engineering': [
@@ -106,7 +166,6 @@ const globalFilterOptions = {
     'ST': [
       { value: "ALL", label: "ALL" },
       { value: "Gear", label: "Gear" },
-    
     ],
     'TRD': [
       { value: "ALL", label: "ALL" },
@@ -123,12 +182,9 @@ const globalFilterOptions = {
   },
 };
 
-
-// Helper function to get work types based on selected departments
 const getWorkTypesForDepartments = (departments: string[]): OptionType[] => {
   if (departments.length === 0) return [{ value: "ALL", label: "ALL" }];
   
-  // If multiple departments selected, combine and deduplicate work types
   const allWorkTypes = new Map();
   
   departments.forEach(dept => {
@@ -143,12 +199,11 @@ const getWorkTypesForDepartments = (departments: string[]): OptionType[] => {
   return Array.from(allWorkTypes.values());
 };
 
-// Helper function to get activities based on work type
 const getActivitiesForWorkType = (workTypeSelected: string): string[] => {
   if (workTypeSelected === 'ALL') return ['ALL'];
   return ['ALL', ...(globalFilterOptions.activity[workTypeSelected as keyof typeof globalFilterOptions.activity] || [])];
 };
-// Helper function to get operator symbol for display
+
 const getOperatorSymbol = (operator: string): string => {
   const operatorMap: { [key: string]: string } = {
     ">": ">",
@@ -162,64 +217,139 @@ const getOperatorSymbol = (operator: string): string => {
 };
 
 export default function GenerateReportPage() {
-  const [durationFilter, setDurationFilter] = useState({
-  operator: "ALL", // "ALL", ">", ">=", "=", "<", "<="
-  value: ""
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [pcInstalledStation, setPcInstalledStation] = useState<boolean>(() => {
+  const params = new URLSearchParams(searchParams);
+  return params.get('pcInstalledStation') === 'true';
+});
+  // Initialize all states from URL parameters - DECLARE upcomingSectionFilter FIRST
+  const [upcomingSectionFilter, setUpcomingSectionFilter] = useState<string>(() => {
+    const params = new URLSearchParams(searchParams);
+    return params.get('upcomingSectionFilter') || "All";
   });
-  const [pastBlockSummary, setPastBlockSummary] = useState<PastBlockSummary[]>(
-    []
-  );
-  const [activeFilter, setActiveFilter] = useState<"approved" | "granted" | "availed" |"applied" |"demanded"|"notGranted" | "notAvailed" |"all">("all");
-  const [activeSection, setActiveSection] = useState<string | null>(null);
+
+  const [selectedLocations, setSelectedLocations] = useState<string[]>(() => {
+    const params = new URLSearchParams(searchParams);
+    return params.get('locations')?.split(',') || ["All"];
+  });
+
+  const [selectedBlockTypes, setSelectedBlockTypes] = useState<string[]>(() => {
+    const params = new URLSearchParams(searchParams);
+    return params.get('blockTypes')?.split(',') || ["All"];
+  });
+
+  const [selectedDepartments, setSelectedDepartments] = useState<string[]>(() => {
+    const params = new URLSearchParams(searchParams);
+    return params.get('departments')?.split(',') || ["Engineering"];
+  });
+
+  const [selectedMajorSections, setSelectedMajorSections] = useState<string[]>(() => {
+    const params = new URLSearchParams(searchParams);
+    return params.get('majorSections')?.split(',') || [];
+  });
+
+  const [durationFilter, setDurationFilter] = useState(() => {
+    const params = new URLSearchParams(searchParams);
+    return {
+      operator: params.get('durationOperator') || "ALL",
+      value: params.get('durationValue') || ""
+    };
+  });
+
+  const [pastBlockSummary, setPastBlockSummary] = useState<PastBlockSummary[]>([]);
+  
+  // Filter states with URL persistence
+  const [activeFilter, setActiveFilter] = useState<"approved" | "granted" | "availed" |"applied" |"demanded"|"notGranted" | "notAvailed" |"all">(() => {
+    const params = new URLSearchParams(searchParams);
+    return (params.get('activeFilter') as any) || "all";
+  });
+
+  const [activeSection, setActiveSection] = useState<string | null>(() => {
+    const params = new URLSearchParams(searchParams);
+    return params.get('activeSection') || null;
+  });
+
   const [loading, setLoading] = useState(false);
   const [reportGenerated, setReportGenerated] = useState(false);
-  const [selectedLocations, setSelectedLocations] = useState<string[]>(["All"]);
-  const [selectedBlockTypes, setSelectedBlockTypes] = useState<string[]>([
-    "All",
-  ]);
-  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([
-    "Engineering",
-  ]);
-  const [selectedMajorSections, setSelectedMajorSections] = useState<string[]>(
-    []
-  );
-  const [majorSectionOptions, setMajorSectionOptions] = useState<OptionType[]>(
-    []
-  );
-    const [upcomingDivisionIdSearch, setUpcomingDivisionIdSearch] = useState<string>("");
-const [sseFilter, setSseFilter] = useState("All");
-const [sseDropdownOpen, setSseDropdownOpen] = useState(false);
-// Add after your existing state variables
-const [globalWorkTypeFilter, setGlobalWorkTypeFilter] = useState<string>("ALL");
-const [globalActivityFilter, setGlobalActivityFilter] = useState<string>("ALL");
+  const [majorSectionOptions, setMajorSectionOptions] = useState<OptionType[]>([]);
+  
+  const [upcomingDivisionIdSearch, setUpcomingDivisionIdSearch] = useState<string>(() => {
+    const params = new URLSearchParams(searchParams);
+    return params.get('divisionIdSearch') || "";
+  });
 
-// Dropdown visibility states
-const [showGlobalWorkTypeDropdown, setShowGlobalWorkTypeDropdown] = useState(false);
-const [showGlobalActivityDropdown, setShowGlobalActivityDropdown] = useState(false);
-const [showDurationDropdown, setShowDurationDropdown] = useState(false);
+  const [sseFilter, setSseFilter] = useState(() => {
+    const params = new URLSearchParams(searchParams);
+    return params.get('sseFilter') || "All";
+  });
+
+  const [sseDropdownOpen, setSseDropdownOpen] = useState(false);
+  
+  const [globalWorkTypeFilter, setGlobalWorkTypeFilter] = useState<string>(() => {
+    const params = new URLSearchParams(searchParams);
+    return params.get('globalWorkType') || "ALL";
+  });
+
+  const [globalActivityFilter, setGlobalActivityFilter] = useState<string>(() => {
+    const params = new URLSearchParams(searchParams);
+    return params.get('globalActivity') || "ALL";
+  });
+
+  const [showGlobalWorkTypeDropdown, setShowGlobalWorkTypeDropdown] = useState(false);
+  const [showGlobalActivityDropdown, setShowGlobalActivityDropdown] = useState(false);
+  const [showDurationDropdown, setShowDurationDropdown] = useState(false);
+  // const [departmentCountFilter, setDepartmentCountFilter] = useState<{
+  //   department: string;
+  //   supportingDepartment: string;
+  //   filterType: 'requested' | 'sanctioned' | 'availed';
+  // } | null>(null);
 const [departmentCountFilter, setDepartmentCountFilter] = useState<{
   department: string;
   supportingDepartment: string;
   filterType: 'requested' | 'sanctioned' | 'availed';
-} | null>(null);
-const durationDropdownRef = useRef<HTMLDivElement>(null);
-
-// Refs for dropdowns
-const globalWorkTypeDropdownRef = useRef<HTMLDivElement>(null);
-const globalActivityDropdownRef = useRef<HTMLDivElement>(null);
-const sseDropdownRef = useRef<HTMLDivElement>(null);
+} | null>(() => {
+  const params = new URLSearchParams(searchParams);
+  const deptFilter = params.get('deptFilter');
+  if (!deptFilter) return null;
   
-  const router = useRouter();
+  try {
+    return JSON.parse(deptFilter);
+  } catch {
+    return null;
+  }
+});
+  const durationDropdownRef = useRef<HTMLDivElement>(null);
+  const globalWorkTypeDropdownRef = useRef<HTMLDivElement>(null);
+  const globalActivityDropdownRef = useRef<HTMLDivElement>(null);
+  const sseDropdownRef = useRef<HTMLDivElement>(null);
+
+  const scrollToUpcomingBlocks = () => {
+    const upcomingBlocksTable = document.getElementById('upcoming-blocks-table');
+    if (upcomingBlocksTable) {
+      upcomingBlocksTable.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+  };
+  
   const {
     register,
     handleSubmit,
     control,
     watch,
+    setValue,
     formState: { errors },
-  } = useForm<FormData>();
+  } = useForm<FormData>({
+    defaultValues: {
+      startDate: searchParams.get('startDate') || '',
+      endDate: searchParams.get('endDate') || '',
+    }
+  });
+
   const { data: session } = useSession();
 
-  // Parameters for the query
   const [queryParams, setQueryParams] = useState({
     startDate: "",
     endDate: "",
@@ -229,16 +359,126 @@ const sseDropdownRef = useRef<HTMLDivElement>(null);
     globalWorkType: "ALL",
     globalActivity: "ALL", 
     durationOperator: "ALL",
-  durationValue: "",
+    durationValue: "",
+    pcInstalledStation: false,
   });
 
-  // Get user's location and set up major section options
+  // Enhanced URL persistence with all filter states
+  useEffect(() => {
+    const params = new URLSearchParams();
+    
+    if (selectedDepartments.length > 0) {
+      params.set('departments', selectedDepartments.join(','));
+    }
+    
+    if (selectedBlockTypes.length > 0) {
+      params.set('blockTypes', selectedBlockTypes.join(','));
+    }
+    
+    if (selectedMajorSections.length > 0) {
+      params.set('majorSections', selectedMajorSections.join(','));
+    }
+    
+    if (selectedLocations.length > 0) {
+      params.set('locations', selectedLocations.join(','));
+    }
+    
+    const startDate = watch("startDate");
+    const endDate = watch("endDate");
+    
+    if (startDate) {
+      params.set('startDate', startDate);
+    }
+    
+    if (endDate) {
+      params.set('endDate', endDate);
+    }
+    
+    if (globalWorkTypeFilter && globalWorkTypeFilter !== "ALL") {
+      params.set('globalWorkType', globalWorkTypeFilter);
+    }
+    
+    if (globalActivityFilter && globalActivityFilter !== "ALL") {
+      params.set('globalActivity', globalActivityFilter);
+    }
+    
+    if (durationFilter.operator && durationFilter.operator !== "ALL") {
+      params.set('durationOperator', durationFilter.operator);
+    }
+    
+    if (durationFilter.value) {
+      params.set('durationValue', durationFilter.value);
+    }
+
+    // Add filter states to URL
+    if (activeFilter && activeFilter !== "all") {
+      params.set('activeFilter', activeFilter);
+    }
+    
+    if (activeSection) {
+      params.set('activeSection', activeSection);
+    }
+
+    if (upcomingSectionFilter && upcomingSectionFilter !== "All") {
+      params.set('upcomingSectionFilter', upcomingSectionFilter);
+    }
+
+    if (upcomingDivisionIdSearch) {
+      params.set('divisionIdSearch', upcomingDivisionIdSearch);
+    }
+      if (pcInstalledStation) {
+    params.set('pcInstalledStation', 'true');
+  }
+
+
+    if (sseFilter && sseFilter !== "All") {
+      params.set('sseFilter', sseFilter);
+    }
+ if (departmentCountFilter) {
+    params.set('deptFilter', JSON.stringify(departmentCountFilter));
+  }
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState(null, '', newUrl);
+  }, [
+    selectedDepartments, 
+    selectedBlockTypes, 
+    selectedMajorSections, 
+    selectedLocations,
+    watch("startDate"), 
+    watch("endDate"),
+    globalWorkTypeFilter,
+    globalActivityFilter,
+    durationFilter,
+    activeFilter,
+    activeSection,
+    upcomingSectionFilter,
+    upcomingDivisionIdSearch,
+    sseFilter,
+    departmentCountFilter,
+    pcInstalledStation
+  ]);
+// === ADD THIS HELPER FUNCTION ===
+const handleDepartmentFilterClick = (
+  department: string, 
+  supportingDepartment: string, 
+  filterType: 'requested' | 'sanctioned' | 'availed'
+) => {
+  setDepartmentCountFilter({
+    department,
+    supportingDepartment,
+    filterType
+  });
+  setActiveFilter("all"); // Reset status filter
+  setActiveSection(null); // Reset section filter
+  scrollToUpcomingBlocks();
+  toast.success(`Showing ${filterType} ${department} blocks${supportingDepartment !== "-" ? ` with ${supportingDepartment} support` : ''}`);
+};
+// === END HELPER FUNCTION ===
   useEffect(() => {
     if (session?.user?.location) {
       const userLocation = session.user.location;
       setSelectedLocations([userLocation]);
 
-      // Set up major section options based on user's location
       if (MajorSection[userLocation as keyof typeof MajorSection]) {
         const sections =
           MajorSection[userLocation as keyof typeof MajorSection];
@@ -250,70 +490,73 @@ const sseDropdownRef = useRef<HTMLDivElement>(null);
       }
     }
   }, [session]);
-  // Reset work type filter when departments change
-useEffect(() => {
-  const availableWorkTypes = getWorkTypesForDepartments(selectedDepartments);
-  const currentWorkTypeExists = availableWorkTypes.some(wt => wt.value === globalWorkTypeFilter);
-  
-  if (!currentWorkTypeExists) {
-    setGlobalWorkTypeFilter("ALL");
-    setGlobalActivityFilter("ALL");
-  }
-}, [selectedDepartments]);
-  // Add after your existing useEffects
-// Close dropdowns when clicking outside
-useEffect(() => {
-  const handleClickOutside = (event: MouseEvent) => {
-    if (globalWorkTypeDropdownRef.current && !globalWorkTypeDropdownRef.current.contains(event.target as Node)) {
-      setShowGlobalWorkTypeDropdown(false);
-    }
-    if (globalActivityDropdownRef.current && !globalActivityDropdownRef.current.contains(event.target as Node)) {
-      setShowGlobalActivityDropdown(false);
-    }
-    if (durationDropdownRef.current && !durationDropdownRef.current.contains(event.target as Node)) {
-      setShowDurationDropdown(false);
-    }
-  };
 
-  document.addEventListener('mousedown', handleClickOutside);
-  return () => document.removeEventListener('mousedown', handleClickOutside);
-}, []);
-  // Use the react-query hook with enabled: false initially
+  useEffect(() => {
+    const availableWorkTypes = getWorkTypesForDepartments(selectedDepartments);
+    const currentWorkTypeExists = availableWorkTypes.some(wt => wt.value === globalWorkTypeFilter);
+    
+    if (!currentWorkTypeExists) {
+      setGlobalWorkTypeFilter("ALL");
+      setGlobalActivityFilter("ALL");
+    }
+  }, [selectedDepartments]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (globalWorkTypeDropdownRef.current && !globalWorkTypeDropdownRef.current.contains(event.target as Node)) {
+        setShowGlobalWorkTypeDropdown(false);
+      }
+      if (globalActivityDropdownRef.current && !globalActivityDropdownRef.current.contains(event.target as Node)) {
+        setShowGlobalActivityDropdown(false);
+      }
+      if (durationDropdownRef.current && !durationDropdownRef.current.contains(event.target as Node)) {
+        setShowDurationDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const {
     data: reportData,
     isLoading,
     error,
-    refetch,
   } = useGenerateReport(queryParams);
 
-  // Watch for query results and loading state
+  // === AUTO-LOAD FROM LOCALSTORAGE ===
+  useEffect(() => {
+    const storedData = getReportDataFromStorage();
+    if (storedData) {
+      if (storedData.pastBlockSummary && storedData.pastBlockSummary.length > 0) {
+        setPastBlockSummary(storedData.pastBlockSummary);
+      }
+      setReportGenerated(true);
+      console.log("Loaded data from localStorage");
+    }
+  }, []);
+
+  // === SAVE TO LOCALSTORAGE WHEN DATA ARRIVES ===
   useEffect(() => {
     setLoading(isLoading);
     console.log("Full reportData:", reportData);
 
     if (reportData && reportData.data) {
-      // Safe access of nested properties with detailed logging
-      console.log(
-        "pastBlockSummary raw data:",
-        reportData.data.pastBlockSummary
-      );
-      console.log("detailedData raw data:", reportData.data.detailedData);
-
-      // Handle data even if the property names don't exactly match
       const pastData = reportData.data.pastBlockSummary || [];
-      setPastBlockSummary(pastData);
-      console.log("Set pastBlockSummary to:", pastData);
-
-      // Set the detailed data directly
       const detailedData = reportData.data.detailedData || [];
-      console.log("Set upcomingBlocks to:", detailedData);
+      
+      setPastBlockSummary(pastData);
+      
+      saveReportDataToStorage(reportData.data);
+      
+      console.log("Set pastBlockSummary to:", pastData);
+      console.log("Saved data to localStorage");
 
       setReportGenerated(true);
       toast.success(reportData.message || "Report generated successfully");
     }
   }, [reportData, isLoading]);
 
-  // Watch for query errors
   useEffect(() => {
     if (error) {
       console.error("Error fetching report data:", error);
@@ -322,27 +565,20 @@ useEffect(() => {
     }
   }, [error]);
 
-  // Function to handle row click for section details
   const handleSectionClick = (section: string) => {
     toast.success(`Viewing details for section: ${section}`);
-    // In a real implementation, this would navigate to a detail view
-    // router.push(`/dashboard/drm/drm/section-details/${section}`);
   };
 
-  // Handler for major section selection
   const handleMajorSectionChange = (options: MultiValue<OptionType>) => {
     if (Array.isArray(options) && options.length > 0) {
       const selectedValues = options.map((option) => option.value);
 
-      // Check if 'All' is included in the selected options
       if (selectedValues.includes("All")) {
-        // If 'All' is selected, include all major sections except 'All' itself
         const allSpecificSections = majorSectionOptions
           .map((option) => option.value)
           .filter((value) => value !== "All");
         setSelectedMajorSections(allSpecificSections);
       } else {
-        // Otherwise just set the selected values
         setSelectedMajorSections(selectedValues);
       }
     } else {
@@ -350,7 +586,6 @@ useEffect(() => {
     }
   };
 
-  // Toggle selection for buttons
   const toggleBlockType = (blockType: string) => {
     if (blockType === "All") {
       setSelectedBlockTypes(["All"]);
@@ -374,287 +609,232 @@ useEffect(() => {
     }
   };
 
-  // const onSubmit = async (data: FormData) => {
-  //   // Validate dates
-  //   if (!data.startDate || !data.endDate) {
-  //     toast.error("Please enter both start and end dates");
-  //     return;
-  //   }
+  const onSubmit = async (data: FormData) => {
+    if (!data.startDate || !data.endDate) {
+      toast.error("Please enter both start and end dates");
+      return;
+    }
 
-  //   try {
-  //     // Format dates to DD/MM/YY format for API
-  //     const startDate = new Date(data.startDate);
-  //     const endDate = new Date(data.endDate);
+    try {
+      const startDate = new Date(data.startDate);
+      const endDate = new Date(data.endDate);
 
-  //     const formattedStartDate = format(startDate, "dd/MM/yy");
-  //     const formattedEndDate = format(endDate, "dd/MM/yy");
+      const formattedStartDate = format(startDate, "dd/MM/yy");
+      const formattedEndDate = format(endDate, "dd/MM/yy");
 
-  //     // Update query parameters
-  //     setQueryParams({
-  //       startDate: formattedStartDate,
-  //       endDate: formattedEndDate,
-  //       majorSections: selectedMajorSections,
-  //       department: selectedDepartments,
-  //       blockType: selectedBlockTypes,
-  //     });
+      setQueryParams({
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+        majorSections: selectedMajorSections,
+        department: selectedDepartments,
+        blockType: selectedBlockTypes,
+        globalWorkType: globalWorkTypeFilter,
+        globalActivity: globalActivityFilter,
+        durationOperator: durationFilter.operator,
+        durationValue: durationFilter.value,
+        pcInstalledStation: pcInstalledStation,
+      });
 
-  //     // Trigger the query - react-query will handle the loading state
-  //     // await refetch();
-  //   } catch (error) {
-  //     console.error("Error initiating report generation:", error);
-  //     toast.error("Failed to generate report");
-  //   }
-  // };
+    } catch (error) {
+      console.error("Error initiating report generation:", error);
+      toast.error("Failed to generate report");
+    }
+  };
 
-  // Replace your existing onSubmit with this:
-const onSubmit = async (data: FormData) => {
-  // Validate dates
-  if (!data.startDate || !data.endDate) {
-    toast.error("Please enter both start and end dates");
-    return;
-  }
+  const clearGlobalFilters = () => {
+    setGlobalWorkTypeFilter("ALL");
+    setGlobalActivityFilter("ALL");
+    setDurationFilter({ operator: "ALL", value: "" });
+  };
 
-  try {
-    // Format dates to DD/MM/YY format for API
-    const startDate = new Date(data.startDate);
-    const endDate = new Date(data.endDate);
-
-    const formattedStartDate = format(startDate, "dd/MM/yy");
-    const formattedEndDate = format(endDate, "dd/MM/yy");
-
-    // Update query parameters with ALL filters
-    setQueryParams({
-      startDate: formattedStartDate,
-      endDate: formattedEndDate,
-      majorSections: selectedMajorSections,
-      department: selectedDepartments,
-      blockType: selectedBlockTypes,
-      globalWorkType: globalWorkTypeFilter,
-      globalActivity: globalActivityFilter,
-   
-      durationOperator: durationFilter.operator,
-      durationValue: durationFilter.value,
-    });
-
-  } catch (error) {
-    console.error("Error initiating report generation:", error);
-    toast.error("Failed to generate report");
-  }
-};
-// Add this function after onSubmit
-const clearGlobalFilters = () => {
-  setGlobalWorkTypeFilter("ALL");
-  setGlobalActivityFilter("ALL");
-  setDurationFilter({ operator: "ALL", value: "" });
-};
   const formatDateInput = (value: string) => {
-    // Format as DD/MM/YY
     if (!value) return "";
     const [day, month, year] = value.split("/");
     if (!day || !month || !year) return value;
     return `${day}/${month}/${year}`;
   };
-  // Format the selected dates for display
+
   const formatDisplayDate = (dateStr: string) => {
     if (!dateStr) return "";
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return "";
-    return d.toLocaleDateString("en-GB"); // DD/MM/YYYY
+    return d.toLocaleDateString("en-GB");
   };
 
-  // (B) Summary of Upcoming Blocks
-  const [upcomingSectionFilter, setUpcomingSectionFilter] =
-    useState<string>("All");
+  // === DATA SOURCE WITH LOCALSTORAGE FALLBACK ===
+  const detailedData: DetailedData[] = (() => {
+    if (reportData?.data?.detailedData) {
+      return reportData.data.detailedData;
+    }
+    
+    const storedData = getReportDataFromStorage();
+    if (storedData && storedData.detailedData) {
+      return storedData.detailedData;
+    }
+    
+    return [];
+  })();
+
   const sectionOptionsB: string[] = Array.from(
-    new Set(
-      reportData?.data?.detailedData?.map((b: DetailedData) => b.Section) || []
-    )
+    new Set(detailedData.map((b: DetailedData) => b.Section) || [])
   );
-//    const filteredUpcomingBlocks: DetailedData[] = (
-//   upcomingSectionFilter === "All"
-//     ? reportData?.data?.detailedData || []
-//     : reportData?.data?.detailedData?.filter(
-//       (b: DetailedData) => b.Section === upcomingSectionFilter
-//     ) || []
-// ).filter((block: any) => {
-//   // Division ID search filter
-//   if (upcomingDivisionIdSearch.trim() === "") return true;
-  
-//   const divisionId = block.DivisionId || "";
-//   return divisionId.toLowerCase().includes(upcomingDivisionIdSearch.toLowerCase());
-// });
 
-
-const filterBlocksByDepartmentCount = (block: any): boolean => {
-  if (!departmentCountFilter) return true;
-  
-  const { department, supportingDepartment, filterType } = departmentCountFilter;
-  
-  // Base department filter
-  if (block.selectedDepartment !== department) return false;
-  
-  // Supporting department filters - MATCHING YOUR COUNTING LOGIC EXACTLY
-  if (supportingDepartment === "-") {
-    // No supporting department - only blocks that don't require any support
-    if (department === "ENGG" && (block.sntDisconnectionRequired || block.powerBlockRequired)) return false;
-    if (department === "S&T" && (block.enggDisconnectionsRequired || block.powerBlockRequired)) return false;
-    // TRD doesn't have supporting departments, so all TRD blocks pass
-  } else if (supportingDepartment === "S&T") {
-    // ENGG + S&T - matches your enggWithSnt counting
-    if (!block.sntDisconnectionRequired) return false;
-    if (block.powerBlockRequired) return false; // Matches: enggWithSnt excludes powerBlockRequired
-  } else if (supportingDepartment === "TRD") {
-    if (department === "ENGG") {
-      // ENGG + TRD - matches your enggWithPower counting
-      if (!block.powerBlockRequired) return false;
-      if (block.sntDisconnectionRequired) return false; // Matches: enggWithPower excludes sntDisconnectionRequired
-    } else if (department === "S&T") {
-      // S&T + TRD - matches your sntWithPower counting
-      if (!block.powerBlockRequired) return false;
-      if (block.enggDisconnectionsRequired) return false; // Matches: sntWithPower excludes enggDisconnectionsRequired
+  const filterBlocksByDepartmentCount = (block: any): boolean => {
+    if (!departmentCountFilter) return true;
+    
+    const { department, supportingDepartment, filterType } = departmentCountFilter;
+    
+    if (block.selectedDepartment !== department) return false;
+    
+    if (supportingDepartment === "-") {
+      if (department === "ENGG" && (block.sntDisconnectionRequired || block.powerBlockRequired)) return false;
+      if (department === "S&T" && (block.enggDisconnectionsRequired || block.powerBlockRequired)) return false;
+    } else if (supportingDepartment === "S&T") {
+      if (!block.sntDisconnectionRequired) return false;
+      if (block.powerBlockRequired) return false;
+    } else if (supportingDepartment === "TRD") {
+      if (department === "ENGG") {
+        if (!block.powerBlockRequired) return false;
+        if (block.sntDisconnectionRequired) return false;
+      } else if (department === "S&T") {
+        if (!block.powerBlockRequired) return false;
+        if (block.enggDisconnectionsRequired) return false;
+      }
+    } else if (supportingDepartment === "ENGG") {
+      if (!block.enggDisconnectionsRequired) return false;
+      if (block.powerBlockRequired) return false;
+    } else if (supportingDepartment === "S&T and TRD") {
+      if (!block.sntDisconnectionRequired || !block.powerBlockRequired) return false;
+    } else if (supportingDepartment === "ENGG and TRD") {
+      if (!block.enggDisconnectionsRequired || !block.powerBlockRequired) return false;
     }
-  } else if (supportingDepartment === "ENGG") {
-    // S&T + ENGG - matches your sntWithEngg counting
-    if (!block.enggDisconnectionsRequired) return false;
-    if (block.powerBlockRequired) return false; // Matches: sntWithEngg excludes powerBlockRequired
-  } else if (supportingDepartment === "S&T and TRD") {
-    // ENGG + S&T + TRD - matches your enggWithSntAndPower counting
-    if (!block.sntDisconnectionRequired || !block.powerBlockRequired) return false;
-  } else if (supportingDepartment === "ENGG and TRD") {
-    // S&T + ENGG + TRD - matches your sntWithEnggAndPower counting
-    if (!block.enggDisconnectionsRequired || !block.powerBlockRequired) return false;
-  }
-  
-  // Filter type conditions
-  switch (filterType) {
-    case 'requested':
-      return true;
-    case 'sanctioned':
-      return block.isSanctioned === true;
-    case 'availed':
-      return block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null;
-    default:
-      return true;
-  }
-};
-
-
-
-
-
-const filteredUpcomingBlocks: DetailedData[] = (
-  upcomingSectionFilter === "All"
-    ? reportData?.data?.detailedData || []
-    : reportData?.data?.detailedData?.filter(
-      (b: DetailedData) => b.Section === upcomingSectionFilter
-    ) || []
-)
-.filter((block: any) => {
-  // Division ID search filter
-  if (upcomingDivisionIdSearch.trim() !== "") {
-    const divisionId = block.DivisionId || "";
-    if (!divisionId.toLowerCase().includes(upcomingDivisionIdSearch.toLowerCase())) {
-      return false;
+    
+    switch (filterType) {
+      case 'requested':
+        return true;
+      case 'sanctioned':
+        return block.isSanctioned === true;
+      case 'availed':
+        return block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null;
+      default:
+        return true;
     }
-  }
-  
-  // SSE filter
-  if (sseFilter !== "All") {
-    const userName = block.userName || "";
-    if (userName !== sseFilter) {
-      return false;
+  };
+
+  const filteredUpcomingBlocks: DetailedData[] = (
+    upcomingSectionFilter === "All"
+      ? detailedData
+      : detailedData.filter(
+        (b: DetailedData) => b.Section === upcomingSectionFilter
+      ) || []
+  )
+  .filter((block: any) => {
+    if (upcomingDivisionIdSearch.trim() !== "") {
+      const divisionId = block.DivisionId || "";
+      if (!divisionId.toLowerCase().includes(upcomingDivisionIdSearch.toLowerCase())) {
+        return false;
+      }
     }
-  }
-  
-  return true;
-});
+    
+    if (sseFilter !== "All") {
+      const userName = block.userName || "";
+      if (userName !== sseFilter) {
+        return false;
+      }
+    }
+    
+    return true;
+  });
 
-// Use the same data source for both tables
-const detailedData: DetailedData[] = reportData?.data?.detailedData || [];
+  const enggTotal = detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === false && block.powerBlockRequired === false).length;
+  const enggWithSnt = detailedData.filter(block => 
+    block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true&&block.powerBlockRequired === false
+  ).length;
+  const enggWithPower = detailedData.filter(block => 
+    block.selectedDepartment === "ENGG" && block.powerBlockRequired === true&& block.sntDisconnectionRequired === false
+  ).length;
+  const enggWithSntAndPower = detailedData.filter(block => 
+    block.selectedDepartment === "ENGG" && 
+    block.sntDisconnectionRequired === true && 
+    block.powerBlockRequired === true
+  ).length;
 
-// ENGG counts
-const enggTotal = detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === false && block.powerBlockRequired === false).length;
-const enggWithSnt = detailedData.filter(block => 
-  block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true&&block.powerBlockRequired === false
-).length;
-const enggWithPower = detailedData.filter(block => 
-  block.selectedDepartment === "ENGG" && block.powerBlockRequired === true&& block.sntDisconnectionRequired === false
-).length;
-const enggWithSntAndPower = detailedData.filter(block => 
-  block.selectedDepartment === "ENGG" && 
-  block.sntDisconnectionRequired === true && 
-  block.powerBlockRequired === true
-).length;
+  const sntTotal = detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === false && block.powerBlockRequired === false).length;
+  const sntWithPower = detailedData.filter(block => 
+    block.selectedDepartment === "S&T" && block.powerBlockRequired === true&&block.enggDisconnectionsRequired === false
+  ).length;
+  const sntWithEngg = detailedData.filter(block => 
+    block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true&&block.powerBlockRequired === false
+  ).length;
+  const sntWithEnggAndPower = detailedData.filter(block => 
+    block.selectedDepartment === "S&T" && 
+    block.enggDisconnectionsRequired === true && 
+    block.powerBlockRequired === true
+  ).length;
 
-// S&T counts
-const sntTotal = detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === false && block.powerBlockRequired === false).length;
-const sntWithPower = detailedData.filter(block => 
-  block.selectedDepartment === "S&T" && block.powerBlockRequired === true&&block.enggDisconnectionsRequired === false
-).length;
-const sntWithEngg = detailedData.filter(block => 
-  block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true&&block.powerBlockRequired === false
-).length;
-const sntWithEnggAndPower = detailedData.filter(block => 
-  block.selectedDepartment === "S&T" && 
-  block.enggDisconnectionsRequired === true && 
-  block.powerBlockRequired === true
-).length;
+  const trdTotal = detailedData.filter(block => block.selectedDepartment === "TRD").length;
 
-// TRD counts
-const trdTotal = detailedData.filter(block => block.selectedDepartment === "TRD").length;
+  const totalRequested = detailedData.length;
+  const totalSanctioned = detailedData.filter(block => block.isSanctioned === true).length;
+  const totalAvailed = detailedData.filter(block => block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length;
 
-// Total counts for the bottom row
-const totalRequested = detailedData.length;
-const totalSanctioned = detailedData.filter(block => block.isSanctioned === true).length;
-const totalAvailed = detailedData.filter(block => block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length;
+  const filteredBlocks = filteredUpcomingBlocks.filter((block) => {
+    if (activeFilter === "approved" && !block.isSanctioned) return false;
+    if (activeFilter === "granted" && !block.isGranted) return false;
+    if (activeFilter === "applied" && !block.isApplied) return false;
 
-// Remove this line since we're not using countBlock anymore
-// const countBlock: DetailedData[] = reportData?.data?.detailedData || [];
-// ===== END COUNTING LOGIC =====
-
-const filteredBlocks = filteredUpcomingBlocks.filter((block) => {
-   if (activeFilter === "approved" && !block.isSanctioned) return false;
-  if (activeFilter === "granted" && !block.isGranted) return false;
-  if (activeFilter === "applied" && !block.isApplied) return false;
-
-  if( activeFilter === "availed" && block.AvailedTimeFrom===null) return false;
-if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false;
-  if (activeFilter === "notGranted" && block.isGranted !== false) return false;
-  if (activeFilter === "notAvailed" && !(
-    (!block.AvailedTimeFrom&&block.isSanctioned) ||
-    (!block.AvailedTimeTo&&block.isSanctioned) ||
-    (block.isApplied === null&&block.isGranted===true) ||
-    (block.isApplied === false) ||
-    (block.userResponse !== "ACCEPTED" && block.useAcceptanceForSanction === false && block.isSanctioned === true)
-  )) return false;
-  // Filter by selected section
-  if (activeSection && block.Section !== activeSection) return false;
-    if (!filterBlocksByDepartmentCount(block)) return false;
-  return true;
-});
+    if( activeFilter === "availed" && block.AvailedTimeFrom===null) return false;
+  if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false;
+      if (activeFilter === "notGranted" && 
+        !(block.isGranted === false && block.isApplied === true && block.isSanctioned === true)) {
+        return false;
+    }
+    // if (activeFilter === "notAvailed" && !(
+    //   (!block.AvailedTimeFrom&&block.isSanctioned) ||
+    //   (!block.AvailedTimeTo&&block.isSanctioned) ||
+    //   (block.isApplied === null&&block.isGranted===true) ||
+    //   (block.isApplied === false) ||
+    //   (block.userResponse !== "ACCEPTED" && block.useAcceptanceForSanction === false && block.isSanctioned === true)
+    // )) return false;
+    if (activeFilter === "notAvailed") {
+    const isNotAvailed = 
+        (block.isSanctioned && !block.userAcceptanceForSanction) ||
+        (block.isSanctioned && block.userAcceptanceForSanction && (!block.isApplied || block.isApplied === null)) ||
+        (block.isSanctioned && block.isApplied && block.isGranted && block.userAcceptanceForSanction && (!block.AvailedTimeFrom || block.AvailedTimeFrom == null));
+    
+    // Return false if it's NOT "not availed"
+    if (!isNotAvailed) {
+        return false;
+    }
+}
+    if (activeSection && block.Section !== activeSection) return false;
+      if (!filterBlocksByDepartmentCount(block)) return false;
+    return true;
+  });
 
   function formatDateB(dateString: string) {
     if (!dateString) return "";
-    // Accepts both MM/DD/YYYY and DD/MM/YYYY
     const parts = dateString.split("/");
     if (parts.length === 3) {
-      // Try MM/DD/YYYY first
       const d1 = new Date(dateString);
       if (!isNaN(d1.getTime())) return d1.toLocaleDateString("en-GB");
-      // Try DD/MM/YYYY
       const d2 = new Date(parts[2] + "-" + parts[1] + "-" + parts[0]);
       if (!isNaN(d2.getTime())) return d2.toLocaleDateString("en-GB");
     }
     return dateString;
   }
 
-  const upcomingBlocks: DetailedData[] = reportData?.data?.detailedData || [];
+  const upcomingBlocks: DetailedData[] = detailedData;
 
   const [sectionDropdownOpenB, setSectionDropdownOpenB] = useState(false);
   const sectionDropdownRefB = useRef<HTMLDivElement>(null);
 
+  const sseOptions = [...new Set(
+    detailedData
+      ?.map((item: any) => item.userName)
+      .filter(Boolean)
+  )].sort();
 
-  // Function to download block summary table as XLSX
   const handleDownloadSummary = () => {
     try {
       if (pastBlockSummary.length === 0) {
@@ -663,7 +843,7 @@ if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false
       }
 
       const excelData = pastBlockSummary.map((summary: any) => ({
-        Section: summary.Department || summary.Section || "", // Using the fixed value as in the table
+        Section: summary.Department || summary.Section || "",
         Demanded: summary.Demanded?.toFixed(2) || "0.00",
         Approved: summary.Approved?.toFixed(2) || "0.00",
         Granted: summary.Granted?.toFixed(2) || "0.00",
@@ -678,7 +858,6 @@ if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false
             : "",
       }));
 
-      // Add total row
       excelData.push({
         Section: "Total",
         Demanded: pastBlockSummary
@@ -712,7 +891,6 @@ if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false
       const workbook = XLSX.utils.book_new();
       const worksheet = XLSX.utils.json_to_sheet(excelData);
 
-      // Add title before the data
       XLSX.utils.sheet_add_aoa(
         worksheet,
         [
@@ -722,20 +900,19 @@ if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false
             )} to ${formatDisplayDate(watch("endDate"))}`,
           ],
           [`Department: ${selectedDepartments.join(", ")} (in Hrs)`],
-          [], // Empty row for spacing
+          [],
         ],
         { origin: "A1" }
       );
 
-      // Adjust column widths
       const colWidths = [
-        { wch: 15 }, // Section
-        { wch: 10 }, // Demanded
-        { wch: 10 }, // Approved
-        { wch: 10 }, // Granted
-        { wch: 10 }, // % Granted
-        { wch: 10 }, // Availed
-        { wch: 10 }, // % Availed
+        { wch: 15 },
+        { wch: 10 },
+        { wch: 10 },
+        { wch: 10 },
+        { wch: 10 },
+        { wch: 10 },
+        { wch: 10 },
       ];
       worksheet["!cols"] = colWidths;
 
@@ -762,340 +939,242 @@ if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false
     }
   };
 
-  // Function to download upcoming blocks table as XLSX
-  // const handleDownloadUpcomingBlocks = () => {
-  //   try {
-  //     if (filteredUpcomingBlocks.length === 0) {
-  //       toast.error("No data available to download");
-  //       return;
-  //     }
-
-  //     const excelData = filteredUpcomingBlocks.map((block: any) => {
-  //       // Status logic
-  //       let statusLabel = "";
-  //       if (block.Status === "APPROVED") {
-  //         statusLabel = "Pending with Optg";
-  //       } else if (block.Status === "PENDING") {
-  //         statusLabel = "Pending with dept control";
-  //       } else if (block.Status === "REJECTED") {
-  //         statusLabel = "Returned by Optg";
-  //       } else {
-  //         statusLabel = block.Status;
-  //       }
-
-  //       return {
-  //         Date: formatDateB(block.Date),
-  //         "Request ID": block.DivisionId || "N/A",
-  //         "Station ID": block.stationId || "N/A",
-  //         "Block Section": block.MissionBlock || "N/A",
-  //         Type: block.Type || "N/A",
-  //         Duration: block.Duration,
-  //         Activity: block.Activity || "N/A",
-  //         Depo:block.selectedDepo||"N/A",
-  //         "Availed Time":
-  //           block.AvailedTimeFrom && block.AvailedTimeTo
-  //             ? `${formatTime(block.AvailedTimeFrom)} to ${formatTime(
-  //               block.AvailedTimeTo
-  //             )}`
-  //             : "Not Available",
-  //         Status: statusLabel,
-  //       };
-  //     });
-
-  //     const workbook = XLSX.utils.book_new();
-  //     const worksheet = XLSX.utils.json_to_sheet(excelData);
-
-  //     // Add title before the data
-  //     XLSX.utils.sheet_add_aoa(
-  //       worksheet,
-  //       [
-  //         [`(B) Summary of Upcoming Blocks`],
-  //         [], // Empty row for spacing
-  //       ],
-  //       { origin: "A1" }
-  //     );
-
-  //     // Adjust column widths
-  //     const colWidths = [
-  //       { wch: 12 }, // Date
-  //       { wch: 10 }, // ID
-  //       { wch: 10 }, // Station ID
-  //       { wch: 20 }, // Block Section
-  //       { wch: 12 }, // Type
-  //       { wch: 30 }, // Activity
-  //       { wch: 20 }, // Demand Time
-  //       { wch: 20 }, // Sanctioned Time
-  //       { wch: 20 }, // Availed Time
-  //       { wch: 20 }, // Status
-  //     ];
-  //     worksheet["!cols"] = colWidths;
-
-  //     XLSX.utils.book_append_sheet(workbook, worksheet, "Upcoming Blocks");
-
-  //     const excelBuffer = XLSX.write(workbook, {
-  //       bookType: "xlsx",
-  //       type: "array",
-  //     });
-  //     const blob = new Blob([excelBuffer], {
-  //       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  //     });
-  //     const link = document.createElement("a");
-  //     link.href = URL.createObjectURL(blob);
-  //     link.download = `upcoming_blocks_${format(
-  //       new Date(),
-  //       "dd-MM-yyyy"
-  //     )}.xlsx`;
-  //     document.body.appendChild(link);
-  //     link.click();
-  //     document.body.removeChild(link);
-
-  //     toast.success("Upcoming blocks data downloaded successfully");
-  //   } catch (error) {
-  //     console.error("Download error:", error);
-  //     toast.error("Failed to download Excel file. Please try again.");
-  //   }
-  // };
- const handleDownloadUpcomingBlocks = () => {
-   try {
-     const dataToDownload = filteredBlocks;
- 
-     if (dataToDownload.length === 0) {
-       toast.error("No data available to download");
-       return;
-     }
- 
-     const excelData = dataToDownload.map((block: any) => {
-       let statusLabel = "";
-       if (block.overAllStatus === "Sanctioned, Pending with SSE For Acceptance") {
-         statusLabel = "Sanctioned, Pending with SSE For Acceptance";
-       } else if (block.overAllStatus === "Sanctioned and Accepted by SSE") {
-         statusLabel = "Sanctioned and Accepted by SSE";
-       } else if (block.overAllStatus === "Sanctioned and Rejected by SSE") {
-         statusLabel = "Sanctioned and Rejected by SSE";
-       } else {
-         statusLabel = block.overAllStatus || block.Status;
-       }
- 
-       return {
-         "Request ID": block.DivisionId || "N/A",
-         "Date": block.Date ? dayjs(block.Date).format("DD-MM-YY") : "N/A",
-         "Department": block.selectedDepartment || "N/A",
-         "Block Section": block.MissionBlock || "N/A",
-         "Depo": block.selectedDepo || "N/A",
-         "Type": block.Type || "N/A",
-         "Activity": block.Activity || "N/A",
-         "Demanded Time": block.DemandedTimeFrom && block.DemandedTimeTo
-           ? `${formatTime(block.DemandedTimeFrom)} to ${formatTime(block.DemandedTimeTo)}`
-           : "Not Available",
-         "Sanctioned Time": block.SanctionedTimeFrom && block.SanctionedTimeTo
-           ? `${formatTime(block.SanctionedTimeFrom)} to ${formatTime(block.SanctionedTimeTo)}`
-           : "Not Available",
-         "Availed Time": block.AvailedTimeFrom && block.AvailedTimeTo
-           ? `${formatTime(block.AvailedTimeFrom)} to ${formatTime(block.AvailedTimeTo)}`
-           : "Not Available",
-         "Status": statusLabel,
-         "Station ID": block.stationId || "N/A",
-         "Duration": block.Duration || "N/A",
-         "Section": block.Section || "N/A",
-       };
-     });
- 
-     const workbook = XLSX.utils.book_new();
-     const worksheet = XLSX.utils.json_to_sheet(excelData);
- 
-     // Column widths (keep)
-     worksheet["!cols"] = [
-       { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 25 }, { wch: 12 },
-       { wch: 12 }, { wch: 30 }, { wch: 25 }, { wch: 25 }, { wch: 25 },
-       { wch: 35 }, { wch: 15 }, { wch: 10 }, { wch: 15 }, { wch: 20 },
-       { wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 25 }, { wch: 15 },
-       { wch: 15 }, { wch: 15 }, { wch: 15 }
-     ];
- 
-     XLSX.utils.book_append_sheet(workbook, worksheet, "Filtered Blocks");
- 
-     const excelBuffer = XLSX.write(workbook, {
-       bookType: "xlsx",
-       type: "array",
-     });
- 
-     const blob = new Blob([excelBuffer], {
-       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-     });
- 
-     const link = document.createElement("a");
-     link.href = URL.createObjectURL(blob);
- 
-     let filename = "blocks";
- 
-     link.download = `${filename}_${format(new Date(), "dd-MM-yyyy")}.xlsx`;
- 
-     document.body.appendChild(link);
-     link.click();
-     document.body.removeChild(link);
- 
-     toast.success(`Downloaded ${dataToDownload.length} records`);
-   } catch (error) {
-     console.error("Download error:", error);
-     toast.error("Failed to download Excel file. Please try again.");
-   }
- };
-  // Get unique SSE names from your data
-const sseOptions = [...new Set(
-  reportData?.data?.detailedData
-    ?.map((item: any) => item.userName)
-    .filter(Boolean) // Remove null/undefined
-)].sort();
-const handleDownloadDepartmentCount = () => {
+const handleDownloadUpcomingBlocks = () => {
   try {
-    if (detailedData.length === 0) { // Changed from countBlock to detailedData
+    const dataToDownload = filteredBlocks;
+
+    if (dataToDownload.length === 0) {
       toast.error("No data available to download");
       return;
     }
 
-    // Prepare the Excel data matching your table structure
-    const excelData = [
-      // ENGG Rows
-      {
-        "Location": "MAS",
-        "Department": "ENGG",
-        "Supporting Department": "-",
-        "Total Block Requested": enggTotal,
-        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.isSanctioned).length,
-        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
-      },
-      {
-        "Location": "MAS",
-        "Department": "ENGG",
-        "Supporting Department": "S&T",
-        "Total Block Requested": enggWithSnt,
-        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.isSanctioned),
-        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
-      },
-      {
-        "Location": "MAS",
-        "Department": "ENGG",
-        "Supporting Department": "TRD",
-        "Total Block Requested": enggWithPower,
-        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.isSanctioned),
-        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
-      },
-      {
-        "Location": "MAS",
-        "Department": "ENGG",
-        "Supporting Department": "S&T and TRD",
-        "Total Block Requested": enggWithSntAndPower,
-        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.powerBlockRequired === true && block.isSanctioned),
-        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
-      },
-      
-      // TRD Rows
-      {
-        "Location": "MAS",
-        "Department": "TRD",
-        "Supporting Department": "-",
-        "Total Block Requested": trdTotal,
-        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "TRD" && block.isSanctioned),
-        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "TRD" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
-      },
-      
-      // S&T Rows
-      {
-        "Location": "MAS",
-        "Department": "S&T",
-        "Supporting Department": "-",
-        "Total Block Requested": sntTotal,
-        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "S&T" && block.isSanctioned),
-        "Total Block Availed":detailedData.filter(block => block.selectedDepartment === "S&T" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
-      },
-      {
-        "Location": "MAS",
-        "Department": "S&T",
-        "Supporting Department": "ENGG",
-        "Total Block Requested": sntWithEngg,
-        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.isSanctioned),
-        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
-      },
-      {
-        "Location": "MAS",
-        "Department": "S&T",
-        "Supporting Department": "TRD",
-        "Total Block Requested": sntWithPower,
-        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.isSanctioned),
-        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
-      },
-      {
-        "Location": "MAS",
-        "Department": "S&T",
-        "Supporting Department": "ENGG and TRD",
-        "Total Block Requested": sntWithEnggAndPower,
-        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.powerBlockRequired === true && block.isSanctioned),
-        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
-      },
-      
-      // Total Row
-      {
-        "Location": "TOTAL",
-        "Department": "",
-        "Supporting Department": "",
-        "Total Block Requested": totalRequested,
-        "Total Block Sanctioned": totalSanctioned,
-        "Total Block Availed": totalAvailed
+    const excelData = dataToDownload.map((block: any) => {
+      let statusLabel = "";
+      if (block.overAllStatus === "Sanctioned, Pending with SSE For Acceptance") {
+        statusLabel = "Sanctioned, Pending with SSE For Acceptance";
+      } else if (block.overAllStatus === "Sanctioned and Accepted by SSE") {
+        statusLabel = "Sanctioned and Accepted by SSE";
+      } else if (block.overAllStatus === "Sanctioned and Rejected by SSE") {
+        statusLabel = "Sanctioned and Rejected by SSE";
+      } else {
+        statusLabel = block.overAllStatus || block.Status;
       }
-    ];
+
+      return {
+        "Request ID": block.DivisionId || "N/A",
+        "Date": block.Date ? dayjs(block.Date).format("DD-MM-YY") : "N/A",
+        "Department": block.selectedDepartment || "N/A",
+        "Block Section": block.MissionBlock || "N/A",
+        "Depo": block.selectedDepo || "N/A",
+        "Type": block.Type || "N/A",
+        "Activity": block.Activity || "N/A",
+        "Demanded Time": block.DemandedTimeFrom && block.DemandedTimeTo
+          ? `${formatTime(block.DemandedTimeFrom)} to ${formatTime(block.DemandedTimeTo)}`
+          : "Not Available",
+        "Sanctioned Time": block.SanctionedTimeFrom && block.SanctionedTimeTo
+          ? `${formatTime(block.SanctionedTimeFrom)} to ${formatTime(block.SanctionedTimeTo)}`
+          : "Not Available",
+        "Availed Time": block.AvailedTimeFrom && block.AvailedTimeTo
+          ? `${formatTime(block.AvailedTimeFrom)} to ${formatTime(block.AvailedTimeTo)}`
+          : "Not Available",
+        "Status": statusLabel,
+        "Station ID": block.stationId || "N/A",
+        "Duration": block.Duration || "N/A",
+        "Section": block.Section || "N/A",
+        "SSE Name": block.userName || "N/A",
+        "Corridor Type": block.corridorType || "N/A",
+        "Power Block Required": block.powerBlockRequired ? "Yes" : "No",
+        "S&T Disconnection Required": block.sntDisconnectionRequired ? "Yes" : "No",
+        "Engg Disconnections Required": block.enggDisconnectionsRequired ? "Yes" : "No",
+        "Is Sanctioned": block.isSanctioned ? "Yes" : "No",
+        "Is Granted": block.isGranted ? "Yes" : "No",
+        "Is Applied": block.isApplied ? "Yes" : "No",
+        "User Response": block.userResponse || "N/A"
+      };
+    });
 
     const workbook = XLSX.utils.book_new();
     const worksheet = XLSX.utils.json_to_sheet(excelData);
 
-    // Add title before the data
-    XLSX.utils.sheet_add_aoa(
-      worksheet,
-      [
-        [`Department Wise Request Count`],
-        [], // Empty row for spacing
-      ],
-      { origin: "A1" }
-    );
-
-    // Adjust column widths for better readability
-    const colWidths = [
-      { wch: 12 }, // Location
-      { wch: 15 }, // Department
-      { wch: 25 }, // Supporting Department
-      { wch: 20 }, // Total Block Requested
-      { wch: 20 }, // Total Block Sanctioned
-      { wch: 20 }, // Total Block Availed
+    // Column widths (keep)
+    worksheet["!cols"] = [
+      { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 25 }, { wch: 12 },
+      { wch: 12 }, { wch: 30 }, { wch: 25 }, { wch: 25 }, { wch: 25 },
+      { wch: 35 }, { wch: 15 }, { wch: 10 }, { wch: 15 }, { wch: 20 },
+      { wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 25 }, { wch: 15 },
+      { wch: 15 }, { wch: 15 }, { wch: 15 }
     ];
-    worksheet["!cols"] = colWidths;
 
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Department Count");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Filtered Blocks");
 
     const excelBuffer = XLSX.write(workbook, {
       bookType: "xlsx",
       type: "array",
     });
-    
+
     const blob = new Blob([excelBuffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
-    
+
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `department_wise_request_count_${format(
-      new Date(),
-      "dd-MM-yyyy"
-    )}.xlsx`;
-    
+
+    let filename = "blocks";
+
+    link.download = `${filename}_${format(new Date(), "dd-MM-yyyy")}.xlsx`;
+
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 
-    toast.success("Department wise request count downloaded successfully");
+    toast.success(`Downloaded ${dataToDownload.length} records`);
   } catch (error) {
     console.error("Download error:", error);
     toast.error("Failed to download Excel file. Please try again.");
   }
 };
+
+
+  const handleDownloadDepartmentCount = () => {
+    try {
+      if (detailedData.length === 0) {
+        toast.error("No data available to download");
+        return;
+      }
+
+      const excelData = [
+        {
+          "Location": "MAS",
+          "Department": "ENGG",
+          "Supporting Department": "-",
+          "Total Block Requested": enggTotal,
+          "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.isSanctioned).length,
+          "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
+        },
+        {
+          "Location": "MAS",
+          "Department": "ENGG",
+          "Supporting Department": "S&T",
+          "Total Block Requested": enggWithSnt,
+          "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.isSanctioned),
+          "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+        },
+        {
+          "Location": "MAS",
+          "Department": "ENGG",
+          "Supporting Department": "TRD",
+          "Total Block Requested": enggWithPower,
+          "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.isSanctioned),
+          "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+        },
+        {
+          "Location": "MAS",
+          "Department": "ENGG",
+          "Supporting Department": "S&T and TRD",
+          "Total Block Requested": enggWithSntAndPower,
+          "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.powerBlockRequired === true && block.isSanctioned),
+          "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+        },
+        {
+          "Location": "MAS",
+          "Department": "TRD",
+          "Supporting Department": "-",
+          "Total Block Requested": trdTotal,
+          "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "TRD" && block.isSanctioned),
+          "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "TRD" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+        },
+        {
+          "Location": "MAS",
+          "Department": "S&T",
+          "Supporting Department": "-",
+          "Total Block Requested": sntTotal,
+          "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "S&T" && block.isSanctioned),
+          "Total Block Availed":detailedData.filter(block => block.selectedDepartment === "S&T" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+        },
+        {
+          "Location": "MAS",
+          "Department": "S&T",
+          "Supporting Department": "ENGG",
+          "Total Block Requested": sntWithEngg,
+          "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.isSanctioned),
+          "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+        },
+        {
+          "Location": "MAS",
+          "Department": "S&T",
+          "Supporting Department": "TRD",
+          "Total Block Requested": sntWithPower,
+          "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.isSanctioned),
+          "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+        },
+        {
+          "Location": "MAS",
+          "Department": "S&T",
+          "Supporting Department": "ENGG and TRD",
+          "Total Block Requested": sntWithEnggAndPower,
+          "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.powerBlockRequired === true && block.isSanctioned),
+          "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
+        },
+        {
+          "Location": "TOTAL",
+          "Department": "",
+          "Supporting Department": "",
+          "Total Block Requested": totalRequested,
+          "Total Block Sanctioned": totalSanctioned,
+          "Total Block Availed": totalAvailed
+        }
+      ];
+
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+      XLSX.utils.sheet_add_aoa(
+        worksheet,
+        [
+          [`Department Wise Request Count`],
+          [],
+        ],
+        { origin: "A1" }
+      );
+
+      const colWidths = [
+        { wch: 12 },
+        { wch: 15 },
+        { wch: 25 },
+        { wch: 20 },
+        { wch: 20 },
+        { wch: 20 },
+      ];
+      worksheet["!cols"] = colWidths;
+
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Department Count");
+
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+      
+      const blob = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `department_wise_request_count_${format(
+        new Date(),
+        "dd-MM-yyyy"
+      )}.xlsx`;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success("Department wise request count downloaded successfully");
+    } catch (error) {
+      console.error("Download error:", error);
+      toast.error("Failed to download Excel file. Please try again.");
+    }
+  };
 
   return (
     <div className="min-h-screen w-full bg-[#fffbe9] flex flex-col items-center">
@@ -1151,7 +1230,6 @@ const handleDownloadDepartmentCount = () => {
                   width: "100%",
                   maxWidth: "110px",
                   minWidth: "90px",
-                  // Show only the count in the input
                   "&:after": selectedMajorSections.length > 0 ? {
                     content: `"${selectedMajorSections.length}"`,
                     position: 'absolute',
@@ -1165,7 +1243,7 @@ const handleDownloadDepartmentCount = () => {
                 }),
                 input: (base) => ({
                   ...base,
-                  opacity: 0, // Hide the default input
+                  opacity: 0,
                   width: 0,
                 }),
                 placeholder: (base) => ({
@@ -1184,7 +1262,7 @@ const handleDownloadDepartmentCount = () => {
                   ...base,
                   backgroundColor: "#e0e0ff",
                   color: "#000",
-                  display: 'none', // Hide the chips in the input
+                  display: 'none',
                 }),
                 multiValueLabel: (base) => ({
                   ...base,
@@ -1285,179 +1363,211 @@ const handleDownloadDepartmentCount = () => {
           </button>
         ))}
       </div>
-{/* === GLOBAL FILTERS SECTION === */}
-<div className="w-full max-w-screen-lg flex flex-wrap justify-center gap-2 mb-4 px-2">
-  {/* Work Type Filter */}
-  <div className="relative" ref={globalWorkTypeDropdownRef}>
+{/* === OC INSTALLED STATION FILTER (SEPARATE SECTION) === */}
+<div className="w-full max-w-screen-lg flex justify-center mb-4 px-2">
+  <div className="flex items-center gap-3 bg-white border border-gray-300 rounded-lg px-4 py-2 shadow-sm">
+    <span className="text-[14px] md:text-[16px] font-bold text-black">
+      PC Installed Station:
+    </span>
     <button
-      onClick={() => setShowGlobalWorkTypeDropdown(!showGlobalWorkTypeDropdown)}
-      className="px-3 py-1 bg-white border border-black rounded flex items-center gap-2 text-black text-[12px] md:text-[14px]"
-      disabled={selectedDepartments.length === 0}
-    >
-      Work Type: {globalWorkTypeFilter}
-      <span>▼</span>
-    </button>
-    {showGlobalWorkTypeDropdown && selectedDepartments.length > 0 && (
-      <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[150px]">
-        {getWorkTypesForDepartments(selectedDepartments).map((type) => (
-          <button
-            key={type.value}
-            onClick={() => {
-              setGlobalWorkTypeFilter(type.value);
-              setGlobalActivityFilter('ALL');
-              setShowGlobalWorkTypeDropdown(false);
-            }}
-            className={`block w-full text-left px-3 py-2 hover:bg-gray-100 text-black ${globalWorkTypeFilter === type.value ? 'bg-blue-100' : ''}`}
-          >
-            {type.label}
-          </button>
-        ))}
-      </div>
-    )}
-  </div>
-
-  {/* Activity Filter */}
-  <div className="relative" ref={globalActivityDropdownRef}>
-    <button
-      onClick={() => globalWorkTypeFilter !== 'ALL' && setShowGlobalActivityDropdown(!showGlobalActivityDropdown)}
-      className={`px-3 py-1 bg-white border border-black rounded flex items-center gap-2 text-black text-[12px] md:text-[14px] ${
-        globalWorkTypeFilter === 'ALL' || selectedDepartments.length === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+      onClick={() => setPcInstalledStation(!pcInstalledStation)}
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ${
+        pcInstalledStation ? 'bg-blue-600' : 'bg-gray-300'
       }`}
-      disabled={globalWorkTypeFilter === 'ALL' || selectedDepartments.length === 0}
+      title={pcInstalledStation ? "Filtering PC Installed Stations" : "Include all stations"}
     >
-      Activity: {globalActivityFilter}
-      <span>▼</span>
+      <span
+        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 ${
+          pcInstalledStation ? 'translate-x-6' : 'translate-x-1'
+        }`}
+      />
     </button>
-    {showGlobalActivityDropdown && globalWorkTypeFilter !== 'ALL' && selectedDepartments.length > 0 && (
-      <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[200px] max-h-60 overflow-y-auto">
-        {getActivitiesForWorkType(globalWorkTypeFilter).map((activity) => (
-          <button
-            key={activity}
-            onClick={() => {
-              setGlobalActivityFilter(activity);
-              setShowGlobalActivityDropdown(false);
-            }}
-            className={`block w-full text-left px-3 py-2 hover:bg-gray-100 text-black ${globalActivityFilter === activity ? 'bg-blue-100' : ''}`}
-          >
-            {activity}
-          </button>
-        ))}
-      </div>
+    <span className={`text-[14px] md:text-[16px] font-semibold ${
+      pcInstalledStation ? 'text-blue-600' : 'text-gray-600'
+    }`}>
+      {pcInstalledStation ? 'ON' : 'OFF'}
+    </span>
+    
+    {pcInstalledStation && (
+      <span className="text-[12px] md:text-[14px] text-green-600 font-medium ml-2">
+        ✓ Filtering PC Installed Stations
+      </span>
     )}
   </div>
-
-  {/* Time Slot Filter */}
-{/* Duration Filter */}
-<div className="relative" ref={durationDropdownRef}>
-  <button
-    onClick={() => setShowDurationDropdown(!showDurationDropdown)}
-    className="px-3 py-1 bg-white border border-black rounded flex items-center gap-2 text-black text-[12px] md:text-[14px]"
-  >
-    Duration: {durationFilter.operator === "ALL" 
-      ? "ALL" 
-      : `${getOperatorSymbol(durationFilter.operator)} ${durationFilter.value}h`
-    }
-    <span>▼</span>
-  </button>
-  
-  {showDurationDropdown && (
-    <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[200px] p-3">
-      {/* Operator Selection */}
-      <div className="mb-3">
-        <label className="block text-sm font-medium text-black mb-1">Operator:</label>
-        <div className="grid grid-cols-3 gap-1">
-          {[
-            { value: "ALL", label: "ALL", symbol: "ALL" },
-            { value: ">", label: ">", symbol: "Greater than" },
-            { value: ">=", label: "≥", symbol: "Greater than or equal" },
-            { value: "=", label: "=", symbol: "Equal to" },
-            { value: "<=", label: "≤", symbol: "Less than or equal" },
-            { value: "<", label: "<", symbol: "Less than" }
-          ].map((op) => (
-            <button
-              key={op.value}
-              onClick={() => setDurationFilter(prev => ({ ...prev, operator: op.value }))}
-              className={`p-2 border rounded text-sm ${
-                durationFilter.operator === op.value 
-                  ? 'bg-blue-500 text-white border-blue-500' 
-                  : 'bg-gray-100 text-black border-gray-300'
-              }`}
-              title={op.symbol}
-            >
-              {op.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Duration Input */}
-      {durationFilter.operator !== "ALL" && (
-        <div className="mb-3">
-          <label className="block text-sm font-medium text-black mb-1">
-            Duration (hours):
-          </label>
-          <input
-            type="number"
-            min="0"
-            max="24"
-            step="0.5"
-            value={durationFilter.value}
-            onChange={(e) => setDurationFilter(prev => ({ 
-              ...prev, 
-              value: e.target.value 
-            }))}
-            className="w-full px-2 py-1 border border-gray-300 rounded text-black"
-            placeholder="Enter hours"
-          />
-          <div className="flex gap-1 mt-1">
-            {[1, 2, 4, 6, 8].map((hours) => (
-              <button
-                key={hours}
-                onClick={() => setDurationFilter(prev => ({ 
-                  ...prev, 
-                  value: hours.toString() 
-                }))}
-                className="flex-1 px-2 py-1 bg-gray-200 text-black rounded text-xs hover:bg-gray-300"
-              >
-                {hours}h
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Action Buttons */}
-      <div className="flex gap-2">
-        <button
-          onClick={() => {
-            setShowDurationDropdown(false);
-          }}
-          className="flex-1 bg-green-500 text-white py-1 rounded text-sm hover:bg-green-600"
-        >
-          Apply
-        </button>
-        <button
-          onClick={() => {
-            setDurationFilter({ operator: "ALL", value: "" });
-            setShowDurationDropdown(false);
-          }}
-          className="flex-1 bg-red-500 text-white py-1 rounded text-sm hover:bg-red-600"
-        >
-          Clear
-        </button>
-      </div>
-    </div>
-  )}
 </div>
 
-  {/* Clear Filters Button */}
-  <button
-    onClick={clearGlobalFilters}
-    className="px-3 py-1 bg-red-500 text-white border border-black rounded text-[12px] md:text-[14px]"
-  >
-    Clear Filters
-  </button>
-</div>
+      {/* === GLOBAL FILTERS SECTION === */}
+      <div className="w-full max-w-screen-lg flex flex-wrap justify-center gap-2 mb-4 px-2">
+        {/* Work Type Filter */}
+        <div className="relative" ref={globalWorkTypeDropdownRef}>
+          <button
+            onClick={() => setShowGlobalWorkTypeDropdown(!showGlobalWorkTypeDropdown)}
+            className="px-3 py-1 bg-white border border-black rounded flex items-center gap-2 text-black text-[12px] md:text-[14px]"
+            disabled={selectedDepartments.length === 0}
+          >
+            Work Type: {globalWorkTypeFilter}
+            <span>▼</span>
+          </button>
+          {showGlobalWorkTypeDropdown && selectedDepartments.length > 0 && (
+            <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[150px]">
+              {getWorkTypesForDepartments(selectedDepartments).map((type) => (
+                <button
+                  key={type.value}
+                  onClick={() => {
+                    setGlobalWorkTypeFilter(type.value);
+                    setGlobalActivityFilter('ALL');
+                    setShowGlobalWorkTypeDropdown(false);
+                  }}
+                  className={`block w-full text-left px-3 py-2 hover:bg-gray-100 text-black ${globalWorkTypeFilter === type.value ? 'bg-blue-100' : ''}`}
+                >
+                  {type.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Activity Filter */}
+        <div className="relative" ref={globalActivityDropdownRef}>
+          <button
+            onClick={() => globalWorkTypeFilter !== 'ALL' && setShowGlobalActivityDropdown(!showGlobalActivityDropdown)}
+            className={`px-3 py-1 bg-white border border-black rounded flex items-center gap-2 text-black text-[12px] md:text-[14px] ${
+              globalWorkTypeFilter === 'ALL' || selectedDepartments.length === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+            }`}
+            disabled={globalWorkTypeFilter === 'ALL' || selectedDepartments.length === 0}
+          >
+            Activity: {globalActivityFilter}
+            <span>▼</span>
+          </button>
+          {showGlobalActivityDropdown && globalWorkTypeFilter !== 'ALL' && selectedDepartments.length > 0 && (
+            <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[200px] max-h-60 overflow-y-auto">
+              {getActivitiesForWorkType(globalWorkTypeFilter).map((activity) => (
+                <button
+                  key={activity}
+                  onClick={() => {
+                    setGlobalActivityFilter(activity);
+                    setShowGlobalActivityDropdown(false);
+                  }}
+                  className={`block w-full text-left px-3 py-2 hover:bg-gray-100 text-black ${globalActivityFilter === activity ? 'bg-blue-100' : ''}`}
+                >
+                  {activity}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Duration Filter */}
+        <div className="relative" ref={durationDropdownRef}>
+          <button
+            onClick={() => setShowDurationDropdown(!showDurationDropdown)}
+            className="px-3 py-1 bg-white border border-black rounded flex items-center gap-2 text-black text-[12px] md:text-[14px]"
+          >
+            Duration: {durationFilter.operator === "ALL" 
+              ? "ALL" 
+              : `${getOperatorSymbol(durationFilter.operator)} ${durationFilter.value}h`
+            }
+            <span>▼</span>
+          </button>
+          
+          {showDurationDropdown && (
+            <div className="absolute top-full left-0 bg-white border border-black shadow-lg z-50 min-w-[200px] p-3">
+              {/* Operator Selection */}
+              <div className="mb-3">
+                <label className="block text-sm font-medium text-black mb-1">Operator:</label>
+                <div className="grid grid-cols-3 gap-1">
+                  {[
+                    { value: "ALL", label: "ALL", symbol: "ALL" },
+                    { value: ">", label: ">", symbol: "Greater than" },
+                    { value: ">=", label: "≥", symbol: "Greater than or equal" },
+                    { value: "=", label: "=", symbol: "Equal to" },
+                    { value: "<=", label: "≤", symbol: "Less than or equal" },
+                    { value: "<", label: "<", symbol: "Less than" }
+                  ].map((op) => (
+                    <button
+                      key={op.value}
+                      onClick={() => setDurationFilter(prev => ({ ...prev, operator: op.value }))}
+                      className={`p-2 border rounded text-sm ${
+                        durationFilter.operator === op.value 
+                          ? 'bg-blue-500 text-white border-blue-500' 
+                          : 'bg-gray-100 text-black border-gray-300'
+                      }`}
+                      title={op.symbol}
+                    >
+                      {op.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Duration Input */}
+              {durationFilter.operator !== "ALL" && (
+                <div className="mb-3">
+                  <label className="block text-sm font-medium text-black mb-1">
+                    Duration (hours):
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="24"
+                    step="0.5"
+                    value={durationFilter.value}
+                    onChange={(e) => setDurationFilter(prev => ({ 
+                      ...prev, 
+                      value: e.target.value 
+                    }))}
+                    className="w-full px-2 py-1 border border-gray-300 rounded text-black"
+                    placeholder="Enter hours"
+                  />
+                  <div className="flex gap-1 mt-1">
+                    {[1, 2, 4, 6, 8].map((hours) => (
+                      <button
+                        key={hours}
+                        onClick={() => setDurationFilter(prev => ({ 
+                          ...prev, 
+                          value: hours.toString() 
+                        }))}
+                        className="flex-1 px-2 py-1 bg-gray-200 text-black rounded text-xs hover:bg-gray-300"
+                      >
+                        {hours}h
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setShowDurationDropdown(false);
+                  }}
+                  className="flex-1 bg-green-500 text-white py-1 rounded text-sm hover:bg-green-600"
+                >
+                  Apply
+                </button>
+                <button
+                  onClick={() => {
+                    setDurationFilter({ operator: "ALL", value: "" });
+                    setShowDurationDropdown(false);
+                  }}
+                  className="flex-1 bg-red-500 text-white py-1 rounded text-sm hover:bg-red-600"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Clear Filters Button */}
+        <button
+          onClick={clearGlobalFilters}
+          className="px-3 py-1 bg-red-500 text-white border border-black rounded text-[12px] md:text-[14px]"
+        >
+          Clear Filters
+        </button>
+      </div>
 
       {/* Submit Button */}
       <div className="w-full max-w-screen-lg flex justify-center mb-4">
@@ -1688,7 +1798,7 @@ const handleDownloadDepartmentCount = () => {
 
                 </tr>
               </thead>
-            <tbody>
+          <tbody>
                 {pastBlockSummary.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="text-center py-4 text-black">
@@ -1829,7 +1939,15 @@ const handleDownloadDepartmentCount = () => {
                     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-[12px] md:text-[16px]">
                       Totals
                     </td>
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                                        <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+
+                         onClick={() => {
+        setActiveFilter("demanded");
+        setActiveSection(null);
+        setDepartmentCountFilter(null);
+        scrollToUpcomingBlocks();
+      }}
+                    >
                       {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Demanded || 0), 0)
                         .toFixed(2)}{" "}
@@ -1839,7 +1957,13 @@ const handleDownloadDepartmentCount = () => {
                         0
                       )}
                     </td>                 
-                          <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                                             <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                         onClick={() => {
+        setActiveFilter("approved");
+        setActiveSection(null);
+        setDepartmentCountFilter(null);
+        scrollToUpcomingBlocks();
+      }}>
                       {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Approved || 0), 0)
                         .toFixed(2)}{" "}
@@ -1864,7 +1988,13 @@ const handleDownloadDepartmentCount = () => {
       : "0.00";
   })()}%
 </td>
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                                        <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                       onClick={() => {
+        setActiveFilter("applied");
+        setActiveSection(null);
+        setDepartmentCountFilter(null);
+        scrollToUpcomingBlocks();
+      }}>
                       {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Applied || 0), 0)
                         .toFixed(2)}{" "}
@@ -1874,7 +2004,13 @@ const handleDownloadDepartmentCount = () => {
                         0
                       )}
                     </td>
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                                        <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                        onClick={() => {
+        setActiveFilter("granted");
+        setActiveSection(null);
+        setDepartmentCountFilter(null);
+        scrollToUpcomingBlocks();
+      }}>
                       {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Granted || 0), 0)
                         .toFixed(2)}{" "}
@@ -1884,7 +2020,7 @@ const handleDownloadDepartmentCount = () => {
                         0
                       )}
                     </td>
-                        <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                                                                    {(() => {
     const totalApplied = pastBlockSummary.reduce(
       (sum, item) => sum + (item.AppliedCount || 0),
@@ -1900,7 +2036,13 @@ const handleDownloadDepartmentCount = () => {
   })()}%
                     </td>
 
-                    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                                      <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                       onClick={() => {
+        setActiveFilter("availed");
+        setActiveSection(null);
+        setDepartmentCountFilter(null);
+        scrollToUpcomingBlocks();
+      }}>
                       {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Availed || 0), 0)
                         .toFixed(2)}{" "}
@@ -1910,7 +2052,7 @@ const handleDownloadDepartmentCount = () => {
                         0
                       )}
                     </td>
-                            <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                                     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                                                                                         {(() => {
     const totalAvailed = pastBlockSummary.reduce(
       (sum, item) => sum + (item.AvailedCount || 0),
@@ -1985,25 +2127,24 @@ const handleDownloadDepartmentCount = () => {
   <div className="bg-[#ff914d] text-[16px] md:text-[24px] font-bold border-2 border-black px-2 py-1 text-center">
     Department Wise Request Count
   </div>
-  {/* Department Count Filter Display */}
-{departmentCountFilter && (
-  <div className="w-full flex flex-col sm:flex-row justify-center items-center gap-4 my-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-    <div className="bg-blue-100 border border-blue-300 px-4 py-2 rounded-lg">
-      <span className="text-blue-700 font-bold text-sm md:text-base">
-        Filtering: {departmentCountFilter.department} 
-        {departmentCountFilter.supportingDepartment !== "-" ? ` + ${departmentCountFilter.supportingDepartment}` : ''} 
-        ({departmentCountFilter.filterType.toUpperCase()})
-      </span>
+  {departmentCountFilter && (
+    <div className="w-full flex flex-col sm:flex-row justify-center items-center gap-4 my-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+      <div className="bg-blue-100 border border-blue-300 px-4 py-2 rounded-lg">
+        <span className="text-blue-700 font-bold text-sm md:text-base">
+          Filtering: {departmentCountFilter.department} 
+          {departmentCountFilter.supportingDepartment !== "-" ? ` + ${departmentCountFilter.supportingDepartment}` : ''} 
+          ({departmentCountFilter.filterType.toUpperCase()})
+        </span>
+      </div>
+      <button
+        onClick={() => setDepartmentCountFilter(null)}
+        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm font-bold flex items-center gap-2"
+      >
+        <span>✕</span>
+        Clear Department Filter
+      </button>
     </div>
-    <button
-      onClick={() => setDepartmentCountFilter(null)}
-      className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm font-bold flex items-center gap-2"
-    >
-      <span>✕</span>
-      Clear Department Filter
-    </button>
-  </div>
-)}
+  )}
 </div>
 
 <div className="w-full overflow-x-auto ">
@@ -2020,7 +2161,7 @@ const handleDownloadDepartmentCount = () => {
     </thead>
 <tbody>
   {/* ENGG Rows */}
-              {session?.user?.department === "ENGG" &&( <tr className="bg-white font-bold">
+              {(session?.user?.role==="DRM") &&( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   MAS
                 </td>
@@ -2094,7 +2235,7 @@ const handleDownloadDepartmentCount = () => {
                 </td>
               </tr>)}
              
-{session?.user?.department === "ENGG" && ( <tr className="bg-[#f4dcf1] font-bold">
+{(session?.user?.role==="DRM") && ( <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   MAS
                 </td>
@@ -2170,7 +2311,7 @@ const handleDownloadDepartmentCount = () => {
                 </td>
               </tr>)}
              
-{session?.user?.department === "ENGG" && (
+{(session?.user?.role==="DRM") && (
      <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   MAS
@@ -2244,7 +2385,7 @@ const handleDownloadDepartmentCount = () => {
               </tr>
 )}
            
-{session?.user?.department === "ENGG" && (
+{(session?.user?.role==="DRM") && (
     <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   MAS
@@ -2319,7 +2460,7 @@ const handleDownloadDepartmentCount = () => {
                 </td>
               </tr>
 )}
-            {session?.user?.department === "TRD" && (
+            {session?.user?.role==="DRM" && (
               <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   MAS
@@ -2388,7 +2529,7 @@ const handleDownloadDepartmentCount = () => {
               
 
               {/* S&T Rows */}
-              {session?.user?.department === "S&T" && (  <tr className="bg-[#f4dcf1] font-bold">
+              {session?.user?.role==="DRM" && (  <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   MAS
                 </td>
@@ -2457,7 +2598,7 @@ const handleDownloadDepartmentCount = () => {
                 </td>
               </tr>)}
             
-{session?.user?.department === "S&T" && ( <tr className="bg-white font-bold">
+{session?.user?.role==="DRM" && ( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   MAS
                 </td>
@@ -2529,7 +2670,7 @@ const handleDownloadDepartmentCount = () => {
                 </td>
               </tr>)}
              
-{session?.user?.department === "S&T" && (<tr className="bg-[#f4dcf1] font-bold">
+{session?.user?.role==="DRM" && (<tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   MAS
                 </td>
@@ -2601,7 +2742,7 @@ const handleDownloadDepartmentCount = () => {
                 </td>
               </tr>)}
               
-{session?.user?.department === "S&T" && ( <tr className="bg-white font-bold">
+{session?.user?.role==="DRM" && ( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   MAS
                 </td>
@@ -2697,7 +2838,7 @@ const handleDownloadDepartmentCount = () => {
       </div>
 
       {/* === PAGE 2: (B) SUMMARY OF UPCOMING BLOCKS - FULL WIDTH === */}
-      <div className="w-full bg-white flex flex-col py-4">
+      <div className="w-full bg-white flex flex-col py-4" id="upcoming-blocks-table">
         <div className="w-full px-2 md:px-4 flex-1">
           <div className="my-2 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
             <button
@@ -2837,10 +2978,10 @@ const handleDownloadDepartmentCount = () => {
 </div>
           </div>
 
-          <div className="w-full mt-4 overflow-x-auto">
+          <div className="w-full mt-4 overflow-x-auto" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
             <table className="w-full border-2 border-black min-w-[900px] text-[12px] md:text-[20px]">
-              <thead>
-         <tr className="bg-[#e49edd] text-black text-[12px] md:text-[20px] font-bold">
+              <thead className="sticky top-0 z-10">
+                <tr className="bg-[#e49edd] text-black text-[12px] md:text-[20px] font-bold">
                   <th className="border-2 border-black px-1 md:px-2 py-2">S.No</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">RequestId</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Date</th>
@@ -2858,14 +2999,14 @@ const handleDownloadDepartmentCount = () => {
               <tbody>
                 {filteredUpcomingBlocks.length === 0 ? (
                   <tr className="bg-white">
-                    <td colSpan={9} className="text-center py-4 text-black">
+                    <td colSpan={11} className="text-center py-4 text-black">
                       No data found.
                     </td>
                   </tr>
                 ) : (
-                  filteredBlocks.slice(0, 200).map((block: any, idx: number) => {
+                  filteredBlocks.map((block: any, idx: number) => {
                     let statusLabel = "";
-                   let statusStyle = { background: "#fff", color: "#222" };
+                    let statusStyle = { background: "#fff", color: "#222" };
                     if (block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance") {
                       statusLabel = "Sanctioned, Pending with SSE For Acceptance";
                       statusStyle = { background: "#fff86b", color: "#222" };
@@ -2888,7 +3029,7 @@ const handleDownloadDepartmentCount = () => {
               </td>
                  <td className="border-2 border-black px-1 md:px-2 py-2 font-bold text-black text-[10px] md:text-[14px]">
                           <Link
-                            href={`/admin/view-request/${block.id}?from=sanction-table-data`}
+                            href={`/drm/view-request/${block.id}?from=generate-report`}
                             className="block w-full h-full"
                           >
                             {block.DivisionId}
@@ -2914,26 +3055,26 @@ const handleDownloadDepartmentCount = () => {
                         <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
                           {block.Activity}
                         </td>
-                                                    <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
-                                                  {block.DemandedTimeFrom && block.DemandedTimeTo ? (
-                                                    <>
-                                                      {formatTime(block.DemandedTimeFrom)} to{" "}
-                                                      {formatTime(block.DemandedTimeTo)}
-                                                    </>
-                                                  ) : (
-                                                    "Not Availed Yet"
-                                                  )}
-                                                </td> 
-                                                          <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
-                                                  {block.SanctionedTimeFrom && block.SanctionedTimeTo ? (
-                                                    <>
-                                                      {formatTime(block.SanctionedTimeFrom)} to{" "}
-                                                      {formatTime(block.SanctionedTimeTo)}
-                                                    </>
-                                                  ) : (
-                                                    "Not Availed Yet"
-                                                  )}
-                                                </td> 
+                            <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
+                          {block.DemandedTimeFrom && block.DemandedTimeTo ? (
+                            <>
+                              {formatTime(block.DemandedTimeFrom)} to{" "}
+                              {formatTime(block.DemandedTimeTo)}
+                            </>
+                          ) : (
+                            "Not Availed Yet"
+                          )}
+                        </td> 
+                                  <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
+                          {block.SanctionedTimeFrom && block.SanctionedTimeTo ? (
+                            <>
+                              {formatTime(block.SanctionedTimeFrom)} to{" "}
+                              {formatTime(block.SanctionedTimeTo)}
+                            </>
+                          ) : (
+                            "Not Availed Yet"
+                          )}
+                        </td> 
                         <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
                           {block.AvailedTimeFrom && block.AvailedTimeTo ? (
                             <>
@@ -2944,7 +3085,7 @@ const handleDownloadDepartmentCount = () => {
                             "Not Availed Yet"
                           )}
                         </td>  
-                      
+                   
                         <td
                           className="border-2 border-black px-1 md:px-2 py-2 font-bold text-center text-black text-[10px] md:text-[14px]"
                           style={statusStyle}
@@ -2973,7 +3114,10 @@ const handleDownloadDepartmentCount = () => {
           <div className="flex justify-center">
             <button
               className="flex items-center gap-2 bg-[#cfd4ff] border-2 border-black rounded-[50%] px-6 md:px-8 py-2 text-[16px] md:text-[24px] font-bold text-black"
-              onClick={() => router.push("/")}
+                                        onClick={() => {
+    clearReportDataFromStorage(); // Clear localStorage
+    router.push("/"); // Navigate
+  }}
             >
               Back
             </button>
