@@ -13,6 +13,7 @@ import { FaUserPlus } from "react-icons/fa";
 import { useRouter } from 'next/navigation';
 import AddPcModal from "@/app/components/ui/AddPcModal";
 import { deptControllerService } from "@/app/service/api/dept-controller";
+import { getAllStationCodes } from "@/app/utils/getAllStationCodes";
 
 interface User {
   id: string;
@@ -34,7 +35,8 @@ export default function ManagePcTable() {
   });
 
   const router = useRouter();
-
+  const allStationCodes = getAllStationCodes();
+  
   // Mutations
   const addUserMutation = useAddStation();
   const deleteUserMutation = useDeleteStation();
@@ -48,8 +50,6 @@ export default function ManagePcTable() {
     setRefetchLoading(false);
   };
 
-
-
   // Delete user handler
   const handleDeleteUser = async () => {
     if (!deleteModalUser) return;
@@ -61,7 +61,8 @@ export default function ManagePcTable() {
       // Update local state instead of refetching
       if (data?.data) {
         const updatedUsers = data.data.filter((user: User) => user.id !== deleteModalUser.id);
-        queryClient.setQueryData(["trafficControllerUsers"], { ...data, data: updatedUsers });
+        queryClient.setQueryData(["deptControllerStation"], { ...data, data: updatedUsers });
+        queryClient.invalidateQueries({ queryKey: ["deptControllerStation"] });
       }
     } finally {
       setDeletingUserId(null);
@@ -73,6 +74,14 @@ export default function ManagePcTable() {
   const users: User[] = Array.isArray(data?.data) 
     ? data.data
     : [];
+
+  // Get existing station codes from the table (already added stations)
+  const existingStationCodes = users.map((user) => user.depot.toUpperCase());
+
+  // Filter out already added stations from all station codes
+  const availableStationCodes = allStationCodes.filter(
+    (stationCode) => !existingStationCodes.includes(stationCode.toUpperCase())
+  );
 
   return (
     <div className="min-h-screen bg-[#FFFDF5] flex flex-col items-center">
@@ -172,9 +181,8 @@ export default function ManagePcTable() {
         isOpen={addModalOpen}
         onClose={() => setAddModalOpen(false)}
         onSubmit={handleAddUser}
+        allStationCodes={availableStationCodes}
       />
-
-  
 
       {/* Delete Confirmation Modal */}
       <ConfirmationModal
