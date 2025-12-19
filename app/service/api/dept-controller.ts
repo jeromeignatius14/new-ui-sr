@@ -13,9 +13,9 @@ export const deptControllerService = {
     const res = await axios.get(`/api/dept-controller/users/${userId}/jes`);
     return res.data;
   },
-   async addStation(data: {  depot: string }) {
+   async addStation(data: {  depots: string[] }) {
     return axios.post("/api/dept-controller/stations", {
-      depot: data.depot,
+      depots: data.depots,
     });
   },
   async addUser(data: { name: string; phone: string; depot: string; role: "SSE" | "JE"; managerId?: string; email: string }) {
