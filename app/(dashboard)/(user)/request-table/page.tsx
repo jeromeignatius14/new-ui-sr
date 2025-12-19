@@ -1400,8 +1400,8 @@ filteredRequests = data?.data?.requests?.filter((request: any) => {
                             </span>
                           ) :
                             // For USER role, check conditions for showing buttons
-                            (userDepartment === "S&T" && request.sntDisconnectionRequired && request.sntDisconnections?.[0]?.status === "PENDING") ||
-                              (userDepartment === "TRD" && request.powerBlockRequired && request.trdDisconnections?.[0]?.status === "PENDING") ? (
+                            (userDepartment === "S&T" && request.sntDisconnectionRequired && request.allSntAcceptance === "PENDING") ||
+                              (userDepartment === "TRD" && request.powerBlockRequired && request.allTrdAcceptance === "PENDING") ? (
                               <div className="flex gap-2 justify-center">
                                 <button
                                   onClick={() =>
@@ -1667,7 +1667,7 @@ filteredRequests = data?.data?.requests?.filter((request: any) => {
                           ) :
                             // For USER role, check conditions for showing buttons
                             
-                              (userDepartment === "ENGG" && request.enggDisconnectionsRequired && request.enggDisconnections?.[0]?.status === "PENDING") ? (
+                              (userDepartment === "ENGG" && request.enggDisconnectionsRequired && request.allEnggAcceptance === "PENDING") ? (
                               <div className="flex gap-2 justify-center">
                                 <button
                                   onClick={() =>
