@@ -576,11 +576,15 @@ const urgentRequestsFiltered = pendingRequests
     if (!matchesActivity(r)) return false;
     if (!matchesTimeSlot(r)) return false;
 
-    const hasOtherLines = r.processedLineSections?.some((section: any) => 
-      section.otherLines && section.otherLines.trim() !== ''
-    );
-    if (hasOtherLines) return false;
-
+    // const hasOtherLines = r.processedLineSections?.some((section: any) => 
+    //   section.otherLines && section.otherLines.trim() !== ''
+    // );
+    // if (hasOtherLines) return false;
+  if (r.processedLineSections ) {
+      const firstSection = r.processedLineSections[0];
+      const hasOtherLines = firstSection.otherLines && firstSection.otherLines.trim() !== '';
+      if (hasOtherLines) return false; // Don't show if first section has otherLines
+    }
     const allSntAcceptance = r.allSntAcceptance === "ACCEPTED";
     const allTrdAcceptance = r.allTrdAcceptance === "ACCEPTED";
     const allEnggAcceptance = r.allEnggAcceptance === "ACCEPTED";
@@ -683,11 +687,16 @@ const nonCorridorRequestsFiltered = pendingRequests
 const combinedRequestsFiltered = pendingRequests
   .filter((r: UserRequest) => {
     // Check if the request has otherLines in processedLineSections
-    const hasOtherLines = r.processedLineSections?.some((section: any) => 
-      section.otherLines && section.otherLines.trim() !== ''
-    );
-    if (!hasOtherLines) return false;
-
+    // const hasOtherLines = r.processedLineSections?.some((section: any) => 
+    //   section.otherLines && section.otherLines.trim() !== ''
+    // );
+    // if (!hasOtherLines) return false;
+ if (r.processedLineSections && r.processedLineSections.length > 0) {
+      const firstSection = r.processedLineSections[0];
+      const hasOtherLines = firstSection.otherLines && firstSection.otherLines.trim() !== '';
+      // DON'T show if first section has EMPTY otherLines
+      if (!hasOtherLines) return false;
+    }
     // Global filters
     if (deptFilter !== 'ALL' && r.selectedDepartment !== deptFilter) return false;
     if (!matchesWorkType(r)) return false;
