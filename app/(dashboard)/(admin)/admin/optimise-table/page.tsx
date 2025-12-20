@@ -173,37 +173,76 @@ const ColumnHeader = ({
 };
 
 // Helper to get line/road display for a request
+// const getLineOrRoad = (request: UserRequest) => {
+//   if (
+//     request.processedLineSections &&
+//     Array.isArray(request.processedLineSections) &&
+//     request.processedLineSections.length > 0
+//   ) {
+//     return (
+//       request.processedLineSections
+//         .map((section) => {
+//           if (section.type === "yard") {
+//             if (section.stream && section.road) {
+//               return `${section.stream}/${section.road}`;
+//             }
+//             if (section.stream) {
+//               return section.stream;
+//             }
+//             if (section.road) {
+//               return section.road;
+//             }
+//           } else if (section.lineName) {
+//             return section.lineName;
+//           }
+//           return null;
+//         })
+//         .filter(Boolean)
+//         .join(", ") || "N/A"
+//     );
+//   }
+//   return "N/A";
+// };
 const getLineOrRoad = (request: UserRequest) => {
   if (
     request.processedLineSections &&
     Array.isArray(request.processedLineSections) &&
     request.processedLineSections.length > 0
   ) {
-    return (
-      request.processedLineSections
-        .map((section) => {
-          if (section.type === "yard") {
-            if (section.stream && section.road) {
-              return `${section.stream}/${section.road}`;
-            }
-            if (section.stream) {
-              return section.stream;
-            }
-            if (section.road) {
-              return section.road;
-            }
-          } else if (section.lineName) {
-            return section.lineName;
-          }
-          return null;
-        })
-        .filter(Boolean)
-        .join(", ") || "N/A"
-    );
+    const sections = request.processedLineSections.map((section) => {
+      const items = [];
+      
+      // Main line/road
+      if (section.type === "yard") {
+        if (section.stream && section.road) {
+          items.push(`${section.stream}/${section.road}`);
+        } else if (section.stream) {
+          items.push(section.stream);
+        } else if (section.road) {
+          items.push(section.road);
+        }
+      } else if (section.lineName) {
+        items.push(section.lineName);
+      }
+      
+      // Additional lines and roads
+      if (section.otherLines && section.otherLines.trim() !== "") {
+        items.push(section.otherLines);
+      }
+      
+      if (section.otherRoads && section.otherRoads.trim() !== "") {
+        items.push(section.otherRoads);
+      }
+      
+      // Join items from same section with "&"
+      return items.filter(item => item.trim() !== "").join(" & ");
+      
+    }).filter(section => section !== ""); // Remove empty sections
+
+    return sections.length > 0 ? sections.join(", ") : "N/A";
   }
   return "N/A";
 };
-
 // Add this helper function before the handleDownloadCSV function
 const getAdjacentLinesAffected = (request: UserRequest): string => {
   if (request.adjacentLinesAffected) {
