@@ -5129,7 +5129,7 @@ export const depot: DepotStructure = {
   "KPD-VM": {
     'TRD': ["ARV", "TNM"],
     'S&T': ["TNM", "VM", "ARV"],
-    'ENGG': ["TNM", "VLR","BRI-TPJ"]
+    'ENGG': ["TNM", "VLR","BRI-TPJ","VM"]
   },
 
   "CUP J-VRI": {
