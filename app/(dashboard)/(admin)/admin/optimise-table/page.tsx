@@ -173,37 +173,76 @@ const ColumnHeader = ({
 };
 
 // Helper to get line/road display for a request
+// const getLineOrRoad = (request: UserRequest) => {
+//   if (
+//     request.processedLineSections &&
+//     Array.isArray(request.processedLineSections) &&
+//     request.processedLineSections.length > 0
+//   ) {
+//     return (
+//       request.processedLineSections
+//         .map((section) => {
+//           if (section.type === "yard") {
+//             if (section.stream && section.road) {
+//               return `${section.stream}/${section.road}`;
+//             }
+//             if (section.stream) {
+//               return section.stream;
+//             }
+//             if (section.road) {
+//               return section.road;
+//             }
+//           } else if (section.lineName) {
+//             return section.lineName;
+//           }
+//           return null;
+//         })
+//         .filter(Boolean)
+//         .join(", ") || "N/A"
+//     );
+//   }
+//   return "N/A";
+// };
 const getLineOrRoad = (request: UserRequest) => {
   if (
     request.processedLineSections &&
     Array.isArray(request.processedLineSections) &&
     request.processedLineSections.length > 0
   ) {
-    return (
-      request.processedLineSections
-        .map((section) => {
-          if (section.type === "yard") {
-            if (section.stream && section.road) {
-              return `${section.stream}/${section.road}`;
-            }
-            if (section.stream) {
-              return section.stream;
-            }
-            if (section.road) {
-              return section.road;
-            }
-          } else if (section.lineName) {
-            return section.lineName;
-          }
-          return null;
-        })
-        .filter(Boolean)
-        .join(", ") || "N/A"
-    );
+    const sections = request.processedLineSections.map((section) => {
+      const items = [];
+      
+      // Main line/road
+      if (section.type === "yard") {
+        if (section.stream && section.road) {
+          items.push(`${section.stream}/${section.road}`);
+        } else if (section.stream) {
+          items.push(section.stream);
+        } else if (section.road) {
+          items.push(section.road);
+        }
+      } else if (section.lineName) {
+        items.push(section.lineName);
+      }
+      
+      // Additional lines and roads
+      if (section.otherLines && section.otherLines.trim() !== "") {
+        items.push(section.otherLines);
+      }
+      
+      if (section.otherRoads && section.otherRoads.trim() !== "") {
+        items.push(section.otherRoads);
+      }
+      
+      // Join items from same section with "&"
+      return items.filter(item => item.trim() !== "").join(" & ");
+      
+    }).filter(section => section !== ""); // Remove empty sections
+
+    return sections.length > 0 ? sections.join(", ") : "N/A";
   }
   return "N/A";
 };
-
 // Add this helper function before the handleDownloadCSV function
 const getAdjacentLinesAffected = (request: UserRequest): string => {
   if (request.adjacentLinesAffected) {
@@ -561,11 +600,15 @@ const urgentRequestsFiltered = pendingRequests
     if (!matchesActivity(r)) return false;
     if (!matchesTimeSlot(r)) return false;
 
-    const hasOtherLines = r.processedLineSections?.some((section: any) => 
-      section.otherLines && section.otherLines.trim() !== ''
-    );
-    if (hasOtherLines) return false;
-
+    // const hasOtherLines = r.processedLineSections?.some((section: any) => 
+    //   section.otherLines && section.otherLines.trim() !== ''
+    // );
+    // if (hasOtherLines) return false;
+  if (r.processedLineSections ) {
+      const firstSection = r.processedLineSections[0];
+      const hasOtherLines = firstSection.otherLines && firstSection.otherLines.trim() !== '';
+      if (hasOtherLines) return false; // Don't show if first section has otherLines
+    }
     const allSntAcceptance = r.allSntAcceptance === "ACCEPTED";
     const allTrdAcceptance = r.allTrdAcceptance === "ACCEPTED";
     const allEnggAcceptance = r.allEnggAcceptance === "ACCEPTED";
@@ -668,11 +711,16 @@ const nonCorridorRequestsFiltered = pendingRequests
 const combinedRequestsFiltered = pendingRequests
   .filter((r: UserRequest) => {
     // Check if the request has otherLines in processedLineSections
-    const hasOtherLines = r.processedLineSections?.some((section: any) => 
-      section.otherLines && section.otherLines.trim() !== ''
-    );
-    if (!hasOtherLines) return false;
-
+    // const hasOtherLines = r.processedLineSections?.some((section: any) => 
+    //   section.otherLines && section.otherLines.trim() !== ''
+    // );
+    // if (!hasOtherLines) return false;
+ if (r.processedLineSections && r.processedLineSections.length > 0) {
+      const firstSection = r.processedLineSections[0];
+      const hasOtherLines = firstSection.otherLines && firstSection.otherLines.trim() !== '';
+      // DON'T show if first section has EMPTY otherLines
+      if (!hasOtherLines) return false;
+    }
     // Global filters
     if (deptFilter !== 'ALL' && r.selectedDepartment !== deptFilter) return false;
     if (!matchesWorkType(r)) return false;
