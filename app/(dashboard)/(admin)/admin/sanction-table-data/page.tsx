@@ -1041,88 +1041,96 @@ const handleDownloadUpcomingBlocks = () => {
         return;
       }
 
-      const excelData = [
-        {
-          "Location": "MAS",
-          "Department": "ENGG",
-          "Supporting Department": "-",
-          "Total Block Requested": enggTotal,
-          "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.isSanctioned).length,
-          "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
-        },
-        {
-          "Location": "MAS",
-          "Department": "ENGG",
-          "Supporting Department": "S&T",
-          "Total Block Requested": enggWithSnt,
-          "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.isSanctioned),
-          "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
-        },
-        {
-          "Location": "MAS",
-          "Department": "ENGG",
-          "Supporting Department": "TRD",
-          "Total Block Requested": enggWithPower,
-          "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.isSanctioned),
-          "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
-        },
-        {
-          "Location": "MAS",
-          "Department": "ENGG",
-          "Supporting Department": "S&T and TRD",
-          "Total Block Requested": enggWithSntAndPower,
-          "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.powerBlockRequired === true && block.isSanctioned),
-          "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
-        },
-        {
-          "Location": "MAS",
-          "Department": "TRD",
-          "Supporting Department": "-",
-          "Total Block Requested": trdTotal,
-          "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "TRD" && block.isSanctioned),
-          "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "TRD" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
-        },
-        {
-          "Location": "MAS",
-          "Department": "S&T",
-          "Supporting Department": "-",
-          "Total Block Requested": sntTotal,
-          "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "S&T" && block.isSanctioned),
-          "Total Block Availed":detailedData.filter(block => block.selectedDepartment === "S&T" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
-        },
-        {
-          "Location": "MAS",
-          "Department": "S&T",
-          "Supporting Department": "ENGG",
-          "Total Block Requested": sntWithEngg,
-          "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.isSanctioned),
-          "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
-        },
-        {
-          "Location": "MAS",
-          "Department": "S&T",
-          "Supporting Department": "TRD",
-          "Total Block Requested": sntWithPower,
-          "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.isSanctioned),
-          "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
-        },
-        {
-          "Location": "MAS",
-          "Department": "S&T",
-          "Supporting Department": "ENGG and TRD",
-          "Total Block Requested": sntWithEnggAndPower,
-          "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.powerBlockRequired === true && block.isSanctioned),
-          "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
-        },
-        {
-          "Location": "TOTAL",
-          "Department": "",
-          "Supporting Department": "",
-          "Total Block Requested": totalRequested,
-          "Total Block Sanctioned": totalSanctioned,
-          "Total Block Availed": totalAvailed
-        }
-      ];
+    // Prepare the Excel data matching your table structure
+    const excelData = [
+      // ENGG Rows
+      {
+        "Location": "MAS",
+        "Department": "ENGG",
+        "Supporting Department": "-",
+        "Total Block Requested": enggTotal,
+        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.isSanctioned).length,
+        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
+      },
+      {
+        "Location": "MAS",
+        "Department": "ENGG",
+        "Supporting Department": "S&T",
+        "Total Block Requested": enggWithSnt,
+        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.isSanctioned).length,
+        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
+      },
+      {
+        "Location": "MAS",
+        "Department": "ENGG",
+        "Supporting Department": "TRD",
+        "Total Block Requested": enggWithPower,
+        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.isSanctioned).length,
+        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
+      },
+      {
+        "Location": "MAS",
+        "Department": "ENGG",
+        "Supporting Department": "S&T and TRD",
+        "Total Block Requested": enggWithSntAndPower,
+        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.powerBlockRequired === true && block.isSanctioned).length,
+        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
+      },
+      
+      // TRD Rows
+      {
+        "Location": "MAS",
+        "Department": "TRD",
+        "Supporting Department": "-",
+        "Total Block Requested": trdTotal,
+        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "TRD" && block.isSanctioned).length,
+        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "TRD" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
+      },
+      
+      // S&T Rows
+      {
+        "Location": "MAS",
+        "Department": "S&T",
+        "Supporting Department": "-",
+        "Total Block Requested": sntTotal,
+        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "S&T" && block.isSanctioned).length,
+        "Total Block Availed":detailedData.filter(block => block.selectedDepartment === "S&T" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
+      },
+      {
+        "Location": "MAS",
+        "Department": "S&T",
+        "Supporting Department": "ENGG",
+        "Total Block Requested": sntWithEngg,
+        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.isSanctioned).length,
+        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
+      },
+      {
+        "Location": "MAS",
+        "Department": "S&T",
+        "Supporting Department": "TRD",
+        "Total Block Requested": sntWithPower,
+        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.isSanctioned).length,
+        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
+      },
+      {
+        "Location": "MAS",
+        "Department": "S&T",
+        "Supporting Department": "ENGG and TRD",
+        "Total Block Requested": sntWithEnggAndPower,
+        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.powerBlockRequired === true && block.isSanctioned).length,
+        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
+      },
+      
+      // Total Row
+      {
+        "Location": "TOTAL",
+        "Department": "",
+        "Supporting Department": "",
+        "Total Block Requested": totalRequested,
+        "Total Block Sanctioned": totalSanctioned,
+        "Total Block Availed": totalAvailed
+      }
+    ];
 
       const workbook = XLSX.utils.book_new();
       const worksheet = XLSX.utils.json_to_sheet(excelData);
