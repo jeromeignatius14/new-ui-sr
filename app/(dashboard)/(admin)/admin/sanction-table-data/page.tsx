@@ -90,6 +90,7 @@ interface FormData {
 }
 
 interface PastBlockSummary {
+  NotSanctionedCount?: number;
   NotAvailedCount?: number;
   NotGrantedCount?: number;
   Applied?: number;
@@ -1679,6 +1680,20 @@ const handleDownloadUpcomingBlocks = () => {
     </div>
   </div>
 </th>
+<th className="border-2 border-black px-1 md:px-2 py-2">
+  <div className="flex flex-col items-center justify-center">
+    <div>Not Sanctioned</div>
+    <div className="relative flex items-center justify-center group">
+      Blocks
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+        Blocks Not Sanctioned by the Operating Dept.
+      </div>
+    </div>
+  </div>
+</th>
 
                   <th className="border-2 border-black px-1 md:px-2 py-2">
   <div className="flex flex-col items-center justify-center">
@@ -1849,6 +1864,12 @@ const handleDownloadUpcomingBlocks = () => {
                       >
                         {summary.Approved.toFixed(2)} / {summary.ApprovedCount}
                       </td>
+                        <td
+                        className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]"
+                   
+                      >
+                        {summary.NotSanctionedCount}
+                      </td>
                         <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                          {summary.PercentSanctioned !== undefined
                           ? summary.PercentSanctioned.toFixed(2) + "%"
@@ -1983,6 +2004,15 @@ const handleDownloadUpcomingBlocks = () => {
                       /{" "}
                       {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.ApprovedCount || 0),
+                        0
+                      )}
+                    </td>
+                                                                 <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]"
+   >
+                   
+                   
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.NotSanctionedCount || 0),
                         0
                       )}
                     </td>
