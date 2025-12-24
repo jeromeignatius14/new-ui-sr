@@ -38,6 +38,7 @@ interface FormData {
 }
 
 interface PastBlockSummary {
+  NotSanctionedCount?: number;
   NotAvailedCount?: number;
   NotGrantedCount?: number;
   Applied?: number;
@@ -179,7 +180,7 @@ export default function GenerateReportPage() {
     | "applied"
     | "demanded"
     | "notGranted"
-    | "notAvailed"
+    | "notAvailed"|"notSanctioned"
     | "all"
   >("all");
   const [activeSection, setActiveSection] = useState<string | null>(null);
@@ -1532,7 +1533,25 @@ const clearGlobalFilters = () => {
     </div>
   </div>
 </th>
-
+                  <th className="border-2 border-black px-1 md:px-2 py-2">
+  <div className="flex flex-col items-center justify-center">
+    {/* First line */}
+    <div>Not Sanctioned</div>
+    
+    {/* Second line with icon */}
+    <div className="relative flex items-center justify-center group">
+     
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      
+      {/* Tooltip */}
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+        Blocks Not Sanctioned by the Operating Dept.
+      </div>
+    </div>
+  </div>
+</th>
 <th className="border-2 border-black px-1 md:px-2 py-2">
   <div className="flex flex-col items-center justify-center">
     <div>Not Granted</div>
@@ -1585,6 +1604,7 @@ const clearGlobalFilters = () => {
                       <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
                         onClick={() => {
+                             setDepartmentCountFilter(null)
                           setActiveFilter("demanded");
                           setActiveSection(
                             summary.Department || summary.Section
@@ -1596,6 +1616,7 @@ const clearGlobalFilters = () => {
                       <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
                         onClick={() => {
+                             setDepartmentCountFilter(null)
                           setActiveFilter("approved");
                           setActiveSection(
                             summary.Department || summary.Section
@@ -1620,6 +1641,8 @@ const clearGlobalFilters = () => {
                       <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
                         onClick={() => {
+                             setDepartmentCountFilter(null)
+
                           setActiveFilter("applied");
                           setActiveSection(
                             summary.Department || summary.Section
@@ -1631,6 +1654,8 @@ const clearGlobalFilters = () => {
                       <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
                         onClick={() => {
+                             setDepartmentCountFilter(null)
+
                           setActiveFilter("granted");
                           setActiveSection(
                             summary.Department || summary.Section
@@ -1648,6 +1673,8 @@ const clearGlobalFilters = () => {
                       <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
                         onClick={() => {
+                             setDepartmentCountFilter(null)
+
                           setActiveFilter("availed");
                           setActiveSection(
                             summary.Department || summary.Section
@@ -1661,11 +1688,25 @@ const clearGlobalFilters = () => {
                           ? summary.PercentAvailed.toFixed(2) + "%"
                           : ""}
                       </td>
+                                                                                                                                      <td
+                        className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                      onClick={() => {
+                          setDepartmentCountFilter(null)
+                          setActiveFilter("notSanctioned");
+                          setActiveSection(
+                            summary.Department || summary.Section
+                          );
+                        }}
+                      >
+                        {summary.NotSanctionedCount}
+                      </td>
                       <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
                         onClick={() => {
                           // You can define what happens when Not Granted is clicked
                           // For example, filter the upcoming blocks to show only not granted requests
+                             setDepartmentCountFilter(null)
+
                           setActiveFilter("notGranted");
                           setActiveSection(
                             summary.Department || summary.Section
@@ -1683,6 +1724,8 @@ const clearGlobalFilters = () => {
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
                         onClick={() => {
                           // You can define what happens when Not Availed is clicked
+                             setDepartmentCountFilter(null)
+
                           setActiveFilter("notAvailed");
                           setActiveSection(
                             summary.Department || summary.Section
@@ -1828,6 +1871,20 @@ const clearGlobalFilters = () => {
       : "0.00";
   })()}%
                     </td>
+                                                                                                            <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                         onClick={() => {
+        setActiveFilter("notSanctioned");
+        setActiveSection(null);
+        setDepartmentCountFilter(null);
+      }}
+   >
+                   
+                   
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.NotSanctionedCount || 0),
+                        0
+                      )}
+                    </td>
                     <td
                       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
                       onClick={() => {
@@ -1949,6 +2006,8 @@ const clearGlobalFilters = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("all");
+                     setActiveSection(null);
                     setDepartmentCountFilter({
                       department: "ENGG",
                       supportingDepartment: "-",
@@ -1964,6 +2023,8 @@ const clearGlobalFilters = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("all");
+                     setActiveSection(null);
                     setDepartmentCountFilter({
                       department: "ENGG",
                       supportingDepartment: "-",
@@ -1987,6 +2048,8 @@ const clearGlobalFilters = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("all");
+                     setActiveSection(null);
                     setDepartmentCountFilter({
                       department: "ENGG",
                       supportingDepartment: "-",
@@ -2023,6 +2086,8 @@ const clearGlobalFilters = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("all");
+                     setActiveSection(null);
                     setDepartmentCountFilter({
                       department: "ENGG",
                       supportingDepartment: "S&T",
@@ -2038,6 +2103,8 @@ const clearGlobalFilters = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("all");
+                     setActiveSection(null);
                     setDepartmentCountFilter({
                       department: "ENGG",
                       supportingDepartment: "S&T",
@@ -2062,6 +2129,8 @@ const clearGlobalFilters = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("all");
+                     setActiveSection(null);
                     setDepartmentCountFilter({
                       department: "ENGG",
                       supportingDepartment: "S&T",
@@ -2100,6 +2169,8 @@ const clearGlobalFilters = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("all");
+                     setActiveSection(null);
                     setDepartmentCountFilter({
                       department: "ENGG",
                       supportingDepartment: "TRD",
@@ -2115,6 +2186,8 @@ const clearGlobalFilters = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("all");
+                     setActiveSection(null);
                     setDepartmentCountFilter({
                       department: "ENGG",
                       supportingDepartment: "TRD",
@@ -2137,6 +2210,8 @@ const clearGlobalFilters = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("all");
+                     setActiveSection(null);
                     setDepartmentCountFilter({
                       department: "ENGG",
                       supportingDepartment: "TRD",
@@ -2174,6 +2249,8 @@ const clearGlobalFilters = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("all");
+                     setActiveSection(null);
                     setDepartmentCountFilter({
                       department: "ENGG",
                       supportingDepartment: "S&T and TRD",
@@ -2189,6 +2266,8 @@ const clearGlobalFilters = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("all");
+                     setActiveSection(null);
                     setDepartmentCountFilter({
                       department: "ENGG",
                       supportingDepartment: "S&T and TRD",
@@ -2212,6 +2291,8 @@ const clearGlobalFilters = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("all");
+                     setActiveSection(null);
                     setDepartmentCountFilter({
                       department: "ENGG",
                       supportingDepartment: "S&T and TRD",
@@ -2249,6 +2330,8 @@ const clearGlobalFilters = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("all");
+                     setActiveSection(null);
                     setDepartmentCountFilter({
                       department: "TRD",
                       supportingDepartment: "-",
@@ -2262,6 +2345,8 @@ const clearGlobalFilters = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("all");
+                     setActiveSection(null);
                     setDepartmentCountFilter({
                       department: "TRD",
                       supportingDepartment: "-",
@@ -2280,6 +2365,8 @@ const clearGlobalFilters = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("all");
+                     setActiveSection(null);
                     setDepartmentCountFilter({
                       department: "TRD",
                       supportingDepartment: "-",
@@ -2317,6 +2404,8 @@ const clearGlobalFilters = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("all");
+                     setActiveSection(null);
                     setDepartmentCountFilter({
                       department: "S&T",
                       supportingDepartment: "-",
@@ -2332,6 +2421,8 @@ const clearGlobalFilters = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("all");
+                     setActiveSection(null);
                     setDepartmentCountFilter({
                       department: "S&T",
                       supportingDepartment: "-",
@@ -2352,6 +2443,8 @@ const clearGlobalFilters = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("all");
+                     setActiveSection(null);
                     setDepartmentCountFilter({
                       department: "S&T",
                       supportingDepartment: "-",
@@ -2386,6 +2479,8 @@ const clearGlobalFilters = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("all");
+                     setActiveSection(null);
                     setDepartmentCountFilter({
                       department: "S&T",
                       supportingDepartment: "ENGG",
@@ -2401,6 +2496,8 @@ const clearGlobalFilters = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("all");
+                     setActiveSection(null);
                     setDepartmentCountFilter({
                       department: "S&T",
                       supportingDepartment: "ENGG",
@@ -2423,6 +2520,8 @@ const clearGlobalFilters = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("all");
+                     setActiveSection(null);
                     setDepartmentCountFilter({
                       department: "S&T",
                       supportingDepartment: "ENGG",
@@ -2458,6 +2557,8 @@ const clearGlobalFilters = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("all");
+                     setActiveSection(null);
                     setDepartmentCountFilter({
                       department: "S&T",
                       supportingDepartment: "TRD",
@@ -2473,6 +2574,8 @@ const clearGlobalFilters = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("all");
+                     setActiveSection(null);
                     setDepartmentCountFilter({
                       department: "S&T",
                       supportingDepartment: "TRD",
@@ -2495,6 +2598,8 @@ const clearGlobalFilters = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("all");
+                     setActiveSection(null);
                     setDepartmentCountFilter({
                       department: "S&T",
                       supportingDepartment: "TRD",
@@ -2530,6 +2635,8 @@ const clearGlobalFilters = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("all");
+                     setActiveSection(null);
                     setDepartmentCountFilter({
                       department: "S&T",
                       supportingDepartment: "ENGG and TRD",
@@ -2545,6 +2652,8 @@ const clearGlobalFilters = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("all");
+                     setActiveSection(null);
                     setDepartmentCountFilter({
                       department: "S&T",
                       supportingDepartment: "ENGG and TRD",
@@ -2568,6 +2677,8 @@ const clearGlobalFilters = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("all");
+                     setActiveSection(null);
                     setDepartmentCountFilter({
                       department: "S&T",
                       supportingDepartment: "ENGG and TRD",
