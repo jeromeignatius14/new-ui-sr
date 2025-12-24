@@ -2389,6 +2389,7 @@ interface FormData {
 
 // Interfaces aligned with the API service
 interface PastBlockSummary {
+  NotSanctionedCount?: number;
   NotAvailedCount?: number;
   NotGrantedCount?: number;
   Applied?: number;
@@ -2543,7 +2544,7 @@ export default function GenerateReportPage() {
     []
   );
   
-  const [activeFilter, setActiveFilter] = useState<"approved" | "granted" | "availed" |"applied" |"demanded"|"notGranted" | "notAvailed" |"all">(() => {
+  const [activeFilter, setActiveFilter] = useState<"approved" | "granted" | "availed" |"applied" |"demanded"|"notGranted" | "notAvailed"|"notSanctioned" |"all">(() => {
     const params = new URLSearchParams(searchParams);
     return (params.get('activeFilter') as any) || "all";
   });
@@ -4230,7 +4231,25 @@ const handleDownloadDepartmentCount = () => {
     </div>
   </div>
 </th>
-
+                  <th className="border-2 border-black px-1 md:px-2 py-2">
+  <div className="flex flex-col items-center justify-center">
+    {/* First line */}
+    <div>Not Sanctioned</div>
+    
+    {/* Second line with icon */}
+    <div className="relative flex items-center justify-center group">
+     
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      
+      {/* Tooltip */}
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+        Blocks Not Sanctioned by the Operating Dept.
+      </div>
+    </div>
+  </div>
+</th>
 <th className="border-2 border-black px-1 md:px-2 py-2">
   <div className="flex flex-col items-center justify-center">
     <div>Not Granted</div>
@@ -4523,6 +4542,8 @@ const handleDownloadDepartmentCount = () => {
                       <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
                         onClick={() => {
+                             setDepartmentCountFilter(null)
+                          scrollToUpcomingBlocks()
                           setActiveFilter("demanded");
                           setActiveSection(
                             summary.Department || summary.Section
@@ -4534,6 +4555,8 @@ const handleDownloadDepartmentCount = () => {
                       <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
                         onClick={() => {
+                             setDepartmentCountFilter(null)
+                          scrollToUpcomingBlocks()
                           setActiveFilter("approved");
                           setActiveSection(
                             summary.Department || summary.Section
@@ -4544,12 +4567,6 @@ const handleDownloadDepartmentCount = () => {
                       </td>
                           <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
-                        onClick={() => {
-                          // setActiveFilter("approved");
-                          setActiveSection(
-                            summary.Department || summary.Section
-                          );
-                        }}
                       >
                          {summary.PercentSanctioned !== undefined
                           ? summary.PercentSanctioned.toFixed(2) + "%"
@@ -4558,6 +4575,8 @@ const handleDownloadDepartmentCount = () => {
                       <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
                         onClick={() => {
+                             setDepartmentCountFilter(null)
+                          scrollToUpcomingBlocks()
                           setActiveFilter("applied");
                           setActiveSection(
                             summary.Department || summary.Section
@@ -4569,6 +4588,8 @@ const handleDownloadDepartmentCount = () => {
                       <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
                         onClick={() => {
+                             setDepartmentCountFilter(null)
+                          scrollToUpcomingBlocks()
                           setActiveFilter("granted");
                           setActiveSection(
                             summary.Department || summary.Section
@@ -4586,6 +4607,8 @@ const handleDownloadDepartmentCount = () => {
                       <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
                         onClick={() => {
+                             setDepartmentCountFilter(null)
+                          scrollToUpcomingBlocks()
                           setActiveFilter("availed");
                           setActiveSection(
                             summary.Department || summary.Section
@@ -4599,11 +4622,24 @@ const handleDownloadDepartmentCount = () => {
                           ? summary.PercentAvailed.toFixed(2) + "%"
                           : ""}
                       </td>
+                                                                                                                <td
+                        className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                      onClick={() => {
+                          setDepartmentCountFilter(null)
+                          scrollToUpcomingBlocks()
+                          setActiveFilter("notSanctioned");
+                          setActiveSection(
+                            summary.Department || summary.Section
+                          );
+                        }}
+                      >
+                        {summary.NotSanctionedCount}
+                      </td>
                       <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
                         onClick={() => {
-                          // You can define what happens when Not Granted is clicked
-                          // For example, filter the upcoming blocks to show only not granted requests
+                             setDepartmentCountFilter(null)
+                          scrollToUpcomingBlocks()
                           setActiveFilter("notGranted");
                           setActiveSection(
                             summary.Department || summary.Section
@@ -4620,7 +4656,8 @@ const handleDownloadDepartmentCount = () => {
                       <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
                         onClick={() => {
-                          // You can define what happens when Not Availed is clicked
+                             setDepartmentCountFilter(null)
+                          scrollToUpcomingBlocks()
                           setActiveFilter("notAvailed");
                           setActiveSection(
                             summary.Department || summary.Section
@@ -4771,9 +4808,26 @@ const handleDownloadDepartmentCount = () => {
       : "0.00";
   })()}%
                     </td>
+                                                                                        <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
+                         onClick={() => {
+        setActiveFilter("notSanctioned");
+        setActiveSection(null);
+        setDepartmentCountFilter(null);
+        scrollToUpcomingBlocks();
+      }}
+   >
+                   
+                   
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.NotSanctionedCount || 0),
+                        0
+                      )}
+                    </td>
                     <td
                       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
                       onClick={() => {
+                           setDepartmentCountFilter(null)
+                          scrollToUpcomingBlocks()
                         setActiveFilter("notGranted");
                         setActiveSection(null); // Show all sections for total
                         toast.success("Viewing all Not Granted requests");
@@ -4787,6 +4841,8 @@ const handleDownloadDepartmentCount = () => {
                     <td
                       className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
                       onClick={() => {
+                           setDepartmentCountFilter(null)
+                          scrollToUpcomingBlocks()
                         setActiveFilter("notAvailed");
                         setActiveSection(null); // Show all sections for total
                         toast.success("Viewing all Not Availed requests");
@@ -4879,6 +4935,9 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                     setActiveFilter("all");
+                     setActiveSection(null);
+                     scrollToUpcomingBlocks()
                     setDepartmentCountFilter({
                       department: "ENGG",
                       supportingDepartment: "-",
@@ -4894,6 +4953,9 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                     setActiveFilter("all");
+                     setActiveSection(null);
+                     scrollToUpcomingBlocks()
                     setDepartmentCountFilter({
                       department: "ENGG",
                       supportingDepartment: "-",
@@ -4917,6 +4979,9 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                     setActiveFilter("all");
+                     setActiveSection(null);
+                     scrollToUpcomingBlocks()
                     setDepartmentCountFilter({
                       department: "ENGG",
                       supportingDepartment: "-",
@@ -4953,6 +5018,9 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                     setActiveFilter("all");
+                     setActiveSection(null);
+                     scrollToUpcomingBlocks()
                     setDepartmentCountFilter({
                       department: "ENGG",
                       supportingDepartment: "S&T",
@@ -4968,6 +5036,9 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                     setActiveFilter("all");
+                     setActiveSection(null);
+                     scrollToUpcomingBlocks()
                     setDepartmentCountFilter({
                       department: "ENGG",
                       supportingDepartment: "S&T",
@@ -4992,6 +5063,9 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                     setActiveFilter("all");
+                     setActiveSection(null);
+                     scrollToUpcomingBlocks()
                     setDepartmentCountFilter({
                       department: "ENGG",
                       supportingDepartment: "S&T",
@@ -5030,6 +5104,9 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                     setActiveFilter("all");
+                     setActiveSection(null);
+                     scrollToUpcomingBlocks()
                     setDepartmentCountFilter({
                       department: "ENGG",
                       supportingDepartment: "TRD",
@@ -5045,6 +5122,9 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                     setActiveFilter("all");
+                     setActiveSection(null);
+                     scrollToUpcomingBlocks()
                     setDepartmentCountFilter({
                       department: "ENGG",
                       supportingDepartment: "TRD",
@@ -5067,6 +5147,9 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                     setActiveFilter("all");
+                     setActiveSection(null);
+                     scrollToUpcomingBlocks()
                     setDepartmentCountFilter({
                       department: "ENGG",
                       supportingDepartment: "TRD",
@@ -5104,6 +5187,9 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                     setActiveFilter("all");
+                     setActiveSection(null);
+                     scrollToUpcomingBlocks()
                     setDepartmentCountFilter({
                       department: "ENGG",
                       supportingDepartment: "S&T and TRD",
@@ -5119,6 +5205,9 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                     setActiveFilter("all");
+                     setActiveSection(null);
+                     scrollToUpcomingBlocks()
                     setDepartmentCountFilter({
                       department: "ENGG",
                       supportingDepartment: "S&T and TRD",
@@ -5142,6 +5231,9 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                     setActiveFilter("all");
+                     setActiveSection(null);
+                     scrollToUpcomingBlocks()
                     setDepartmentCountFilter({
                       department: "ENGG",
                       supportingDepartment: "S&T and TRD",
@@ -5179,6 +5271,9 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                     setActiveFilter("all");
+                     setActiveSection(null);
+                     scrollToUpcomingBlocks()
                     setDepartmentCountFilter({
                       department: "TRD",
                       supportingDepartment: "-",
@@ -5192,6 +5287,9 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                     setActiveFilter("all");
+                     setActiveSection(null);
+                     scrollToUpcomingBlocks()
                     setDepartmentCountFilter({
                       department: "TRD",
                       supportingDepartment: "-",
@@ -5210,6 +5308,9 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                     setActiveFilter("all");
+                     setActiveSection(null);
+                     scrollToUpcomingBlocks()
                     setDepartmentCountFilter({
                       department: "TRD",
                       supportingDepartment: "-",
@@ -5247,6 +5348,9 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                     setActiveFilter("all");
+                     setActiveSection(null);
+                     scrollToUpcomingBlocks()
                     setDepartmentCountFilter({
                       department: "S&T",
                       supportingDepartment: "-",
@@ -5262,6 +5366,9 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                     setActiveFilter("all");
+                     setActiveSection(null);
+                     scrollToUpcomingBlocks()
                     setDepartmentCountFilter({
                       department: "S&T",
                       supportingDepartment: "-",
@@ -5282,6 +5389,9 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                     setActiveFilter("all");
+                     setActiveSection(null);
+                     scrollToUpcomingBlocks()
                     setDepartmentCountFilter({
                       department: "S&T",
                       supportingDepartment: "-",
@@ -5316,6 +5426,9 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                     setActiveFilter("all");
+                     setActiveSection(null);
+                     scrollToUpcomingBlocks()
                     setDepartmentCountFilter({
                       department: "S&T",
                       supportingDepartment: "ENGG",
@@ -5331,6 +5444,9 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                     setActiveFilter("all");
+                     setActiveSection(null);
+                     scrollToUpcomingBlocks()
                     setDepartmentCountFilter({
                       department: "S&T",
                       supportingDepartment: "ENGG",
@@ -5353,6 +5469,9 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                     setActiveFilter("all");
+                     setActiveSection(null);
+                     scrollToUpcomingBlocks()
                     setDepartmentCountFilter({
                       department: "S&T",
                       supportingDepartment: "ENGG",
@@ -5388,6 +5507,9 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                     setActiveFilter("all");
+                     setActiveSection(null);
+                     scrollToUpcomingBlocks()
                     setDepartmentCountFilter({
                       department: "S&T",
                       supportingDepartment: "TRD",
@@ -5403,6 +5525,9 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                     setActiveFilter("all");
+                     setActiveSection(null);
+                     scrollToUpcomingBlocks()
                     setDepartmentCountFilter({
                       department: "S&T",
                       supportingDepartment: "TRD",
@@ -5425,6 +5550,9 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                     setActiveFilter("all");
+                     setActiveSection(null);
+                     scrollToUpcomingBlocks()
                     setDepartmentCountFilter({
                       department: "S&T",
                       supportingDepartment: "TRD",
@@ -5460,6 +5588,9 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                     setActiveFilter("all");
+                     setActiveSection(null);
+                     scrollToUpcomingBlocks()
                     setDepartmentCountFilter({
                       department: "S&T",
                       supportingDepartment: "ENGG and TRD",
@@ -5475,6 +5606,9 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                     setActiveFilter("all");
+                     setActiveSection(null);
+                     scrollToUpcomingBlocks()
                     setDepartmentCountFilter({
                       department: "S&T",
                       supportingDepartment: "ENGG and TRD",
@@ -5498,6 +5632,9 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                     setActiveFilter("all");
+                     setActiveSection(null);
+                     scrollToUpcomingBlocks()
                     setDepartmentCountFilter({
                       department: "S&T",
                       supportingDepartment: "ENGG and TRD",
