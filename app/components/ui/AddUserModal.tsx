@@ -20,7 +20,8 @@ export default function AddUserModal({ isOpen, onClose, onSubmit, users, departm
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
-    const [depot, setDepot] = useState("");
+    // const [depot, setDepot] = useState("");
+    const [depots, setDepots] = useState<string[]>([]);
     const [managerId, setManagerId] = useState("");
     const [phoneExists, setPhoneExists] = useState<null | boolean>(null);
     const [checkingPhone, setCheckingPhone] = useState(false);
@@ -29,14 +30,16 @@ export default function AddUserModal({ isOpen, onClose, onSubmit, users, departm
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [selectedManager, setSelectedManager] = useState<{ id: string; name: string; depot?: string } | null>(null);
-
+    const [showDepotSelection, setShowDepotSelection] = useState(false);
 
     const resetForm = () => {
         setRole("SSE");
         setName("");
         setEmail("");
         setPhone("");
-        setDepot("");
+        // setDepot("");
+        setDepots([]);
+        setShowDepotSelection(false);
         setManagerId("");
         setSelectedManager(null);
         setPhoneExists(null);
@@ -45,6 +48,20 @@ export default function AddUserModal({ isOpen, onClose, onSubmit, users, departm
         setError(null);
     }
 
+    // ADD THESE FUNCTIONS:
+const handleDepotChange = (depot: string) => {
+    if (depots.includes(depot)) {
+        // Remove depot if already selected
+        setDepots(depots.filter(d => d !== depot));
+    } else {
+        // Add depot if not selected
+        setDepots([...depots, depot]);
+    }
+};
+
+const isDepotSelected = (depot: string) => {
+    return depots.includes(depot);
+};
     useEffect(() => {
         let cancel: (() => void) | undefined;
         if (phone && phone.length === 10) {
@@ -117,7 +134,7 @@ export default function AddUserModal({ isOpen, onClose, onSubmit, users, departm
                         setSubmitting(true);
                         try {
                             // If role is JE, use the selectedManager's depot
-                            const submissionDepot = role === "JE" && selectedManager ? selectedManager.depot : depot;
+                            const submissionDepot = role === "JE" && selectedManager ? selectedManager.depot : depots.join(",");
 
                             await onSubmit({
                                 name,
@@ -142,8 +159,8 @@ export default function AddUserModal({ isOpen, onClose, onSubmit, users, departm
                             value={role}
                             onChange={e => setRole(e.target.value as "SSE" | "JE")}
                         >
-                            <option value="SSE">SSE</option>
-                            <option value="JE">JE</option>
+                            <option value="SSE">SSE-Only Incharge</option>
+                            <option value="JE">JE – include all the subsections JE and technicians</option>
                         </select>
                     </div>
                     <div>
@@ -187,7 +204,7 @@ export default function AddUserModal({ isOpen, onClose, onSubmit, users, departm
                         {phoneExists === true && <span className="text-base font-bold text-red-600 ml-2">CUG already exists</span>}
                         {phoneExists === false && <span className="text-base font-bold text-green-600 ml-2">CUG available</span>}
                     </div>
-                    {role === "SSE" && (
+                    {/* {role === "SSE" && (
                         <div>
                             <label className="block font-semibold mb-1">Depot</label>
                             <select
@@ -209,6 +226,80 @@ export default function AddUserModal({ isOpen, onClose, onSubmit, users, departm
                                     )
                                 }
                             </select>
+                        </div>
+                    )} */}
+                    {role === "SSE" && (
+
+                        <div>
+                            <div 
+                                className="flex items-center justify-between cursor-pointer bg-gray-100 p-2 rounded mb-2"
+                                onClick={() => setShowDepotSelection(!showDepotSelection)}
+                            >
+                                <label className="block font-semibold mb-0">
+                                    Depot(s) - Select Multiple
+                                    {depots.length > 0 && (
+                                        <span className="ml-2 text-sm font-normal text-blue-600">
+                                            ({depots.length} selected)
+                                        </span>
+                                    )}
+                                </label>
+                                <span className="transform transition-transform" style={{
+                                    transform: showDepotSelection ? 'rotate(180deg)' : 'rotate(0deg)'
+                                }}>
+                                    ▼
+                                </span>
+                            </div>
+                            
+                            {depots.length > 0 && !showDepotSelection && (
+                                <div className="text-sm text-gray-600 mb-2 pl-2">
+                                    Selected: {depots.join(", ")}
+                                </div>
+                            )}
+                            
+                            {showDepotSelection && (
+                                <div className="max-h-60 overflow-y-auto border border-gray-300 rounded p-2 mb-2">
+                                    {departmentDepot[department] ?
+                                        departmentDepot[department].map(dep => (
+                                            <div key={dep} className="flex items-center mb-2">
+                                                <input
+                                                    type="checkbox"
+                                                    id={`depot-${dep}`}
+                                                    checked={depots.includes(dep)}
+                                                    onChange={() => handleDepotChange(dep)}
+                                                    className="mr-2"
+                                                />
+                                                <label htmlFor={`depot-${dep}`} className="cursor-pointer">
+                                                    {dep}
+                                                </label>
+                                            </div>
+                                        ))
+                                        :
+                                        Object.entries(depotOnLocation).map(([loc, depotsList]) => (
+                                            <div key={loc}>
+                                                <div className="font-semibold text-gray-700 mb-1 mt-2">{loc}</div>
+                                                {depotsList.map(dep => (
+                                                    <div key={dep} className="flex items-center mb-2 ml-2">
+                                                        <input
+                                                            type="checkbox"
+                                                            id={`depot-${dep}`}
+                                                            checked={depots.includes(dep)}
+                                                            onChange={() => handleDepotChange(dep)}
+                                                            className="mr-2"
+                                                        />
+                                                        <label htmlFor={`depot-${dep}`} className="cursor-pointer">
+                                                            {dep}
+                                                        </label>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ))
+                                    }
+                                </div>
+                            )}
+                            
+                            {depots.length === 0 && (
+                                <div className="text-red-500 text-sm mt-1">Please select at least one depot</div>
+                            )}
                         </div>
                     )}
                     {role === "JE" && (
@@ -255,7 +346,7 @@ export default function AddUserModal({ isOpen, onClose, onSubmit, users, departm
                                     !name ||
                                     !phone ||
                                     !email ||
-                                    (role === "SSE" && !depot) ||
+                                    (role === "SSE" && depots.length === 0) ||
                                     (role === "JE" && !managerId) ?
                                     "opacity-50 cursor-not-allowed" : ""
                                 }`}
@@ -268,7 +359,7 @@ export default function AddUserModal({ isOpen, onClose, onSubmit, users, departm
                                 !name ||
                                 !phone ||
                                 !email ||
-                                (role === "SSE" && !depot) ||
+                                (role === "SSE"  && depots.length === 0) ||
                                 (role === "JE" && !managerId)
                             }
                         >
