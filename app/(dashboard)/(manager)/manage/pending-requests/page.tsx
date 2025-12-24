@@ -916,6 +916,15 @@ useEffect(() => {
                                 <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
                                 <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-[#E6E6FA] text-center align-middle w-32">
                                     <div className="flex gap-2 justify-center flex-col md:flex-row">
+                                          {(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // reset time
+    const requestDate = new Date(request.date);
+    requestDate.setHours(0, 0, 0, 0);
+
+    return requestDate >= today;
+  })() && (
+    <>
                                         <button
                                             onClick={() => handleEditClick(request)}
                                             disabled={isAccepting || isRejecting || isEditing}
@@ -930,6 +939,8 @@ useEffect(() => {
                                         >
                                             {isAccepting ? "Accepting..." : "F"}
                                         </button>
+                                        </>
+                                         )}
                                         <button
                                             onClick={() => handleReject(request.id)}
                                             disabled={isAccepting || isRejecting}
@@ -1081,6 +1092,15 @@ useEffect(() => {
                                 <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
                                 <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-[#E6E6FA] text-center align-middle w-32">
                                     <div className="flex gap-2 justify-center flex-col md:flex-row">
+                                                                                  {(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // reset time
+    const requestDate = new Date(request.date);
+    requestDate.setHours(0, 0, 0, 0);
+
+    return requestDate >= today;
+  })() && (
+    <>
                                         <button
                                             onClick={() => handleEditClick(request)}
                                             disabled={isAccepting || isRejecting || isEditing}
@@ -1095,6 +1115,7 @@ useEffect(() => {
                                         >
                                             {isAccepting ? "Accepting..." : "F"}
                                         </button>
+                                        </>)}
                                         <button
                                             onClick={() => handleReject(request.id)}
                                             disabled={isAccepting || isRejecting}
@@ -1183,6 +1204,15 @@ useEffect(() => {
                                 <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
                                 <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-[#E6E6FA] text-center align-middle w-32">
                                     <div className="flex gap-2 justify-center flex-col md:flex-row">
+                                                                                                                          {(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // reset time
+    const requestDate = new Date(request.date);
+    requestDate.setHours(0, 0, 0, 0);
+
+    return requestDate >= today;
+  })() && (
+    <>
                                         <button
                                             onClick={() => handleEditClick(request)}
                                             disabled={isAccepting || isRejecting || isEditing}
@@ -1197,6 +1227,7 @@ useEffect(() => {
                                         >
                                             {isAccepting ? "Accepting..." : "F"}
                                         </button>
+                                        </>)}
                                         <button
                                             onClick={() => handleReject(request.id)}
                                             disabled={isAccepting || isRejecting}
@@ -1285,6 +1316,15 @@ useEffect(() => {
                                 <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
                                 <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-[#E6E6FA] text-center align-middle w-32">
                                     <div className="flex gap-2 justify-center flex-col md:flex-row">
+                                                                                                                          {(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // reset time
+    const requestDate = new Date(request.date);
+    requestDate.setHours(0, 0, 0, 0);
+
+    return requestDate >= today;
+  })() && (
+    <>
                                         <button
                                             onClick={() => handleEditClick(request)}
                                             disabled={isAccepting || isRejecting || isEditing}
@@ -1299,6 +1339,7 @@ useEffect(() => {
                                         >
                                             {isAccepting ? "Accepting..." : "F"}
                                         </button>
+                                        </>)}
                                         <button
                                             onClick={() => handleReject(request.id)}
                                             disabled={isAccepting || isRejecting}
