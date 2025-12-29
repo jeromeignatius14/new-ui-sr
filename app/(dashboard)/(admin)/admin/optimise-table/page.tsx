@@ -662,10 +662,11 @@ const nonCorridorRequestsFiltered = pendingRequests
     if (!matchesActivity(r)) return false;
     if (!matchesTimeSlot(r)) return false;
 
-    const hasOtherLines = r.processedLineSections?.some((section: any) => 
-      section.otherLines && section.otherLines.trim() !== ''
-    );
-    if (hasOtherLines) return false;
+     if (r.processedLineSections ) {
+      const firstSection = r.processedLineSections[0];
+      const hasOtherLines = firstSection.otherLines && firstSection.otherLines.trim() !== '';
+      if (hasOtherLines) return false; // Don't show if first section has otherLines
+    }
 
     const allSntAcceptance = r.allSntAcceptance === "ACCEPTED";
     const allTrdAcceptance = r.allTrdAcceptance === "ACCEPTED";
