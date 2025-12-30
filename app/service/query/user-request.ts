@@ -21,6 +21,9 @@ export interface RequestResponse {
 }
 
 export interface RequestItem {
+  assetName?: any;
+  assetNumber?: any;
+  engDisconnectionRemarks?: string;
   Status?: String;
   userAcceptanceForSanction?: boolean;
   freshCautions?: any;

@@ -2413,7 +2413,11 @@ const getCorridorTypeRestrictions = (dateString: string) => {
     errors.powerBlockDisconnectionAssignTo = "Please assign at least one TRD depot";
   }
     }
-
+if(formData.enggDisconnectionsRequired){
+            if (selectedENGDepots.length === 0) {
+      errors.engDisconnectionAssignTo = "Please assign at least one ENGG depot for Disconnection";
+    }
+}
     // S&T Disconnection validations
     if (formData.sntDisconnectionRequired) {
       // if (!formData.sntDisconnectionLineFrom)
@@ -5706,7 +5710,18 @@ const getCorridorTypeRestrictions = (dateString: string) => {
         <MultiSelectDepot
           department="ENGG"
           selectedDepots={selectedENGDepots}
-          onDepotsChange={setSelectedENGDepots}
+          // onDepotsChange={setSelectedENGDepots}
+                                                           onDepotsChange={(depots) => {
+    setSelectedENGDepots(depots);
+    // Clear error when user selects a depot
+    if (depots.length > 0 && errors.engDisconnectionAssignTo) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.engDisconnectionAssignTo;
+        return newErrors;
+      });
+    }
+  }}
           majorSection={formData.selectedSection}
           blockSections={blockSectionValue}
           disabled={false}
