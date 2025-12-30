@@ -491,6 +491,14 @@ block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance"
                 <td className="py-1">{request.activity}</td>
               </tr>
               <tr>
+                <td className="py-1 font-medium">Asset Name:</td>
+                <td className="py-1">{request.assetName || "N/A"}</td>
+              </tr>
+              <tr>
+                <td className="py-1 font-medium">Asset Number:</td>
+                <td className="py-1">{request.assetNumber || "N/A"}</td>
+              </tr>
+              <tr>
                 <td className="py-1 font-medium">Requested Time:</td>
                 <td className="py-1">
                   {formatTime(request.demandTimeFrom)} to{" "}
@@ -713,7 +721,14 @@ block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance"
           <div className="py-1">{request.emergencyBlockRemarks}</div>
         </div>
       )}
-
+     {request.enggDisconnectionsRequired && (
+        <div className="border border-black p-3 mb-4">
+          <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
+          {"ENGG Remarks"}
+          </h2>
+          <div className="py-1">{request.engDisconnectionRemarks}</div>
+        </div>
+      )}
       <div className="flex flex-wrap gap-4 mb-4 w-full">
         {request.selectedDepartment !== "TRD" && (
           <div className="border border-black p-3 flex-1">
@@ -807,6 +822,14 @@ block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance"
                     </td>
                   </tr>
                 )} */}
+                  <tr>
+                  <td className="py-1 font-medium">
+                    ENGG Disconnection Required:
+                  </td>
+                  <td className="py-1">
+                    {request.enggDisconnectionsRequired ? "Yes" : "No"}
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
