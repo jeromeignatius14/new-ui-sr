@@ -18,7 +18,11 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onSubmit
     const [name, setName] = useState(initialData?.name || "");
     const [email, setEmail] = useState(initialData?.email || "");
     const [phone, setPhone] = useState(initialData?.phone || "");
-    const [depot, setDepot] = useState(initialData?.depot || "");
+    // const [depot, setDepot] = useState(initialData?.depot || "");
+    const [depot, setDepot] = useState<string[]>(
+  initialData?.depot ? initialData.depot.split(",") : []
+);
+
     const [managerId, setManagerId] = useState(initialData?.managerId || "");
     const [error, setError] = useState<string | null>(null);
     const [editing, setEditing] = useState(false);
@@ -38,7 +42,9 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onSubmit
         setName(initialData?.name || "");
         setEmail(initialData?.email || "");
         setPhone(initialData?.phone || "");
-        setDepot(initialData?.depot || "");
+        // setDepot(initialData?.depot || "");
+        setDepot(initialData?.depot ? initialData.depot.split(",") : []);
+
         setManagerId(initialData?.managerId || "");
         setPhoneChanged(false);
         setEmailChanged(false);
@@ -113,6 +119,16 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onSubmit
 
 
     if (!isOpen) return null;
+const handleDepotChange = (depotValue: string) => {
+  setDepot(prev =>
+    prev.includes(depotValue)
+      ? prev.filter(d => d !== depotValue)
+      : [...prev, depotValue]
+  );
+};
+
+// const isDepotSelected = (depot: string) => depot.includes(depot);
+const isDepotSelected = (depotValue: string) => depot.includes(depotValue);
 
     return (
         <div className="fixed inset-0 bg-gray-900/70 flex items-center justify-center z-50 backdrop-blur-sm text-black">
@@ -128,8 +144,12 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onSubmit
                         try {
                             setEditing(true);
                             // If it's a JE, use the selectedManager's depot
-                            const submissionDepot = isJE && selectedManager ? selectedManager.depot : depot;
-                            
+                            // const submissionDepot = isJE && selectedManager ? selectedManager.depot : depot;
+                            const submissionDepot =
+  isJE && selectedManager
+    ? selectedManager.depot
+    : depot.join(",");
+
                             await onSubmit({ 
                                 name, 
                                 email, 
@@ -197,7 +217,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onSubmit
                         {phoneExists === true && <span className="text-base font-bold text-red-600 ml-2">CUG already exists</span>}
                         {phoneExists === false && <span className="text-base font-bold text-green-600 ml-2">CUG available</span>}
                     </div>
-                    {!isJE && (
+                    {/* {!isJE && (
                         <div>
                             <label className="block font-semibold mb-1">Depot</label>
                             <select
@@ -223,7 +243,63 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, onSubmit
                                 }
                             </select>
                         </div>
-                    )}
+                    )} */}
+                    {!isJE && (
+  <div>
+    <label className="block font-semibold mb-1">
+      Depot(s) – Select Multiple
+      {depot.length > 0 && (
+        <span className="ml-2 text-sm text-blue-600">
+          ({depot.length} selected)
+        </span>
+      )}
+    </label>
+
+    <div className="max-h-60 overflow-y-auto border border-gray-300 rounded p-2">
+      {departmentDepot[department]
+        ? departmentDepot[department].map(dep => (
+            <div key={dep} className="flex items-center mb-2">
+              <input
+                type="checkbox"
+                checked={isDepotSelected(dep)}
+                onChange={() => {
+                  handleDepotChange(dep);
+                  setDepotChanged(true);
+                }}
+                className="mr-2"
+              />
+              <label>{dep}</label>
+            </div>
+          ))
+        : Object.entries(depotOnLocation).map(([loc, depotsList]) => (
+            <div key={loc}>
+              <div className="font-semibold mt-2">{loc}</div>
+              {depotsList.map(dep => (
+                <div key={dep} className="flex items-center ml-2">
+                  <input
+                    type="checkbox"
+                    checked={isDepotSelected(dep)}
+                    onChange={() => {
+                      handleDepotChange(dep);
+                      setDepotChanged(true);
+                    }}
+                    className="mr-2"
+                  />
+                  <label>{dep}</label>
+                </div>
+              ))}
+            </div>
+          ))}
+    </div>
+
+    {depot.length === 0 && (
+      <div className="text-red-500 text-sm mt-1">
+        Please select at least one depot
+      </div>
+    )}
+  </div>
+)}
+
                     {isJE && (
                         <div>
                             <label className="block font-semibold mb-1">Managed by SSE</label>
