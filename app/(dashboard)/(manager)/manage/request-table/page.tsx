@@ -923,7 +923,12 @@ const handleDownloadExcel = async () => {
     PC Installed In Stations
   </button>
 </Link>}
-
+{session?.user.department==="TRD"&&
+<Link href={`https://smr-dashboard.plattorian.tech/?cugNumber=${session?.user?.phone}&trd-division=${session?.user?.location}&user=TRD-SM&token=W1IU66ZFEBFBF6C1dGmouN6PVyHARQJg`}>
+  <button className="w-fit px-16 rounded-full bg-[#ffd180] border-2 border-black py-6 text-2xl font-extrabold text-black text-center shadow-lg hover:scale-105 transition min-w-[320px]">
+    PERMIT BLOCK AT SITE
+  </button>
+</Link>}
   <button
     onClick={async () => {
       const { signOut } = await import("next-auth/react");
