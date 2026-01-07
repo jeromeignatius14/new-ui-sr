@@ -2381,22 +2381,22 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment =
   },
 
   "DG-MDU": {
-    "DG-ABI": { "S&T": "NORTH-MDU", "TRD": "DG", "ENGG": "DG" },
-    "ABI-KQN": { "S&T": "NORTH-MDU", "TRD": "MDU", "ENGG": "DG" },
-    "KQN-VDP": { "S&T": "NORTH-MDU", "TRD": "MDU", "ENGG": "MG-MDU" },
-    "VDP-SDN": { "S&T": "NORTH-MDU", "TRD": "MDU", "ENGG": "MG-MDU" },
-    "SDN-SER": { "S&T": "NORTH-MDU", "TRD": "MDU", "ENGG": "MG-MDU" },
-    "SER-KON": { "S&T": "NORTH-MDU", "TRD": "MDU", "ENGG": "MG-MDU" },
-    "KON-MDU": { "S&T": "NORTH-MDU", "TRD": "MDU", "ENGG": "MG-MDU" },
+    "DG-ABI": { "S&T": "North-MDU", "TRD": "DG", "ENGG": "DG" },
+    "ABI-KQN": { "S&T": "North-MDU", "TRD": "MDU", "ENGG": "DG" },
+    "KQN-VDP": { "S&T": "North-MDU", "TRD": "MDU", "ENGG": "MG-MDU" },
+    "VDP-SDN": { "S&T": "North-MDU", "TRD": "MDU", "ENGG": "MG-MDU" },
+    "SDN-SER": { "S&T": "North-MDU", "TRD": "MDU", "ENGG": "MG-MDU" },
+    "SER-KON": { "S&T": "North-MDU", "TRD": "MDU", "ENGG": "MG-MDU" },
+    "KON-MDU": { "S&T": "North-MDU", "TRD": "MDU", "ENGG": "MG-MDU" },
 
-    "DG-YD": { "S&T": "NORTH-MDU", "TRD": "DG", "ENGG": "DG" },
-    "ABI-YD": { "S&T": "NORTH-MDU", "TRD": "DG", "ENGG": "DG" },
-    "KQN-YD": { "S&T": "NORTH-MDU", "TRD": "MDU", "ENGG": "DG" },
-    "VDP-YD": { "S&T": "NORTH-MDU", "TRD": "MDU", "ENGG": "MG-MDU" },
-    "SDN-YD": { "S&T": "NORTH-MDU", "TRD": "MDU", "ENGG": "MG-MDU" },
-    "SER-YD": { "S&T": "NORTH-MDU", "TRD": "MDU", "ENGG": "MG-MDU" },
-    "KON-YD": { "S&T": "NORTH-MDU", "TRD": "MDU", "ENGG": "MG-MDU" },
-    "MDU-YD": { "S&T": "NORTH-MDU", "TRD": "MDU", "ENGG": "MG-MDU" }
+    "DG-YD": { "S&T": "North-MDU", "TRD": "DG", "ENGG": "DG" },
+    "ABI-YD": { "S&T": "North-MDU", "TRD": "DG", "ENGG": "DG" },
+    "KQN-YD": { "S&T": "North-MDU", "TRD": "MDU", "ENGG": "DG" },
+    "VDP-YD": { "S&T": "North-MDU", "TRD": "MDU", "ENGG": "MG-MDU" },
+    "SDN-YD": { "S&T": "North-MDU", "TRD": "MDU", "ENGG": "MG-MDU" },
+    "SER-YD": { "S&T": "North-MDU", "TRD": "MDU", "ENGG": "MG-MDU" },
+    "KON-YD": { "S&T": "North-MDU", "TRD": "MDU", "ENGG": "MG-MDU" },
+    "MDU-YD": { "S&T": "North-MDU", "TRD": "MDU", "ENGG": "MG-MDU" }
   },
 
   "DG-PLNI-POY": {
@@ -2480,16 +2480,16 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment =
   },
 
   "MDU-MNM": {
-    "MDU-ILA": { "S&T": "NORTH-MDU", "TRD": "MDU", "ENGG": "MD-MDU" },
-    "ILA-TVN": { "S&T": "NORTH-MDU", "TRD": "MNM", "ENGG": "MD-MDU" },
-    "TVN-TPC": { "S&T": "NORTH-MDU", "TRD": "MNM", "ENGG": "MD-MDU" },
-    "TPC-MNM": { "S&T": "NORTH-MDU", "TRD": "MNM", "ENGG": "MNM" },
+    "MDU-ILA": { "S&T": "North-MDU", "TRD": "MDU", "ENGG": "MD-MDU" },
+    "ILA-TVN": { "S&T": "North-MDU", "TRD": "MNM", "ENGG": "MD-MDU" },
+    "TVN-TPC": { "S&T": "North-MDU", "TRD": "MNM", "ENGG": "MD-MDU" },
+    "TPC-MNM": { "S&T": "North-MDU", "TRD": "MNM", "ENGG": "MNM" },
 
-    "MDU-YD": { "S&T": "NORTH-MDU", "TRD": "MDU", "ENGG": "MD-MDU" },
-    "ILA-YD": { "S&T": "NORTH-MDU", "TRD": "MDU", "ENGG": "MD-MDU" },
-    "TVN-YD": { "S&T": "NORTH-MDU", "TRD": "MNM", "ENGG": "MD-MDU" },
-    "TPC-YD": { "S&T": "NORTH-MDU", "TRD": "MNM", "ENGG": "MD-MDU" },
-    "MNM-YD": { "S&T": "NORTH-MDU", "TRD": "MNM", "ENGG": "MNM" }
+    "MDU-YD": { "S&T": "North-MDU", "TRD": "MDU", "ENGG": "MD-MDU" },
+    "ILA-YD": { "S&T": "North-MDU", "TRD": "MDU", "ENGG": "MD-MDU" },
+    "TVN-YD": { "S&T": "North-MDU", "TRD": "MNM", "ENGG": "MD-MDU" },
+    "TPC-YD": { "S&T": "North-MDU", "TRD": "MNM", "ENGG": "MD-MDU" },
+    "MNM-YD": { "S&T": "North-MDU", "TRD": "MNM", "ENGG": "MNM" }
   },
 
   "TPJ-KKDI-MNM": {
