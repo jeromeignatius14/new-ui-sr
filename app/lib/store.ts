@@ -2423,16 +2423,16 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment =
   },
 
   "MDU-VPT": {
-    "MDU-TDN": { "S&T": "South/MDU", "TRD": "MDU", "ENGG": "VPT" },
-    "TDN-TMQ": { "S&T": "South/MDU", "TRD": "VPT", "ENGG": "VPT" },
-    "TMQ-KGD": { "S&T": "South/MDU", "TRD": "VPT", "ENGG": "VPT" },
-    "KGD-VPT": { "S&T": "South/MDU", "TRD": "VPT", "ENGG": "VPT" },
+    "MDU-TDN": { "S&T": "South-MDU", "TRD": "MDU", "ENGG": "VPT" },
+    "TDN-TMQ": { "S&T": "South-MDU", "TRD": "VPT", "ENGG": "VPT" },
+    "TMQ-KGD": { "S&T": "South-MDU", "TRD": "VPT", "ENGG": "VPT" },
+    "KGD-VPT": { "S&T": "South-MDU", "TRD": "VPT", "ENGG": "VPT" },
 
-    "MDU-YD": { "S&T": "South/MDU", "TRD": "MDU", "ENGG": "VPT" },
-    "TDN-YD": { "S&T": "South/MDU", "TRD": "MDU", "ENGG": "VPT" },
-    "TMQ-YD": { "S&T": "South/MDU", "TRD": "VPT", "ENGG": "VPT" },
-    "KGD-YD": { "S&T": "South/MDU", "TRD": "VPT", "ENGG": "VPT" },
-    "VPT-YD": { "S&T": "South/MDU", "TRD": "VPT", "ENGG": "VPT" }
+    "MDU-YD": { "S&T": "South-MDU", "TRD": "MDU", "ENGG": "VPT" },
+    "TDN-YD": { "S&T": "South-MDU", "TRD": "MDU", "ENGG": "VPT" },
+    "TMQ-YD": { "S&T": "South-MDU", "TRD": "VPT", "ENGG": "VPT" },
+    "KGD-YD": { "S&T": "South-MDU", "TRD": "VPT", "ENGG": "VPT" },
+    "VPT-YD": { "S&T": "South-MDU", "TRD": "VPT", "ENGG": "VPT" }
   },
 
   "VPT-MEJ": {
@@ -2639,16 +2639,16 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment =
   },
 
   "MDU-BDNK": {
-    "MDU-USLP": { "S&T": "South/MDU", "TRD": "TE", "ENGG": "ADPT" },
-    "USLP-ADPT": { "S&T": "South/MDU", "TRD": "TE", "ENGG": "ADPT" },
-    "ADPT-TE": { "S&T": "South/MDU", "TRD": "TE", "ENGG": "ADPT" },
-    "TE-BDNK": { "S&T": "South/MDU", "TRD": "TE", "ENGG": "ADPT" },
+    "MDU-USLP": { "S&T": "South-MDU", "TRD": "TE", "ENGG": "ADPT" },
+    "USLP-ADPT": { "S&T": "South-MDU", "TRD": "TE", "ENGG": "ADPT" },
+    "ADPT-TE": { "S&T": "South-MDU", "TRD": "TE", "ENGG": "ADPT" },
+    "TE-BDNK": { "S&T": "South-MDU", "TRD": "TE", "ENGG": "ADPT" },
 
-    "MDU-YD": { "S&T": "South/MDU", "TRD": "TE", "ENGG": "ADPT" },
-    "USLP-YD": { "S&T": "South/MDU", "TRD": "TE", "ENGG": "ADPT" },
-    "ADPT-YD": { "S&T": "South/MDU", "TRD": "TE", "ENGG": "ADPT" },
-    "TE-YD": { "S&T": "South/MDU", "TRD": "TE", "ENGG": "ADPT" },
-    "BDNK-YD": { "S&T": "South/MDU", "TRD": "TE", "ENGG": "ADPT" }
+    "MDU-YD": { "S&T": "South-MDU", "TRD": "TE", "ENGG": "ADPT" },
+    "USLP-YD": { "S&T": "South-MDU", "TRD": "TE", "ENGG": "ADPT" },
+    "ADPT-YD": { "S&T": "South-MDU", "TRD": "TE", "ENGG": "ADPT" },
+    "TE-YD": { "S&T": "South-MDU", "TRD": "TE", "ENGG": "ADPT" },
+    "BDNK-YD": { "S&T": "South-MDU", "TRD": "TE", "ENGG": "ADPT" }
   }
 }
 
