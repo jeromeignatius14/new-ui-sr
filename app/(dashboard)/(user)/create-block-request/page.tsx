@@ -1332,17 +1332,25 @@ const activityOptions = getActivityOptions();
   };
 
   const isWithinNextTwoDays = (dateString: string): boolean => {
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
-
-    const targetDate = new Date(dateString + "T00:00:00Z");
-    targetDate.setUTCHours(0, 0, 0, 0);
-
-    const twoDaysFromNow = new Date(today);
-    twoDaysFromNow.setUTCDate(today.getUTCDate() + 2);
-
-    return targetDate >= today && targetDate <= twoDaysFromNow;
+  // Convert to India time
+  const convertToIndiaTime = (date: Date) => {
+    const indiaOffset = 5.5 * 60 * 60 * 1000;
+    return new Date(date.getTime() + indiaOffset);
   };
+  
+  const now = new Date();
+  const todayIndia = convertToIndiaTime(now);
+  todayIndia.setUTCHours(0, 0, 0, 0);
+
+  const targetUTC = new Date(dateString + "T00:00:00Z");
+  const targetIndia = convertToIndiaTime(targetUTC);
+  targetIndia.setUTCHours(0, 0, 0, 0);
+
+  const twoDaysFromNow = new Date(todayIndia);
+  twoDaysFromNow.setUTCDate(todayIndia.getUTCDate() + 2);
+
+  return targetIndia >= todayIndia && targetIndia <= twoDaysFromNow;
+};
 
   const isDateInNextWeek = (dateString: string): boolean => {
     const today = new Date();
@@ -1369,15 +1377,38 @@ const activityOptions = getActivityOptions();
   //   const dayOfWeek = now.getUTCDay();
   //   const hour = now.getUTCHours();
 
-  //   return (dayOfWeek === 4 && hour >= 22) || dayOfWeek > 4;
+  //   return (dayOfWeek === 4 && hour >= 22) || dayOfWeek > 4
   // };
 const isPastThursdayCutoff = () => {
   const now = new Date();
-  const thursday = new Date();
-  thursday.setDate(now.getDate() - now.getDay() + 4); // Thursday
-  thursday.setHours(22, 0, 0, 0); 
-
-  return now > thursday;
+  
+  // Find the most recent Thursday 10 PM
+  const findMostRecentThursday10PM = () => {
+    const thursday = new Date(now);
+    const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+    
+    let daysSinceThursday;
+    if (dayOfWeek === 4) { // Thursday
+      daysSinceThursday = 0;
+    } else if (dayOfWeek < 4) { // Sun-Wed
+      daysSinceThursday = dayOfWeek + 3;
+    } else { // Fri-Sat
+      daysSinceThursday = dayOfWeek - 4;
+    }
+    
+    thursday.setDate(now.getDate() - daysSinceThursday);
+    thursday.setHours(22, 0, 0, 0);
+    
+    // If we're before this Thursday 10 PM, use previous Thursday
+    if (now < thursday) {
+      thursday.setDate(thursday.getDate() - 7);
+    }
+    
+    return thursday;
+  };
+  
+  const cutoffThursday = findMostRecentThursday10PM();
+  return now > cutoffThursday;
 };
 
   // const getCorridorTypeRestrictions = (
@@ -1448,6 +1479,9 @@ const isPastThursdayCutoff = () => {
   //   return { urgentOnly, urgentAllowed, message, corridorTypeAllowed };
   // };
 const getCorridorTypeRestrictions = (dateString: string) => {
+  console.log("=== DEBUG getCorridorTypeRestrictions ===");
+  console.log("Selected date:", dateString);
+  
   if (!dateString) {
     return {
       urgentOnly: false,
@@ -1457,34 +1491,128 @@ const getCorridorTypeRestrictions = (dateString: string) => {
     };
   }
 
-  // 1. Urgent logic
+  // Convert to India time (UTC+5:30)
+  const convertToIndiaTime = (date: Date) => {
+    const indiaOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+    return new Date(date.getTime() + indiaOffset);
+  };
+
+  // 1. Urgent logic (fix this too if needed)
   const urgentOnly = isWithinNextTwoDays(dateString);
+  console.log("urgentOnly:", urgentOnly);
 
-  // 2. Calculate diffDays for blocking logic
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // 2. Get today in India time
+  const now = new Date();
+  const todayIndia = convertToIndiaTime(now);
+  todayIndia.setUTCHours(0, 0, 0, 0);
+  console.log("Today (India time):", todayIndia.toISOString());
 
-  const target = new Date(dateString);
-  target.setHours(0, 0, 0, 0);
+  // 3. Get target date in India time
+  const targetUTC = new Date(dateString + "T00:00:00Z"); // Midnight UTC
+  const targetIndia = convertToIndiaTime(targetUTC);
+  targetIndia.setUTCHours(0, 0, 0, 0);
+  console.log("Target (India time):", targetIndia.toISOString());
 
   const diffDays = Math.floor(
-    (target.getTime() - today.getTime()) / (24 * 60 * 60 * 1000)
+    (targetIndia.getTime() - todayIndia.getTime()) / (24 * 60 * 60 * 1000)
   );
+  console.log("diffDays (India time):", diffDays);
 
   // 3. Thursday cutoff check
   const isPastCutoff = isPastThursdayCutoff();
+  console.log("isPastCutoff:", isPastCutoff);
 
-  // 4. After cutoff → block 14–21 (diffDays 3–10)
-  if (isPastCutoff && diffDays >= 3 && diffDays <= 10) {
-    return {
-      urgentOnly: false,
-      urgentAllowed: false,
-      message: "Not a valid date",
-      corridorTypeAllowed: false,
-    };
+  // 4. DYNAMIC LOGIC: Block from (today+3) to (cutoff Thursday + 10 days)
+  if (isPastCutoff) {
+    console.log("PAST CUTOFF - Checking blocked range");
+    
+    // Find cutoff Thursday in India time
+    // const findCutoffThursday = () => {
+    //   const nowIndia = convertToIndiaTime(new Date());
+    //   const thursdayIndia = new Date(nowIndia);
+      
+    //   // Get day of week in India time
+    //   const indiaTimeDay = nowIndia.getUTCDay(); // Sunday = 0, Monday = 1, etc.
+      
+    //   // Calculate days since Thursday (Thursday = 4)
+    //   const daysSinceThursday = indiaTimeDay === 4 ? 0 : 
+    //                            indiaTimeDay < 4 ? indiaTimeDay + 3 : 
+    //                            indiaTimeDay - 4;
+      
+    //   thursdayIndia.setUTCDate(nowIndia.getUTCDate() - daysSinceThursday);
+    //   thursdayIndia.setUTCHours(16, 30, 0, 0); // 10 PM India time = 16:30 UTC
+      
+    //   // If we're before Thursday 10 PM this week, use previous Thursday
+    //   if (nowIndia < thursdayIndia) {
+    //     thursdayIndia.setUTCDate(thursdayIndia.getUTCDate() - 7);
+    //   }
+      
+    //   console.log("Cutoff Thursday found (India time):", thursdayIndia.toISOString());
+    //   return thursdayIndia;
+    // };
+const findCutoffThursday = () => {
+  const now = new Date(); // Railway Time (IST)
+
+  const thursday = new Date(now);
+
+  // Sunday = 0 ... Thursday = 4
+  const day = now.getDay();
+
+  const daysSinceThursday =
+    day === 4 ? 0 :
+    day < 4 ? day + 3 :
+    day - 4;
+
+  // Move to Thursday
+  thursday.setDate(now.getDate() - daysSinceThursday);
+
+  // 🔴 Cutoff = 22:00 IST (10 PM Railway Time)
+  thursday.setHours(22, 0, 0, 0);
+
+  // If now is before this week's Thursday 10 PM → go to last Thursday
+  if (now < thursday) {
+    thursday.setDate(thursday.getDate() - 7);
   }
 
-  // 5. Normal output before cutoff
+  console.log("Cutoff Thursday (IST):", thursday.toString());
+  return thursday;
+};
+
+    const cutoffThursday = findCutoffThursday();
+    
+    // Blocked period end = cutoff Thursday + 10 days
+    const blockedEndDate = new Date(cutoffThursday);
+    blockedEndDate.setUTCDate(cutoffThursday.getUTCDate() + 10);
+    blockedEndDate.setUTCHours(23, 59, 59, 999);
+    
+    // Blocked period start = today + 3 days (at midnight India time)
+    const blockedStartDate = new Date(todayIndia);
+    blockedStartDate.setUTCDate(todayIndia.getUTCDate() + 3);
+    blockedStartDate.setUTCHours(0, 0, 0, 0);
+    
+    console.log("Blocked Start Date (India):", blockedStartDate.toISOString());
+    console.log("Blocked End Date (India):", blockedEndDate.toISOString());
+    console.log("Target Date (India):", targetIndia.toISOString());
+    console.log("Target >= BlockedStart?", targetIndia >= blockedStartDate);
+    console.log("Target <= BlockedEnd?", targetIndia <= blockedEndDate);
+    
+    // Check if target date is in the blocked range
+    const isInBlockedRange = targetIndia >= blockedStartDate && targetIndia <= blockedEndDate;
+    console.log("isInBlockedRange:", isInBlockedRange);
+    
+    if (isInBlockedRange) {
+      console.log("BLOCKED: Returning 'Not a valid date'");
+      return {
+        urgentOnly: false,
+        urgentAllowed: false,
+        message: "Not a valid date",
+        corridorTypeAllowed: false,
+      };
+    }
+  }
+
+  // 5. Normal output
+  console.log("NOT BLOCKED: Returning normal/urgent");
   return {
     urgentOnly,
     urgentAllowed: urgentOnly,
@@ -2276,6 +2404,73 @@ if(formData.enggDisconnectionsRequired){
       }
     }
   }, [formData.date]);
+  // Handle date change and corridor type selection logic
+useEffect(() => {
+  console.log("=== DEBUG useEffect for date ===");
+  console.log("formData.date:", formData.date);
+  
+  setErrors((prev: any) =>
+    Object.keys(prev).reduce((newErrors, key) => {
+      if (key !== "date") newErrors[key] = prev[key];
+      return newErrors;
+    }, {} as Record<string, any>)
+  );
+
+  if (!formData.date) {
+    console.log("No date selected");
+    setIsDisabled(true);
+    setValidCorridorType(true);
+    setFormData({ ...formData, corridorTypeSelection: null });
+  } else {
+    // Get corridor type restrictions based on selected date
+    const { urgentOnly, urgentAllowed, corridorTypeAllowed, message } =
+      getCorridorTypeRestrictions(formData.date);
+
+    console.log("Results from getCorridorTypeRestrictions:");
+    console.log("urgentOnly:", urgentOnly);
+    console.log("urgentAllowed:", urgentAllowed);
+    console.log("corridorTypeAllowed:", corridorTypeAllowed);
+    console.log("message:", message);
+
+    if (urgentOnly) {
+      console.log("CASE 1: Urgent only");
+      setIsDisabled(true);
+      setValidCorridorType(true);
+      setFormData({
+        ...formData,
+        corridorTypeSelection: "Urgent Block",
+      });
+    } else if (!corridorTypeAllowed) {
+      console.log("CASE 2: Not a valid date");
+      setIsDisabled(true);
+      setValidCorridorType(false);
+      setFormData({
+        ...formData,
+        corridorTypeSelection: null,
+      });
+      console.log("Setting error for date:", message);
+      setErrors((prev: any) => ({ ...prev, date: message || "Not a valid date" }));
+    } else {
+      console.log("CASE 3: Normal corridor types available");
+      setIsDisabled(false);
+      setValidCorridorType(true);
+      if (
+        formData.corridorTypeSelection === "Urgent Block" &&
+        !urgentAllowed
+      ) {
+        setFormData({
+          ...formData,
+          corridorTypeSelection: null,
+        });
+      }
+    }
+    
+    console.log("Final state after update:");
+    console.log("isDisabled:", isDisabled);
+    console.log("validCorridorType:", validCorridorType);
+    console.log("errors.date:", errors.date);
+  }
+}, [formData.date]);
 
   useEffect(() => {
     setSntDisconnectionChecked(
