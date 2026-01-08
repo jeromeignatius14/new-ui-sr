@@ -782,7 +782,14 @@ const handleDepartmentFilterClick = (
   const filteredBlocks = filteredUpcomingBlocks.filter((block) => {
     if (activeFilter === "approved" && !block.isSanctioned) return false;
     if (activeFilter === "granted" && !block.isGranted) return false;
-    if (activeFilter === "applied" && !block.isApplied) return false;
+    // if (activeFilter === "applied" && !block.isApplied) return false;
+        if (activeFilter === "applied") {
+    if (!(block.isApplied === true && 
+          block.isSanctioned === true && 
+          block.userAcceptanceForSanction === true)) {
+        return false;
+    }
+}
 
     if( activeFilter === "availed" && block.AvailedTimeFrom===null) return false;
   if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false;
