@@ -964,6 +964,14 @@ block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance"
           <p className="text-sm">{request.requestremarks}</p>
         </div>
       )}
+         {request.rejectionRemarks && (
+        <div className="border border-black p-3 mb-4">
+          <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
+            Rejection Remarks
+          </h2>
+          <p className="text-sm">{request.rejectionRemarks}</p>
+        </div>
+      )}  
  {request.tpcRemarks && (
         <div className="border border-black p-3 mb-4">
           <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
