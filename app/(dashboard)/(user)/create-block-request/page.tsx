@@ -1527,29 +1527,56 @@ const getCorridorTypeRestrictions = (dateString: string) => {
     console.log("PAST CUTOFF - Checking blocked range");
     
     // Find cutoff Thursday in India time
-    const findCutoffThursday = () => {
-      const nowIndia = convertToIndiaTime(new Date());
-      const thursdayIndia = new Date(nowIndia);
+    // const findCutoffThursday = () => {
+    //   const nowIndia = convertToIndiaTime(new Date());
+    //   const thursdayIndia = new Date(nowIndia);
       
-      // Get day of week in India time
-      const indiaTimeDay = nowIndia.getUTCDay(); // Sunday = 0, Monday = 1, etc.
+    //   // Get day of week in India time
+    //   const indiaTimeDay = nowIndia.getUTCDay(); // Sunday = 0, Monday = 1, etc.
       
-      // Calculate days since Thursday (Thursday = 4)
-      const daysSinceThursday = indiaTimeDay === 4 ? 0 : 
-                               indiaTimeDay < 4 ? indiaTimeDay + 3 : 
-                               indiaTimeDay - 4;
+    //   // Calculate days since Thursday (Thursday = 4)
+    //   const daysSinceThursday = indiaTimeDay === 4 ? 0 : 
+    //                            indiaTimeDay < 4 ? indiaTimeDay + 3 : 
+    //                            indiaTimeDay - 4;
       
-      thursdayIndia.setUTCDate(nowIndia.getUTCDate() - daysSinceThursday);
-      thursdayIndia.setUTCHours(16, 30, 0, 0); // 10 PM India time = 16:30 UTC
+    //   thursdayIndia.setUTCDate(nowIndia.getUTCDate() - daysSinceThursday);
+    //   thursdayIndia.setUTCHours(16, 30, 0, 0); // 10 PM India time = 16:30 UTC
       
-      // If we're before Thursday 10 PM this week, use previous Thursday
-      if (nowIndia < thursdayIndia) {
-        thursdayIndia.setUTCDate(thursdayIndia.getUTCDate() - 7);
-      }
+    //   // If we're before Thursday 10 PM this week, use previous Thursday
+    //   if (nowIndia < thursdayIndia) {
+    //     thursdayIndia.setUTCDate(thursdayIndia.getUTCDate() - 7);
+    //   }
       
-      console.log("Cutoff Thursday found (India time):", thursdayIndia.toISOString());
-      return thursdayIndia;
-    };
+    //   console.log("Cutoff Thursday found (India time):", thursdayIndia.toISOString());
+    //   return thursdayIndia;
+    // };
+const findCutoffThursday = () => {
+  const now = new Date(); // Railway Time (IST)
+
+  const thursday = new Date(now);
+
+  // Sunday = 0 ... Thursday = 4
+  const day = now.getDay();
+
+  const daysSinceThursday =
+    day === 4 ? 0 :
+    day < 4 ? day + 3 :
+    day - 4;
+
+  // Move to Thursday
+  thursday.setDate(now.getDate() - daysSinceThursday);
+
+  // 🔴 Cutoff = 22:00 IST (10 PM Railway Time)
+  thursday.setHours(22, 0, 0, 0);
+
+  // If now is before this week's Thursday 10 PM → go to last Thursday
+  if (now < thursday) {
+    thursday.setDate(thursday.getDate() - 7);
+  }
+
+  console.log("Cutoff Thursday (IST):", thursday.toString());
+  return thursday;
+};
 
     const cutoffThursday = findCutoffThursday();
     
