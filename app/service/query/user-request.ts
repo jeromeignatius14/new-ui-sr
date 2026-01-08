@@ -21,6 +21,7 @@ export interface RequestResponse {
 }
 
 export interface RequestItem {
+  rejectionRemarks?: string;
   assetName?: any;
   assetNumber?: any;
   engDisconnectionRemarks?: string;
