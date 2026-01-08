@@ -8668,6 +8668,7 @@ export const depot: DepotStructure = {
 
 export const depotOnLocation = {
   "MAS": [
+    "MAS",
     "MASS",
     "BBQ",
     "VPY",
