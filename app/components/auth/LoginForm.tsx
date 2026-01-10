@@ -180,7 +180,7 @@ export default function PhoneLoginForm() {
           type="tel"
           {...register("phone")}
           placeholder="Phone Number"
-          typeof="tel"
+          type="tel"
           disabled={step !== "phone"}
           className="w-full flex-1 bg-[#eeb8f7] text-white font-semibold rounded-xl px-4 py-3 text-2xl focus:outline-none focus:ring-2 focus:ring-purple-400 placeholder-white placeholder:font-bold border-none"
           style={{

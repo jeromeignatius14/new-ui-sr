@@ -1457,6 +1457,7 @@ const hasInProgressBlock = requestsData?.data?.requests?.find(
 
 
           <a href="/generate-reports" className="w-full rounded-full bg-[#ffd180] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">GENERATE REPORTS</a>
+          <a href="/request-table" className="w-full rounded-full bg-[#c7c7f7] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">learning</a>
         </div>
 
         {/* Logout button */}
