@@ -24,6 +24,16 @@ interface FormData {
 
 // Interfaces aligned with the API service
 interface PastBlockSummary {
+  NotAvailedCount?:number;
+  NotGrantedCount?: number;
+  NotSanctionedCount?: number;
+  AvailedCount?: number;
+  GrantedCount?: any;
+  AppliedCount?: number;
+  Applied?: any;
+  PercentSanctioned?: number;
+  ApprovedCount?: number;
+  DemandsCount?: number;
   SectionId?: string;
   Section: string;
   Demanded: number;
@@ -555,22 +565,164 @@ export default function GenerateReportPage() {
                   Section
                 </th>
                 <th className="border px-4 py-2 text-center text-black">
-                  Demanded
+                    <div className="flex flex-col items-center justify-center">
+    {/* First line */}
+    <div>Demanded</div>
+    
+    {/* Second line with icon */}
+    <div className="relative flex items-center justify-center group">
+      (Hrs)/Blocks
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      
+      {/* Tooltip */}
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+        Blocks Demanded by Engg/OHE/S&T
+      </div>
+    </div>
+  </div>
+                </th>
+                 <th className="border px-4 py-2 text-center text-black">
+                    <div className="flex flex-col items-center justify-center">
+    <div>Sanctioned</div>
+    <div className="relative flex items-center justify-center group">
+      (Hrs)/Blocks
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+        Blocks Sanctioned by the Operating Dept.
+      </div>
+    </div>
+  </div>
                 </th>
                 <th className="border px-4 py-2 text-center text-black">
-                  Approved
+                    <div className="flex flex-col items-center justify-center">
+    {/* First line */}
+    <div>% Sanctioned</div>
+    
+    {/* Second line with icon */}
+    <div className="relative flex items-center justify-center group">
+     
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      
+      {/* Tooltip */}
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+       Total Block Sanctioned/Total Blocks Demanded
+      </div>
+    </div>
+  </div>
+                </th>
+
+                <th className="border px-4 py-2 text-center text-black">
+                    <div className="flex flex-col items-center justify-center">
+    <div>Applied</div>
+    <div className="relative flex items-center justify-center group">
+      (Hrs)/Blocks
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+         Sanctioned Blocks applied to a SM from the site by SSE/JE
+      </div>
+    </div>
+  </div>
+                </th>
+                   <th className="border px-4 py-2 text-center text-black">
+                    <div className="flex flex-col items-center justify-center">
+    <div>Granted</div>
+    <div className="relative flex items-center justify-center group">
+      (Hrs)/Blocks
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+        Applied block Granted  by the SM
+      </div>
+    </div>
+  </div>
+                </th>
+                  <th className="border px-4 py-2 text-center text-black">
+                    <div className="flex flex-col items-center justify-center">
+    <div>% Granted</div>
+    <div className="relative flex items-center justify-center group">
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+       Total Blocks Granted / Total Blocks Applied
+      </div>
+    </div>
+  </div>
+                </th>
+                 <th className="border px-4 py-2 text-center text-black">
+                    <div className="flex flex-col items-center justify-center">
+    <div>Availed</div>
+    <div className="relative flex items-center justify-center group">
+      (Hrs)/Blocks
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+        Granted Blocks Availed and Cancelled by SSE/JE
+      </div>
+    </div>
+  </div>
+                </th>
+                  <th className="border px-4 py-2 text-center text-black">
+                    <div className="flex flex-col items-center justify-center">
+    <div>% Availed</div>
+    <div className="relative flex items-center justify-center group">
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+         Total Blocks Availed/Total Block Granted
+      </div>
+    </div>
+  </div>
                 </th>
                 <th className="border px-4 py-2 text-center text-black">
-                  Granted
+                    <div className="flex flex-col items-center justify-center">
+    <div>Not Sanctioned</div>
+    <div className="relative flex items-center justify-center group">
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+        Blocks Not Sanctioned by the Operating Dept.
+      </div>
+    </div>
+  </div>
                 </th>
                 <th className="border px-4 py-2 text-center text-black">
-                  % Granted
+                   <div className="flex flex-col items-center justify-center">
+    <div>Not Granted</div>
+    <div className="relative flex items-center justify-center group">
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+    Applied Blocks not granted by the SM
+      </div>
+    </div>
+  </div>
                 </th>
                 <th className="border px-4 py-2 text-center text-black">
-                  Availed
-                </th>
-                <th className="border px-4 py-2 text-center text-black">
-                  % Availed
+                    <div className="flex flex-col items-center justify-center">
+    <div>Not Availed</div>
+    <div className="relative flex items-center justify-center group">
+      <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
+        i
+      </span>
+      <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+        Granted Blocks rejected by SSE/JE after Sanctioned/Grant
+      </div>
+    </div>
+  </div>
                 </th>
               </tr>
             </thead>
@@ -593,22 +745,43 @@ export default function GenerateReportPage() {
                       </span>
                     </td>
                     <td className="border px-4 py-2 text-center text-black">
-                      {item.Demanded}
+                       {item.Demanded.toFixed(2)} / {item.DemandsCount}
                     </td>
                     <td className="border px-4 py-2 text-center text-black">
-                      {item.Approved}
+                        {item.Approved.toFixed(2)} / {item.ApprovedCount}
                     </td>
                     <td className="border px-4 py-2 text-center text-black">
-                      {item.Granted}
+                        {item.PercentSanctioned !== undefined
+                          ? item.PercentSanctioned.toFixed(2) + "%"
+                          : ""}
                     </td>
                     <td className="border px-4 py-2 text-center text-black">
-                      {item.PercentGranted}%
+                        {item.Applied} /{item.AppliedCount}
                     </td>
                     <td className="border px-4 py-2 text-center text-black">
-                      {item.Availed}
+                          {item.Granted.toFixed(2)} /{item.GrantedCount}
                     </td>
                     <td className="border px-4 py-2 text-center text-black">
-                      {item.PercentAvailed}%
+                      {item.PercentGranted !== undefined
+                          ? item.PercentGranted.toFixed(2) + "%"
+                          : ""}
+                    </td>
+                       <td className="border px-4 py-2 text-center text-black">
+                      {item.Availed.toFixed(2)} / {item.AvailedCount}
+                    </td>
+                      <td className="border px-4 py-2 text-center text-black">
+                      {item.PercentAvailed !== undefined
+                          ? item.PercentAvailed.toFixed(2) + "%"
+                          : ""}
+                    </td>
+                         <td className="border px-4 py-2 text-center text-black">
+                         {item.NotSanctionedCount}
+                    </td>
+                             <td className="border px-4 py-2 text-center text-black">
+                                       {item.NotGrantedCount}
+                    </td>
+                           <td className="border px-4 py-2 text-center text-black">
+                                                  {item.NotAvailedCount}
                     </td>
                   </tr>
                 ))}
@@ -619,48 +792,122 @@ export default function GenerateReportPage() {
                     Total
                   </td>
                   <td className="border px-4 py-2 text-center text-black">
-                    {pastBlockSummary.length > 0
-                      ? pastBlockSummary.reduce(
-                          (sum, item) => sum + item.Demanded,
-                          0
-                        )
-                      : "0"}
+                                 {pastBlockSummary
+                        .reduce((sum, item) => sum + (item.Demanded || 0), 0)
+                        .toFixed(2)}{" "}
+                      /{" "}
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.DemandsCount || 0),
+                        0
+                      )}
                   </td>
                   <td className="border px-4 py-2 text-center text-black">
-                    {pastBlockSummary.length > 0
-                      ? pastBlockSummary.reduce(
-                          (sum, item) => sum + item.Approved,
-                          0
-                        )
-                      : "0"}
+                       {pastBlockSummary
+                        .reduce((sum, item) => sum + (item.Approved || 0), 0)
+                        .toFixed(2)}{" "}
+                      /{" "}
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.ApprovedCount || 0),
+                        0
+                      )}
                   </td>
                   <td className="border px-4 py-2 text-center text-black">
-                    {pastBlockSummary.length > 0
-                      ? pastBlockSummary.reduce(
-                          (sum, item) => sum + item.Granted,
-                          0
-                        )
-                      : "0"}
+                  {(() => {
+    const totalApproved = pastBlockSummary.reduce(
+      (sum, item) => sum + (item.ApprovedCount || 0),
+      0
+    );
+    const totalDemanded = pastBlockSummary.reduce(
+      (sum, item) => sum + (item.DemandsCount || 0),
+      0
+    );
+    return totalDemanded > 0 
+      ? ((totalApproved / totalDemanded) * 100).toFixed(2)
+      : "0.00";
+  })()}%
                   </td>
                   <td className="border px-4 py-2 text-center text-black">
-                    {pastBlockSummary.reduce(
-                      (sum, item) => sum + (item.PercentGranted || 0),
-                      0
-                    )}
+                     {pastBlockSummary
+                        .reduce((sum, item) => sum + (item.Applied || 0), 0)
+                        .toFixed(2)}{" "}
+                      /{" "}
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.AppliedCount || 0),
+                        0
+                      )}
                   </td>
                   <td className="border px-4 py-2 text-center text-black">
-                    {pastBlockSummary.length > 0
-                      ? pastBlockSummary.reduce(
-                          (sum, item) => sum + item.Availed,
-                          0
-                        )
-                      : "0"}
+                      {pastBlockSummary
+                        .reduce((sum, item) => sum + (item.Granted || 0), 0)
+                        .toFixed(2)}{" "}
+                      /{" "}
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.GrantedCount || 0),
+                        0
+                      )}
                   </td>
                   <td className="border px-4 py-2 text-center text-black">
-                    {pastBlockSummary.reduce(
-                      (sum, item) => sum + (item.PercentAvailed || 0),
-                      0
-                    )}
+                                                                                   {(() => {
+    const totalApplied = pastBlockSummary.reduce(
+      (sum, item) => sum + (item.AppliedCount || 0),
+      0
+    );
+    const totalGranted = pastBlockSummary.reduce(
+      (sum, item) => sum + (item.GrantedCount || 0),
+      0
+    );
+    return totalApplied > 0 
+      ? ((totalGranted / totalApplied) * 100).toFixed(2)
+      : "0.00";
+  })()}%
+                  </td>
+
+
+                                    <td className="border px-4 py-2 text-center text-black">
+     {pastBlockSummary
+                        .reduce((sum, item) => sum + (item.Availed || 0), 0)
+                        .toFixed(2)}{" "}
+                      /{" "}
+                      {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.AvailedCount || 0),
+                        0
+                      )}
+                  </td>
+
+
+                                                   <td className="border px-4 py-2 text-center text-black">
+                                                                                         {(() => {
+    const totalAvailed = pastBlockSummary.reduce(
+      (sum, item) => sum + (item.AvailedCount || 0),
+      0
+    );
+    const totalGranted = pastBlockSummary.reduce(
+      (sum, item) => sum + (item.GrantedCount || 0),
+      0
+    );
+    return totalAvailed > 0 
+      ? ((totalAvailed / totalGranted) * 100).toFixed(2)
+      : "0.00";
+  })()}%
+                  </td>
+                                                                  <td className="border px-4 py-2 text-center text-black">
+    {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.NotSanctionedCount || 0),
+                        0
+                      )}
+                  </td>
+
+                                                                                    <td className="border px-4 py-2 text-center text-black">
+   {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.NotGrantedCount || 0),
+                        0
+                      )}
+                  </td>
+                                                                                                      <td className="border px-4 py-2 text-center text-black">
+  {pastBlockSummary.reduce(
+                        (sum, item) => sum + (item.NotAvailedCount || 0),
+                        0
+                      )}
                   </td>
                 </tr>
               )}
