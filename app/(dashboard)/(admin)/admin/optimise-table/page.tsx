@@ -318,11 +318,11 @@ useEffect(() => {
     }
   }
 }, [searchParams]);
-useEffect(() => {
-  const params = new URLSearchParams();
-  params.set("date", format(currentWeekStart, "yyyy-MM-dd"));
-  router.push(`?${params.toString()}`, { scroll: false });
-}, [currentWeekStart, router]);
+// useEffect(() => {
+//   const params = new URLSearchParams();
+//   params.set("date", format(currentWeekStart, "yyyy-MM-dd"));
+//   router.push(`?${params.toString()}`, { scroll: false });
+// }, [currentWeekStart, router]);
 
   // Edit state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -354,6 +354,14 @@ useEffect(() => {
 const [sanctionRemark, setSanctionRemark] = useState("");
 const [selectedRequestsForSanction, setSelectedRequestsForSanction] = useState<UserRequest[]>([]);
   // Update URL when deptFilter changes
+  // useEffect(() => {
+  //   // Only update URL if dept filter changes to something other than ALL
+  //   if (deptFilter !== 'ALL') {
+  //     const params = new URLSearchParams(searchParams.toString());
+  //     params.set("dept", encodeURIComponent(deptFilter));
+  //     router.push(`?${params.toString()}`, { scroll: false });
+  //   }
+  // }, [deptFilter, router, searchParams]);
   useEffect(() => {
     // Only update URL if dept filter changes to something other than ALL
     if (deptFilter !== 'ALL') {
@@ -361,7 +369,7 @@ const [selectedRequestsForSanction, setSelectedRequestsForSanction] = useState<U
       params.set("dept", encodeURIComponent(deptFilter));
       router.push(`?${params.toString()}`, { scroll: false });
     }
-  }, [deptFilter, router, searchParams]);
+  }, []);
 
   // Helper function to check if request matches time slot
   const matchesTimeSlot = (request: UserRequest): boolean => {
