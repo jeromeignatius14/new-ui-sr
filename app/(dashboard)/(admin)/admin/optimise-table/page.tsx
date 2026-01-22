@@ -549,7 +549,7 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
   reqDate.setHours(0, 0, 0, 0);
 
   // Include requests for today and future dates
-  return reqDate 
+  return reqDate >= today;
   });
 
 
