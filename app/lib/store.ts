@@ -5105,13 +5105,13 @@ export const depot: DepotStructure = {
   "TJ-KIK": {
     'TRD': ["TJ", "TVR","KIK"],
     'S&T': ["TJ", "KIK", "TVR"],
-    'ENGG': ["TJ", "A-TVR","BRI-TPJ"]
+    'ENGG': ["TJ", "A-TVR","BRI-TPJ","TVR"]
   },
 
   "MV-TVR": {
     'TRD': ["MV", "TVR"],
     'S&T': ["MV", "TVR"],
-    'ENGG': ["MV", "B-TVR","BRI-TPJ"]
+    'ENGG': ["MV","TVR","B-TVR","BRI-TPJ"]
   },
 
   "NMJ-MQ": {
