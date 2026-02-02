@@ -885,7 +885,8 @@ export default function RequestTablePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFDF5] max-w-[1366px] mx-auto px-2 relative ">
+    // <div className="min-h-screen bg-[#FFFDF5] max-w-[1366px] mx-auto px-2 relative ">
+    <div className="min-h-screen bg-[#FFFDF5] w-full px-2 relative">
       {showRejectReasonPopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md border border-gray-300">
@@ -1879,7 +1880,8 @@ export default function RequestTablePage() {
           </h3>
         </div>
 
-        <div className="max-w-[1366px] mx-auto px-2">
+        {/* <div className="max-w-[1366px] mx-auto px-2"> */}
+        <div className="w-full px-2">
           <div className="flex justify-center items-center gap-4 mb-4  py-3 w-full rounded-lg">
             <div className="flex items-center gap-4 flex-wrap justify-center">
               <div className="flex items-center gap-1">{" "} {/* Added this container */}
