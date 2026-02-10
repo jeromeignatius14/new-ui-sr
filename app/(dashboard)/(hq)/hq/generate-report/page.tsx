@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useGenerateReport } from "@/app/service/query/drm";
 import { useSession } from "next-auth/react";
+import formatTime from "@/app/utils/formatTime";
 
 interface OptionType {
   value: string;
@@ -49,7 +50,9 @@ interface PastBlockSummary {
   MissionBlockCount?: number;
 }
 
-interface DetailedData {
+interface UpcomingBlock {
+  Department?: string;
+  overAllStatus?: string;
   selectedDepo?: string;
   id?: any;
   Activity?: string;
@@ -59,6 +62,16 @@ interface DetailedData {
   Duration: number;
   Type: string;
   Status: string;
+  DemandedTimeFrom?: any;
+  DemandedTimeTo?: any;
+}
+
+interface DetailedData extends UpcomingBlock {
+  selectedDepartment: string;
+  AvailedTimeFrom: string;
+  AvailedTimeTo: any;
+  SanctionedTimeFrom: string;
+  SanctionedTimeTo: any;
 }
 
 const locationOptions: OptionType[] = [
@@ -145,7 +158,7 @@ const [displayEndDate, setDisplayEndDate] = useState<string>("");
       console.log("Set pastBlockSummary to:", pastData);
 
       // Set the detailed data directly
-      const detailedData = reportData.data.detailedData || [];
+      const detailedData = (reportData.data.detailedData || []) as DetailedData[];
       setUpcomingBlocks(detailedData);
       console.log("Set upcomingBlocks to:", detailedData);
 
@@ -951,26 +964,43 @@ Department: {selectedDepartments.join(", ")}
           <table className="min-w-full bg-white">
             <thead>
               <tr className="bg-[#e49edd]">
+
+
+    <th className="border px-4 py-2 text-center text-black">
+                  RequestId
+                </th>
+
+
+
                 <th className="border px-4 py-2 text-center text-black">
                   Date
                 </th>
+
+
+                    <th className="border px-4 py-2 text-center text-black">
+                  Department
+                </th>
+
                 <th className="border px-4 py-2 text-left text-black">
-                  Section
+                  Block Section
                 </th>
                 <th className="border px-4 py-2 text-left text-black">
-                  Depo
+                  Depot
                 </th>
-                <th className="border px-4 py-2 text-center text-black">
-                  DivisionId
+                  <th className="border px-4 py-2 text-center text-black">
+                  Type
                 </th>
                 <th className="border px-4 py-2 text-center text-black">
                   Activity
                 </th>
                 <th className="border px-4 py-2 text-center text-black">
-                  Duration (Hours)
+                  Demanded time
                 </th>
-                <th className="border px-4 py-2 text-center text-black">
-                  Type
+               <th className="border px-4 py-2 text-center text-black">
+                  Sanctioned time
+                </th>
+                 <th className="border px-4 py-2 text-center text-black">
+                  Availed time
                 </th>
                 <th className="border px-4 py-2 text-center text-black">
                   Status
@@ -986,39 +1016,71 @@ Department: {selectedDepartments.join(", ")}
                       index % 2 === 0 ? "bg-[#f4dcf1]" : "bg-white"
                     } hover:bg-gray-50 transition-colors text-black `}
                   >
+
+                         <td className="border px-4 py-2 text-center text-black">
+                       {/* <Link
+                            href={`/hq/view-request/${block.id}?from=generate-report`}
+                            className="block w-full h-full text-blue-600 font-medium underline"
+                          >
+                            {block.DivisionId}
+                          </Link> */}
+                          <span className="block w-full h-full text-blue-600 font-medium underline">{block.DivisionId}</span>
+                    </td>
                     <td className="border px-4 py-2 text-center text-black">
                       {block.Date}
                     </td>
+
+                      <td className="border px-4 py-2 text-center text-black">
+                      {block.selectedDepartment}
+                    </td>
                     <td
-                      className="border px-4 py-2 cursor-pointer hover:bg-purple-100"
-                      onClick={() => handleSectionClick(block.Section)}
+                      className="border px-4 py-2 text-center text-black"
                     >
-                      <span className="text-blue-600 font-medium underline">
                         {block.Section}
-                      </span>
                     </td>
                          <td className="border px-4 py-2 text-center text-black">
                     
                       {block.selectedDepo}
                      
                     </td>
-                    <td className="border px-4 py-2 text-center text-black">
-                    
-                      {block.DivisionId}
-                     
+                 <td className="border px-4 py-2 text-center text-black">
+                      {block.Type}
                     </td>
                     <td className="border px-4 py-2 text-center text-black">
                       {block.Activity}
                     </td>
                     <td className="border px-4 py-2 text-center text-black">
-                      {(Number(block.Duration) < 0 
-    ? 24 + Number(block.Duration) 
-    : Number(block.Duration)
-  ).toFixed(2)}
+  {block.DemandedTimeFrom && block.DemandedTimeTo ? (
+                            <>
+                              {formatTime(block.DemandedTimeFrom)} to{" "}
+                              {formatTime(block.DemandedTimeTo)}
+                            </>
+                          ) : (
+                            "Not Availed Yet"
+                          )}
 
                     </td>
-                    <td className="border px-4 py-2 text-center text-black">
-                      {block.Type}
+                                     <td className="border px-4 py-2 text-center text-black">
+   {block.SanctionedTimeFrom && block.SanctionedTimeTo ? (
+                            <>
+                              {formatTime(block.SanctionedTimeFrom)} to{" "}
+                              {formatTime(block.SanctionedTimeTo)}
+                            </>
+                          ) : (
+                            "Not Availed Yet"
+                          )}
+
+                    </td>
+                                       <td className="border px-4 py-2 text-center text-black">
+   {block.AvailedTimeFrom && block.AvailedTimeTo ? (
+                            <>
+                              {formatTime(block.AvailedTimeFrom)} to{" "}
+                              {formatTime(block.AvailedTimeTo)}
+                            </>
+                          ) : (
+                            "Not Availed Yet"
+                          )}
+
                     </td>
                     <td
                       className={`border px-4 py-2 text-center ${
@@ -1034,7 +1096,7 @@ Department: {selectedDepartments.join(", ")}
                       <span
                         className={`px-3 py-1 rounded-full text-sm font-medium `}
                       >
-                        {block.Status}
+                        {block.overAllStatus}
                       </span>
                     </td>
                   </tr>
