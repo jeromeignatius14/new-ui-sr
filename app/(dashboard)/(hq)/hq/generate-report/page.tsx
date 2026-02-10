@@ -50,6 +50,7 @@ interface PastBlockSummary {
 }
 
 interface DetailedData {
+  selectedDepo?: string;
   id?: any;
   Activity?: string;
   DivisionId?: string;
@@ -241,7 +242,8 @@ setDisplayEndDate(formattedEndDate);
   };
 
   return (
-    <div className="max-w-7xl mx-auto bg-white">
+    // <div className="max-w-7xl mx-auto bg-white">
+    <div className="w-full min-h-screen bg-white">
       <div className="bg-yellow-100 text-center pt-3 rounded-t-md">
         <h1 className="text-3xl font-bold text-purple-600">
 
@@ -955,6 +957,9 @@ Department: {selectedDepartments.join(", ")}
                 <th className="border px-4 py-2 text-left text-black">
                   Section
                 </th>
+                <th className="border px-4 py-2 text-left text-black">
+                  Depo
+                </th>
                 <th className="border px-4 py-2 text-center text-black">
                   DivisionId
                 </th>
@@ -991,6 +996,11 @@ Department: {selectedDepartments.join(", ")}
                       <span className="text-blue-600 font-medium underline">
                         {block.Section}
                       </span>
+                    </td>
+                         <td className="border px-4 py-2 text-center text-black">
+                    
+                      {block.selectedDepo}
+                     
                     </td>
                     <td className="border px-4 py-2 text-center text-black">
                     
