@@ -1018,13 +1018,12 @@ Department: {selectedDepartments.join(", ")}
                   >
 
                          <td className="border px-4 py-2 text-center text-black">
-                       {/* <Link
+                       <Link
                             href={`/hq/view-request/${block.id}?from=generate-report`}
                             className="block w-full h-full text-blue-600 font-medium underline"
                           >
                             {block.DivisionId}
-                          </Link> */}
-                          <span className="block w-full h-full text-blue-600 font-medium underline">{block.DivisionId}</span>
+                          </Link>
                     </td>
                     <td className="border px-4 py-2 text-center text-black">
                       {block.Date}
