@@ -1017,13 +1017,16 @@ Department: {selectedDepartments.join(", ")}
                     } hover:bg-gray-50 transition-colors text-black `}
                   >
 
-                         <td className="border px-4 py-2 text-center text-black">
+                         {/* <td className="border px-4 py-2 text-center text-black">
                        <Link
                             href={`/hq/view-request/${block.id}?from=generate-report`}
                             className="block w-full h-full text-blue-600 font-medium underline"
                           >
                             {block.DivisionId}
                           </Link>
+                    </td> */}
+                        <td className="border px-4 py-2 text-center text-black">
+                      {block.DivisionId}
                     </td>
                     <td className="border px-4 py-2 text-center text-black">
                       {block.Date}
