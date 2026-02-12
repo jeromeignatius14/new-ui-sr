@@ -2154,12 +2154,34 @@ const handleOptimize = async () => {
             >
               Sanction
             </button>
-                        <button
+                        {/* <button
                           className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
                           onClick={() => setModifyReturnOpenId(request.id)}
                         >
                           Modify/Return
-                        </button>
+                        </button> */}
+                                            <button
+  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+  onClick={() => {
+    setEditingId(request.id);
+    setEditDate(request.date.split("T")[0]);
+    setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
+    setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
+
+    setModifyReturnOpenId(null);
+  }}
+>
+  Modify
+</button>
+        <button
+          className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
+          onClick={() => {
+            handleRejectClick(request.id);
+            setModifyReturnOpenId(null);
+          }}
+        >
+          Return
+        </button>
                       </>
                     )}
                   </>
@@ -2504,12 +2526,34 @@ className={`transition-colors ${
             >
               Sanction
             </button>
-            <button
+            {/* <button
               className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
               onClick={() => setModifyReturnOpenId(request.id)}
             >
               Modify/Return
-            </button>
+            </button> */}
+                    <button
+  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+  onClick={() => {
+    setEditingId(request.id);
+    setEditDate(request.date.split("T")[0]);
+    setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
+    setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
+
+    setModifyReturnOpenId(null);
+  }}
+>
+  Modify
+</button>
+        <button
+          className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
+          onClick={() => {
+            handleRejectClick(request.id);
+            setModifyReturnOpenId(null);
+          }}
+        >
+          Return
+        </button>
           </>
         )}
       </>
@@ -2886,12 +2930,34 @@ className={`transition-colors ${
             >
               Sanction
             </button>
-            <button
+            {/* <button
               className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
               onClick={() => setModifyReturnOpenId(request.id)}
             >
               Modify/Return
-            </button>
+            </button> */}
+                                <button
+  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+  onClick={() => {
+    setEditingId(request.id);
+    setEditDate(request.date.split("T")[0]);
+    setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
+    setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
+
+    setModifyReturnOpenId(null);
+  }}
+>
+  Modify
+</button>
+        <button
+          className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
+          onClick={() => {
+            handleRejectClick(request.id);
+            setModifyReturnOpenId(null);
+          }}
+        >
+          Return
+        </button>
           </>
         )}
       </>
@@ -3202,12 +3268,34 @@ className={`transition-colors ${
             >
               Sanction
             </button>
-            <button
+            {/* <button
               className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
               onClick={() => setModifyReturnOpenId(request.id)}
             >
               Modify/Return
-            </button>
+            </button> */}
+                                <button
+  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+  onClick={() => {
+    setEditingId(request.id);
+    setEditDate(request.date.split("T")[0]);
+    setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
+    setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
+
+    setModifyReturnOpenId(null);
+  }}
+>
+  Modify
+</button>
+        <button
+          className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
+          onClick={() => {
+            handleRejectClick(request.id);
+            setModifyReturnOpenId(null);
+          }}
+        >
+          Return
+        </button>
           </>
         )}
       </>
