@@ -1288,7 +1288,7 @@ export const depotOnLocation = {
     "TSI", "TEN", "TIP", "KDNL", "RJPM", "TVN", "NZT", "ASD", "GDN", "CTND", "SVV", "SUX",
     "TCN", "SQD", "KAL", "SMD", "TAY", "ANY", "SDNR", "KRUR", "PNGI", "SCT", "SVGA", "VEL",
     "SVKS", "KRMG", "API", "DG", "ODC", "CHPT", "PLNI", "PPTR", "MVRD", "UDT", "GMGM", "TN",
-    "KLS","VPT", "NKK", "TCH","KFC","VDM","AYR","VPJ","MPA","TMP","CVP","PUG",
+    "KLS","VPT", "NKK", "TCH","KFC","VDM","AYR","VPJ","MPA","TMP","CVP","PUG","APK"
   ],
   MAS: [
     "MS", "MPK", "MSB", "VLCY", "WST", "RPM", "TNPM", "MTMY", "MCPK", "MLMR", "TZD", "OLA",
