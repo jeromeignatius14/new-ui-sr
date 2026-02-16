@@ -780,6 +780,7 @@ function MultiSelectDepot({
           {/* Dropdown to Add More Depots */}
           {!disabled && availableDepots.length > 0 && (
             <select
+            disabled={selectedDepots.length >= 2}
               onChange={(e) => {
                 if (e.target.value) {
                   handleAddDepot(e.target.value);
@@ -790,7 +791,7 @@ function MultiSelectDepot({
               defaultValue=""
             >
               <option value="" disabled>
-                Add more depots...
+                {selectedDepots.length >= 2 ? "Maximum depots reached" : "Add more depots..."}
               </option>
               {availableDepots
                 .filter(depotOption => !selectedDepots.includes(depotOption))
