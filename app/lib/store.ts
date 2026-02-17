@@ -2192,7 +2192,8 @@ export const depotOnLocation = {
     "AAM", "SRR", "VNB", "OTP", "MAJN", "LDY", "MNUR", "FK", "KRKD", "MAQ", "KUL", "NIL",
     "NTVT", "PLL", "MJS", "NLE", "WH", "CLT", "ULL", "QLD", "ETR", "PGT", "ETMD", "KJKD",
     "CLMD", "MDKI", "MMDA", "CNV", "KLGD", "PDGM", "MXM", "KTKU", "PNMB", "PGTN", "POY",
-    "padil", "WRA","PTB"
+    "padil", "WRA","PTB","JOKT","KQK","CHV","PAZ","VAPM","CS","TLY","BDJ","KN","TA","TUA",
+    "SRR-A","KMQ","KGQ","KZE","PAY","KPQ","CAN","ETK","MHE","TKT","PGI","TIR","PUM","SRR-B"
   ],
   TVC: [
     "AAY", "NCJ", "AFK", "ALLP", "AMPA", "AWY", "CAPE", "CGV", "CHPD", "CKI", "CNGR", "ERL",
