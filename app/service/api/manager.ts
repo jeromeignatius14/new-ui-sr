@@ -33,6 +33,7 @@ export interface UsersResponse {
 }
 
 export interface UserRequest {
+    DisconnAccceptance: string;
     Draft: boolean;
     tpcRemarks?: string;
     enggDisconnectionsRequired: boolean | undefined;

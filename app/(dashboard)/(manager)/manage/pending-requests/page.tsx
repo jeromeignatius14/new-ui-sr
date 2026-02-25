@@ -138,7 +138,8 @@ const pendingDisconnectionRequests =
       
       const isTodayOrFuture = requestDate >= today;
     //   return isPending && isManagerPending && hasDisconnection && deptMatch;
-      return  hasDisconnection && deptMatch&&isTodayOrFuture;
+    const isNotRejected = r.DisconnAcceptance !== 'REJECTED';
+      return  hasDisconnection && deptMatch&&isTodayOrFuture && isNotRejected;
 
     })
     .sort((a: UserRequest, b: UserRequest) => {
