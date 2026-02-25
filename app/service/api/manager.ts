@@ -33,6 +33,7 @@ export interface UsersResponse {
 }
 
 export interface UserRequest {
+    DisconnAccceptance: string;
     allEnggAcceptance: string;
     allSntAcceptance: string;
     allTrdAcceptance: string;
