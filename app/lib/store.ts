@@ -1830,7 +1830,7 @@ export let blockSection = {
     "VARD-KRPP", "KRPP-ETM", "ETM-KTYM", "KTYM-CGV", "CGV-CGY",
     "CGY-TRVL", "TRVL-CNGR", "CNGR-MVLK", "MVLK-KYJ",
     "ERS-YD","ERSC-YD","ERSD-YD", "TRTR-YD", "MNTT-YD", "PVRD-YD", "VARD-YD", "KRPP-YD", "ETM-YD",
-    "KTYM-YD", "CGV-YD", "CGY-YD", "TVRL-YD", "CNGR-YD", "MVLK-YD", "KYJ-YD"
+    "KTYM-YD", "CGV-YD", "CGY-YD", "TRVL-YD", "CNGR-YD", "MVLK-YD", "KYJ-YD"
   ],
   "ERS-ALLP-KYJ": [
     "ERS-KUMM", "KUMM-TUVR", "TUVR-SRTL", "SRTL-MAKM", "MAKM-ALLP",
@@ -2229,7 +2229,7 @@ export const streamData = {
     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
     "both direction not affected": []
   },
-  "TVRL-YD": {
+  "TRVL-YD": {
     "up direction affected": [],
     "down direction affected": [],
     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
@@ -2784,7 +2784,7 @@ export const depotOnLocation = {
     "ERSC", "ERM", "GUV", "ERN", "HAD", "IJK", "KLMR", "KPY", "KRPP", "KTYM", "KUC", "IPN",
     "KUMM", "KYJ", "KZK", "KZT", "MAKM", "MGK", "MP", "MQU", "MVLK", "NNN", "NYY", "OCR",
     "OLR", "PASA", "PNQ", "PRND", "QLN", "PUK", "PVRD", "PVU", "SRTL", "STKT", "TCR", "TRTR",
-    "TUVR", "TVCS", "VARD", "VLY", "VTK", "WKI", "IPL", "CGY", "KVU", "ERS/D", "MNTT", "ERS",
+    "TUVR", "TVCS", "VARD", "VLY", "VTK", "WKI", "IPL", "CGY", "KVU", "ERSD", "MNTT", "ERS",
     "TVC", "NPK", "ETM", "TVCN", "VAK", "QIN", "NJT", "TRVL"
   ],
   TPJ: [
