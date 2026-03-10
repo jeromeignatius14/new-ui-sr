@@ -5132,7 +5132,7 @@ export const depot: DepotStructure = {
     'ENGG': ["TNM", "VLR","BRI-TPJ","VM"]
   },
 
-  "CUP J-VRI": {
+  "CUPJ-VRI": {
     'TRD': ["CUPJ", "VRI"],
     'S&T': ["CUPJ", "VRI-B"],
     'ENGG': ["BVR","BRI-TPJ","VRI-B"]
@@ -6604,54 +6604,54 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
   },
   "VM-MV": {
     "VM-SXR": {
-      "S&T": "CUP J",
+      "S&T": "CUPJ",
       "TRD": "VM",
-      "ENGG": "CUP J"
+      "ENGG": "CUPJ"
     },
     "SXR-TUY": {
-      "S&T": "CUP J",
+      "S&T": "CUPJ",
       "TRD": "VM",
-      "ENGG": "CUP J"
+      "ENGG": "CUPJ"
     },
     "TUY-PRT": {
-      "S&T": "CUP J",
-      "TRD": "CUP J",
-      "ENGG": "CUP J"
+      "S&T": "CUPJ",
+      "TRD": "CUPJ",
+      "ENGG": "CUPJ"
     },
     "PRT-MBU": {
-      "S&T": "CUP J",
-      "TRD": "CUP J",
-      "ENGG": "CUP J"
+      "S&T": "CUPJ",
+      "TRD": "CUPJ",
+      "ENGG": "CUPJ"
     },
     "MBU-NPM": {
-      "S&T": "CUP J",
-      "TRD": "CUP J",
-      "ENGG": "CUP J"
+      "S&T": "CUPJ",
+      "TRD": "CUPJ",
+      "ENGG": "CUPJ"
     },
     "NPM-TDPR": {
-      "S&T": "CUP J",
-      "TRD": "CUP J",
-      "ENGG": "CUP J"
+      "S&T": "CUPJ",
+      "TRD": "CUPJ",
+      "ENGG": "CUPJ"
     },
     "TDPR-CUPJ": {
-      "S&T": "CUP J",
-      "TRD": "CUP J",
-      "ENGG": "CUP J"
+      "S&T": "CUPJ",
+      "TRD": "CUPJ",
+      "ENGG": "CUPJ"
     },
     "CUPJ-ALP": {
-      "S&T": "CUP J",
-      "TRD": "CUP J",
-      "ENGG": "CUP J"
+      "S&T": "CUPJ",
+      "TRD": "CUPJ",
+      "ENGG": "CUPJ"
     },
     "ALP-PUC": {
-      "S&T": "CUP J",
-      "TRD": "CUP J",
-      "ENGG": "CUP J"
+      "S&T": "CUPJ",
+      "TRD": "CUPJ",
+      "ENGG": "CUPJ"
     },
 
     "PUC-KII": {
       "S&T": "MV",
-      "TRD": "CUP J",
+      "TRD": "CUPJ",
       "ENGG": "MV"
     },
     "KII-CDM": {
@@ -6691,53 +6691,53 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
       "ENGG": "VM"
     },
     "SXR-YD": {
-      "S&T": "CUP J",
+      "S&T": "CUPJ",
       "TRD": "VM",
-      "ENGG": "CUP J"
+      "ENGG": "CUPJ"
     },
     "TUY-YD": {
-      "S&T": "CUP J",
-      "TRD": "CUP J",
-      "ENGG": "CUP J"
+      "S&T": "CUPJ",
+      "TRD": "CUPJ",
+      "ENGG": "CUPJ"
     },
     "PRT-YD": {
-      "S&T": "CUP J",
-      "TRD": "CUP J",
-      "ENGG": "CUP J"
+      "S&T": "CUPJ",
+      "TRD": "CUPJ",
+      "ENGG": "CUPJ"
     },
     "MBU-YD": {
-      "S&T": "CUP J",
-      "TRD": "CUP J",
-      "ENGG": "CUP J"
+      "S&T": "CUPJ",
+      "TRD": "CUPJ",
+      "ENGG": "CUPJ"
     },
     "NPM-YD": {
-      "S&T": "CUP J",
-      "TRD": "CUP J",
-      "ENGG": "CUP J"
+      "S&T": "CUPJ",
+      "TRD": "CUPJ",
+      "ENGG": "CUPJ"
     },
     "TDPR-YD": {
-      "S&T": "CUP J",
-      "TRD": "CUP J",
-      "ENGG": "CUP J"
+      "S&T": "CUPJ",
+      "TRD": "CUPJ",
+      "ENGG": "CUPJ"
     },
     "CUPJ-YD": {
-      "S&T": "CUP J",
-      "TRD": "CUP J",
-      "ENGG": "CUP J"
+      "S&T": "CUPJ",
+      "TRD": "CUPJ",
+      "ENGG": "CUPJ"
     },
     "ALP-YD": {
-      "S&T": "CUP J",
-      "TRD": "CUP J",
-      "ENGG": "CUP J"
+      "S&T": "CUPJ",
+      "TRD": "CUPJ",
+      "ENGG": "CUPJ"
     },
     "PUC-YD": {
-      "S&T": "CUP J",
-      "TRD": "CUP J",
-      "ENGG": "CUP J"
+      "S&T": "CUPJ",
+      "TRD": "CUPJ",
+      "ENGG": "CUPJ"
     },
     "KII-YD": {
       "S&T": "MV",
-      "TRD": "CUP J",
+      "TRD": "CUPJ",
       "ENGG": "MV"
     },
     "CDM-YD": {
@@ -7255,20 +7255,20 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
     }
   },
   
-  "CUP J-VRI": {
-      "CUP J-KJPD": {
+  "CUPJ-VRI": {
+      "CUPJ-KJPD": {
         "S&T": "VRI-B",
-        "TRD": "CUP J",
+        "TRD": "CUPJ",
         "ENGG": "B-VRI"
       },
       "KJPD-VLU": {
         "S&T": "VRI-B",
-        "TRD": "CUP J",
+        "TRD": "CUPJ",
         "ENGG": "B-VRI"
       },
       "VLU-NVL": {
         "S&T": "VRI-B",
-        "TRD": "CUP J",
+        "TRD": "CUPJ",
         "ENGG": "B-VRI"
       },
       "NVL-UMG": {
@@ -7283,18 +7283,18 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
       },
 
       "CUPJ-YD": {
-        "S&T": "CUP J",
-        "TRD": "CUP J",
-        "ENGG": "CUP J"
+        "S&T": "CUPJ",
+        "TRD": "CUPJ",
+        "ENGG": "CUPJ"
       },
       "KJPD-YD": {
         "S&T": "VRI-B",
-        "TRD": "CUP J",
+        "TRD": "CUPJ",
         "ENGG": "B-VRI"
       },
       "VLU-YD": {
         "S&T": "VRI-B",
-        "TRD": "CUP J",
+        "TRD": "CUPJ",
         "ENGG": "B-VRI"
       },
       "NVL-YD": {
