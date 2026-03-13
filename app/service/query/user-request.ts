@@ -107,49 +107,67 @@ export interface RequestItem {
         stream?: string;
         road?: string;
         otherRoads?: string;
-      }[]
-    | null;
-  routeFrom: string | null;
-  routeTo: string | null;
-  userId: string;
-  managerAcceptance: boolean;
-  DisconnAcceptance: string | null;
-  managerId: string | null;
-  managerResponseTiming: string | null;
-  sntAcceptRemarks: string | null;
-  trdAcceptRemarks: string | null;
-  sanctionedRemarks: string | null;
-  disconnectionRequestRejectRemarks: string | null;
-  remarkByManager: string | null;
-  userResponse: string | null;
-  sntDisconnections:
-    | {
+    }[] | null;
+    routeFrom: string | null;
+    routeTo: string | null;
+    userId: string;
+    managerAcceptance: boolean;
+    DisconnAcceptance: string | null;
+    managerId: string | null;
+    managerResponseTiming: string | null;
+    sntAcceptRemarks: string | null;
+    trdAcceptRemarks: string | null;
+    sanctionedRemarks: string | null;
+    disconnectionRequestRejectRemarks: string | null;
+    remarkByManager: string | null;
+    user: {
+        id: string;
+        name: string;
+        email: string;
+        role: string;
+    };
+    // Availing flow fields (Site Availing Feature)
+    oheMasFrom?: string | null;
+    oheMasTo?: string | null;
+    trdAvailConcurrences?: {
         depot: string;
         status: "PENDING" | "ACCEPTED" | "REJECTED";
-        approvedAt: string | null;
+        submittedAt: string | null;
         remarks: string | null;
-      }[]
-    | null;
-  trdDisconnections:
-    | {
+    }[] | null;
+    sntAvailConcurrences?: {
         depot: string;
         status: "PENDING" | "ACCEPTED" | "REJECTED";
-        approvedAt: string | null;
+        submittedAt: string | null;
         remarks: string | null;
-      }[]
-    | null;
-    enggDisconnections:
-    | {
+    }[] | null;
+    enggAvailConcurrences?: {
         depot: string;
         status: "PENDING" | "ACCEPTED" | "REJECTED";
-        approvedAt: string | null;
+        submittedAt: string | null;
         remarks: string | null;
-      }[]
-    | null;
-  user: User;
-  rejectedBy: User | null;
-  AvailedTimeFrom: string | null;
-  AvailedTimeTo: string | null;
+    }[] | null;
+    smApprovedTimeFrom?: string | null;
+    smApprovedTimeTo?: string | null;
+    smRemarks?: string | null;
+    smApprovedBy?: string | null;
+    smApprovedAt?: string | null;
+    sseAcceptedSmModification?: boolean | null;
+    availingStartedAt?: string | null;
+    geoCheckPassed?: boolean | null;
+    closureYard?: string | null;
+    closureRemarks?: string | null;
+    closureSubmittedAt?: string | null;
+    smClosureAcknowledgedAt?: string | null;
+    smClosureRemarks?: string | null;
+    smClosureAcknowledgedBy?: string | null;
+    // Time extension fields
+    extensionRequestedTo?: string | null;
+    extensionStatus?: "PENDING" | "APPROVED" | "REJECTED" | null;
+    extensionRemarks?: string | null;
+    smExtensionRemarks?: string | null;
+    smExtensionApprovedAt?: string | null;
+    smExtensionApprovedById?: string | null;
 }
 
 export type User = {

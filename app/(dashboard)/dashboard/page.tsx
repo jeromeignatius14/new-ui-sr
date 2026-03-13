@@ -1444,16 +1444,7 @@ const hasInProgressBlock = requestsData?.data?.requests?.find(
           <a href="/create-block-request" className="w-full rounded-full bg-[#eeb8f7] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">ENTER NEW BLOCK REQUEST</a>
           <a href="/edit-request" className="w-full rounded-full bg-[#aee6f7] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">EDIT/CANCEL PREVIOUS BLOCK REQUESTS</a>
           <a href="/request-table" className="w-full rounded-full bg-[#c7c7f7] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">SUMMARY OF MY BLOCK REQUESTS</a>
-          <a href={`https://smr-dashboard.plattorian.tech/?cugNumber=${session?.user?.phone}&token=W1IU66ZFEBFBF6C1dGmouN6PVyHARQJg`} className="w-full rounded-full bg-[#a6f7a6] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">AVAIL BLOCK AT SITE</a>
-
-{hasInProgressBlock && (
-  <a
-    href={`https://mobile-bms.plattrtechstudio.com/?cugNumber=${session?.user?.phone}&section=MAS-GDR&in-progress=true`}
-    className="w-full rounded-full bg-[#f69697] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition"
-  >
-    Block under progress
-  </a>
-)}
+          <a href="/avail-block" className="w-full rounded-full bg-[#a6f7a6] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">AVAIL BLOCK AT SITE</a>
 
 
           <a href="/generate-reports" className="w-full rounded-full bg-[#ffd180] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">GENERATE REPORTS</a>
@@ -1485,8 +1476,7 @@ if (session?.user?.role === "BOARD_CONTROLLER") {
 }
 
 if (session?.user?.role === "SM") {
-    // window.location.href = "https://smr-dashboard.plattorian.tech/?cugNumber=${session?.user?.phone}&section=MAS-GDR";
-    window.location.href=`https://smr-dashboard.plattorian.tech/?cugNumber=${session?.user?.phone}&stationCode=${session?.user?.depot}&user=SM&token=W1IU66ZFEBFBF6C1dGmouN6PVyHARQJg`
+    window.location.href = "/sm/pending-avails";
 }
   // Custom admin dashboard UI (match manager dashboard style)
   if (session?.user?.role === "ADMIN") {
@@ -1597,29 +1587,6 @@ if (session?.user?.role === "PUNCTUALITY_CONTROLLER") {
 
 
   if (session?.user?.role === "JE") {
-  const handleClick = async () => {
-  if (!session?.user?.phone) {
-    alert("Phone number not available");
-    return;
-  }
-
-  try {
-    const response = await axiosInstance.get("/api/user-request/manager-cug", {
-      params: { cugNumber: session.user.phone },
-    });
-
-    const managerCug = response.data?.data?.managerPhone;
-
-    if (managerCug) {
-      window.location.href = `https://smr-dashboard.plattorian.tech/?cugNumber=${managerCug}&token=W1IU66ZFEBFBF6C1dGmouN6PVyHARQJg`
-    } else {
-      alert("Manager CUG number not found");
-    }
-  } catch (error) {
-    console.error("Error fetching manager phone:", error);
-    alert("Something went wrong while fetching manager CUG.");
-  }
-};
     return (
       <div className="min-h-screen w-full flex flex-col items-center bg-[#fffbe9]">
         {/* Header */}
@@ -1643,19 +1610,9 @@ if (session?.user?.role === "PUNCTUALITY_CONTROLLER") {
         </div>
         {/* Navigation buttons */}
         <div className="flex flex-col gap-8 mt-8 w-full max-w-md items-center">
-          {/* <a href={`rbms://app?cugNumber=${session?.user?.phone}&token=W1IU66ZFEBFBF6C1dGmouN6PVyHARQJg`}>
-
-            <button className="w-72 bg-[#E6E6FA] py-6 rounded-2xl border-4 border-black text-2xl font-bold text-[#13529e] shadow-lg hover:bg-[#B57CF6] hover:text-white transition-colors">
-              AVAIL BLOCK AT SITE
-            </button>
-          </a> */}
-
-          <button
-      onClick={handleClick}
-      className="w-72 bg-[#E6E6FA] py-6 rounded-2xl border-4 border-black text-2xl font-bold text-[#13529e] shadow-lg hover:bg-[#B57CF6] hover:text-white transition-colors"
-    >
-      AVAIL BLOCK AT SITE
-    </button>
+          <a href="/avail-block" className="w-72 bg-[#E6E6FA] py-6 rounded-2xl border-4 border-black text-2xl font-bold text-[#13529e] shadow-lg hover:bg-[#B57CF6] hover:text-white transition-colors text-center">
+            AVAIL BLOCK AT SITE
+          </a>
         </div>
         {/* Logout button */}
         <div className="w-full flex justify-center mt-10 mb-4">
