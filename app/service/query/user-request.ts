@@ -154,6 +154,48 @@ export interface RequestItem {
         email: string;
         role: string;
     };
+    // Availing flow fields (Site Availing Feature)
+    oheMasFrom?: string | null;
+    oheMasTo?: string | null;
+    trdAvailConcurrences?: {
+        depot: string;
+        status: "PENDING" | "ACCEPTED" | "REJECTED";
+        submittedAt: string | null;
+        remarks: string | null;
+    }[] | null;
+    sntAvailConcurrences?: {
+        depot: string;
+        status: "PENDING" | "ACCEPTED" | "REJECTED";
+        submittedAt: string | null;
+        remarks: string | null;
+    }[] | null;
+    enggAvailConcurrences?: {
+        depot: string;
+        status: "PENDING" | "ACCEPTED" | "REJECTED";
+        submittedAt: string | null;
+        remarks: string | null;
+    }[] | null;
+    smApprovedTimeFrom?: string | null;
+    smApprovedTimeTo?: string | null;
+    smRemarks?: string | null;
+    smApprovedBy?: string | null;
+    smApprovedAt?: string | null;
+    sseAcceptedSmModification?: boolean | null;
+    availingStartedAt?: string | null;
+    geoCheckPassed?: boolean | null;
+    closureYard?: string | null;
+    closureRemarks?: string | null;
+    closureSubmittedAt?: string | null;
+    smClosureAcknowledgedAt?: string | null;
+    smClosureRemarks?: string | null;
+    smClosureAcknowledgedBy?: string | null;
+    // Time extension fields
+    extensionRequestedTo?: string | null;
+    extensionStatus?: "PENDING" | "APPROVED" | "REJECTED" | null;
+    extensionRemarks?: string | null;
+    smExtensionRemarks?: string | null;
+    smExtensionApprovedAt?: string | null;
+    smExtensionApprovedById?: string | null;
 }
 export type User = {
   id: string;

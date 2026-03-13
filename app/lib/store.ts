@@ -4702,3 +4702,38 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
 export const sectionsWithAlphanumericSiteLocation = [
 ""
 ];
+
+// ============================================================
+// AVAILING FLOW — STATIC DATA (Site Availing Feature)
+// ============================================================
+
+// Yards available for block closure selection per block section.
+// KEY: Block section name (matches missionBlock or selectedSection values)
+// VALUE: Array of yard codes SM/SSE selects from when closing a block.
+// NOTE: Replace placeholder yard names with actual yard codes from domain team.
+export const blockSectionYards: Record<string, string[]> = {
+  "TVC-NCJ": ["TVC-YD", "NCJ-YD"],
+  "QLN-TVC": ["QLN-YD", "TVC-YD"],
+  "KYJ-QLN": ["KYJ-YD", "QLN-YD"],
+  "NCJ-TEN": ["NCJ-YD", "TEN-YD"],
+  "NCJ-CAPE": ["NCJ-YD", "CAPE-YD"],
+  "SRR-CHTS": ["SRR-YD", "CHTS-YD"],
+  "TCR-GUV": ["TCR-YD", "GUV-YD"],
+  "ERS-KTYM-KYJ": ["ERS-YD", "KTYM-YD", "KYJ-YD"],
+  "ERS-ALLP-KYJ": ["ERS-YD", "ALLP-YD", "KYJ-YD"],
+};
+
+// Status constants for the availing flow.
+// These extend the existing overAllStatus system used on block requests.
+export const AVAIL_STATUS = {
+  APPLIED_FOR_AVAILING: "Applied for Availing",
+  PENDING_CONCURRENCES: "Pending Concurrences",
+  PENDING_SM_APPROVAL: "Pending SM Approval",
+  SM_APPROVED: "SM Approved",
+  SM_TIME_MODIFIED: "SM Time Modified - Pending SSE Confirmation",
+  AVAILING_IN_PROGRESS: "Availing in Progress",
+  BLOCK_BURST: "Block Burst",
+  CLOSURE_SUBMITTED: "Closure Submitted",
+  BLOCK_CLOSED: "Block Closed",
+  AVAILING_CANCELLED: "Cancelled - Availing Declined",
+} as const;
