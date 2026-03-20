@@ -1845,7 +1845,7 @@ export let blockSection = {
   "QLN-TVC": [
     "QLN-PVU", "PVU-VAK", "VAK-KVU", "KVU-MQU", "MQU-KZK",
     "KZK-TVCN", "TVCN-TVC",
-    "QLN-YD", "PVU-YD", "VAK-YD", "KVU-YD", "MQU-YD", "KZK-YD", "KCVL-YD", "TVC-YD"
+    "QLN-YD", "PVU-YD", "VAK-YD", "KVU-YD", "MQU-YD", "KZK-YD", "TVC-YD"
   ],
   "TVC-NCJ": [
     "TVC-TVCS", "TVCS-NYY", "NYY-PASA", "PASA-KZT", "KZT-ERL",
@@ -2359,12 +2359,6 @@ export const streamData = {
     "up direction affected": [],
     "down direction affected": [],
     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
-    "both direction not affected": []
-  },
-  "KCVL-YD": {
-    "up direction affected": [],
-    "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6", "Rd 7"],
     "both direction not affected": []
   },
   "TVC-YD": {
