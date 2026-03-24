@@ -8,6 +8,7 @@ const withPWA = require("next-pwa")({
 
 const nextConfig = withPWA({
   // your config
+  output: 'standalone',
   experimental: {
     appDir: true,
   },
