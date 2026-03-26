@@ -567,28 +567,11 @@ const urgentRequestsFiltered = pendingRequests
     if (!matchesActivity(r)) return false;
     if (!matchesTimeSlot(r)) return false;
 
-    // Handle cases where all three flags are true
-    if (r.powerBlockRequired && r.sntDisconnectionRequired && r.enggDisconnectionsRequired) {
-      return ((r.trdActionsNeeded && r.sigActionsNeeded) || 
-             (r.allTrdAcceptance === "ACCEPTED" && r.allSntAcceptance === "ACCEPTED" && r.allEnggAcceptance === "ACCEPTED"));
-    }
+    // Hide if any required disconnection is still pending
+    if (r.powerBlockRequired && !(r.trdActionsNeeded || r.allTrdAcceptance === "ACCEPTED")) return false;
+    if (r.sntDisconnectionRequired && !(r.sigActionsNeeded || r.allSntAcceptance === "ACCEPTED")) return false;
+    if (r.enggDisconnectionsRequired && r.allEnggAcceptance !== "ACCEPTED") return false;
 
-    // Handle powerBlockRequired case
-    if (r.powerBlockRequired&&((r.enggDisconnectionsRequired===true&&r.allEnggAcceptance === "ACCEPTED")||(r.enggDisconnectionsRequired===false))&&((r.sntDisconnectionRequired===true&&r.allSntAcceptance === "ACCEPTED")||(r.sntDisconnectionRequired===false))) {
-      return r.trdActionsNeeded || r.allTrdAcceptance === "ACCEPTED";
-    }
-
-    // Handle enggDisconnectionsRequired case
-    if (r.enggDisconnectionsRequired&&((r.powerBlockRequired===true&&r.allTrdAcceptance === "ACCEPTED")||(r.powerBlockRequired===false))&&((r.sntDisconnectionRequired===true&&r.allSntAcceptance === "ACCEPTED")||(r.sntDisconnectionRequired===false))) {
-      return r.allEnggAcceptance === "ACCEPTED";
-    }
-
-    // Handle sntDisconnectionRequired case
-    if (r.sntDisconnectionRequired&&((r.powerBlockRequired===true&&r.allTrdAcceptance === "ACCEPTED")||(r.powerBlockRequired===false))&&((r.enggDisconnectionsRequired===true&&r.allEnggAcceptance === "ACCEPTED")||(r.enggDisconnectionsRequired===false))) {
-      return r.sigActionsNeeded || r.allSntAcceptance === "ACCEPTED";
-    }
-
-    // If neither special flag is true, just return the urgent status
     return true;
   })
   .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -621,39 +604,11 @@ const urgentRequestsFiltered = pendingRequests
     const allTrdAcceptance = r.allTrdAcceptance === "ACCEPTED";
     const allEnggAcceptance = r.allEnggAcceptance === "ACCEPTED";
 
-    // Handle cases where all three flags are true - FIXED PARENTHESES
-    if (r.powerBlockRequired && r.sntDisconnectionRequired && r.enggDisconnectionsRequired) {
-      return (r.trdActionsNeeded && r.sigActionsNeeded) || (allTrdAcceptance && allSntAcceptance && allEnggAcceptance);
-    }
+    // Hide if any required disconnection is still pending
+    if (r.powerBlockRequired && !(r.trdActionsNeeded || allTrdAcceptance)) return false;
+    if (r.sntDisconnectionRequired && !(r.sigActionsNeeded || allSntAcceptance)) return false;
+    if (r.enggDisconnectionsRequired && !allEnggAcceptance) return false;
 
-    // // Handle powerBlockRequired case
-    // if (r.powerBlockRequired) {
-    //   return r.trdActionsNeeded || allTrdAcceptance;
-    // }
-
-    // // Handle enggDisconnectionsRequired case
-    // if (r.enggDisconnectionsRequired) {
-    //   return allEnggAcceptance;
-    // }
-
-    // // Handle sntDisconnectionRequired case
-    // if (r.sntDisconnectionRequired) {
-    //   return r.sigActionsNeeded || allSntAcceptance;
-    // }
-    if (r.powerBlockRequired&&((r.enggDisconnectionsRequired===true&&r.allEnggAcceptance === "ACCEPTED")||(r.enggDisconnectionsRequired===false))&&((r.sntDisconnectionRequired===true&&r.allSntAcceptance === "ACCEPTED")||(r.sntDisconnectionRequired===false))) {
-      return r.trdActionsNeeded || r.allTrdAcceptance === "ACCEPTED";
-    }
-
-    // Handle enggDisconnectionsRequired case
-    if (r.enggDisconnectionsRequired&&((r.powerBlockRequired===true&&r.allTrdAcceptance === "ACCEPTED")||(r.powerBlockRequired===false))&&((r.sntDisconnectionRequired===true&&r.allSntAcceptance === "ACCEPTED")||(r.sntDisconnectionRequired===false))) {
-      return r.allEnggAcceptance === "ACCEPTED";
-    }
-
-    // Handle sntDisconnectionRequired case
-    if (r.sntDisconnectionRequired&&((r.powerBlockRequired===true&&r.allTrdAcceptance === "ACCEPTED")||(r.powerBlockRequired===false))&&((r.enggDisconnectionsRequired===true&&r.allEnggAcceptance === "ACCEPTED")||(r.enggDisconnectionsRequired===false))) {
-      return r.sigActionsNeeded || r.allSntAcceptance === "ACCEPTED";
-    }
-    // If neither special flag is true, just return the status
     return true;
   })
   .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -680,39 +635,11 @@ const nonCorridorRequestsFiltered = pendingRequests
     const allTrdAcceptance = r.allTrdAcceptance === "ACCEPTED";
     const allEnggAcceptance = r.allEnggAcceptance === "ACCEPTED";
 
-    // Handle cases where all three flags are true - FIXED PARENTHESES
-    if (r.powerBlockRequired && r.sntDisconnectionRequired && r.enggDisconnectionsRequired) {
-      return (r.trdActionsNeeded && r.sigActionsNeeded) || (allTrdAcceptance && allSntAcceptance && allEnggAcceptance);
-    }
+    // Hide if any required disconnection is still pending
+    if (r.powerBlockRequired && !(r.trdActionsNeeded || allTrdAcceptance)) return false;
+    if (r.sntDisconnectionRequired && !(r.sigActionsNeeded || allSntAcceptance)) return false;
+    if (r.enggDisconnectionsRequired && !allEnggAcceptance) return false;
 
-    // // Handle powerBlockRequired case
-    // if (r.powerBlockRequired) {
-    //   return r.trdActionsNeeded || allTrdAcceptance;
-    // }
-
-    // // Handle enggDisconnectionsRequired case
-    // if (r.enggDisconnectionsRequired) {
-    //   return allEnggAcceptance;
-    // }
-
-    // // Handle sntDisconnectionRequired case
-    // if (r.sntDisconnectionRequired) {
-    //   return r.sigActionsNeeded || allSntAcceptance;
-    // }
-    if (r.powerBlockRequired&&((r.enggDisconnectionsRequired===true&&r.allEnggAcceptance === "ACCEPTED")||(r.enggDisconnectionsRequired===false))&&((r.sntDisconnectionRequired===true&&r.allSntAcceptance === "ACCEPTED")||(r.sntDisconnectionRequired===false))) {
-      return r.trdActionsNeeded || r.allTrdAcceptance === "ACCEPTED";
-    }
-
-    // Handle enggDisconnectionsRequired case
-    if (r.enggDisconnectionsRequired&&((r.powerBlockRequired===true&&r.allTrdAcceptance === "ACCEPTED")||(r.powerBlockRequired===false))&&((r.sntDisconnectionRequired===true&&r.allSntAcceptance === "ACCEPTED")||(r.sntDisconnectionRequired===false))) {
-      return r.allEnggAcceptance === "ACCEPTED";
-    }
-
-    // Handle sntDisconnectionRequired case
-    if (r.sntDisconnectionRequired&&((r.powerBlockRequired===true&&r.allTrdAcceptance === "ACCEPTED")||(r.powerBlockRequired===false))&&((r.enggDisconnectionsRequired===true&&r.allEnggAcceptance === "ACCEPTED")||(r.enggDisconnectionsRequired===false))) {
-      return r.sigActionsNeeded || r.allSntAcceptance === "ACCEPTED";
-    }
-    // If neither special flag is true, just return the status
     return true;
   })
   .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -741,39 +668,11 @@ const combinedRequestsFiltered = pendingRequests
     const allTrdAcceptance = r.allTrdAcceptance === "ACCEPTED";
     const allEnggAcceptance = r.allEnggAcceptance === "ACCEPTED";
 
-    // Handle cases where all three flags are true - FIXED PARENTHESES
-    if (r.powerBlockRequired && r.sntDisconnectionRequired && r.enggDisconnectionsRequired) {
-      return (r.trdActionsNeeded && r.sigActionsNeeded) || (allTrdAcceptance && allSntAcceptance && allEnggAcceptance);
-    }
+    // Hide if any required disconnection is still pending
+    if (r.powerBlockRequired && !(r.trdActionsNeeded || allTrdAcceptance)) return false;
+    if (r.sntDisconnectionRequired && !(r.sigActionsNeeded || allSntAcceptance)) return false;
+    if (r.enggDisconnectionsRequired && !allEnggAcceptance) return false;
 
-    // // Handle powerBlockRequired case
-    // if (r.powerBlockRequired) {
-    //   return r.trdActionsNeeded || allTrdAcceptance;
-    // }
-
-    // // Handle enggDisconnectionsRequired case
-    // if (r.enggDisconnectionsRequired) {
-    //   return allEnggAcceptance;
-    // }
-
-    // // Handle sntDisconnectionRequired case
-    // if (r.sntDisconnectionRequired) {
-    //   return r.sigActionsNeeded || allSntAcceptance;
-    // }
-    if (r.powerBlockRequired&&((r.enggDisconnectionsRequired===true&&r.allEnggAcceptance === "ACCEPTED")||(r.enggDisconnectionsRequired===false))&&((r.sntDisconnectionRequired===true&&r.allSntAcceptance === "ACCEPTED")||(r.sntDisconnectionRequired===false))) {
-      return r.trdActionsNeeded || r.allTrdAcceptance === "ACCEPTED";
-    }
-
-    // Handle enggDisconnectionsRequired case
-    if (r.enggDisconnectionsRequired&&((r.powerBlockRequired===true&&r.allTrdAcceptance === "ACCEPTED")||(r.powerBlockRequired===false))&&((r.sntDisconnectionRequired===true&&r.allSntAcceptance === "ACCEPTED")||(r.sntDisconnectionRequired===false))) {
-      return r.allEnggAcceptance === "ACCEPTED";
-    }
-
-    // Handle sntDisconnectionRequired case
-    if (r.sntDisconnectionRequired&&((r.powerBlockRequired===true&&r.allTrdAcceptance === "ACCEPTED")||(r.powerBlockRequired===false))&&((r.enggDisconnectionsRequired===true&&r.allEnggAcceptance === "ACCEPTED")||(r.enggDisconnectionsRequired===false))) {
-      return r.sigActionsNeeded || r.allSntAcceptance === "ACCEPTED";
-    }
-    // If neither special flag is true, just return the status
     return true;
   })
   .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
