@@ -198,8 +198,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { PhoneLoginInput, phoneLoginSchema } from "@/app/validation/auth";
 import { usePhoneAuth } from "@/app/service/query/auth";
-import { depotOnLocation } from "@/app/lib/store";
-
 /**
  * Phone Login Form Component
  * Handles user authentication with phone number and OTP
@@ -210,10 +208,8 @@ export default function PhoneLoginForm() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [selectedDepot, setSelectedDepot] = useState<string>("");
+  const [smStations, setSmStations] = useState<string[]>([]);
   const router = useRouter();
-  
-  // List of depots for SM to select from
-  const availableDepots = depotOnLocation["TVC"] || [];
   
   const { 
     requestOtp,  
@@ -272,6 +268,13 @@ export default function PhoneLoginForm() {
   useEffect(() => {
     if (verifyOtpData?.data?.user?.role === "SM") {
       setUserRole("SM");
+      // Parse stationCodes from SM user — comma-separated e.g. "TVC,NCJ"
+      const smUser = verifyOtpData.data.user as any;
+      const codes = ((smUser.stationCodes as string) ?? "")
+        .split(",")
+        .map((s: string) => s.trim())
+        .filter(Boolean);
+      setSmStations(codes.length > 0 ? codes : [smUser.depot ?? ""]);
       setStep("depot");
     }
   }, [verifyOtpData]);
@@ -309,35 +312,11 @@ export default function PhoneLoginForm() {
       // Login with selected depot
       try {
         if (!selectedDepot) {
-          setAuthError("Please select a depot");
+          setAuthError("Please select a station");
           return;
         }
-        
-        // Validate that selected depot exists in available depots
-        if (!availableDepots.includes(selectedDepot)) {
-          // Try to find a close match
-          const closestMatch = availableDepots.find(
-            depot => depot.toLowerCase().includes(selectedDepot.toLowerCase())
-          );
-          
-          if (closestMatch) {
-            setSelectedDepot(closestMatch);
-            setAuthError(`Using closest match: ${closestMatch}`);
-            // Wait a moment before submitting with the corrected depot
-            setTimeout(() => {
-              loginWithDepot({
-                phone: data.phone,
-                depot: closestMatch
-              });
-            }, 1000);
-            return;
-          } else {
-            setAuthError("Invalid depot selection. Please choose from the list.");
-            return;
-          }
-        }
-        
-        // Call login with depot selection
+
+        // Call login with station selection
         await loginWithDepot({
           phone: data.phone,
           depot: selectedDepot
@@ -404,47 +383,28 @@ export default function PhoneLoginForm() {
         />
       </div>
       
-      {/* Depot Selection for SM with search capability */}
+      {/* Station Selection for SM — shows their assigned stations */}
       {step === "depot" && (
-        <div className="w-full flex flex-col mb-4">
-          <div className="w-full relative">
-            <input
-              type="text"
-              value={selectedDepot}
-              onChange={(e) => setSelectedDepot(e.target.value)}
-              placeholder="Type to search station code"
-             className="w-full flex-1 bg-[#eeb8f7] text-white font-semibold rounded-xl px-4 py-3 text-2xl focus:outline-none focus:ring-2 focus:ring-purple-400 placeholder-white placeholder:font-bold border-none"
-              style={{
-                boxShadow: "0 2px 8px 0 rgba(0,0,0,0.04)",
-                WebkitBoxShadow: "0 0 0 1000px #eeb8f7 inset",
-                WebkitTextFillColor: "white",
-                caretColor: "white",
-              }}
-            />
+        <div className="w-full flex flex-col mb-4 gap-2">
+          <p className="text-sm font-semibold text-gray-600 text-center mb-1">Select your active station</p>
+          <div className="w-full flex flex-wrap gap-2 justify-center">
+            {smStations.map((station) => (
+              <button
+                key={station}
+                type="button"
+                onClick={() => setSelectedDepot(station)}
+                className="px-6 py-3 rounded-xl font-bold text-lg border-2 transition-all"
+                style={{
+                  backgroundColor: selectedDepot === station ? "#f4a47c" : "#eeb8f7",
+                  borderColor: selectedDepot === station ? "#d97706" : "#c084fc",
+                  color: selectedDepot === station ? "#000" : "#fff",
+                  boxShadow: selectedDepot === station ? "0 2px 8px rgba(0,0,0,0.15)" : "none",
+                }}
+              >
+                {station}
+              </button>
+            ))}
           </div>
-          
-          {/* Display depot options based on search input */}
-          {selectedDepot && (
-            <div className="w-full max-h-40 overflow-y-auto font-semibold bg-[#eeb8f7] rounded-lg border border-purple-200 shadow-lg">
-              {availableDepots
-                .filter(depot => 
-                  depot.toLowerCase().includes(selectedDepot.toLowerCase()) ||
-                  selectedDepot.toLowerCase().includes(depot.toLowerCase())
-                )
-                .map(depot => (
-                  <div 
-                    key={depot}
-                    onClick={() => setSelectedDepot(depot)}
-                    className={`px-4 py-2 cursor-pointer hover:bg-purple-300 ${
-                      selectedDepot === depot ? 'bg-[#eeb8f7] font-bold' : ''
-                    }`}
-                  >
-                    {depot}
-                  </div>
-                ))}
-            </div>
-          )}
-
         </div>
       )}
 

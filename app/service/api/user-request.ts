@@ -103,14 +103,14 @@ export const userRequestService = {
     limit: number = 100,
     startDate?: string,
     endDate?: string,
-    userDepartement?:string
+    userDepartment?:string
   ): Promise<RequestResponse> => {
     const queryParams = new URLSearchParams();
     queryParams.append('page', page.toString());
     queryParams.append('limit', limit.toString());
     if (startDate) queryParams.append('startDate', startDate);
     if (endDate) queryParams.append('endDate', endDate);
-    if (userDepartement) queryParams.append('userDepartement', userDepartement);
+    if (userDepartment) queryParams.append('userDepartment', userDepartment);
 
     const response = await axiosInstance.get<RequestResponse>(
       `/api/user-request/other/${selectedDepo}?${queryParams.toString()}`
@@ -148,7 +148,7 @@ updateOtherRequest: async (
   id: string,
   accept: boolean,
   remarks?: string,
-  userDepartement?: string,
+  userDepartment?: string,
   mobileView?: string
 ): Promise<UserRequestResponse> => {
   const url = `/api/user-request/other/${id}?accept=${accept}`;
@@ -165,8 +165,8 @@ updateOtherRequest: async (
     }
   }
   
-  if (userDepartement) {
-    body.userDepartement = userDepartement;
+  if (userDepartment) {
+    body.userDepartment = userDepartment;
   }
 
   if (mobileView) {

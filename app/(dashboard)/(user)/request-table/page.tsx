@@ -384,7 +384,7 @@ export default function RequestTablePage() {
   const [showRejectReasonPopup, setShowRejectReasonPopup] = useState(false);
   const [requestToReject, setRequestToReject] = useState<{
     id: string;
-    userDepartement: string;
+    userDepartment: string;
     mobileView: string;
   } | null>(null);
 
@@ -392,7 +392,7 @@ export default function RequestTablePage() {
   const [showAcceptReasonPopup, setShowAcceptReasonPopup] = useState(false);
   const [requestToAccept, setRequestToAccept] = useState<{
     id: string;
-    userDepartement: string;
+    userDepartment: string;
     mobileView: string;
     requestDateStr: string;
     corridorType: string;
@@ -459,13 +459,13 @@ export default function RequestTablePage() {
     }
   };
 
-  // const handleStatusUpdate = (id: string, accept: boolean,userDepartement:string,mobileView:string) => {
+  // const handleStatusUpdate = (id: string, accept: boolean,userDepartment:string,mobileView:string) => {
   //   if (accept) {
   //     updateOtherRequest(
   //       {
   //         id,
   //         accept,
-  //         userDepartement,
+  //         userDepartment,
   //         mobileView
   //       },
   //       {
@@ -476,7 +476,7 @@ export default function RequestTablePage() {
   //       }
   //     );
   //   } else {
-  //   setRequestToReject({ id, userDepartement, mobileView });
+  //   setRequestToReject({ id, userDepartment, mobileView });
   //   setShowRejectReasonPopup(true);
   //   }
   // };
@@ -485,7 +485,7 @@ export default function RequestTablePage() {
   const handleStatusUpdate = async (
     id: string,
     accept: boolean,
-    userDepartement: string,
+    userDepartment: string,
     mobileView: string,
     requestDateStr: string,
     corridorType: string
@@ -525,7 +525,7 @@ export default function RequestTablePage() {
       //   {
       //     id,
       //     accept,
-      //     userDepartement,
+      //     userDepartment,
       //     mobileView
       //   },
       //   {
@@ -534,11 +534,11 @@ export default function RequestTablePage() {
       //     },
       //   }
       // );
-      setRequestToAccept({ id, userDepartement, mobileView, requestDateStr, corridorType });
+      setRequestToAccept({ id, userDepartment, mobileView, requestDateStr, corridorType });
       setShowAcceptReasonPopup(true);
     } else {
       // For reject actions, just set up the rejection dialog
-      setRequestToReject({ id, userDepartement, mobileView });
+      setRequestToReject({ id, userDepartment, mobileView });
       setShowRejectReasonPopup(true);
     }
   };
@@ -550,7 +550,7 @@ export default function RequestTablePage() {
       {
         id: requestToReject.id,
         accept: false,
-        userDepartement: requestToReject.userDepartement,
+        userDepartment: requestToReject.userDepartment,
         mobileView: requestToReject.mobileView,
         disconnectionRequestRejectRemarks: rejectReason // Keep using disconnectionRequestRejectRemarks for rejections
       },
@@ -575,7 +575,7 @@ export default function RequestTablePage() {
       {
         id: requestToAccept.id,
         accept: true,
-        userDepartement: requestToAccept.userDepartement,
+        userDepartment: requestToAccept.userDepartment,
         mobileView: requestToAccept.mobileView,
         acceptRemarks: acceptReason // Using acceptRemarks for accept actions
       },

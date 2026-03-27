@@ -2,64 +2,90 @@ import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { availService } from "../api/avail";
 
-// GET: Sanctioned blocks available for availing (JE/SSE, next N hours, for their depot)
-export function useGetSanctionedBlocksForAvailing(hours: number = 12) {
+// GET: All blocks for a depot (sanctioned + applied pipeline)
+// Everyone in the depot sees these — SSE, JE, Tech
+export function useGetDepotBlocks() {
   const { data: session } = useSession();
   const depot = session?.user?.depot;
   return useQuery({
-    queryKey: ["avail-sanctioned-blocks", depot, hours],
-    queryFn: () => availService.getSanctionedBlocksForAvailing(depot!, hours),
+    queryKey: ["avail-depot-blocks", depot],
+    queryFn: () => availService.getDepotBlocks(depot!),
     enabled: !!depot,
-    staleTime: 1000 * 60 * 2, // 2 minutes — time-sensitive
-    refetchInterval: 1000 * 60 * 5, // refetch every 5 min
-  });
-}
-
-// GET: Other-dept availing concurrences pending for this SSE (USER role only)
-export function useGetPendingAvailConcurrences() {
-  const { data: session } = useSession();
-  const depot = session?.user?.depot;
-  const userDepartement = session?.user?.department;
-  return useQuery({
-    queryKey: ["avail-concurrences", depot, userDepartement],
-    queryFn: () => availService.getPendingConcurrences(depot!, userDepartement!),
-    enabled: !!depot && !!userDepartement && session?.user?.role === "USER",
-    staleTime: 1000 * 60 * 2,
-    refetchInterval: 1000 * 60 * 5,
-  });
-}
-
-// GET: SM pending approvals and closures for their station
-export function useGetSmPending() {
-  const { data: session } = useSession();
-  const stationCode = session?.user?.depot; // SM's depot field = station code
-  return useQuery({
-    queryKey: ["sm-pending", stationCode],
-    queryFn: () => availService.getSmPending(stationCode!),
-    enabled: !!stationCode && session?.user?.role === "SM",
-    staleTime: 1000 * 60 * 2,
-    refetchInterval: 1000 * 60 * 3, // refetch every 3 min — SM needs fresh data
-  });
-}
-
-// GET: All blocks for the logged-in user in any availing status
-export function useGetMyAvailBlocks() {
-  const { data: session } = useSession();
-  const userId = session?.user?.id;
-  return useQuery({
-    queryKey: ["avail-my-blocks", userId],
-    queryFn: () => availService.getMyAvailBlocks(),
-    enabled: !!userId,
     staleTime: 1000 * 60 * 2,
     refetchInterval: 1000 * 60 * 3,
   });
 }
 
-// GET: Single avail request detail (includes all availing fields)
+// GET: My active participations (blocks where I'm an AvailParticipant)
+export function useGetMyParticipations() {
+  const { data: session } = useSession();
+  const userId = session?.user?.id;
+  return useQuery({
+    queryKey: ["avail-my-participations", userId],
+    queryFn: () => availService.getMyParticipations(),
+    enabled: !!userId,
+    staleTime: 1000 * 60 * 2,
+    refetchInterval: 1000 * 60 * 2,
+  });
+}
+
+// GET: Pending concurrences for my dept/depot (S&T, TRD people)
+export function useGetPendingAvailConcurrences() {
+  const { data: session } = useSession();
+  const depot = session?.user?.depot;
+  const userDepartment = session?.user?.department;
+  const role = session?.user?.role;
+  return useQuery({
+    queryKey: ["avail-concurrences", depot, userDepartment],
+    queryFn: () => availService.getPendingConcurrences(depot!, userDepartment!),
+    enabled: !!depot && !!userDepartment && (role === "USER" || role === "JE"),
+    staleTime: 1000 * 60 * 2,
+    refetchInterval: 1000 * 60 * 3,
+  });
+}
+
+// GET: SM pending dashboard
+export function useGetSmPending() {
+  const { data: session } = useSession();
+  const stationCode = session?.user?.depot;
+  return useQuery({
+    queryKey: ["sm-pending", stationCode],
+    queryFn: () => availService.getSmPending(stationCode!),
+    enabled: !!stationCode && session?.user?.role === "SM",
+    staleTime: 1000 * 60 * 2,
+    refetchInterval: 1000 * 60 * 3,
+  });
+}
+
+// GET: Single avail request detail
 export function useGetAvailRequestById(requestId: string) {
   return useQuery({
     queryKey: ["avail-request", requestId],
     queryFn: () => availService.getAvailRequestById(requestId),
     enabled: !!requestId,
+    staleTime: 30 * 1000,
+    refetchInterval: 30 * 1000,
+  });
+}
+
+// GET: My own avail blocks (blocks I applied to avail) — alias for useGetMyParticipations for dashboard badge
+export function useGetMyAvailBlocks() {
+  const { data: session } = useSession();
+  const userId = session?.user?.id;
+  return useQuery({
+    queryKey: ["avail-my-blocks", userId],
+    queryFn: () => availService.getMyParticipations(),
+    enabled: !!userId,
+    staleTime: 1000 * 60 * 2,
+    refetchInterval: 1000 * 60 * 2,
+  });
+}
+
+// GET: SM station codes
+export function useGetSmStations() {
+  return useQuery({
+    queryKey: ["sm-stations"],
+    queryFn: () => availService.getSmStations(),
+    staleTime: 1000 * 60 * 10,
   });
 }

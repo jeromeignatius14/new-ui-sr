@@ -2,189 +2,119 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { availService } from "../api/avail";
 import { toast } from "react-hot-toast";
 
+function invalidateAll(qc: ReturnType<typeof useQueryClient>) {
+  qc.invalidateQueries({ queryKey: ["avail-depot-blocks"] });
+  qc.invalidateQueries({ queryKey: ["avail-my-participations"] });
+  qc.invalidateQueries({ queryKey: ["avail-concurrences"] });
+  qc.invalidateQueries({ queryKey: ["avail-request"] });
+}
+
 export function useApplyForAvailing() {
-  const queryClient = useQueryClient();
+  const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      requestId,
-      oheMasFrom,
-      oheMasTo,
-    }: {
+    mutationFn: (p: {
       requestId: string;
-      oheMasFrom: string;
-      oheMasTo: string;
-    }) => availService.applyForAvailing(requestId, oheMasFrom, oheMasTo),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["avail-sanctioned-blocks"] });
-      queryClient.invalidateQueries({ queryKey: ["avail-my-blocks"] });
-      queryClient.invalidateQueries({ queryKey: ["avail-requests"] });
-      toast.success("Availing application submitted successfully");
-    },
-    onError: () => toast.error("Failed to apply for availing"),
+      requestedTimeFrom?: string;
+      requestedTimeTo?: string;
+      smStation?: string;
+      oheMasFrom?: string;
+      oheMasTo?: string;
+    }) => availService.applyForAvailing(p),
+    onSuccess: () => { invalidateAll(qc); toast.success("Availing application submitted"); },
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to apply for availing"),
   });
 }
 
-export function useSubmitAvailConcurrence() {
-  const queryClient = useQueryClient();
+export function useSubmitConcurrence() {
+  const qc = useQueryClient();
   return useMutation({
-    mutationFn: (params: {
-      requestId: string;
-      accept: boolean;
-      acceptRemarks?: string;
-      rejectRemarks?: string;
-      userDepartement?: string;
-    }) =>
-      availService.submitAvailConcurrence(
-        params.requestId,
-        params.accept,
-        params.acceptRemarks,
-        params.rejectRemarks,
-        params.userDepartement
-      ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["avail-concurrences"] });
-      toast.success("Concurrence submitted successfully");
-    },
-    onError: () => toast.error("Failed to submit concurrence"),
+    mutationFn: (p: { requestId: string; accept: boolean; remarks?: string; userDepartment?: string }) =>
+      availService.submitConcurrence(p.requestId, p.accept, p.remarks, p.userDepartment),
+    onSuccess: (_, v) => { invalidateAll(qc); toast.success(v.accept ? "Concurrence accepted" : "Concurrence rejected"); },
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to submit concurrence"),
   });
 }
 
-export function useSmApproveAvail() {
-  const queryClient = useQueryClient();
+export function useAcknowledgeSmGrant() {
+  const qc = useQueryClient();
   return useMutation({
-    mutationFn: (params: {
-      requestId: string;
-      action: "APPROVE" | "APPROVE_WITH_MODIFICATION" | "REJECT";
-      smApprovedTimeFrom?: string;
-      smApprovedTimeTo?: string;
-      smRemarks?: string;
-    }) =>
-      availService.smApproveAvail(params.requestId, params.action, {
-        smApprovedTimeFrom: params.smApprovedTimeFrom,
-        smApprovedTimeTo: params.smApprovedTimeTo,
-        smRemarks: params.smRemarks,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["sm-pending"] });
-      toast.success("Action completed successfully");
-    },
-    onError: () => toast.error("Failed to process request"),
-  });
-}
-
-export function useSseRespondToSmModification() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ requestId, accept }: { requestId: string; accept: boolean }) =>
-      availService.sseRespondToSmModification(requestId, accept),
-    onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({ queryKey: ["avail-requests"] });
-      toast.success(vars.accept ? "SM modification accepted" : "Availing cancelled");
-    },
-    onError: () => toast.error("Failed to submit response"),
+    mutationFn: (p: { requestId: string; accept: boolean; remarks?: string }) =>
+      availService.acknowledgeSmGrant(p.requestId, p.accept, p.remarks),
+    onSuccess: (_, v) => { invalidateAll(qc); toast.success(v.accept ? "Grant accepted — availing will begin soon" : "Grant rejected"); },
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to acknowledge"),
   });
 }
 
 export function useStartAvailing() {
-  const queryClient = useQueryClient();
+  const qc = useQueryClient();
   return useMutation({
-    mutationFn: (params: {
-      requestId: string;
-      latitude: number | null;
-      longitude: number | null;
-      geoCheckBypassed: boolean;
-    }) =>
-      availService.startAvailing(
-        params.requestId,
-        params.latitude,
-        params.longitude,
-        params.geoCheckBypassed
-      ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["avail-my-blocks"] });
-      queryClient.invalidateQueries({ queryKey: ["avail-requests"] });
-      toast.success("Availing started");
+    mutationFn: (p: string | { requestId: string; latitude?: number | null; longitude?: number | null; geoCheckBypassed?: boolean }) => {
+      const requestId = typeof p === "string" ? p : p.requestId;
+      return availService.startAvailing(requestId);
     },
-    onError: () => toast.error("Failed to start availing"),
+    onSuccess: () => { invalidateAll(qc); toast.success("Availing started"); },
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to start availing"),
   });
 }
 
 export function useCloseBlock() {
-  const queryClient = useQueryClient();
+  const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      requestId,
-      closureYard,
-      closureRemarks,
-    }: {
+    mutationFn: (p: {
       requestId: string;
-      closureYard: string;
-      closureRemarks: string;
-    }) => availService.closeBlock(requestId, closureYard, closureRemarks),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["avail-requests"] });
-      toast.success("Block closed — pending SM acknowledgement");
-    },
-    onError: () => toast.error("Failed to submit closure"),
+      closureRemarks?: string;
+      closureImage?: File | null;
+      closureReconnectedSignal?: string;
+      closureCautionKmph?: string;
+      closureOheMadeFit?: boolean;
+    }) => availService.closeBlock(p.requestId, p.closureRemarks, p.closureImage, p.closureReconnectedSignal, p.closureCautionKmph, p.closureOheMadeFit),
+    onSuccess: () => { invalidateAll(qc); toast.success("Closure submitted — awaiting SM acknowledgement"); },
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to submit closure"),
   });
 }
 
 export function useRequestExtension() {
-  const queryClient = useQueryClient();
+  const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      requestId,
-      newEndTime,
-      remarks,
-    }: {
-      requestId: string;
-      newEndTime: string;
-      remarks?: string;
-    }) => availService.requestExtension(requestId, newEndTime, remarks),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["avail-my-blocks"] });
-      queryClient.invalidateQueries({ queryKey: ["avail-request"] });
-      toast.success("Extension requested — waiting for SM approval");
-    },
-    onError: (err: any) =>
-      toast.error(err?.response?.data?.message || "Failed to request extension"),
+    mutationFn: (p: { requestId: string; newEndTime: string; remarks?: string; isEmergency?: boolean; emergencyReason?: string }) =>
+      availService.requestExtension(p.requestId, p.newEndTime, p.remarks, p.isEmergency, p.emergencyReason),
+    onSuccess: () => { invalidateAll(qc); toast.success("Extension requested — awaiting SM"); },
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to request extension"),
+  });
+}
+
+// Alias: when SM modifies time, SSE must accept or reject — same API as acknowledgeSmGrant
+export const useSseRespondToSmModification = useAcknowledgeSmGrant;
+
+// Alias for backwards compatibility
+export const useSubmitAvailConcurrence = useSubmitConcurrence;
+
+export function useSmApproveAvail() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: { requestId: string; action: "APPROVE" | "APPROVE_WITH_MODIFICATION" | "REJECT"; smApprovedTimeFrom?: string; smApprovedTimeTo?: string; smRemarks?: string }) =>
+      availService.smApproveAvail(p.requestId, p.action, { smApprovedTimeFrom: p.smApprovedTimeFrom, smApprovedTimeTo: p.smApprovedTimeTo, smRemarks: p.smRemarks }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["sm-pending"] }); toast.success("Action completed"); },
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to process request"),
   });
 }
 
 export function useSmApproveExtension() {
-  const queryClient = useQueryClient();
+  const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      requestId,
-      action,
-      smRemarks,
-    }: {
-      requestId: string;
-      action: "APPROVE" | "REJECT";
-      smRemarks?: string;
-    }) => availService.smApproveExtension(requestId, action, smRemarks),
-    onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({ queryKey: ["sm-pending"] });
-      toast.success(vars.action === "APPROVE" ? "Extension approved" : "Extension rejected");
-    },
-    onError: () => toast.error("Failed to process extension"),
+    mutationFn: (p: { requestId: string; participantId?: string; action: "APPROVE" | "REJECT"; smRemarks?: string }) =>
+      availService.smApproveExtension(p.requestId, p.participantId ?? "", p.action, p.smRemarks),
+    onSuccess: (_, v) => { qc.invalidateQueries({ queryKey: ["sm-pending"] }); toast.success(v.action === "APPROVE" ? "Extension approved" : "Extension rejected"); },
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed"),
   });
 }
 
 export function useSmAcknowledgeClosure() {
-  const queryClient = useQueryClient();
+  const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      requestId,
-      smClosureRemarks,
-    }: {
-      requestId: string;
-      smClosureRemarks: string;
-    }) => availService.smAcknowledgeClosure(requestId, smClosureRemarks),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["sm-pending"] });
-      toast.success("Closure acknowledged — Block Closed");
-    },
-    onError: () => toast.error("Failed to acknowledge closure"),
+    mutationFn: (p: { requestId: string; smClosureRemarks: string }) =>
+      availService.smAcknowledgeClosure(p.requestId, p.smClosureRemarks),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["sm-pending"] }); toast.success("Block closed ✓"); },
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed"),
   });
 }

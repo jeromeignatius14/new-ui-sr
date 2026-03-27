@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BMS &amp; BAA — System Overview &amp; Block Lifecycle</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 210mm; background: white; }
+
+  @media print {
+    html, body { width: 210mm; }
+    @page { size: A4 portrait; margin: 15mm 18mm 15mm 18mm; }
+    .page-break { page-break-after: always; }
+  }
+
+  body {
+    font-family: 'Arial', sans-serif;
+    font-size: 10.5pt;
+    color: #111;
+    padding: 15mm 18mm;
+  }
+
+  /* ── TOP HEADER ── */
+  .doc-header {
+    border-bottom: 3px solid #1a3264;
+    padding-bottom: 10px;
+    margin-bottom: 16px;
+  }
+  .org-line {
+    font-size: 8.5pt;
+    color: #555;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .doc-title {
+    font-size: 18pt;
+    font-weight: 900;
+    color: #1a3264;
+    line-height: 1.1;
+  }
+  .doc-subtitle {
+    font-size: 10pt;
+    color: #444;
+    margin-top: 3px;
+  }
+  .doc-meta {
+    float: right;
+    text-align: right;
+    font-size: 8.5pt;
+    color: #666;
+    line-height: 1.6;
+  }
+
+  /* ── SECTION HEADINGS ── */
+  .section-heading {
+    background: #1a3264;
+    color: white;
+    font-size: 10pt;
+    font-weight: 700;
+    padding: 5px 10px;
+    margin-top: 14px;
+    margin-bottom: 0;
+    letter-spacing: 0.5px;
+  }
+  .section-body {
+    border: 1.5px solid #1a3264;
+    border-top: none;
+    padding: 10px;
+    margin-bottom: 4px;
+  }
+
+  /* ── STAT ROW ── */
+  .stat-row {
+    display: table;
+    width: 100%;
+    margin-bottom: 12px;
+    border-collapse: separate;
+    border-spacing: 6px;
+  }
+  .stat-cell {
+    display: table-cell;
+    width: 20%;
+    text-align: center;
+    border: 1.5px solid #1a3264;
+    padding: 8px 4px;
+    vertical-align: middle;
+  }
+  .stat-num { font-size: 20pt; font-weight: 900; color: #1a3264; line-height: 1; }
+  .stat-label { font-size: 8pt; color: #444; margin-top: 3px; line-height: 1.3; }
+
+  /* ── TWO COLUMN ── */
+  .two-col { display: table; width: 100%; border-collapse: separate; border-spacing: 6px 0; margin-bottom: 4px; }
+  .col { display: table-cell; vertical-align: top; width: 50%; }
+
+  /* ── ROLE TABLE ── */
+  table.role-table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+  table.role-table th { background: #1a3264; color: white; padding: 4px 8px; text-align: left; font-size: 8.5pt; }
+  table.role-table td { padding: 4px 8px; border-bottom: 1px solid #ddd; vertical-align: top; font-size: 9pt; }
+  table.role-table tr:last-child td { border-bottom: none; }
+  table.role-table tr:nth-child(even) td { background: #f4f6fb; }
+  .role-pill { background: #1a3264; color: white; font-size: 7.5pt; font-weight: 700; padding: 1px 5px; border-radius: 2px; }
+
+  /* ── FLOW STEPS ── */
+  table.flow-grid {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 3px 0;
+    table-layout: fixed;
+  }
+  table.flow-grid td { vertical-align: top; padding: 0; }
+  .flow-box {
+    border: 1.5px solid;
+    border-radius: 3px;
+    padding: 5px 4px;
+    font-size: 7pt;
+    text-align: center;
+    height: 100%;
+    overflow: hidden;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+  .flow-num {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    margin: 0 auto 3px;
+    line-height: 18px;
+    font-weight: 900; font-size: 9pt; color: white;
+  }
+  .flow-title { font-weight: 800; font-size: 6.5pt; line-height: 1.2; margin-bottom: 2px; word-break: break-word; }
+  .flow-role { font-size: 6pt; color: #555; margin-bottom: 2px; word-break: break-word; }
+  .flow-items { font-size: 6pt; text-align: left; padding-left: 7px; color: #333; line-height: 1.3; }
+  .flow-items li { margin-bottom: 1px; }
+  .new-tag { font-size: 5.5pt; background: #c00; color: white; padding: 0px 2px; border-radius: 2px; font-weight: 700; }
+
+  /* Colors */
+  .c1 { border-color: #1976d2; } .c1 .flow-num { background: #1976d2; }
+  .c2 { border-color: #0288d1; } .c2 .flow-num { background: #0288d1; }
+  .c3 { border-color: #388e3c; } .c3 .flow-num { background: #388e3c; }
+  .c4 { border-color: #7b1fa2; } .c4 .flow-num { background: #7b1fa2; }
+  .c5 { border-color: #f57c00; } .c5 .flow-num { background: #f57c00; }
+  .c6 { border-color: #d32f2f; } .c6 .flow-num { background: #d32f2f; }
+  .c7 { border-color: #6a1b9a; } .c7 .flow-num { background: #6a1b9a; }
+  .c8 { border-color: #2e7d32; } .c8 .flow-num { background: #2e7d32; }
+  .c9 { border-color: #1565c0; } .c9 .flow-num { background: #1565c0; }
+
+  /* ── INFO BOX ── */
+  .info-box { border-left: 4px solid #1a3264; padding: 6px 10px; margin: 6px 0; font-size: 9pt; background: #f4f6fb; }
+  .warn-box { border-left: 4px solid #d32f2f; padding: 6px 10px; margin: 6px 0; font-size: 9pt; background: #fff4f4; }
+  .note-box { border-left: 4px solid #f57c00; padding: 6px 10px; margin: 6px 0; font-size: 9pt; background: #fffbf0; }
+
+  ul.plain { padding-left: 14px; }
+  ul.plain li { margin-bottom: 3px; line-height: 1.4; font-size: 9.5pt; }
+
+  /* ── FOOTER ── */
+  .doc-footer {
+    border-top: 1.5px solid #1a3264;
+    padding-top: 6px;
+    margin-top: 16px;
+    font-size: 8pt;
+    color: #666;
+    display: table;
+    width: 100%;
+  }
+  .footer-left { display: table-cell; }
+  .footer-right { display: table-cell; text-align: right; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="doc-header">
+  <div class="doc-meta">
+    Presented to: ADRM, SR-MAS<br>
+    March 2026 · Document 1 of 5
+  </div>
+  <div class="org-line">Southern Railway · Rail Block Requisition Management</div>
+  <div class="doc-title">Block Management System (BMS) &amp; Block Authorization App (BAA)</div>
+  <div class="doc-subtitle">BMS: Stages 1–5 (Request → Sanction) &nbsp;·&nbsp; BAA: Stages 6–9 (Availing → Closure)</div>
+</div>
+
+<!-- STATS -->
+<div class="stat-row">
+  <div class="stat-cell"><div class="stat-num">5,000+</div><div class="stat-label">Daily Active Users</div></div>
+  <div class="stat-cell"><div class="stat-num">6</div><div class="stat-label">Divisions<br>across Southern Railway</div></div>
+  <div class="stat-cell"><div class="stat-num">9</div><div class="stat-label">User Roles Supported</div></div>
+  <div class="stat-cell"><div class="stat-num">10</div><div class="stat-label">Lifecycle Stages Automated</div></div>
+  <div class="stat-cell"><div class="stat-num">3</div><div class="stat-label">Dept. Disconnection Types<br>TRD · S&amp;T · ENGG</div></div>
+</div>
+
+<!-- WHAT IT DOES + MODULES -->
+<div class="two-col">
+  <div class="col">
+    <div class="section-heading">The Problem We Are Solving</div>
+    <div class="section-body">
+      <div class="warn-box" style="margin-bottom:8px;">
+        <strong>Before BMS &amp; BAA:</strong> Every stage — submission, multi-department coordination, approval, optimisation, sanction, and availing — ran on paper registers and phone calls. Once a block was sanctioned, there was zero digital traceability of what happened next.
+      </div>
+      <ul class="plain">
+        <li><strong>Multi-department coordination</strong> done simultaneously online — no more sequential phone calls between TRD, S&amp;T, and ENGG for disconnection approvals</li>
+        <li><strong>Single dashboard</strong> for Operating Controller to view, optimise timings, and sanction across all sections — replacing multiple physical registers</li>
+        <li><strong>End-to-end audit trail</strong> — every approval, rejection, edit, timestamp, and remark stored against the request with identity</li>
+        <li><strong>BAA — post-sanctioning loop closed digitally:</strong> SSE applies, SM approves at station, availing is tracked live, closure acknowledged — all in app</li>
+        <li><strong>No app installation needed</strong> — works on any mobile browser; installable as PWA; push notifications delivered even when app is closed</li>
+        <li><strong>Real-time analytics</strong> — section-wise Demanded / Approved / Granted / Availed figures available instantly, not weeks later</li>
+      </ul>
+    </div>
+  </div>
+  <div class="col">
+    <div class="section-heading">Software Modules at a Glance</div>
+    <div class="section-body" style="padding: 0;">
+      <table class="role-table">
+        <thead>
+          <tr><th>Module</th><th>Used By</th><th>Key Software Capability</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Block Request</strong></td><td>JE, SSE</td><td>Online submission with section, timings, disconnection flags; editable before approval</td></tr>
+          <tr><td><strong>Disconnection Workflow</strong></td><td>SSE (dept-wise)</td><td>Parallel approval across all three departments; each dept acts independently; status visible to all parties in real time</td></tr>
+          <tr><td><strong>Section Controller Dashboard</strong></td><td>Dept. Controller</td><td>Edit request timings, add remarks, approve or reject; urgent requests flash for immediate attention</td></tr>
+          <tr><td><strong>Operating Controller Dashboard</strong></td><td>Op. Controller</td><td>Master view across all sections; adjust and optimise timings; bulk sanction; conflict detection</td></tr>
+          <tr><td><strong>TPC Board</strong></td><td>TPC</td><td>Live read-only view of upcoming sanctioned blocks in 8 / 16 / 24 hr windows</td></tr>
+          <tr><td><strong>BAA — Avail Block</strong></td><td>SSE</td><td>Apply for availing, track SM approval, start availing with live timer, submit closure; personal health score visible</td></tr>
+          <tr><td><strong>BAA — SM Dashboard</strong></td><td>SM</td><td>Approve, modify, or reject avail requests; live active blocks tracker with elapsed/remaining time</td></tr>
+          <tr><td><strong>Analytics &amp; Reports</strong></td><td>DRM, HQ, ADRM</td><td>Real-time section-wise KPIs; stage-wise drop analysis; XLSX export</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- LIFECYCLE FLOW -->
+<div class="section-heading" style="margin-top: 14px;">Complete Block Lifecycle — 9 Key Stages</div>
+<div class="section-body">
+  <table class="flow-grid">
+    <tr>
+
+      <td>
+        <div class="flow-box c1">
+          <div class="flow-num">1</div>
+          <div class="flow-title">JE / SSE Creates Request</div>
+          <div class="flow-role">JE or SSE</div>
+          <ul class="flow-items">
+            <li>Section &amp; block</li>
+            <li>Date &amp; demand time</li>
+            <li>Corridor / Urgent</li>
+            <li>Disconnection flags</li>
+          </ul>
+        </div>
+      </td>
+
+      <td>
+        <div class="flow-box c2">
+          <div class="flow-num">2</div>
+          <div class="flow-title">Disconnection Depts. Approve</div>
+          <div class="flow-role">TRD / S&amp;T / ENGG</div>
+          <ul class="flow-items">
+            <li>Dept SSEs notified</li>
+            <li>Accept or reject</li>
+            <li>All 3 independent</li>
+            <li>Fri 12PM rule</li>
+          </ul>
+        </div>
+      </td>
+
+      <td>
+        <div class="flow-box c3">
+          <div class="flow-num">3</div>
+          <div class="flow-title">Section Controller Approves</div>
+          <div class="flow-role">Dept. Controller</div>
+          <ul class="flow-items">
+            <li>Can edit date/time</li>
+            <li>Adds TPC remarks</li>
+            <li>Approve or reject</li>
+            <li>Urgent blocks flash</li>
+          </ul>
+        </div>
+      </td>
+
+      <td>
+        <div class="flow-box c4">
+          <div class="flow-num">4</div>
+          <div class="flow-title">Controller Accepts &amp; Optimises</div>
+          <div class="flow-role">Operating Controller</div>
+          <ul class="flow-items">
+            <li>All sections view</li>
+            <li>Accept / bulk accept</li>
+            <li>Adjusts times</li>
+            <li>Avoids conflicts</li>
+          </ul>
+        </div>
+      </td>
+
+      <td>
+        <div class="flow-box c5">
+          <div class="flow-num">5</div>
+          <div class="flow-title">Controller Sanctions</div>
+          <div class="flow-role">Operating Controller</div>
+          <ul class="flow-items">
+            <li>Official sanction</li>
+            <li>Granted time set</li>
+            <li>Push notif to SSE</li>
+            <li>TPC board updated</li>
+          </ul>
+        </div>
+      </td>
+
+      <td>
+        <div class="flow-box c6">
+          <div class="flow-num">6</div>
+          <div class="flow-title">SSE Applies for Availing <span class="new-tag">NEW</span></div>
+          <div class="flow-role">SSE</div>
+          <ul class="flow-items">
+            <li>SSE applies in app</li>
+            <li>Work location</li>
+            <li>Concurrences</li>
+            <li>Beep alerts</li>
+          </ul>
+        </div>
+      </td>
+
+      <td>
+        <div class="flow-box c7">
+          <div class="flow-num">7</div>
+          <div class="flow-title">SM Approves at Site <span class="new-tag">NEW</span></div>
+          <div class="flow-role">Station Master</div>
+          <ul class="flow-items">
+            <li>SM sees request</li>
+            <li>Approve / modify</li>
+            <li>Or reject + reason</li>
+            <li>Timestamped</li>
+          </ul>
+        </div>
+      </td>
+
+      <td>
+        <div class="flow-box c8">
+          <div class="flow-num">8</div>
+          <div class="flow-title">SSE Starts Availing <span class="new-tag">NEW</span></div>
+          <div class="flow-role">SSE</div>
+          <ul class="flow-items">
+            <li>Ack SM approval</li>
+            <li>Start Availing</li>
+            <li>Live countdown</li>
+            <li>Time extension</li>
+          </ul>
+        </div>
+      </td>
+
+      <td>
+        <div class="flow-box c9">
+          <div class="flow-num">9</div>
+          <div class="flow-title">Block Closed &amp; Ack'd <span class="new-tag">NEW</span></div>
+          <div class="flow-role">SSE + SM</div>
+          <ul class="flow-items">
+            <li>SSE submits closure</li>
+            <li>SM acknowledges</li>
+            <li>Status: Closed ✓</li>
+            <li>In DRM reports</li>
+          </ul>
+        </div>
+      </td>
+
+    </tr>
+  </table>
+
+  <div style="display: table; width: 100%; border-collapse: separate; border-spacing: 6px 0; margin-top: 8px;">
+    <div style="display: table-cell; width: 33%; vertical-align: top;">
+      <div class="info-box">
+        <strong>Friday 12PM Rule:</strong> SSE and DEPT_CONTROLLER cannot accept non-urgent requests for the coming week once Friday 12PM has passed. Urgent Blocks bypass this rule entirely.
+      </div>
+    </div>
+    <div style="display: table-cell; width: 33%; vertical-align: top;">
+      <div class="note-box">
+        <strong>Thursday 4PM Cycle:</strong> Weekly planning runs Thursday 4PM → Sunday 23:59. Requests for the coming week are submitted and processed in this window.
+      </div>
+    </div>
+    <div style="display: table-cell; width: 33%; vertical-align: top;">
+      <div class="warn-box">
+        <strong>Stages 6–9 are new.</strong> These stages — SSE application, SM approval, availing start/close, and SM acknowledgement — are the newly built post-sanctioning flow.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="doc-footer">
+  <div class="footer-left">Southern Railway · BMS &amp; BAA · Developed by ADRIG AI Technologies Pvt. Ltd. · Confidential</div>
+  <div class="footer-right">Document 1 of 5 · March 2026</div>
+</div>
+
+</body>
+</html>

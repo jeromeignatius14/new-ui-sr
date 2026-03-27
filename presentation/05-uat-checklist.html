@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BMS &amp; BAA — User Acceptance Testing Checklist</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 210mm; background: white; }
+
+  @media print {
+    html, body { width: 210mm; }
+    @page { size: A4 portrait; margin: 15mm 18mm 12mm 18mm; }
+    .page-break { page-break-before: always; padding-top: 0; }
+  }
+
+  body {
+    font-family: 'Arial', sans-serif;
+    font-size: 10.5pt;
+    color: #111;
+    padding: 15mm 18mm 12mm;
+  }
+
+  .doc-header { border-bottom: 3px solid #1a3264; padding-bottom: 10px; margin-bottom: 12px; }
+  .org-line { font-size: 8.5pt; color: #555; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .doc-title { font-size: 18pt; font-weight: 900; color: #1a3264; line-height: 1.1; }
+  .doc-subtitle { font-size: 10pt; color: #444; margin-top: 3px; }
+  .doc-meta { float: right; text-align: right; font-size: 8.5pt; color: #666; line-height: 1.6; }
+
+  /* ── INSTRUCTION BOX ── */
+  .instruction {
+    border: 1.5px solid #1a3264;
+    background: #f4f6fb;
+    padding: 8px 12px;
+    font-size: 9pt;
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+
+  /* ── ROLE BLOCK ── */
+  .role-block { margin-bottom: 10px; }
+  .role-header {
+    color: white;
+    font-weight: 800;
+    font-size: 10pt;
+    padding: 5px 10px;
+    display: table;
+    width: 100%;
+  }
+  .rh-title { display: table-cell; }
+  .rh-note { display: table-cell; text-align: right; font-size: 8.5pt; font-weight: 400; opacity: 0.9; }
+
+  /* ── CHECKLIST TABLE ── */
+  table.uat { width: 100%; border-collapse: collapse; font-size: 9pt; }
+  table.uat th { padding: 4px 7px; text-align: left; font-size: 8.5pt; border-bottom: 1px solid; }
+  table.uat td { padding: 4px 7px; border-bottom: 1px solid #e0e0e0; vertical-align: middle; }
+  table.uat tr:last-child td { border-bottom: none; }
+  table.uat tr:nth-child(even) td { background: rgba(0,0,0,0.025); }
+
+  .cb { width: 13px; height: 13px; border: 1.5px solid #555; display: inline-block; border-radius: 1px; }
+  .tc-num { width: 30px; text-align: center; font-size: 8pt; color: #666; }
+  .tc-result { width: 40px; text-align: center; }
+
+  .edge-tag { font-size: 7pt; background: #7b1fa2; color: white; padding: 0 3px; border-radius: 2px; font-weight: 700; }
+  .new-tag { font-size: 7pt; background: #c62828; color: white; padding: 0 3px; border-radius: 2px; font-weight: 700; }
+  .critical-tag { font-size: 7pt; background: #e65100; color: white; padding: 0 3px; border-radius: 2px; font-weight: 700; }
+
+  /* ── SIGN-OFF ── */
+  .signoff-grid { display: table; width: 100%; border-collapse: separate; border-spacing: 8px 0; margin-top: 8px; }
+  .so-col { display: table-cell; vertical-align: top; border: 1.5px solid #1a3264; padding: 8px; }
+  .so-role { font-weight: 800; font-size: 9pt; color: #1a3264; margin-bottom: 8px; border-bottom: 1px solid #1a3264; padding-bottom: 4px; }
+  .so-field { border-bottom: 1.5px solid #555; height: 18px; margin-bottom: 4px; }
+  .so-label { font-size: 8pt; color: #777; margin-bottom: 8px; }
+
+  .issues-box { border: 1.5px solid #1a3264; padding: 8px 10px; margin-top: 8px; }
+  .issues-title { font-weight: 800; font-size: 9.5pt; color: #1a3264; margin-bottom: 6px; }
+  .issues-line { border-bottom: 1px solid #ccc; height: 18px; margin-bottom: 5px; }
+
+  .doc-footer { border-top: 1.5px solid #1a3264; padding-top: 5px; margin-top: 10px; font-size: 8pt; color: #666; display: table; width: 100%; }
+  .footer-left { display: table-cell; }
+  .footer-right { display: table-cell; text-align: right; }
+
+  /* Role colors */
+  .sse-head { background: #1565c0; }
+  .sse-th { background: #bbdefb; color: #0d47a1; border-color: #90caf9; }
+  .sm-head { background: #2e7d32; }
+  .sm-th { background: #c8e6c9; color: #1b5e20; border-color: #a5d6a7; }
+  .ctrl-head { background: #6a1b9a; }
+  .ctrl-th { background: #e1bee7; color: #4a148c; border-color: #ce93d8; }
+  .admin-head { background: #c62828; }
+  .admin-th { background: #ffcdd2; color: #b71c1c; border-color: #ef9a9a; }
+  .tpc-head { background: #37474f; }
+  .tpc-th { background: #cfd8dc; color: #263238; border-color: #b0bec5; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="doc-header">
+  <div class="doc-meta">ADRM, SR-MAS · March 2026<br>Document 5 of 5</div>
+  <div class="org-line">Southern Railway · BMS &amp; BAA</div>
+  <div class="doc-title">User Acceptance Testing (UAT) Checklist</div>
+  <div class="doc-subtitle">Sign-off document — to be completed by real users before production go-live</div>
+</div>
+
+<!-- INSTRUCTION -->
+<div class="instruction">
+  <strong>Instructions:</strong>
+  Each tester marks <strong>P = Pass</strong> if the feature works correctly, <strong>F = Fail</strong> if an issue is found (note it at the bottom), or leave blank if not applicable.
+  Tags: &nbsp;<span class="edge-tag">EDGE</span> = known tricky scenario, must test carefully. &nbsp;<span class="new-tag">NEW</span> = newly built feature. &nbsp;<span class="critical-tag">CRITICAL</span> = must pass for go-live.
+  Sign the sign-off section on page 2 once complete.
+</div>
+
+<!-- SSE / JE -->
+<div class="role-block">
+  <div class="role-header sse-head">
+    <div class="rh-title">Module: Block Request &amp; BAA Avail Block (SSE / JE)</div>
+    <div class="rh-note">Test on mobile phone where possible · Login with SSE / JE credentials</div>
+  </div>
+  <table class="uat">
+    <thead class="sse-th">
+      <tr>
+        <th class="tc-num">#</th>
+        <th>Test Case</th>
+        <th class="tc-result">P / F</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="tc-num">1</td><td>Login with phone OTP — OTP arrives within 60 seconds</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">2</td><td>Submit a new Corridor block request for a date in the current week</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">3</td><td>Submit a new Outside Corridor block request</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">4</td><td><span class="edge-tag">EDGE</span> Submit with powerBlockRequired = true — verify TRD disconnection request appears for correct depot</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">5</td><td><span class="edge-tag">EDGE</span> <span class="critical-tag">CRITICAL</span> On Friday after 12PM, try approving a non-urgent disconnection for next week — system must block it</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">6</td><td>Approve another department's disconnection request with remarks</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">7</td><td>Reject a disconnection request with a reason — submitter is notified</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">8</td><td><span class="new-tag">NEW</span> View a sanctioned block in the "Avail Block" screen</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">9</td><td><span class="new-tag">NEW</span> <span class="critical-tag">CRITICAL</span> Apply for availing — fill work location from/to, enter remarks, submit</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">10</td><td><span class="new-tag">NEW</span> Status changes to "Applied — Awaiting SM Approval" after application</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">11</td><td><span class="new-tag">NEW</span> <span class="critical-tag">CRITICAL</span> After SM approves, acknowledge the approval, then tap "Start Availing"</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">12</td><td><span class="new-tag">NEW</span> When SM modifies block time, SSE is alerted and can accept or reject the modification</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">13</td><td><span class="new-tag">NEW</span> <span class="critical-tag">CRITICAL</span> Submit block closure after work is done — SM sees it pending acknowledgement</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">14</td><td><span class="new-tag">NEW</span> Health score shows correct count after acting on a block</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">15</td><td><span class="edge-tag">EDGE</span> <span class="new-tag">NEW</span> Let block pass 24hrs without action — "Acknowledge Expired Block" modal must appear on next login</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">16</td><td><span class="edge-tag">EDGE</span> <span class="new-tag">NEW</span> Concurrence request — another SSE's block needs your concurrence; verify it appears in your list and you can respond</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">17</td><td>Push notification received on mobile when block is sanctioned</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">18</td><td>Own requests in request table show correct section and depot filter</td><td><span class="cb"></span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SM -->
+<div class="role-block">
+  <div class="role-header sm-head">
+    <div class="rh-title">Module: BAA SM Dashboard (Station Master)</div>
+    <div class="rh-note">Mobile-primary module — test on mobile phone · Login with SM credentials</div>
+  </div>
+  <table class="uat">
+    <thead class="sm-th">
+      <tr><th class="tc-num">#</th><th>Test Case</th><th class="tc-result">P / F</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="tc-num">1</td><td><span class="new-tag">NEW</span> <span class="critical-tag">CRITICAL</span> SM login opens SM dashboard (Pending Avails + Active Blocks) — not the main app</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">2</td><td><span class="new-tag">NEW</span> <span class="critical-tag">CRITICAL</span> SSE's avail request appears in SM Pending Avails list</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">3</td><td><span class="new-tag">NEW</span> <span class="critical-tag">CRITICAL</span> SM approves an avail request — SSE gets notified with alert</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">4</td><td><span class="new-tag">NEW</span> SM modifies block time and approves — SSE sees the modified time with a response prompt</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">5</td><td><span class="new-tag">NEW</span> SM rejects with reason — SSE is notified of rejection</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">6</td><td><span class="new-tag">NEW</span> Active Blocks screen shows blocks currently being availed with elapsed/remaining time</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">7</td><td><span class="new-tag">NEW</span> <span class="critical-tag">CRITICAL</span> When SSE submits closure, SM sees notification and can acknowledge</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">8</td><td><span class="new-tag">NEW</span> <span class="critical-tag">CRITICAL</span> SM acknowledges closure — block shows "Block Closed ✅" on both SM and SSE screens</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">9</td><td><span class="edge-tag">EDGE</span> Block burst — block time passed without closure; SM sees "Block Burst" flag on Active Blocks</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">10</td><td><span class="edge-tag">EDGE</span> Two simultaneous avail requests for same section — SM can see both and act on each independently</td><td><span class="cb"></span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION CONTROLLER -->
+<div class="role-block">
+  <div class="role-header ctrl-head">
+    <div class="rh-title">Module: Section Controller Dashboard (Dept. Controller)</div>
+    <div class="rh-note">Login with your department's controller credentials</div>
+  </div>
+  <table class="uat">
+    <thead class="ctrl-th">
+      <tr><th class="tc-num">#</th><th>Test Case</th><th class="tc-result">P / F</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="tc-num">1</td><td>Pending requests appear under correct tabs: Corridor / Non-Corridor / Urgent / Disconnections</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">2</td><td>Urgent Block request flashes red with animation in the list</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">3</td><td>Edit request — change date, demandTimeFrom, demandTimeTo, and add TPC remarks before approving</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">4</td><td>Approve request — disappears from pending and SSE/JE is notified</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">5</td><td>Reject request with reason — SSE/JE receives notification</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">6</td><td><span class="critical-tag">CRITICAL</span> Disconnections tab shows ONLY requests relevant to your department (TRD sees TRD, S&amp;T sees S&amp;T)</td><td><span class="cb"></span></td></tr>
+      <tr><td class="tc-num">7</td><td><span class="edge-tag">EDGE</span> <span class="critical-tag">CRITICAL</span> Try approving non-urgent request on Friday after 12PM for next Saturday — must be blocked</td><td><span class="cb"></span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ADMIN + TPC in two columns -->
+<div style="display:table; width:100%; border-collapse:separate; border-spacing:6px 0; margin-bottom:10px;">
+  <div style="display:table-cell; vertical-align:top; width:60%;">
+    <div class="role-block" style="margin-bottom:0;">
+      <div class="role-header admin-head">
+        <div class="rh-title">Module: Operating Controller Dashboard</div>
+        <div class="rh-note">Full scope — all sections visible · Login with Operating Controller credentials</div>
+      </div>
+      <table class="uat">
+        <thead class="admin-th">
+          <tr><th class="tc-num">#</th><th>Test Case</th><th class="tc-result">P / F</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="tc-num">1</td><td>Admin table shows ALL accepted requests across all sections</td><td><span class="cb"></span></td></tr>
+          <tr><td class="tc-num">2</td><td>Accept individual request — appears in optimise table</td><td><span class="cb"></span></td></tr>
+          <tr><td class="tc-num">3</td><td>Bulk approve all pending in one action</td><td><span class="cb"></span></td></tr>
+          <tr><td class="tc-num">4</td><td><span class="edge-tag">EDGE</span> Two blocks on same section — optimise assigns non-overlapping times</td><td><span class="cb"></span></td></tr>
+          <tr><td class="tc-num">5</td><td>Sanction selected blocks — SSE/JE push notification received</td><td><span class="cb"></span></td></tr>
+          <tr><td class="tc-num">6</td><td>XLSX export opens correctly with correct data</td><td><span class="cb"></span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div style="display:table-cell; vertical-align:top; width:40%;">
+    <div class="role-block" style="margin-bottom:0;">
+      <div class="role-header tpc-head">
+        <div class="rh-title">Module: TPC Board View</div>
+        <div class="rh-note">Read-only module — verify no action buttons appear · Login with TPC credentials</div>
+      </div>
+      <table class="uat">
+        <thead class="tpc-th">
+          <tr><th class="tc-num">#</th><th>Test Case</th><th class="tc-result">P / F</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="tc-num">1</td><td>8-hr view shows only blocks starting in next 8 hours</td><td><span class="cb"></span></td></tr>
+          <tr><td class="tc-num">2</td><td>16-hr and 24-hr views work correctly</td><td><span class="cb"></span></td></tr>
+          <tr><td class="tc-num">3</td><td>Blocks organised by section correctly (Up/Down lines)</td><td><span class="cb"></span></td></tr>
+          <tr><td class="tc-num">4</td><td><span class="critical-tag">CRITICAL</span> No action buttons visible — TPC is strictly read-only</td><td><span class="cb"></span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE BREAK -->
+<div class="page-break"></div>
+
+<!-- SIGN-OFF -->
+<div style="margin-top: 14px; border: 2px solid #1a3264; padding: 10px 12px; margin-bottom: 10px;">
+  <div style="font-weight:800; font-size:11pt; color:#1a3264; margin-bottom:6px; border-bottom:1.5px solid #1a3264; padding-bottom:5px;">UAT Sign-off Declaration</div>
+  <div style="font-size:9pt; margin-bottom:10px; line-height:1.5;">
+    We, the undersigned representatives, have completed all relevant test cases for our respective roles.
+    All <strong>CRITICAL</strong> items are confirmed as PASS.
+    Any failed items have been communicated to the development team and either resolved or formally noted below.
+    We approve the Block Management System (BMS) &amp; Block Authorization App (BAA) for production use.
+  </div>
+
+  <div class="signoff-grid">
+    <div class="so-col">
+      <div class="so-role">SSE / JE Representative</div>
+      <div class="so-field"></div><div class="so-label">Full Name</div>
+      <div class="so-field"></div><div class="so-label">Designation &amp; Depot</div>
+      <div class="so-field"></div><div class="so-label">Signature</div>
+      <div class="so-field"></div><div class="so-label">Date</div>
+    </div>
+    <div class="so-col">
+      <div class="so-role">SM Representative</div>
+      <div class="so-field"></div><div class="so-label">Full Name</div>
+      <div class="so-field"></div><div class="so-label">Station Name</div>
+      <div class="so-field"></div><div class="so-label">Signature</div>
+      <div class="so-field"></div><div class="so-label">Date</div>
+    </div>
+    <div class="so-col">
+      <div class="so-role">Section Controller</div>
+      <div class="so-field"></div><div class="so-label">Full Name</div>
+      <div class="so-field"></div><div class="so-label">Designation &amp; Dept.</div>
+      <div class="so-field"></div><div class="so-label">Signature</div>
+      <div class="so-field"></div><div class="so-label">Date</div>
+    </div>
+  </div>
+
+  <div style="margin-top:8px; display:table; width:100%; border-collapse:separate; border-spacing:8px 0;">
+    <div style="display:table-cell; vertical-align:top; width:50%; border:1.5px solid #1a3264; padding:8px;">
+      <div style="font-weight:800; font-size:9.5pt; color:#1a3264; margin-bottom:5px;">Admin / Operating Controller Representative</div>
+      <div class="so-field"></div><div class="so-label">Full Name &amp; Designation</div>
+      <div class="so-field" style="margin-top:8px;"></div><div class="so-label">Signature &amp; Date</div>
+    </div>
+    <div style="display:table-cell; vertical-align:top; width:50%; border:1.5px solid #1a3264; padding:8px;">
+      <div style="font-weight:800; font-size:9.5pt; color:#1a3264; margin-bottom:5px;">ADRM / Authorized Officer</div>
+      <div class="so-field"></div><div class="so-label">Full Name &amp; Designation</div>
+      <div class="so-field" style="margin-top:8px;"></div><div class="so-label">Signature &amp; Date — Final Approval for Go-Live</div>
+    </div>
+  </div>
+</div>
+
+<!-- Issues -->
+<div class="issues-box">
+  <div class="issues-title">Issues Found &amp; Resolution Notes:</div>
+  <div class="issues-line"></div>
+  <div class="issues-line"></div>
+  <div class="issues-line"></div>
+  <div class="issues-line"></div>
+  <div class="issues-line" style="margin-bottom:0;"></div>
+</div>
+
+<div class="doc-footer">
+  <div class="footer-left">Southern Railway · BMS &amp; BAA · Developed by ADRIG AI Technologies Pvt. Ltd. · Confidential</div>
+  <div class="footer-right">Document 5 of 5 · March 2026</div>
+</div>
+
+</body>
+</html>

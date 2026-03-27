@@ -22,23 +22,19 @@ export default function AddToHomeScreenPrompt() {
   useEffect(() => {
     if (!promptEvent || hasPrompted) return;
 
-    const handleInteraction = async () => {
+    const interactionHandler = () => {
+      window.removeEventListener("click", interactionHandler);
+      window.removeEventListener("touchstart", interactionHandler);
+      // Must call prompt() synchronously within the user gesture handler
       try {
-        console.log("⚡ Prompting install...");
         promptEvent.prompt();
-        const result = await promptEvent.userChoice;
-        console.log("🧾 User choice:", result.outcome);
-        setHasPrompted(true);
-        setPromptEvent(null);
+        promptEvent.userChoice.then((result: any) => {
+          setHasPrompted(true);
+          setPromptEvent(null);
+        });
       } catch (error) {
         console.error("❌ Error showing A2HS prompt:", error);
       }
-    };
-
-    const interactionHandler = () => {
-      handleInteraction();
-      window.removeEventListener("click", interactionHandler);
-      window.removeEventListener("touchstart", interactionHandler);
     };
 
     window.addEventListener("click", interactionHandler);

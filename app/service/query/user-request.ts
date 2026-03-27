@@ -283,7 +283,7 @@ export function useGetOtherRequests(
   limit = 100,
   startDate?: string,
   endDate?: string,
-  userDepartement?:string
+  userDepartment?:string
 ) {
   const queryParams = new URLSearchParams();
   queryParams.append('page', page.toString());
@@ -292,8 +292,8 @@ export function useGetOtherRequests(
   if (endDate) queryParams.append('endDate', endDate);
 
   return useQuery({
-    queryKey: ['other-requests', selectedDepo, page, limit, startDate, endDate,userDepartement],
-    queryFn: () => userRequestService.getOtherRequests(selectedDepo, page, limit, startDate, endDate,userDepartement),
+    queryKey: ['other-requests', selectedDepo, page, limit, startDate, endDate,userDepartment],
+    queryFn: () => userRequestService.getOtherRequests(selectedDepo, page, limit, startDate, endDate,userDepartment),
     enabled: !!selectedDepo,
   });
 }
