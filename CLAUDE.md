@@ -662,5 +662,5 @@ NEXT_PUBLIC_FIREBASE_VAPID_KEY=  # Firebase FCM VAPID key for push notifications
 6. **DEPT_CONTROLLER** uses both `data.data.requests` (regular requests) AND `data.data.specialDeptRequests` (disconnection requests) — these are different arrays from the same API call
 7. **Friday 12PM rule** is frontend-enforced for both SSE and DEPT_CONTROLLER accept actions
 8. **`managerService` is misnamed** — it is used by multiple roles, not just managers; it contains functions for admin, dept_controller, and officers
-9. **`userDepartement` (note the typo: "departement")** — this typo is in both frontend and backend, do NOT fix it or you'll break the API
+9. **`userDepartment`** — the correct spelling is now used consistently across all frontend and backend code. Always pass it as `userDepartment`.
 10. **`mobileView` parameter** is passed in many requests — it's a flag the backend uses for certain logic. Always include it as `true` or `"mobileView"` when making mutations.

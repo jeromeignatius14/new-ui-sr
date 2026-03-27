@@ -1,596 +1,636 @@
 "use client";
 
-import { useState } from "react";
-import { useSession } from "next-auth/react";
+import { useEffect, useRef, useState } from "react";
+import { useSession, signOut } from "next-auth/react";
 import { Toaster, toast } from "react-hot-toast";
-import { format } from "date-fns";
 import { useGetSmPending } from "@/app/service/query/avail";
 import { useSmApproveAvail, useSmAcknowledgeClosure, useSmApproveExtension } from "@/app/service/mutation/avail";
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function fmtDt(iso?: string | null) {
+  if (!iso) return "—";
+  try {
+    const s = new Date(iso).toISOString();
+    const [y, m, d] = s.slice(0, 10).split("-");
+    return `${d}-${m}-${y} ${s.slice(11, 16)}`;
+  } catch { return "—"; }
+}
+function fmtShort(iso?: string | null) {
+  if (!iso) return "—";
+  try {
+    const s = new Date(iso).toISOString();
+    const [, m, d] = s.slice(0, 10).split("-");
+    return `${d}-${m}\n${s.slice(11, 16)}`;
+  } catch { return "—"; }
+}
+function getExtendedUpto(req: any) {
+  return req.extensionStatus === "APPROVED" && req.extensionRequestedTo
+    ? fmtShort(req.extensionRequestedTo)
+    : "NA";
+}
+function getStatusLabel(req: any) {
+  const s = req.overAllStatus ?? "";
+  if (s === "Block Closed") return "Closed ✓";
+  if (s === "All Closures Submitted") return "Submitted\nto SM";
+  if (s === "Availing Active") return "In Progress";
+  if (s === "SM Approved") return "SM Approved\nAwaiting SSE";
+  if (s === "Pending SM Approval") return "Awaiting\nSM Approval";
+  if (s === "Pending Concurrences") return "Pending\nConcurrences";
+  if (s === "Availing Cancelled") return "Cancelled";
+  return s;
+}
+
+// ── Beep ──────────────────────────────────────────────────────────────────────
+function playBeep() {
+  try {
+    const ctx = new ((window as any).AudioContext || (window as any).webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = "sine"; osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.5);
+  } catch { /* ignore */ }
+}
+
+// ── Table styles ──────────────────────────────────────────────────────────────
+const thSt: React.CSSProperties = {
+  border: "1px solid rgba(0,0,0,0.25)", padding: "8px 10px",
+  fontWeight: 800, fontSize: "13px", textAlign: "center", color: "#000",
+};
+const tdSt: React.CSSProperties = {
+  border: "1px solid #d1d5db", padding: "7px 9px",
+  fontSize: "13px", fontWeight: 600, textAlign: "center",
+  verticalAlign: "middle", color: "#000",
+};
+
+// ── BlinkingRow ───────────────────────────────────────────────────────────────
+function BlinkingRow({ req, onClickId, idx }: { req: any; onClickId: (r: any) => void; idx: number }) {
+  const [on, setOn] = useState(true);
+  useEffect(() => {
+    const id = setInterval(() => setOn(v => !v), 600);
+    return () => clearInterval(id);
+  }, []);
+  const timeFrom = req.smApprovedTimeFrom ?? req.grantedFromTime ?? req.sanctionedTimeFrom;
+  const timeTo   = req.smApprovedTimeTo   ?? req.grantedToTime   ?? req.sanctionedTimeTo;
+  const bg = on ? "#fca5a5" : "#fff0f0";
+  return (
+    <tr style={{ background: bg, transition: "background 0.3s" }}>
+      <td style={{ ...tdSt, fontWeight: 900 }}>{req.smStation ?? "—"}</td>
+      <td style={{ ...tdSt }}>
+        <span onClick={() => onClickId(req)} style={{ cursor: "pointer", color: "#b91c1c", fontWeight: 900, textDecoration: "underline", fontSize: "14px" }}>
+          {req.divisionId ?? (req._id || req.id)?.slice(0, 8)}
+        </span>
+      </td>
+      <td style={tdSt}>{req.missionBlock ?? req.selectedSection ?? "—"}</td>
+      <td style={tdSt}>{req.corridorType ?? "—"}</td>
+      <td style={tdSt}>{req.workLocationFrom ?? "—"}</td>
+      <td style={tdSt}>{req.workLocationTo ?? "—"}</td>
+      <td style={{ ...tdSt, whiteSpace: "pre-line" }}>{fmtShort(timeFrom)}</td>
+      <td style={{ ...tdSt, whiteSpace: "pre-line" }}>{fmtShort(timeTo)}</td>
+      <td style={tdSt}>{getExtendedUpto(req)}</td>
+      <td style={tdSt}>{req.activity ?? "—"}</td>
+      <td style={{ ...tdSt, whiteSpace: "pre-line", color: "#b91c1c", fontWeight: 800 }}>
+        {getStatusLabel(req)}
+      </td>
+    </tr>
+  );
+}
+
+// ── NormalRow ─────────────────────────────────────────────────────────────────
+function NormalRow({ req, onClickId, idx }: { req: any; onClickId: (r: any) => void; idx: number }) {
+  const timeFrom = req.smApprovedTimeFrom ?? req.grantedFromTime ?? req.sanctionedTimeFrom;
+  const timeTo   = req.smApprovedTimeTo   ?? req.grantedToTime   ?? req.sanctionedTimeTo;
+  return (
+    <tr style={{ background: idx % 2 === 0 ? "#fff" : "#faf5ff" }}>
+      <td style={{ ...tdSt, fontWeight: 900 }}>{req.smStation ?? "—"}</td>
+      <td style={tdSt}>
+        <span onClick={() => onClickId(req)} style={{ cursor: "pointer", color: "#1d4ed8", fontWeight: 800, textDecoration: "underline", fontSize: "14px" }}>
+          {req.divisionId ?? (req._id || req.id)?.slice(0, 8)}
+        </span>
+      </td>
+      <td style={tdSt}>{req.missionBlock ?? req.selectedSection ?? "—"}</td>
+      <td style={tdSt}>{req.corridorType ?? "—"}</td>
+      <td style={tdSt}>{req.workLocationFrom ?? "—"}</td>
+      <td style={tdSt}>{req.workLocationTo ?? "—"}</td>
+      <td style={{ ...tdSt, whiteSpace: "pre-line" }}>{fmtShort(timeFrom)}</td>
+      <td style={{ ...tdSt, whiteSpace: "pre-line" }}>{fmtShort(timeTo)}</td>
+      <td style={tdSt}>{getExtendedUpto(req)}</td>
+      <td style={tdSt}>{req.activity ?? "—"}</td>
+      <td style={{ ...tdSt, whiteSpace: "pre-line" }}>{getStatusLabel(req)}</td>
+    </tr>
+  );
+}
+
+// ── Section Table ─────────────────────────────────────────────────────────────
+function SectionTable({ title, subtitle, headerColor, rows, blink, onClickId, emptyMsg }: {
+  title: string; subtitle?: string; headerColor: string;
+  rows: any[]; blink?: boolean;
+  onClickId: (r: any) => void; emptyMsg: string;
+}) {
+  return (
+    <div style={{ border: "2px solid #888", borderRadius: "10px", overflow: "hidden", marginBottom: "20px" }}>
+      <div style={{ background: headerColor, padding: "10px 16px", textAlign: "center" }}>
+        <div style={{ fontWeight: 900, fontSize: "17px", color: "#fff", letterSpacing: "0.5px", textShadow: "0 1px 2px rgba(0,0,0,0.3)" }}>{title}</div>
+        {subtitle && <div style={{ fontStyle: "italic", fontSize: "12px", color: "rgba(255,255,255,0.85)", marginTop: "2px" }}>{subtitle}</div>}
+      </div>
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", background: "#fff", minWidth: "700px" }}>
+          <thead>
+            <tr style={{ background: "#f3c6d5" }}>
+              <th style={thSt} rowSpan={2}>Station</th>
+              <th style={thSt} rowSpan={2}>ID</th>
+              <th style={thSt} rowSpan={2}>Block Section<br />/Yard</th>
+              <th style={thSt} rowSpan={2}>UP/DN/<br />Road No.</th>
+              <th style={{ ...thSt }} colSpan={2}>Location</th>
+              <th style={{ ...thSt }} colSpan={2}>Timings</th>
+              <th style={thSt} rowSpan={2}>Extended<br />Upto</th>
+              <th style={thSt} rowSpan={2}>Activity</th>
+              <th style={thSt} rowSpan={2}>Status</th>
+            </tr>
+            <tr style={{ background: "#f3c6d5" }}>
+              <th style={thSt}>From</th><th style={thSt}>To</th>
+              <th style={thSt}>From</th><th style={thSt}>To</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0
+              ? <tr><td colSpan={11} style={{ ...tdSt, padding: "20px", color: "#9ca3af", fontStyle: "italic", background: "#fafafa" }}>{emptyMsg}</td></tr>
+              : rows.map((req, i) =>
+                  blink
+                    ? <BlinkingRow key={req._id || req.id} req={req} onClickId={onClickId} idx={i} />
+                    : <NormalRow   key={req._id || req.id} req={req} onClickId={onClickId} idx={i} />
+                )
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ── Detail field ──────────────────────────────────────────────────────────────
+function DRow({ label, value }: { label: string; value?: string | null }) {
+  if (!value) return null;
+  return (
+    <div style={{ display: "flex", gap: "10px", padding: "8px 0", borderBottom: "1px solid #e5e7eb", alignItems: "flex-start" }}>
+      <span style={{ fontSize: "13px", color: "#374151", fontWeight: 700, minWidth: "150px", flexShrink: 0 }}>{label}</span>
+      <span style={{ fontSize: "14px", color: "#111827", fontWeight: 700, textAlign: "right", flex: 1 }}>{value}</span>
+    </div>
+  );
+}
+
+// ── Modal ──────────────────────────────────────────────────────────────────────
+function Modal({ title, accent, children, onClose }: { title: string; accent?: string; children: React.ReactNode; onClose: () => void }) {
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: "12px" }}>
+      <div style={{ background: "#fff", borderRadius: "14px", width: "100%", maxWidth: "500px", boxShadow: "0 24px 64px rgba(0,0,0,0.35)", overflow: "hidden", maxHeight: "92vh", display: "flex", flexDirection: "column" }}>
+        <div style={{ background: accent ?? "#1f2937", padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+          <h3 style={{ color: "#fff", fontWeight: 800, fontSize: "16px", margin: 0 }}>{title}</h3>
+          <button onClick={onClose} style={{ background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", cursor: "pointer", fontSize: "18px", lineHeight: 1, borderRadius: "6px", padding: "2px 8px" }}>×</button>
+        </div>
+        <div style={{ padding: "20px", overflowY: "auto", flex: 1 }}>{children}</div>
+      </div>
+    </div>
+  );
+}
+
+function SectionDivider({ label }: { label: string }) {
+  return (
+    <div style={{ background: "#1e40af", borderRadius: "6px", padding: "6px 12px", margin: "16px 0 10px", fontSize: "12px", fontWeight: 800, color: "#fff", textTransform: "uppercase", letterSpacing: "1px" }}>
+      {label}
+    </div>
+  );
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 export default function SmPendingAvailsPage() {
   const { data: session } = useSession();
-  const [activeTab, setActiveTab] = useState<"approvals" | "closures" | "extensions">("approvals");
-
-  // Approval modal state
-  const [showApproveModal, setShowApproveModal] = useState(false);
-  const [approveRequest, setApproveRequest] = useState<any>(null);
-  const [smRemarks, setSmRemarks] = useState("");
-  const [modifyTime, setModifyTime] = useState(false);
-  const [smTimeFrom, setSmTimeFrom] = useState("");
-  const [smTimeTo, setSmTimeTo] = useState("");
-  const [approveAction, setApproveAction] = useState<"APPROVE" | "APPROVE_WITH_MODIFICATION" | "REJECT">("APPROVE");
-
-  // Reject modal state
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [rejectRequest, setRejectRequest] = useState<any>(null);
-  const [rejectRemarks, setRejectRemarks] = useState("");
-
-  // Closure acknowledgement modal state
-  const [showClosureModal, setShowClosureModal] = useState(false);
-  const [closureRequest, setClosureRequest] = useState<any>(null);
-  const [closureAckRemarks, setClosureAckRemarks] = useState("");
-
-  // Extension modal state
-  const [showExtensionModal, setShowExtensionModal] = useState(false);
-  const [extensionRequest, setExtensionRequest] = useState<any>(null);
-  const [extensionAction, setExtensionAction] = useState<"APPROVE" | "REJECT">("APPROVE");
-  const [extensionSmRemarks, setExtensionSmRemarks] = useState("");
-
   const { data, isLoading, refetch } = useGetSmPending();
-  const approveMutation = useSmApproveAvail();
+  const approveMutation    = useSmApproveAvail();
   const closureAckMutation = useSmAcknowledgeClosure();
-  const extensionMutation = useSmApproveExtension();
+  const extensionMutation  = useSmApproveExtension();
 
-  const pendingApprovals: any[] = data?.data?.pendingApprovals ?? [];
-  const pendingClosures: any[] = data?.data?.pendingClosures ?? [];
+  // Modal
+  const [activeReq,   setActiveReq]   = useState<any>(null);
+  const [modalType,   setModalType]   = useState<"approval" | "extension" | "closure" | "view" | null>(null);
+
+  // Approve form
+  const [modifyTime,  setModifyTime]  = useState(false);
+  const [smTimeFrom,  setSmTimeFrom]  = useState("");
+  const [smTimeTo,    setSmTimeTo]    = useState("");
+  const [smRemarks,   setSmRemarks]   = useState("");
+
+  // Reject form (inside approval modal)
+  const [rejectMode,  setRejectMode]  = useState(false);
+  const [rejectRmk,   setRejectRmk]   = useState("");
+
+  // Closure form
+  const [closureRmk,  setClosureRmk]  = useState("");
+
+  // Extension form
+  const [extAction,   setExtAction]   = useState<"APPROVE"|"REJECT">("APPROVE");
+  const [extRemarks,  setExtRemarks]  = useState("");
+
+  const pendingApprovals:  any[] = data?.data?.pendingApprovals  ?? [];
+  const pendingClosures:   any[] = data?.data?.pendingClosures   ?? [];
   const pendingExtensions: any[] = data?.data?.pendingExtensions ?? [];
+  const inProgress:        any[] = data?.data?.inProgress        ?? [];
+  const smApproved:        any[] = data?.data?.smApproved        ?? [];
+  const alreadyAvailed:    any[] = data?.data?.alreadyAvailed    ?? [];
 
-  const formatTime = (isoString: string | null) => {
-    if (!isoString) return "—";
-    try {
-      return format(new Date(isoString), "dd-MM-yyyy HH:mm");
-    } catch {
-      return isoString;
+  const pendingAction = [...pendingApprovals, ...pendingExtensions, ...pendingClosures];
+  const underProgress = [...inProgress, ...smApproved];
+
+  // Beep when pendingAction is non-empty
+  const lastBeepRef = useRef(0);
+  useEffect(() => {
+    if (pendingAction.length === 0) return;
+    const id = setInterval(() => {
+      const now = Date.now();
+      if (now - lastBeepRef.current > 8000) { playBeep(); lastBeepRef.current = now; }
+    }, 1000);
+    return () => clearInterval(id);
+  }, [pendingAction.length]);
+
+  // ── Open modal ──────────────────────────────────────────────────────────────
+  function openModal(req: any) {
+    setActiveReq(req);
+    setRejectMode(false);
+    setModifyTime(false); setSmTimeFrom(""); setSmTimeTo(""); setSmRemarks("");
+    setRejectRmk(""); setClosureRmk(""); setExtRemarks(""); setExtAction("APPROVE");
+
+    if (pendingApprovals.some((r: any) => (r._id||r.id) === (req._id||req.id))) {
+      setModalType("approval");
+    } else if (pendingExtensions.some((r: any) => (r._id||r.id) === (req._id||req.id))) {
+      setModalType("extension");
+    } else if (pendingClosures.some((r: any) => (r._id||r.id) === (req._id||req.id))) {
+      setModalType("closure");
+    } else {
+      setModalType("view");
     }
-  };
+  }
 
-  // Validate SM cannot reduce duration by more than 30%
-  const validateTimeModification = (request: any, timeFrom: string, timeTo: string): boolean => {
-    if (!request?.grantedFromTime || !request?.grantedToTime) return true;
-    const originalDuration =
-      new Date(request.grantedToTime).getTime() - new Date(request.grantedFromTime).getTime();
-    const newDuration = new Date(timeTo).getTime() - new Date(timeFrom).getTime();
-    const minAllowed = originalDuration * 0.7;
-    if (newDuration < minAllowed) {
-      toast.error("Cannot reduce block duration by more than 30%");
-      return false;
+  // ── Submit helpers ──────────────────────────────────────────────────────────
+  function submitApprove() {
+    if (!activeReq) return;
+    if (modifyTime && (!smTimeFrom || !smTimeTo)) { toast.error("Enter both times"); return; }
+    if (modifyTime) {
+      const orig = new Date(activeReq.grantedToTime).getTime() - new Date(activeReq.grantedFromTime).getTime();
+      const nd   = new Date(smTimeTo).getTime() - new Date(smTimeFrom).getTime();
+      if (nd < orig * 0.7) { toast.error("Cannot reduce duration by more than 30%"); return; }
     }
-    return true;
-  };
+    approveMutation.mutate({
+      requestId: activeReq._id || activeReq.id,
+      action: modifyTime ? "APPROVE_WITH_MODIFICATION" : "APPROVE",
+      smApprovedTimeFrom: modifyTime ? smTimeFrom : undefined,
+      smApprovedTimeTo: modifyTime ? smTimeTo : undefined,
+      smRemarks: smRemarks || undefined,
+    }, {
+      onSuccess: () => { setModalType(null); toast.success("Approved"); refetch(); },
+      onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed"),
+    });
+  }
 
-  const handleOpenApprove = (request: any) => {
-    setApproveRequest(request);
-    setSmRemarks("");
-    setModifyTime(false);
-    setSmTimeFrom("");
-    setSmTimeTo("");
-    setApproveAction("APPROVE");
-    setShowApproveModal(true);
-  };
+  function submitReject() {
+    if (!activeReq) return;
+    if (!rejectRmk.trim()) { toast.error("Remarks required"); return; }
+    approveMutation.mutate({
+      requestId: activeReq._id || activeReq.id,
+      action: "REJECT",
+      smRemarks: rejectRmk,
+    }, {
+      onSuccess: () => { setModalType(null); toast.success("Rejected"); refetch(); },
+      onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed"),
+    });
+  }
 
-  const handleOpenReject = (request: any) => {
-    setRejectRequest(request);
-    setRejectRemarks("");
-    setShowRejectModal(true);
-  };
+  function submitClosure() {
+    if (!activeReq) return;
+    closureAckMutation.mutate({
+      requestId: activeReq._id || activeReq.id,
+      smClosureRemarks: closureRmk,
+    }, {
+      onSuccess: () => { setModalType(null); toast.success("Block closed"); refetch(); },
+      onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed"),
+    });
+  }
 
-  const handleSubmitApprove = () => {
-    if (!approveRequest) return;
-    const action: "APPROVE" | "APPROVE_WITH_MODIFICATION" = modifyTime
-      ? "APPROVE_WITH_MODIFICATION"
-      : "APPROVE";
-    if (action === "APPROVE_WITH_MODIFICATION") {
-      if (!smTimeFrom || !smTimeTo) {
-        toast.error("Please enter both modified time values");
-        return;
-      }
-      if (!validateTimeModification(approveRequest, smTimeFrom, smTimeTo)) return;
-    }
-    approveMutation.mutate(
-      {
-        requestId: approveRequest._id || approveRequest.id,
-        action,
-        smApprovedTimeFrom: modifyTime ? smTimeFrom : undefined,
-        smApprovedTimeTo: modifyTime ? smTimeTo : undefined,
-        smRemarks: smRemarks || undefined,
-      },
-      {
-        onSuccess: () => {
-          setShowApproveModal(false);
-          refetch();
-        },
-      }
+  function submitExtension(action?: "APPROVE" | "REJECT") {
+    if (!activeReq) return;
+    const act = action ?? extAction;
+    if (act === "REJECT" && !extRemarks.trim()) { toast.error("Remarks required to reject"); return; }
+    const pendingExtParticipant = (activeReq.availParticipants ?? []).find((p: any) => p.extensionStatus === "PENDING");
+    extensionMutation.mutate({
+      requestId: activeReq._id || activeReq.id,
+      participantId: pendingExtParticipant?.id,
+      action: act,
+      smRemarks: extRemarks || undefined,
+    }, {
+      onSuccess: () => { setModalType(null); toast.success(`Extension ${act === "APPROVE" ? "approved" : "rejected"}`); refetch(); },
+      onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed"),
+    });
+  }
+
+  // ── Clock ───────────────────────────────────────────────────────────────────
+  const [tick, setTick] = useState(0);
+  useEffect(() => { const id = setInterval(() => setTick(t => t + 1), 30000); return () => clearInterval(id); }, []);
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const currentDate = `${pad(now.getUTCDate())}/${pad(now.getUTCMonth()+1)}/${now.getUTCFullYear()}`;
+  const currentTime = `${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())}`;
+
+  // ── Concurrence badge helper ─────────────────────────────────────────────────
+  function ConcBadges({ req }: { req: any }) {
+    const all = [
+      ...(req.trdAvailConcurrences  ?? []).map((c: any) => ({ prefix: "TRD",  ...c })),
+      ...(req.sntAvailConcurrences  ?? []).map((c: any) => ({ prefix: "S&T",  ...c })),
+      ...(req.enggAvailConcurrences ?? []).map((c: any) => ({ prefix: "ENGG", ...c })),
+    ];
+    if (all.length === 0) return null;
+    return (
+      <div style={{ marginTop: "4px", display: "flex", flexWrap: "wrap", gap: "5px" }}>
+        {all.map((c: any, i: number) => (
+          <span key={i} style={{
+            padding: "3px 10px", borderRadius: "12px", fontSize: "12px", fontWeight: 700,
+            background: c.status === "ACCEPTED" ? "#dcfce7" : c.status === "REJECTED" ? "#fef2f2" : "#fef3c7",
+            color: c.status === "ACCEPTED" ? "#166534" : c.status === "REJECTED" ? "#991b1b" : "#92400e",
+            border: `1.5px solid ${c.status === "ACCEPTED" ? "#86efac" : c.status === "REJECTED" ? "#fca5a5" : "#fde68a"}`,
+          }}>
+            {c.prefix}/{c.depot}: {c.status}
+          </span>
+        ))}
+      </div>
     );
-  };
+  }
 
-  const handleSubmitReject = () => {
-    if (!rejectRequest) return;
-    if (!rejectRemarks.trim()) {
-      toast.error("Please enter rejection remarks");
-      return;
-    }
-    approveMutation.mutate(
-      {
-        requestId: rejectRequest._id || rejectRequest.id,
-        action: "REJECT",
-        smRemarks: rejectRemarks,
-      },
-      {
-        onSuccess: () => {
-          setShowRejectModal(false);
-          refetch();
-        },
-      }
-    );
-  };
-
-  const handleOpenClosureAck = (request: any) => {
-    setClosureRequest(request);
-    setClosureAckRemarks("");
-    setShowClosureModal(true);
-  };
-
-  const handleSubmitClosureAck = () => {
-    if (!closureRequest) return;
-    closureAckMutation.mutate(
-      {
-        requestId: closureRequest._id || closureRequest.id,
-        smClosureRemarks: closureAckRemarks,
-      },
-      {
-        onSuccess: () => {
-          setShowClosureModal(false);
-          refetch();
-        },
-      }
-    );
-  };
-
-  const handleOpenExtension = (req: any, action: "APPROVE" | "REJECT") => {
-    setExtensionRequest(req);
-    setExtensionAction(action);
-    setExtensionSmRemarks("");
-    setShowExtensionModal(true);
-  };
-
-  const handleSubmitExtension = () => {
-    if (!extensionRequest) return;
-    if (extensionAction === "REJECT" && !extensionSmRemarks.trim()) {
-      toast.error("Please enter rejection remarks");
-      return;
-    }
-    extensionMutation.mutate(
-      {
-        requestId: extensionRequest._id || extensionRequest.id,
-        action: extensionAction,
-        smRemarks: extensionSmRemarks || undefined,
-      },
-      {
-        onSuccess: () => {
-          setShowExtensionModal(false);
-          refetch();
-        },
-      }
-    );
-  };
+  const fldInput: React.CSSProperties = { width: "100%", padding: "10px 14px", borderRadius: "8px", border: "2px solid #6b7280", fontSize: "15px", fontWeight: 600, color: "#111827", boxSizing: "border-box", background: "#fff", outline: "none", marginTop: "6px", display: "block" };
+  const fldLabel: React.CSSProperties = { fontSize: "13px", fontWeight: 800, color: "#1f2937", letterSpacing: "0.3px", display: "block", marginTop: "10px" };
+  const btnGreen: React.CSSProperties = { flex: 1, padding: "12px", borderRadius: "8px", fontWeight: 800, fontSize: "14px", cursor: "pointer", border: "none", background: "#16a34a", color: "#fff" };
+  const btnRed:   React.CSSProperties = { ...btnGreen, background: "#dc2626" };
+  const btnGray:  React.CSSProperties = { ...btnGreen, background: "#e5e7eb", color: "#374151" };
+  const btnAmber: React.CSSProperties = { ...btnGreen, background: "#d97706" };
 
   return (
-    <div className="min-h-screen bg-[#fffbe9]">
-      <Toaster />
-      {/* Header */}
-      <div className="w-full border border-black bg-yellow-200 flex items-center justify-center relative p-2" style={{ minHeight: 60 }}>
-        <span className="text-2xl font-bold text-black">Station Master — Availing Approvals</span>
+    <div style={{ minHeight: "100vh", background: "#c8f7c8", fontFamily: "Arial, sans-serif" }}>
+      <Toaster position="top-center" />
+
+      {/* RBMS header */}
+      <div style={{ background: "#fef08a", padding: "10px", textAlign: "center" }}>
+        <span style={{ fontSize: "28px", fontWeight: 900, color: "#7c3aed", letterSpacing: "3px" }}>RBMS</span>
       </div>
 
-      <div className="p-4">
-        {/* Station info */}
-        <div className="text-sm text-gray-600 mb-4">
-          Station: <span className="font-semibold">{session?.user?.depot || "—"}</span>
+      {/* Date / Station / Time */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 14px", gap: "10px", flexWrap: "wrap" }}>
+        <div style={{ background: "#e0e7ff", border: "2px solid #a5b4fc", borderRadius: "8px", padding: "8px 14px", textAlign: "center", fontWeight: 800, fontSize: "13px", color: "#000" }}>
+          CURRENT DATE<br />{currentDate}
         </div>
-
-        {/* Tabs */}
-        <div className="flex border-b border-gray-300 mb-4">
-          <button
-            className={`px-6 py-2 font-semibold text-sm border-b-2 transition ${
-              activeTab === "approvals"
-                ? "border-orange-500 text-orange-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
-            onClick={() => setActiveTab("approvals")}
-          >
-            Pending Approvals
-            {pendingApprovals.length > 0 && (
-              <span className="ml-2 bg-orange-500 text-white text-xs rounded-full px-2 py-0.5">
-                {pendingApprovals.length}
-              </span>
-            )}
-          </button>
-          <button
-            className={`px-6 py-2 font-semibold text-sm border-b-2 transition ${
-              activeTab === "closures"
-                ? "border-orange-500 text-orange-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
-            onClick={() => setActiveTab("closures")}
-          >
-            Pending Closures
-            {pendingClosures.length > 0 && (
-              <span className="ml-2 bg-orange-500 text-white text-xs rounded-full px-2 py-0.5">
-                {pendingClosures.length}
-              </span>
-            )}
-          </button>
-          <button
-            className={`px-6 py-2 font-semibold text-sm border-b-2 transition ${
-              activeTab === "extensions"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
-            onClick={() => setActiveTab("extensions")}
-          >
-            Pending Extensions
-            {pendingExtensions.length > 0 && (
-              <span className="ml-2 bg-blue-500 text-white text-xs rounded-full px-2 py-0.5">
-                {pendingExtensions.length}
-              </span>
-            )}
-          </button>
+        <div style={{ background: "#4ade80", border: "2px solid #16a34a", borderRadius: "8px", padding: "8px 20px", textAlign: "center", fontWeight: 900, fontSize: "15px", color: "#000", flex: 1, maxWidth: "400px" }}>
+          SMR DASHBOARD
+          <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: "4px", marginTop: "4px" }}>
+            {(session?.user?.depot ?? "").split(",").filter(Boolean).map(s => (
+              <span key={s} style={{ background: "#15803d", color: "#fff", borderRadius: "4px", padding: "1px 8px", fontSize: "13px", fontWeight: 800 }}>{s.trim()}</span>
+            ))}
+          </div>
         </div>
-
-        {isLoading && (
-          <div className="text-center py-10 text-gray-500">Loading...</div>
-        )}
-
-        {/* Pending Approvals Tab */}
-        {activeTab === "approvals" && !isLoading && (
-          <div>
-            {pendingApprovals.length === 0 ? (
-              <div className="text-center py-10 text-gray-500 bg-white border border-gray-200 rounded">
-                No pending availing approvals
-              </div>
-            ) : (
-              pendingApprovals.map((req: any) => (
-                <div key={req._id || req.id} className="bg-white border border-black rounded mb-3 p-4">
-                  <div className="grid grid-cols-2 gap-2 text-sm mb-3">
-                    <div><span className="font-semibold">Section:</span> {req.selectedSection || req.missionBlock || "—"}</div>
-                    <div><span className="font-semibold">Work Type:</span> {req.workType || "—"}</div>
-                    <div><span className="font-semibold">Dept:</span> {req.selectedDepartment || "—"}</div>
-                    <div><span className="font-semibold">Depot:</span> {req.selectedDepo || "—"}</div>
-                    <div><span className="font-semibold">Granted From:</span> {formatTime(req.grantedFromTime)}</div>
-                    <div><span className="font-semibold">Granted To:</span> {formatTime(req.grantedToTime)}</div>
-                    {req.oheMasFrom && <div><span className="font-semibold">OHE From:</span> {req.oheMasFrom}</div>}
-                    {req.oheMasTo && <div><span className="font-semibold">OHE To:</span> {req.oheMasTo}</div>}
-                  </div>
-
-                  {/* Concurrence statuses */}
-                  {(req.trdAvailConcurrences?.length > 0 || req.sntAvailConcurrences?.length > 0 || req.enggAvailConcurrences?.length > 0) && (
-                    <div className="mb-3 text-xs">
-                      <p className="font-semibold text-gray-600 mb-1">Concurrences:</p>
-                      {req.trdAvailConcurrences?.map((c: any, i: number) => (
-                        <span key={i} className={`inline-block mr-2 px-2 py-0.5 rounded text-white ${c.status === "ACCEPTED" ? "bg-green-600" : c.status === "REJECTED" ? "bg-red-600" : "bg-yellow-500"}`}>
-                          TRD/{c.depot}: {c.status}
-                        </span>
-                      ))}
-                      {req.sntAvailConcurrences?.map((c: any, i: number) => (
-                        <span key={i} className={`inline-block mr-2 px-2 py-0.5 rounded text-white ${c.status === "ACCEPTED" ? "bg-green-600" : c.status === "REJECTED" ? "bg-red-600" : "bg-yellow-500"}`}>
-                          S&T/{c.depot}: {c.status}
-                        </span>
-                      ))}
-                      {req.enggAvailConcurrences?.map((c: any, i: number) => (
-                        <span key={i} className={`inline-block mr-2 px-2 py-0.5 rounded text-white ${c.status === "ACCEPTED" ? "bg-green-600" : c.status === "REJECTED" ? "bg-red-600" : "bg-yellow-500"}`}>
-                          ENGG/{c.depot}: {c.status}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="flex gap-2 flex-wrap">
-                    <button
-                      onClick={() => handleOpenApprove(req)}
-                      className="bg-green-600 text-white text-sm px-4 py-1.5 rounded font-semibold hover:bg-green-700"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleOpenApprove(req);
-                        setModifyTime(true);
-                        setApproveAction("APPROVE_WITH_MODIFICATION");
-                      }}
-                      className="bg-blue-600 text-white text-sm px-4 py-1.5 rounded font-semibold hover:bg-blue-700"
-                    >
-                      Approve with Time Change
-                    </button>
-                    <button
-                      onClick={() => handleOpenReject(req)}
-                      className="bg-red-600 text-white text-sm px-4 py-1.5 rounded font-semibold hover:bg-red-700"
-                    >
-                      Reject
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
+        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+          <div style={{ background: "#e0e7ff", border: "2px solid #a5b4fc", borderRadius: "8px", padding: "8px 14px", textAlign: "center", fontWeight: 800, fontSize: "13px", color: "#000" }}>
+            CURRENT TIME<br />{currentTime}
           </div>
-        )}
-
-        {/* Pending Closures Tab */}
-        {activeTab === "closures" && !isLoading && (
-          <div>
-            {pendingClosures.length === 0 ? (
-              <div className="text-center py-10 text-gray-500 bg-white border border-gray-200 rounded">
-                No pending block closures
-              </div>
-            ) : (
-              pendingClosures.map((req: any) => (
-                <div key={req._id || req.id} className="bg-white border border-black rounded mb-3 p-4">
-                  <div className="grid grid-cols-2 gap-2 text-sm mb-3">
-                    <div><span className="font-semibold">Section:</span> {req.selectedSection || req.missionBlock || "—"}</div>
-                    <div><span className="font-semibold">Depot:</span> {req.selectedDepo || "—"}</div>
-                    <div><span className="font-semibold">Granted From:</span> {formatTime(req.grantedFromTime)}</div>
-                    <div><span className="font-semibold">Granted To:</span> {formatTime(req.grantedToTime)}</div>
-                    {req.smApprovedTimeFrom && <div><span className="font-semibold">SM Time From:</span> {formatTime(req.smApprovedTimeFrom)}</div>}
-                    {req.smApprovedTimeTo && <div><span className="font-semibold">SM Time To:</span> {formatTime(req.smApprovedTimeTo)}</div>}
-                    {req.availingStartedAt && <div><span className="font-semibold">Availing Started:</span> {formatTime(req.availingStartedAt)}</div>}
-                    {req.closureYard && <div><span className="font-semibold">Closure Yard:</span> {req.closureYard}</div>}
-                    {req.closureRemarks && <div className="col-span-2"><span className="font-semibold">Closure Remarks:</span> {req.closureRemarks}</div>}
-                  </div>
-                  <button
-                    onClick={() => handleOpenClosureAck(req)}
-                    className="bg-orange-600 text-white text-sm px-4 py-1.5 rounded font-semibold hover:bg-orange-700"
-                  >
-                    Acknowledge Closure
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-
-        {/* Pending Extensions Tab */}
-        {activeTab === "extensions" && !isLoading && (
-          <div>
-            {pendingExtensions.length === 0 ? (
-              <div className="text-center py-10 text-gray-500 bg-white border border-gray-200 rounded">
-                No pending time extension requests
-              </div>
-            ) : (
-              pendingExtensions.map((req: any) => (
-                <div key={req._id || req.id} className="bg-white border border-black rounded mb-3 p-4">
-                  <div className="grid grid-cols-2 gap-2 text-sm mb-3">
-                    <div><span className="font-semibold">Section:</span> {req.selectedSection || req.missionBlock || "—"}</div>
-                    <div><span className="font-semibold">Depot:</span> {req.selectedDepo || "—"}</div>
-                    <div><span className="font-semibold">Approved From:</span> {formatTime(req.smApprovedTimeFrom ?? req.grantedFromTime)}</div>
-                    <div><span className="font-semibold">Approved To:</span> {formatTime(req.smApprovedTimeTo ?? req.grantedToTime)}</div>
-                    <div className="col-span-2 bg-blue-50 p-2 rounded border border-blue-200">
-                      <span className="font-semibold text-blue-800">Extension Requested To:</span>{" "}
-                      <span className="text-blue-900 font-bold">{formatTime(req.extensionRequestedTo)}</span>
-                    </div>
-                    {req.extensionRemarks && (
-                      <div className="col-span-2">
-                        <span className="font-semibold">SSE Remarks:</span> {req.extensionRemarks}
-                      </div>
-                    )}
-                    {req.availingStartedAt && (
-                      <div><span className="font-semibold">Availing Started:</span> {formatTime(req.availingStartedAt)}</div>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleOpenExtension(req, "APPROVE")}
-                      className="bg-green-600 text-white text-sm px-4 py-1.5 rounded font-semibold hover:bg-green-700"
-                    >
-                      Approve Extension
-                    </button>
-                    <button
-                      onClick={() => handleOpenExtension(req, "REJECT")}
-                      className="bg-red-600 text-white text-sm px-4 py-1.5 rounded font-semibold hover:bg-red-700"
-                    >
-                      Reject Extension
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
+          <button onClick={() => refetch()} style={{ background: "#0d9488", color: "#fff", border: "none", borderRadius: "8px", padding: "9px 13px", fontWeight: 700, fontSize: "15px", cursor: "pointer" }}>↻</button>
+          <button onClick={() => signOut({ callbackUrl: "/auth/login" })} style={{ background: "#374151", color: "#fbbf24", border: "none", borderRadius: "8px", padding: "9px 14px", fontWeight: 700, fontSize: "12px", cursor: "pointer" }}>Logout</button>
+        </div>
       </div>
 
-      {/* Approve Modal */}
-      {showApproveModal && approveRequest && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg border border-black w-full max-w-md p-5">
-            <h3 className="text-lg font-bold mb-4">
-              {modifyTime ? "Approve with Time Modification" : "Approve Availing Request"}
-            </h3>
+      {/* Alert banner when pending */}
+      {pendingAction.length > 0 && (
+        <div style={{ margin: "0 14px 10px", background: "#fef2f2", border: "2px solid #dc2626", borderRadius: "8px", padding: "8px 14px", fontWeight: 800, fontSize: "14px", color: "#dc2626", textAlign: "center" }}>
+          ⚡ {pendingAction.length} request{pendingAction.length !== 1 ? "s" : ""} need your immediate action
+        </div>
+      )}
 
-            {modifyTime && (
-              <div className="mb-4">
-                <p className="text-xs text-gray-500 mb-2">
-                  Original granted: {formatTime(approveRequest.grantedFromTime)} — {formatTime(approveRequest.grantedToTime)}
-                </p>
-                <p className="text-xs text-orange-600 mb-3 font-semibold">
-                  Note: Duration cannot be reduced by more than 30%
-                </p>
-                <label className="block text-sm font-semibold mb-1">New Time From</label>
-                <input
-                  type="datetime-local"
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm mb-3"
-                  value={smTimeFrom}
-                  onChange={(e) => setSmTimeFrom(e.target.value)}
-                />
-                <label className="block text-sm font-semibold mb-1">New Time To</label>
-                <input
-                  type="datetime-local"
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                  value={smTimeTo}
-                  onChange={(e) => setSmTimeTo(e.target.value)}
-                />
+      {isLoading
+        ? <div style={{ textAlign: "center", padding: "60px", fontWeight: 700, fontSize: "16px" }}>Loading…</div>
+        : (
+          <div style={{ padding: "0 12px 16px" }}>
+
+            <SectionTable title="REQUESTS PENDING FOR AVAILING / CANCELLATION BLOCKS" subtitle="(CLICK ID TO TAKE ACTION)" headerColor="#c2185b" rows={pendingAction} blink onClickId={openModal} emptyMsg="No pending requests" />
+            <SectionTable title="BLOCKS UNDER PROGRESS" subtitle="(CLICK ID TO SEE FULL DETAILS)" headerColor="#e65100" rows={underProgress} onClickId={openModal} emptyMsg="No blocks in progress" />
+            <SectionTable title="UPCOMING SANCTIONED BLOCKS" subtitle="(CLICK ID TO SEE FULL DETAILS)" headerColor="#2e7d32" rows={[]} onClickId={openModal} emptyMsg="No upcoming sanctioned blocks" />
+            <SectionTable title="BLOCKS ALREADY AVAILED" subtitle="(CLICK ID TO SEE FULL DETAILS)" headerColor="#1565c0" rows={alreadyAvailed} onClickId={openModal} emptyMsg="No availed blocks in last 48 hrs" />
+
+          </div>
+        )
+      }
+
+      {/* HOME / LOGOUT / BACK */}
+      <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 16px 28px", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button onClick={() => window.location.href = "/dashboard"} style={{ background: "#e0e7ff", border: "2px solid #a5b4fc", borderRadius: "24px", padding: "9px 22px", fontWeight: 800, fontSize: "14px", cursor: "pointer" }}>🏠 HOME</button>
+          <button onClick={() => signOut({ callbackUrl: "/auth/login" })} style={{ background: "#e0e7ff", border: "2px solid #a5b4fc", borderRadius: "24px", padding: "9px 22px", fontWeight: 800, fontSize: "14px", cursor: "pointer" }}>⏻ LOGOUT</button>
+        </div>
+        <button onClick={() => window.history.back()} style={{ background: "#e0e7ff", border: "2px solid #a5b4fc", borderRadius: "24px", padding: "9px 26px", fontWeight: 800, fontSize: "14px", cursor: "pointer" }}>&lt; BACK</button>
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          APPROVAL MODAL
+      ══════════════════════════════════════════════════════════════════════ */}
+      {modalType === "approval" && activeReq && (
+        <Modal title="Availing Request — SM Action" accent="#1e40af" onClose={() => setModalType(null)}>
+          {/* Block info */}
+          <SectionDivider label="Block Details" />
+          <DRow label="Request ID"       value={activeReq.divisionId ?? (activeReq._id||activeReq.id)?.slice(0,8)} />
+          <DRow label="Section"          value={activeReq.selectedSection ?? activeReq.missionBlock} />
+          <DRow label="Mission Block"    value={activeReq.missionBlock} />
+          <DRow label="Department"       value={activeReq.selectedDepartment} />
+          <DRow label="Work Type"        value={activeReq.workType} />
+          <DRow label="Activity"         value={activeReq.activity} />
+          <DRow label="Work Location"    value={[activeReq.workLocationFrom, activeReq.workLocationTo].filter(Boolean).join(" → ")} />
+
+          <SectionDivider label="Granted Timing" />
+          <DRow label="From" value={fmtDt(activeReq.grantedFromTime)} />
+          <DRow label="To"   value={fmtDt(activeReq.grantedToTime)} />
+          {activeReq.oheMasFrom && <DRow label="OHE MAS From" value={activeReq.oheMasFrom} />}
+          {activeReq.oheMasTo   && <DRow label="OHE MAS To"   value={activeReq.oheMasTo} />}
+          {activeReq.requestremarks && <DRow label="SSE Remarks" value={activeReq.requestremarks} />}
+
+          {/* Concurrences */}
+          {(activeReq.trdAvailConcurrences?.length > 0 || activeReq.sntAvailConcurrences?.length > 0 || activeReq.enggAvailConcurrences?.length > 0) && (
+            <>
+              <SectionDivider label="Concurrences" />
+              <ConcBadges req={activeReq} />
+            </>
+          )}
+
+          {/* Action area — toggle between Approve and Reject */}
+          <SectionDivider label="Your Action" />
+
+          {!rejectMode ? (
+            <>
+              {/* Modify timing toggle */}
+              <button
+                onClick={() => setModifyTime(v => !v)}
+                style={{
+                  width: "100%", marginBottom: "12px", padding: "10px 14px",
+                  background: modifyTime ? "#92400e" : "#fef3c7",
+                  border: `2px solid ${modifyTime ? "#b45309" : "#fbbf24"}`,
+                  borderRadius: "8px", fontWeight: 800, fontSize: "14px",
+                  color: modifyTime ? "#fff" : "#78350f", cursor: "pointer",
+                  textAlign: "left",
+                }}
+              >
+                {modifyTime ? "✓ Modifying Timing — Click to Cancel" : "✎ Approve with Modified Timing"}
+              </button>
+
+              {modifyTime && (
+                <div style={{ background: "#fffbeb", border: "2px solid #f59e0b", borderRadius: "10px", padding: "14px 16px", marginBottom: "14px" }}>
+                  <div style={{ background: "#fef3c7", borderRadius: "6px", padding: "8px 12px", marginBottom: "12px", fontSize: "13px", color: "#78350f", fontWeight: 700 }}>
+                    ⚠ Original granted time:<br />
+                    {fmtDt(activeReq.grantedFromTime)} → {fmtDt(activeReq.grantedToTime)}<br />
+                    <span style={{ fontWeight: 600, fontSize: "12px" }}>Duration cannot be reduced by more than 30%</span>
+                  </div>
+                  <label style={{ ...fldLabel, color: "#92400e" }}>New Time From *</label>
+                  <input type="datetime-local" style={{ ...fldInput, border: "2px solid #f59e0b", marginBottom: "10px" }} value={smTimeFrom} onChange={e => setSmTimeFrom(e.target.value)} />
+                  <label style={{ ...fldLabel, color: "#92400e" }}>New Time To *</label>
+                  <input type="datetime-local" style={{ ...fldInput, border: "2px solid #f59e0b" }} value={smTimeTo} onChange={e => setSmTimeTo(e.target.value)} />
+                </div>
+              )}
+
+              <label style={fldLabel}>Remarks (optional)</label>
+              <textarea style={{ ...fldInput, height: "80px", resize: "vertical", marginBottom: "16px" }} placeholder="Enter remarks…" value={smRemarks} onChange={e => setSmRemarks(e.target.value)} />
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button onClick={submitApprove} disabled={approveMutation.isPending} style={btnGreen}>
+                  {approveMutation.isPending ? "Submitting…" : modifyTime ? "Approve & Modify Time" : "Approve"}
+                </button>
+                <button onClick={() => setRejectMode(true)} style={btnRed}>Reject</button>
+                <button onClick={() => setModalType(null)} style={btnGray}>Cancel</button>
               </div>
-            )}
-
-            <div className="mb-4">
-              <label className="block text-sm font-semibold mb-1">Remarks (optional)</label>
-              <textarea
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                rows={3}
-                placeholder="Enter remarks..."
-                value={smRemarks}
-                onChange={(e) => setSmRemarks(e.target.value)}
-              />
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={handleSubmitApprove}
-                disabled={approveMutation.isPending}
-                className="flex-1 bg-green-600 text-white py-2 rounded font-semibold text-sm hover:bg-green-700 disabled:opacity-50"
-              >
-                {approveMutation.isPending ? "Submitting..." : "Confirm Approve"}
-              </button>
-              <button
-                onClick={() => setShowApproveModal(false)}
-                className="flex-1 bg-gray-200 text-black py-2 rounded font-semibold text-sm hover:bg-gray-300"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Reject Modal */}
-      {showRejectModal && rejectRequest && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg border border-black w-full max-w-md p-5">
-            <h3 className="text-lg font-bold mb-4">Reject Availing Request</h3>
-            <div className="mb-4">
-              <label className="block text-sm font-semibold mb-1">Rejection Remarks *</label>
-              <textarea
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                rows={3}
-                placeholder="Enter reason for rejection..."
-                value={rejectRemarks}
-                onChange={(e) => setRejectRemarks(e.target.value)}
-              />
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={handleSubmitReject}
-                disabled={approveMutation.isPending}
-                className="flex-1 bg-red-600 text-white py-2 rounded font-semibold text-sm hover:bg-red-700 disabled:opacity-50"
-              >
-                {approveMutation.isPending ? "Submitting..." : "Confirm Reject"}
-              </button>
-              <button
-                onClick={() => setShowRejectModal(false)}
-                className="flex-1 bg-gray-200 text-black py-2 rounded font-semibold text-sm hover:bg-gray-300"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Extension Approve/Reject Modal */}
-      {showExtensionModal && extensionRequest && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg border border-black w-full max-w-md p-5">
-            <h3 className="text-lg font-bold mb-4">
-              {extensionAction === "APPROVE" ? "Approve Time Extension" : "Reject Time Extension"}
-            </h3>
-            <div className="text-sm mb-4 bg-gray-50 p-3 rounded border">
-              <div><span className="font-semibold">Section:</span> {extensionRequest.selectedSection || extensionRequest.missionBlock || "—"}</div>
-              <div><span className="font-semibold">Current End:</span> {formatTime(extensionRequest.smApprovedTimeTo ?? extensionRequest.grantedToTime)}</div>
-              <div className="text-blue-800 font-semibold mt-1">
-                Requested New End: {formatTime(extensionRequest.extensionRequestedTo)}
+            </>
+          ) : (
+            <>
+              <div style={{ background: "#fef2f2", border: "1.5px solid #fca5a5", borderRadius: "8px", padding: "10px 12px", marginBottom: "10px", fontSize: "13px", color: "#991b1b", fontWeight: 700 }}>
+                ⚠ Rejecting will cancel the SSE's availing application.
               </div>
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-semibold mb-1">
-                Remarks {extensionAction === "REJECT" ? "*" : "(optional)"}
-              </label>
-              <textarea
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                rows={3}
-                placeholder={extensionAction === "REJECT" ? "Enter reason for rejection..." : "Enter remarks..."}
-                value={extensionSmRemarks}
-                onChange={(e) => setExtensionSmRemarks(e.target.value)}
-              />
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={handleSubmitExtension}
-                disabled={extensionMutation.isPending}
-                className={`flex-1 text-white py-2 rounded font-semibold text-sm disabled:opacity-50 ${
-                  extensionAction === "APPROVE" ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"
-                }`}
-              >
-                {extensionMutation.isPending
-                  ? "Submitting..."
-                  : extensionAction === "APPROVE"
-                  ? "Confirm Approve"
-                  : "Confirm Reject"}
-              </button>
-              <button
-                onClick={() => setShowExtensionModal(false)}
-                className="flex-1 bg-gray-200 text-black py-2 rounded font-semibold text-sm hover:bg-gray-300"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
+              <label style={fldLabel}>Rejection Reason *</label>
+              <textarea style={{ ...fldInput, height: "90px", resize: "vertical", marginBottom: "16px" }} placeholder="Enter reason for rejection…" value={rejectRmk} onChange={e => setRejectRmk(e.target.value)} />
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button onClick={submitReject} disabled={approveMutation.isPending} style={btnRed}>
+                  {approveMutation.isPending ? "Submitting…" : "Confirm Reject"}
+                </button>
+                <button onClick={() => setRejectMode(false)} style={btnGray}>← Back</button>
+              </div>
+            </>
+          )}
+        </Modal>
       )}
 
-      {/* Closure Acknowledgement Modal */}
-      {showClosureModal && closureRequest && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg border border-black w-full max-w-md p-5">
-            <h3 className="text-lg font-bold mb-4">Acknowledge Block Closure</h3>
-            <div className="text-sm mb-4 bg-gray-50 p-3 rounded border">
-              <div><span className="font-semibold">Section:</span> {closureRequest.selectedSection || closureRequest.missionBlock || "—"}</div>
-              <div><span className="font-semibold">Closure Yard:</span> {closureRequest.closureYard || "—"}</div>
-              <div><span className="font-semibold">SSE Remarks:</span> {closureRequest.closureRemarks || "—"}</div>
+      {/* ══════════════════════════════════════════════════════════════════════
+          EXTENSION MODAL
+      ══════════════════════════════════════════════════════════════════════ */}
+      {modalType === "extension" && activeReq && (
+        <Modal title="Time Extension Request" accent={activeReq.extensionIsEmergency ? "#991b1b" : "#1e40af"} onClose={() => setModalType(null)}>
+          <DRow label="Request ID" value={activeReq.divisionId ?? (activeReq._id||activeReq.id)?.slice(0,8)} />
+          <DRow label="Section"    value={activeReq.selectedSection ?? activeReq.missionBlock} />
+          <DRow label="Activity"   value={activeReq.activity} />
+
+          {activeReq.extensionIsEmergency && (
+            <div style={{ background: "#fef2f2", border: "1.5px solid #fca5a5", borderRadius: "8px", padding: "10px 12px", margin: "10px 0", fontSize: "14px", color: "#991b1b", fontWeight: 800 }}>
+              🚨 EMERGENCY EXTENSION<br />
+              <span style={{ fontWeight: 600, fontSize: "13px" }}>{activeReq.extensionEmergencyReason}</span>
             </div>
-            <div className="mb-4">
-              <label className="block text-sm font-semibold mb-1">SM Closure Remarks (optional)</label>
-              <textarea
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                rows={3}
-                placeholder="Enter remarks..."
-                value={closureAckRemarks}
-                onChange={(e) => setClosureAckRemarks(e.target.value)}
-              />
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={handleSubmitClosureAck}
-                disabled={closureAckMutation.isPending}
-                className="flex-1 bg-orange-600 text-white py-2 rounded font-semibold text-sm hover:bg-orange-700 disabled:opacity-50"
-              >
-                {closureAckMutation.isPending ? "Submitting..." : "Acknowledge & Close"}
-              </button>
-              <button
-                onClick={() => setShowClosureModal(false)}
-                className="flex-1 bg-gray-200 text-black py-2 rounded font-semibold text-sm hover:bg-gray-300"
-              >
-                Cancel
-              </button>
-            </div>
+          )}
+
+          <SectionDivider label="Extension Details" />
+          <DRow label="Current End Time"   value={fmtDt(activeReq.smApprovedTimeTo ?? activeReq.grantedToTime)} />
+          <DRow label="Requested New End"  value={fmtDt(activeReq.extensionRequestedTo)} />
+          {activeReq.extensionRemarks && <DRow label="SSE Remarks" value={activeReq.extensionRemarks} />}
+
+          <SectionDivider label="Remarks (required to reject, optional to approve)" />
+          <textarea style={{ ...fldInput, height: "90px", resize: "vertical", marginBottom: "16px" }} placeholder="Enter remarks…" value={extRemarks} onChange={e => setExtRemarks(e.target.value)} />
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button onClick={() => submitExtension("APPROVE")} disabled={extensionMutation.isPending} style={{ ...btnGreen, flex: 1 }}>
+              {extensionMutation.isPending ? "Submitting…" : "✓ Approve Extension"}
+            </button>
+            <button onClick={() => submitExtension("REJECT")} disabled={extensionMutation.isPending} style={{ ...btnRed, flex: 1 }}>
+              {extensionMutation.isPending ? "Submitting…" : "✗ Reject Extension"}
+            </button>
           </div>
-        </div>
+        </Modal>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          CLOSURE MODAL
+      ══════════════════════════════════════════════════════════════════════ */}
+      {modalType === "closure" && activeReq && (
+        <Modal title="Acknowledge Block Closure" accent="#0369a1" onClose={() => setModalType(null)}>
+          <DRow label="Request ID" value={activeReq.divisionId ?? (activeReq._id||activeReq.id)?.slice(0,8)} />
+          <DRow label="Section"    value={activeReq.selectedSection ?? activeReq.missionBlock} />
+          <DRow label="Department" value={activeReq.selectedDepartment} />
+          <DRow label="Activity"   value={activeReq.activity} />
+
+          <SectionDivider label="Closure Details from SSE" />
+          <DRow label="SSE Remarks"           value={activeReq.closureRemarks} />
+          <DRow label="Reconnected Signal No." value={activeReq.closureReconnectedSignal} />
+          <DRow label="Caution (kmph)"         value={activeReq.closureCautionKmph} />
+          {activeReq.closureOheMadeFit !== undefined && <DRow label="OHE Made Fit" value={activeReq.closureOheMadeFit ? "Yes" : "No"} />}
+
+          {activeReq.closureImageUrl && (
+            <div style={{ margin: "10px 0" }}>
+              <p style={{ fontSize: "12px", fontWeight: 700, color: "#6b7280", marginBottom: "6px", textTransform: "uppercase" }}>Closure Image</p>
+              <img src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${activeReq.closureImageUrl}`} alt="Closure"
+                style={{ maxWidth: "100%", maxHeight: "200px", borderRadius: "8px", border: "1.5px solid #e5e7eb", objectFit: "contain" }} />
+            </div>
+          )}
+
+          <SectionDivider label="Availed Timing" />
+          <DRow label="Availing Started" value={fmtDt(activeReq.availingStartedAt)} />
+          <DRow label="Closure Submitted" value={fmtDt(activeReq.closureSubmittedAt)} />
+
+          <SectionDivider label="Your Remarks" />
+          <label style={fldLabel}>SM Remarks (optional)</label>
+          <textarea style={{ ...fldInput, height: "90px", resize: "vertical", marginBottom: "16px" }} placeholder="Enter remarks…" value={closureRmk} onChange={e => setClosureRmk(e.target.value)} />
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button onClick={submitClosure} disabled={closureAckMutation.isPending} style={btnAmber}>
+              {closureAckMutation.isPending ? "Submitting…" : "Acknowledge & Close Block"}
+            </button>
+            <button onClick={() => setModalType(null)} style={btnGray}>Cancel</button>
+          </div>
+        </Modal>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          VIEW-ONLY MODAL
+      ══════════════════════════════════════════════════════════════════════ */}
+      {modalType === "view" && activeReq && (
+        <Modal title="Block Details" accent="#374151" onClose={() => setModalType(null)}>
+          <DRow label="Request ID"   value={activeReq.divisionId ?? (activeReq._id||activeReq.id)?.slice(0,8)} />
+          <DRow label="Section"      value={activeReq.selectedSection ?? activeReq.missionBlock} />
+          <DRow label="Department"   value={activeReq.selectedDepartment} />
+          <DRow label="Work Type"    value={activeReq.workType} />
+          <DRow label="Activity"     value={activeReq.activity} />
+          <DRow label="Status"       value={activeReq.overAllStatus} />
+
+          <SectionDivider label="Timing" />
+          <DRow label="Granted From"   value={fmtDt(activeReq.grantedFromTime)} />
+          <DRow label="Granted To"     value={fmtDt(activeReq.grantedToTime)} />
+          {activeReq.smApprovedTimeFrom && <DRow label="SM Approved From" value={fmtDt(activeReq.smApprovedTimeFrom)} />}
+          {activeReq.smApprovedTimeTo   && <DRow label="SM Approved To"   value={fmtDt(activeReq.smApprovedTimeTo)} />}
+          {activeReq.availingStartedAt  && <DRow label="Availing Started" value={fmtDt(activeReq.availingStartedAt)} />}
+          {activeReq.closureSubmittedAt && <DRow label="Closure Submitted" value={fmtDt(activeReq.closureSubmittedAt)} />}
+          {activeReq.smClosureAcknowledgedAt && <DRow label="SM Acknowledged" value={fmtDt(activeReq.smClosureAcknowledgedAt)} />}
+
+          {(activeReq.trdAvailConcurrences?.length > 0 || activeReq.sntAvailConcurrences?.length > 0 || activeReq.enggAvailConcurrences?.length > 0) && (
+            <>
+              <SectionDivider label="Concurrences" />
+              <ConcBadges req={activeReq} />
+            </>
+          )}
+
+          <div style={{ marginTop: "16px" }}>
+            <button onClick={() => setModalType(null)} style={{ ...btnGray, width: "100%" }}>Close</button>
+          </div>
+        </Modal>
       )}
     </div>
   );

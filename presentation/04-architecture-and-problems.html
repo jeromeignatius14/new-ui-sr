@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BMS &amp; BAA — Architecture, Real Problems Solved &amp; Roadmap</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 210mm; background: white; }
+
+  @media print {
+    html, body { width: 210mm; }
+    @page { size: A4 portrait; margin: 15mm 18mm 15mm 18mm; }
+  }
+
+  body {
+    font-family: 'Arial', sans-serif;
+    font-size: 10.5pt;
+    color: #111;
+    padding: 15mm 18mm;
+  }
+
+  .doc-header { border-bottom: 3px solid #1a3264; padding-bottom: 10px; margin-bottom: 14px; }
+  .org-line { font-size: 8.5pt; color: #555; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .doc-title { font-size: 18pt; font-weight: 900; color: #1a3264; line-height: 1.1; }
+  .doc-subtitle { font-size: 10pt; color: #444; margin-top: 3px; }
+  .doc-meta { float: right; text-align: right; font-size: 8.5pt; color: #666; line-height: 1.6; }
+
+  .section-heading { background: #1a3264; color: white; font-size: 10pt; font-weight: 700; padding: 5px 10px; margin-top: 12px; letter-spacing: 0.5px; }
+  .section-body { border: 1.5px solid #1a3264; border-top: none; padding: 10px; }
+
+  /* ── ARCH BOXES ── */
+  .arch-grid { display: table; width: 100%; border-collapse: separate; border-spacing: 6px 0; }
+  .arch-cell { display: table-cell; vertical-align: top; }
+  .arch-box { border: 1.5px solid; border-radius: 3px; padding: 9px 10px; height: 100%; }
+  .arch-title { font-weight: 800; font-size: 10pt; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid; }
+  .arch-items { font-size: 9pt; line-height: 1.6; }
+
+  /* ── PROBLEM TABLE ── */
+  table.prob-table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+  table.prob-table th { background: #1a3264; color: white; padding: 5px 8px; text-align: left; font-size: 8.5pt; }
+  table.prob-table td { padding: 5px 8px; border-bottom: 1px solid #ddd; vertical-align: top; }
+  table.prob-table tr:last-child td { border-bottom: none; }
+  table.prob-table tr:nth-child(even) td { background: #f4f6fb; }
+
+  /* ── ROADMAP ── */
+  .roadmap-item { display: table; width: 100%; margin-bottom: 7px; }
+  .rm-marker-col { display: table-cell; vertical-align: top; width: 50px; text-align: center; }
+  .rm-phase-badge { display: inline-block; width: 40px; height: 40px; border-radius: 50%; line-height: 40px; text-align: center; font-weight: 900; font-size: 9pt; color: white; }
+  .rm-content-col { display: table-cell; vertical-align: top; padding-left: 6px; }
+  .rm-title { font-weight: 800; font-size: 10pt; }
+  .rm-period { font-size: 8.5pt; color: #666; margin-bottom: 3px; }
+  .rm-items { font-size: 9pt; line-height: 1.5; }
+
+  .pill { display: inline-block; padding: 1px 7px; border-radius: 2px; font-size: 8pt; font-weight: 700; color: white; }
+  .pill-green { background: #388e3c; }
+  .pill-blue { background: #1565c0; }
+  .pill-amber { background: #f57c00; }
+  .pill-grey { background: #666; }
+
+  .two-col { display: table; width: 100%; border-collapse: separate; border-spacing: 8px 0; }
+  .col { display: table-cell; vertical-align: top; }
+
+  .note-box { border-left: 4px solid #1a3264; padding: 7px 10px; font-size: 9pt; background: #f4f6fb; margin-bottom: 6px; }
+
+  .doc-footer { border-top: 1.5px solid #1a3264; padding-top: 6px; margin-top: 14px; font-size: 8pt; color: #666; display: table; width: 100%; }
+  .footer-left { display: table-cell; }
+  .footer-right { display: table-cell; text-align: right; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="doc-header">
+  <div class="doc-meta">ADRM, SR-MAS · March 2026<br>Document 4 of 5</div>
+  <div class="org-line">Southern Railway · BMS &amp; BAA</div>
+  <div class="doc-title">Architecture, Real Problems Solved &amp; Roadmap</div>
+  <div class="doc-subtitle">How the system is built, what problems it solves, and what comes next</div>
+</div>
+
+<!-- ARCHITECTURE -->
+<div class="section-heading">System Architecture — How BMS &amp; BAA are Built &amp; Deployed</div>
+<div class="section-body">
+  <div class="arch-grid">
+
+    <div class="arch-cell" style="width:33%;">
+      <div class="arch-box" style="border-color:#1565c0;">
+        <div class="arch-title" style="color:#1565c0; border-color:#bbdefb;">Frontend (User-facing App)</div>
+        <div class="arch-items">
+          <strong>Next.js 15</strong> (React 19, TypeScript)<br>
+          Tailwind CSS — responsive design<br>
+          Runs in any mobile browser<br>
+          <br>
+          <strong>PWA (Progressive Web App):</strong><br>
+          Installable on iOS &amp; Android<br>
+          — No App Store needed<br>
+          — Works on railway field WiFi<br>
+          — Offline viewing from cache<br>
+          <br>
+          <strong>Push Notifications:</strong><br>
+          Firebase FCM (Google) — free at scale<br>
+          Token registered at login<br>
+          Works even when app is closed
+        </div>
+      </div>
+    </div>
+
+    <div class="arch-cell" style="width:33%;">
+      <div class="arch-box" style="border-color:#388e3c;">
+        <div class="arch-title" style="color:#388e3c; border-color:#c8e6c9;">Backend API &amp; Database</div>
+        <div class="arch-items">
+          <strong>Node.js REST API</strong><br>
+          JWT Auth (access + refresh tokens)<br>
+          Auto token refresh — transparent to users<br>
+          <br>
+          <strong>Session Management:</strong><br>
+          NextAuth v4 — effectively permanent sessions (field staff don't need to re-login)<br>
+          <br>
+          <strong>Data:</strong><br>
+          All requests, approvals, timestamps stored in structured database<br>
+          <br>
+          <strong>Background Jobs:</strong><br>
+          Availing reminder scheduler<br>
+          SSE disconnect event handler
+        </div>
+      </div>
+    </div>
+
+    <div class="arch-cell" style="width:33%;">
+      <div class="arch-box" style="border-color:#f57c00;">
+        <div class="arch-title" style="color:#f57c00; border-color:#ffe0b2;">Deployment &amp; Scale</div>
+        <div class="arch-items">
+          <strong>Hosting:</strong><br>
+          VPS with Nginx reverse proxy<br>
+          PM2 process manager (auto-restart)<br>
+          HTTPS enforced everywhere<br>
+          <br>
+          <strong>Currently handles:</strong><br>
+          5,000+ daily active users<br>
+          All 4 SR divisions simultaneously<br>
+          <br>
+          <strong>Environments:</strong><br>
+          Dev → Staging → Production<br>
+          No code changes between envs<br>
+          (only env variable swap)<br>
+          <br>
+          <strong>Scale path:</strong> Load balancer + DB read replicas when needed
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- PROBLEMS SOLVED -->
+<div class="section-heading" style="margin-top:12px;">6 Digital Gaps This System Closes</div>
+<div class="section-body" style="padding:0;">
+  <table class="prob-table">
+    <thead>
+      <tr>
+        <th style="width:30%;">Gap (No Digital Record Existed)</th>
+        <th>What the Software Now Captures &amp; Automates</th>
+        <th style="width:14%; text-align:center;">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Station-level availing approval was verbal.</strong> No timestamp, no record of who gave permission, no way to audit after the fact.</td>
+        <td>BAA records every SM action — approve / modify / reject — with identity, timestamp, and reason. Full audit trail per block, per station, per date.</td>
+        <td style="text-align:center;"><span class="pill pill-blue">UAT</span></td>
+      </tr>
+      <tr>
+        <td><strong>No automated alert on sanction.</strong> Field staff had to call and check — blocks passed unused due to lack of awareness.</td>
+        <td>Push notification delivered instantly on sanction. Audio beep + visual urgency indicator triggered in-app when action is due. Works even when app is in background.</td>
+        <td style="text-align:center;"><span class="pill pill-blue">UAT</span></td>
+      </tr>
+      <tr>
+        <td><strong>Block time overrun had no digital detection.</strong> Overruns were tracked manually, with no automated flag or extension workflow.</td>
+        <td>Live countdown on field staff screen. SM dashboard shows elapsed vs. remaining time. Auto "Block Burst" flag on overrun. Time extension request routed digitally to SM for approval.</td>
+        <td style="text-align:center;"><span class="pill pill-blue">UAT</span></td>
+      </tr>
+      <tr>
+        <td><strong>Multi-department disconnection approvals were sequential phone calls.</strong> One department's delay blocked everything with no visibility to others.</td>
+        <td>All three disconnection workflows (TRD, S&amp;T, ENGG) run in parallel in the system. Each department's status is visible to all stakeholders in real time. No phone calls needed.</td>
+        <td style="text-align:center;"><span class="pill pill-green">LIVE</span></td>
+      </tr>
+      <tr>
+        <td><strong>No single consolidated view for sanction authority.</strong> Requests across all sections came in on paper with no filtering or conflict detection.</td>
+        <td>Single dashboard aggregates all accepted requests across all sections. Filter by section, date, department, type. Optimisation screen prevents time conflicts. Bulk sanction in one action.</td>
+        <td style="text-align:center;"><span class="pill pill-green">LIVE</span></td>
+      </tr>
+      <tr>
+        <td><strong>Compliance reports were compiled manually.</strong> Data was days or weeks old, unreliable, and gave no section-wise breakdown.</td>
+        <td>Real-time dashboard for DRM and HQ: section-wise Demanded / Approved / Granted / Availed % for any date range. XLSX export on demand. No manual compilation.</td>
+        <td style="text-align:center;"><span class="pill pill-green">LIVE</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ROADMAP -->
+<div class="section-heading" style="margin-top:12px;">Implementation Roadmap</div>
+<div class="section-body">
+  <div class="two-col">
+    <div class="col" style="width:55%;">
+      <div class="roadmap-item">
+        <div class="rm-marker-col"><div class="rm-phase-badge" style="background:#388e3c;">✓</div></div>
+        <div class="rm-content-col">
+          <div class="rm-period">Phase 1 — COMPLETE &amp; LIVE</div>
+          <div class="rm-title">Core Block Request Workflow</div>
+          <div class="rm-items">JE/SSE creation · Disconnection approvals · Section Controller gate · Operating Controller accept, optimise, sanction · TPC board view · DRM/HQ real-time reporting · FCM push notifications</div>
+        </div>
+      </div>
+      <div class="roadmap-item">
+        <div class="rm-marker-col"><div class="rm-phase-badge" style="background:#1565c0;">→</div></div>
+        <div class="rm-content-col">
+          <div class="rm-period">Phase 2 — DEPLOYED, IN UAT</div>
+          <div class="rm-title">Availing &amp; SM Integration</div>
+          <div class="rm-items">SSE avail application · SM approval chain · Real-time availing tracking · Block closure + SM acknowledgement · Health score per SSE · Block burst detection · Time extension mechanism · Urgency alerts + audio beeping</div>
+        </div>
+      </div>
+      <div class="roadmap-item">
+        <div class="rm-marker-col"><div class="rm-phase-badge" style="background:#f57c00;">3</div></div>
+        <div class="rm-content-col">
+          <div class="rm-period">Phase 3 — POST-UAT (In Development)</div>
+          <div class="rm-title">Drop-Reason Capture &amp; Analytics Dashboard</div>
+          <div class="rm-items">
+            At every stage where a request does not proceed — rejection, non-availing, or no action — the user is prompted with a <strong>structured reason dropdown</strong> (e.g. "Work already completed", "Material not ready", "Train path conflict", "SM not reachable"). These reasons are captured and fed into an <strong>analytics dashboard</strong> that shows section-wise and stage-wise drop analysis, enabling ADRM and DRM to identify patterns and intervene at the right stage. Section compliance KPI · SSE health score in Controller view · Automated weekly compliance report export (XLSX)
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col" style="width:45%;">
+      <div style="border: 1.5px solid #1a3264; border-radius: 3px; overflow: hidden;">
+        <div style="background: #f4f6fb; padding: 7px 10px; border-bottom: 1px solid #1a3264; font-weight: 800; font-size: 9.5pt; color: #1a3264;">Manual → Digital: What Changed</div>
+        <table style="width:100%; border-collapse:collapse; font-size:8.5pt;">
+          <tr style="background:#e8ecf5;">
+            <td style="padding:4px 8px; border-bottom:1px solid #ddd; font-weight:700;">Function</td>
+            <td style="padding:4px 8px; border-bottom:1px solid #ddd; text-align:center; font-weight:700;">Status</td>
+          </tr>
+          <tr><td style="padding:4px 8px; border-bottom:1px solid #ddd;">Block request submission</td><td style="text-align:center; padding:4px 8px; border-bottom:1px solid #ddd;"><span class="pill pill-green">LIVE</span></td></tr>
+          <tr><td style="padding:4px 8px; border-bottom:1px solid #ddd; background:#f4f6fb;">Disconnection coordination</td><td style="text-align:center; padding:4px 8px; border-bottom:1px solid #ddd; background:#f4f6fb;"><span class="pill pill-green">LIVE</span></td></tr>
+          <tr><td style="padding:4px 8px; border-bottom:1px solid #ddd;">Section Controller approval</td><td style="text-align:center; padding:4px 8px; border-bottom:1px solid #ddd;"><span class="pill pill-green">LIVE</span></td></tr>
+          <tr><td style="padding:4px 8px; border-bottom:1px solid #ddd; background:#f4f6fb;">Op. Controller optimise &amp; sanction</td><td style="text-align:center; padding:4px 8px; border-bottom:1px solid #ddd; background:#f4f6fb;"><span class="pill pill-green">LIVE</span></td></tr>
+          <tr><td style="padding:4px 8px; border-bottom:1px solid #ddd;">TPC board view</td><td style="text-align:center; padding:4px 8px; border-bottom:1px solid #ddd;"><span class="pill pill-green">LIVE</span></td></tr>
+          <tr><td style="padding:4px 8px; border-bottom:1px solid #ddd; background:#f4f6fb;">DRM/HQ reports</td><td style="text-align:center; padding:4px 8px; border-bottom:1px solid #ddd; background:#f4f6fb;"><span class="pill pill-green">LIVE</span></td></tr>
+          <tr><td style="padding:4px 8px; border-bottom:1px solid #ddd;">SSE applies for availing</td><td style="text-align:center; padding:4px 8px; border-bottom:1px solid #ddd;"><span class="pill pill-blue">UAT</span></td></tr>
+          <tr><td style="padding:4px 8px; border-bottom:1px solid #ddd; background:#f4f6fb;">SM approval at site</td><td style="text-align:center; padding:4px 8px; border-bottom:1px solid #ddd; background:#f4f6fb;"><span class="pill pill-blue">UAT</span></td></tr>
+          <tr><td style="padding:4px 8px; border-bottom:1px solid #ddd;">Real-time availing tracking</td><td style="text-align:center; padding:4px 8px; border-bottom:1px solid #ddd;"><span class="pill pill-blue">UAT</span></td></tr>
+          <tr><td style="padding:4px 8px; border-bottom:1px solid #ddd; background:#f4f6fb;">Block closure + SM ack.</td><td style="text-align:center; padding:4px 8px; border-bottom:1px solid #ddd; background:#f4f6fb;"><span class="pill pill-blue">UAT</span></td></tr>
+          <tr><td style="padding:4px 8px; border-bottom:1px solid #ddd;">Drop-reason capture (dropdown)</td><td style="text-align:center; padding:4px 8px; border-bottom:1px solid #ddd;"><span class="pill pill-amber">PLANNED</span></td></tr>
+          <tr><td style="padding:4px 8px; border-bottom:1px solid #ddd; background:#f4f6fb;">Stage-wise drop analytics dashboard</td><td style="text-align:center; padding:4px 8px; border-bottom:1px solid #ddd; background:#f4f6fb;"><span class="pill pill-amber">PLANNED</span></td></tr>
+          <tr><td style="padding:4px 8px;">Section compliance KPI &amp; weekly export</td><td style="text-align:center; padding:4px 8px;"><span class="pill pill-amber">PLANNED</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="doc-footer">
+  <div class="footer-left">Southern Railway · BMS &amp; BAA · Developed by ADRIG AI Technologies Pvt. Ltd. · Confidential</div>
+  <div class="footer-right">Document 4 of 5 · March 2026</div>
+</div>
+
+</body>
+</html>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { depotOnLocation, departmentDepot } from "@/app/lib/store";
 import { FaEdit } from "react-icons/fa";
+import StationCodeInput from "./StationCodeInput";
 
 type Department = "TRD" | "S&T" | "ENGG";
 
@@ -219,42 +219,14 @@ const EditStationMasterModal: React.FC<EditStationMasterModalProps> = ({
                         {phoneExists === false && <span className="text-sm text-green-600 ml-2">CUG number available</span>}
                     </div>
                     
-<div>
-  <label className="block font-semibold mb-1">Station Code</label>
-  <input
-    type="text"
-    className="w-full border border-black rounded px-2 py-1"
-    value={depot}
-    onChange={e => {
-      const target = e.target as HTMLInputElement;
-      // Allow only alphabets and single spaces
-      let filteredValue = target.value.replace(/[^a-zA-Z\s]/g, '');
-      // Prevent multiple consecutive spaces
-      filteredValue = filteredValue.replace(/\s+/g, ' ');
-      setDepot(filteredValue);
-      // Track if depot changed from initial data
-      const trimmedValue = filteredValue.trim();
-      setDepotChanged(trimmedValue !== initialData?.depot);
-    }}
-    onBlur={e => {
-      const target = e.target as HTMLInputElement;
-      // Final cleanup on blur - trim whitespace
-      const trimmedValue = target.value.trim();
-      setDepot(trimmedValue);
-      // Update depotChanged after trimming
-      setDepotChanged(trimmedValue !== initialData?.depot);
-    }}
-    onKeyDown={e => {
-      const target = e.target as HTMLInputElement;
-      // Prevent space at the beginning
-      if (e.key === ' ' && (!target.value || target.value.endsWith(' '))) {
-        e.preventDefault();
-      }
-    }}
-    placeholder="Enter Station Code"
-    required
-  />
-</div>
+<StationCodeInput
+  value={depot}
+  onChange={val => {
+    setDepot(val);
+    setDepotChanged(val !== initialData?.depot);
+  }}
+  required
+/>
 
                     <div className="flex justify-center gap-4 mt-6">
                         <button

@@ -526,6 +526,7 @@ export default function RequestTablePage() {
       //     id,
       //     accept,
       //     userDepartment,
+      //     userDepartment,
       //     mobileView
       //   },
       //   {
@@ -538,6 +539,7 @@ export default function RequestTablePage() {
       setShowAcceptReasonPopup(true);
     } else {
       // For reject actions, just set up the rejection dialog
+      setRequestToReject({ id, userDepartment, mobileView });
       setRequestToReject({ id, userDepartment, mobileView });
       setShowRejectReasonPopup(true);
     }

@@ -174,8 +174,9 @@ export default function OtherRequestsPage() {
     return isUrgentMode ? today : startOfWeek(today, { weekStartsOn: 1 }); // Start from Monday
   });
 
-  // Get the depot from session data
+  // Get the depot and department from session data
   const selectedDepo = session?.user?.depot || "";
+  const userDepartment = session?.user?.department || "";
 
   // Calculate week range
   const weekEnd = isUrgentMode
@@ -196,7 +197,8 @@ export default function OtherRequestsPage() {
     currentPage,
     pageSize,
     format(weekStart, "yyyy-MM-dd"),
-    format(weekEnd, "yyyy-MM-dd")
+    format(weekEnd, "yyyy-MM-dd"),
+    userDepartment
   );
 
   // Update other request mutation
@@ -252,10 +254,11 @@ export default function OtherRequestsPage() {
         {
           id,
           accept,
+          userDepartment,
+          mobileView: "mobileView",
         },
         {
           onSuccess: () => {
-            // Refetch the data after the mutation succeeds
             refetch();
           },
         }
@@ -279,10 +282,11 @@ export default function OtherRequestsPage() {
         id: selectedRequestId,
         accept: false,
         disconnectionRequestRejectRemarks: rejectRemarks,
+        userDepartment,
+        mobileView: "mobileView",
       },
       {
         onSuccess: () => {
-          // Reset the form and refetch data after successful rejection
           setShowRejectDialog(false);
           setRejectRemarks("");
           setSelectedRequestId("");

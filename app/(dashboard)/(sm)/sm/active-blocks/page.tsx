@@ -2,7 +2,6 @@
 
 import { useSession } from "next-auth/react";
 import { Toaster } from "react-hot-toast";
-import { format } from "date-fns";
 import { useGetSmPending } from "@/app/service/query/avail";
 import { AVAIL_STATUS } from "@/app/lib/store";
 
@@ -14,37 +13,42 @@ export default function SmActiveBlocksPage() {
 
   // Active blocks = currently availing
   const activeBlocks = allBlocks.filter(
-    (r: any) => r.overAllStatus === AVAIL_STATUS.AVAILING_IN_PROGRESS
+    (r: any) => r.overAllStatus === AVAIL_STATUS.AVAILING_ACTIVE
   );
 
   const formatTime = (isoString: string | null) => {
     if (!isoString) return "—";
     try {
-      return format(new Date(isoString), "dd-MM-yyyy HH:mm");
+      const iso = new Date(isoString).toISOString();
+      const [y, m, d] = iso.slice(0, 10).split("-");
+      return `${d}-${m}-${y} ${iso.slice(11, 16)}`;
     } catch {
       return isoString;
     }
   };
 
+  const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+  const nowIST = () => Date.now() + IST_OFFSET_MS;
+
   // Block burst: if grantedToTime + 30 minute buffer is in the past
   const isBlockBurst = (req: any): boolean => {
     if (!req.grantedToTime) return false;
     const bufferMs = 30 * 60 * 1000;
-    return Date.now() > new Date(req.grantedToTime).getTime() + bufferMs;
+    return nowIST() > new Date(req.grantedToTime).getTime() + bufferMs;
   };
 
   // Time elapsed display (minutes)
   const getElapsedMinutes = (req: any): number => {
     const start = req.availingStartedAt || req.smApprovedTimeFrom || req.grantedFromTime;
     if (!start) return 0;
-    return Math.floor((Date.now() - new Date(start).getTime()) / 60000);
+    return Math.floor((nowIST() - new Date(start).getTime()) / 60000);
   };
 
   // Remaining time display (minutes — may be negative if burst)
   const getRemainingMinutes = (req: any): number => {
     const end = req.smApprovedTimeTo || req.grantedToTime;
     if (!end) return 0;
-    return Math.floor((new Date(end).getTime() - Date.now()) / 60000);
+    return Math.floor((new Date(end).getTime() - nowIST()) / 60000);
   };
 
   return (

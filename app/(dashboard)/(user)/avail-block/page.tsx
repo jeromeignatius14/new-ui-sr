@@ -2,170 +2,398 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useGetMyAvailBlocks, useGetPendingAvailConcurrences } from "@/app/service/query/avail";
-import { RequestItem } from "@/app/service/query/user-request";
-import { format } from "date-fns";
+import { useEffect, useRef, useState } from "react";
+import { useGetDepotBlocks, useGetMyParticipations, useGetPendingAvailConcurrences } from "@/app/service/query/avail";
+import { useQueryClient } from "@tanstack/react-query";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Time helpers ───────────────────────────────────────────────────────────────
+const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+function nowIST() { return Date.now() + IST_OFFSET_MS; }
+
+function fmtDate(dt?: string | Date | null): string {
+  if (!dt) return "—";
+  try { const iso = new Date(dt).toISOString(); const [y,m,d] = iso.slice(0,10).split("-"); return `${d}-${m}-${y.slice(2)}`; }
+  catch { return "—"; }
+}
 
 function fmtDt(dt?: string | Date | null): string {
   if (!dt) return "—";
-  try { return format(new Date(dt), "dd-MM-yy HH:mm"); } catch { return "—"; }
+  try { const iso = new Date(dt).toISOString(); const [y,m,d] = iso.slice(0,10).split("-"); return `${d}-${m}-${y.slice(2)}\n${iso.slice(11,16)}`; }
+  catch { return "—"; }
 }
 
-function getDuration(block: RequestItem): string {
-  const from = block.smApprovedTimeFrom ?? block.grantedFromTime ?? block.sanctionedTimeFrom ?? block.demandTimeFrom;
-  const to   = block.smApprovedTimeTo   ?? block.grantedToTime   ?? block.sanctionedTimeTo   ?? block.demandTimeTo;
-  if (!from || !to) return "—";
-  const mins = Math.round((new Date(to as string).getTime() - new Date(from as string).getTime()) / 60000);
+function getEffectiveTimes(block: any): { fromMs: number | null; toMs: number | null } {
+  const f = block.smApprovedTimeFrom ?? block.requestedTimeFrom ?? block.grantedFromTime ?? block.sanctionedTimeFrom ?? block.demandTimeFrom;
+  const t = block.smApprovedTimeTo   ?? block.requestedTimeTo   ?? block.grantedToTime   ?? block.sanctionedTimeTo   ?? block.demandTimeTo;
+  return { fromMs: f ? new Date(f).getTime() : null, toMs: t ? new Date(t).getTime() : null };
+}
+
+function getDuration(block: any): string {
+  const { fromMs, toMs } = getEffectiveTimes(block);
+  if (!fromMs || !toMs) return "—";
+  const mins = Math.round((toMs - fromMs) / 60000);
   if (mins <= 0) return "—";
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+  return `${Math.floor(mins / 60)}h ${mins % 60}m`;
 }
 
-function getExtendedUpto(block: RequestItem): string {
-  if (block.extensionStatus === "APPROVED" && block.smApprovedTimeTo) {
-    return fmtDt(block.smApprovedTimeTo);
-  }
-  return "NA";
-}
-
-function getBlockStatus(block: RequestItem): string {
-  const pending: string[] = [];
-  if (block.powerBlockRequired && (block.trdAvailConcurrences as any[])?.some((c) => c.status === "PENDING")) pending.push("TRD");
-  if (block.sntDisconnectionRequired && (block.sntAvailConcurrences as any[])?.some((c) => c.status === "PENDING")) pending.push("S&T");
-  if (block.enggDisconnectionsRequired && (block.enggAvailConcurrences as any[])?.some((c) => c.status === "PENDING")) pending.push("ENGG");
-  if (pending.length > 0) return `${pending.join(", ")}: needs to submit the form`;
-  return block.overAllStatus ?? "—";
-}
-
-function rowBg(block: RequestItem, i: number): string {
-  const s = block.overAllStatus ?? "";
-  if (s === "Block Burst") return "#ffcccc";
-  if (s === "Availing in Progress") return "#d4edda";
-  return i % 2 === 0 ? "#fff9e6" : "#fff";
-}
-
-// ── Live clock ────────────────────────────────────────────────────────────────
+// ── Clock ──────────────────────────────────────────────────────────────────────
 function useClock() {
-  const [time, setTime] = useState(() => new Date());
-  useEffect(() => {
-    const id = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(id);
-  }, []);
-  return time;
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => { const id = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(id); }, []);
+  return now;
+}
+function clockStr(d: Date) {
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 }
 
-// ── Table ─────────────────────────────────────────────────────────────────────
-const tdStyle: React.CSSProperties = {
-  padding: "7px 10px",
-  border: "1px solid #ddd",
-  textAlign: "center",
-  whiteSpace: "nowrap",
-};
+// ── Urgency ────────────────────────────────────────────────────────────────────
+type Urgency = "urgent" | "near" | null;
+function getUrgency(block: any, myParticipant?: any): Urgency {
+  const now = nowIST();
+  const { fromMs, toMs } = getEffectiveTimes(block);
 
-function BlockTable({ blocks, onRowClick }: { blocks: RequestItem[]; onRowClick: (id: string) => void }) {
-  if (blocks.length === 0) {
-    return <p style={{ padding: "12px", color: "#666", fontStyle: "italic" }}>No blocks found.</p>;
+  // If I'm actively availing and end is near
+  if (myParticipant?.availStartedAt && !myParticipant?.closureSubmittedAt && toMs) {
+    const effTo = myParticipant.smExtensionGrantedTo
+      ? new Date(myParticipant.smExtensionGrantedTo).getTime() : toMs;
+    const minsLeft = (effTo - now) / 60000;
+    if (minsLeft < 5) return "urgent";
+    if (minsLeft < 20) return "near";
   }
+  // Block is upcoming
+  if (fromMs && fromMs > now) {
+    const minsUntil = (fromMs - now) / 60000;
+    if (minsUntil < 10) return "urgent";
+    if (minsUntil < 30) return "near";
+  }
+  return null;
+}
+
+// ── Beep ───────────────────────────────────────────────────────────────────────
+function playBeep(freq = 880) {
+  try {
+    const ctx = new ((window as any).AudioContext || (window as any).webkitAudioContext)();
+    const osc = ctx.createOscillator(); const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = "sine"; osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.5);
+  } catch { /* ignore */ }
+}
+
+// ── Status helpers ─────────────────────────────────────────────────────────────
+function shortStatus(block: any, myParticipant?: any): { text: string; color: string } {
+  const s = block.overAllStatus ?? "";
+  if (s === "Sanctioned and Accepted by SSE") return { text: "Ready to Apply", color: "#16a34a" };
+  if (s === "Pending Concurrences") return { text: "Pending Concurrence", color: "#c2410c" };
+  if (s === "Pending SM Approval") return { text: "Pending SM Approval", color: "#9333ea" };
+  if (s === "SM Approved") {
+    if (myParticipant && myParticipant.smAckStatus === null)
+      return { text: "Acknowledge SM Grant", color: "#d97706" };
+    return { text: "SM Approved ✔", color: "#047857" };
+  }
+  if (s === "Availing Active") {
+    if (myParticipant?.availStartedAt && !myParticipant?.closureSubmittedAt)
+      return { text: "In Progress ▶", color: "#2563eb" };
+    if (myParticipant?.closureSubmittedAt)
+      return { text: "Closed ✓ (awaiting others)", color: "#0d9488" };
+    return { text: "Active — Start Availing", color: "#16a34a" };
+  }
+  if (s === "All Closures Submitted") return { text: "Awaiting SM Closure Ack", color: "#0369a1" };
+  if (s === "Block Closed") return { text: "Block Closed ✓", color: "#1d4ed8" };
+  if (s === "Availing Cancelled") return { text: "Cancelled", color: "#dc2626" };
+  if (myParticipant?.blockBurst) return { text: "⚠ BLOCK BURST", color: "#dc2626" };
+  return { text: s || "—", color: "#374151" };
+}
+
+function detailedStatus(block: any): string {
+  const appliedBy = block.appliedByName
+    ? `${block.appliedByName}${block.appliedByPhone ? ` (${block.appliedByPhone})` : ""} applied.`
+    : "";
+  const s = block.overAllStatus ?? "";
+
+  if (s === "Pending Concurrences") {
+    const pending: string[] = [];
+    (block.sntAvailConcurrences ?? []).filter((c: any) => c.status === "PENDING")
+      .forEach((c: any) => pending.push(`S&T/${c.depot}${c.submittedByPhone ? ` - ${c.submittedByPhone}` : ""}`));
+    (block.trdAvailConcurrences ?? []).filter((c: any) => c.status === "PENDING")
+      .forEach((c: any) => pending.push(`TRD/${c.depot}${c.submittedByPhone ? ` - ${c.submittedByPhone}` : ""}`));
+    (block.enggAvailConcurrences ?? []).filter((c: any) => c.status === "PENDING")
+      .forEach((c: any) => pending.push(`ENGG/${c.depot}${c.submittedByPhone ? ` - ${c.submittedByPhone}` : ""}`));
+    return `${appliedBy} Pending concurrence from: ${pending.join(", ") || "—"}`;
+  }
+  if (s === "Pending SM Approval") return `${appliedBy} Pending with SM at station ${block.smStation ?? "—"}`;
+  if (s === "SM Approved") {
+    const notAcked = (block.availParticipants ?? []).filter((p: any) => p.smAckStatus === null)
+      .map((p: any) => `${p.userName}${p.userPhone ? ` (${p.userPhone})` : ""}`);
+    return `${appliedBy} SM granted. Awaiting acknowledgement from: ${notAcked.join(", ") || "all acknowledged"}`;
+  }
+  if (s === "Availing Active") {
+    const parts = (block.availParticipants ?? []).map((p: any) => {
+      const who = `${p.userName}/${p.userDept}`;
+      if (p.closureSubmittedAt) return `${who}: Closed ✓`;
+      if (p.blockBurst) return `${who}: ⚠ BURST`;
+      if (p.availStartedAt) return `${who}: In Progress`;
+      return `${who}: Not started`;
+    });
+    return `${appliedBy} ${parts.join(" | ")}`;
+  }
+  if (s === "All Closures Submitted") return `${appliedBy} All participants closed — awaiting SM ack.`;
+  if (s === "Block Closed") return `${appliedBy} Block fully closed.`;
+  return appliedBy || s;
+}
+
+// ── Table styles ───────────────────────────────────────────────────────────────
+const th: React.CSSProperties = { border: "1px solid #374151", padding: "8px", fontWeight: 800, fontSize: "13px", textAlign: "center", color: "#000" };
+const td: React.CSSProperties = { border: "1px solid #9ca3af", padding: "7px 8px", fontSize: "13px", fontWeight: 700, color: "#000", verticalAlign: "middle", textAlign: "center" };
+
+// ── BlockRow ───────────────────────────────────────────────────────────────────
+function BlockRow({
+  block, myParticipant, isConcurrence, onNavigate, onNavigateConcurrence,
+}: {
+  block: any; myParticipant?: any; isConcurrence?: boolean;
+  onNavigate: (id: string) => void; onNavigateConcurrence: (id: string) => void;
+}) {
+  const urgency = getUrgency(block, myParticipant);
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    if (!urgency && !isConcurrence) return;
+    const id = setInterval(() => setTick(t => t + 1), isConcurrence ? 400 : 600);
+    return () => clearInterval(id);
+  }, [urgency, isConcurrence]);
+
+  const blinkOp = (urgency === "urgent" || isConcurrence) ? (tick % 2 === 0 ? 1 : 0.2) : 1;
+  const rowBg = isConcurrence
+    ? (tick % 2 === 0 ? "#fecaca" : "#fff0f0")
+    : urgency === "urgent" ? (tick % 2 === 0 ? "#fca5a5" : "#fff")
+    : urgency === "near" ? "#fef9c3"
+    : block.overAllStatus === "Availing Active" ? "#f0fdf4"
+    : block.overAllStatus === "Sanctioned and Accepted by SSE" ? "#f8fafc"
+    : "#fff";
+
+  const { fromMs, toMs } = getEffectiveTimes(block);
+  const ss = shortStatus(block, myParticipant);
+  const det = detailedStatus(block);
+
   return (
-    <div style={{ overflowX: "auto" }}>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-        <thead>
-          <tr style={{ background: "#b39ddb" }}>
-            {["Date", "ID", "Section", "Sanctioned From", "Sanctioned To", "Extended upto", "Duration", "Activity", "Status", "BlockStatus"].map((h) => (
-              <th key={h} style={{ ...tdStyle, fontWeight: 700 }}>{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {blocks.map((block, i) => (
-            <tr key={block.id} style={{ background: rowBg(block, i), cursor: "pointer" }} onClick={() => onRowClick(block.id)}>
-              <td style={tdStyle}>{fmtDt(block.grantedFromTime ?? block.sanctionedTimeFrom ?? block.date)}</td>
-              <td style={{ ...tdStyle, color: "#1565c0", fontWeight: 600, textDecoration: "underline" }}>
-                {block.divisionId ?? block.id.slice(0, 8)}
-              </td>
-              <td style={tdStyle}>{block.selectedSection ?? "—"}</td>
-              <td style={tdStyle}>{fmtDt(block.grantedFromTime ?? block.sanctionedTimeFrom)}</td>
-              <td style={tdStyle}>{fmtDt(block.grantedToTime ?? block.sanctionedTimeTo)}</td>
-              <td style={{ ...tdStyle, color: getExtendedUpto(block) === "NA" ? "#999" : "#c62828", fontWeight: getExtendedUpto(block) === "NA" ? 400 : 700 }}>
-                {getExtendedUpto(block)}
-              </td>
-              <td style={tdStyle}>{getDuration(block)}</td>
-              <td style={tdStyle}>{block.activity ?? "—"}</td>
-              <td style={{ ...tdStyle, fontWeight: 600 }}>{block.overAllStatus ?? "—"}</td>
-              <td style={{ ...tdStyle, fontStyle: "italic", fontSize: "12px" }}>{getBlockStatus(block)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <tr style={{ background: rowBg, opacity: blinkOp, transition: "opacity 0.15s" }}>
+      <td style={td}>{fmtDate(block.date)}</td>
+      <td style={td}>
+        <span
+          onClick={() => isConcurrence ? onNavigateConcurrence(block.id) : onNavigate(block.id)}
+          style={{ color: isConcurrence ? "#dc2626" : "#1d4ed8", fontWeight: 900, cursor: "pointer", textDecoration: "underline", fontSize: "14px" }}
+        >
+          {block.divisionId ?? block.id.slice(0, 8)}
+        </span>
+        {isConcurrence && (
+          <div style={{ fontSize: "10px", background: "#dc2626", color: "#fff", borderRadius: "4px", padding: "1px 4px", marginTop: "2px" }}>CONCURRENCE</div>
+        )}
+        {myParticipant?.blockBurst && (
+          <div style={{ fontSize: "10px", background: "#7f1d1d", color: "#fff", borderRadius: "4px", padding: "1px 4px", marginTop: "2px" }}>BURST</div>
+        )}
+      </td>
+      <td style={td}>{block.selectedSection ?? block.missionBlock ?? "—"}</td>
+      <td style={{ ...td, whiteSpace: "pre-line" }}>{fmtDt(fromMs ? new Date(fromMs) : null)}</td>
+      <td style={{ ...td, whiteSpace: "pre-line" }}>{fmtDt(toMs ? new Date(toMs) : null)}</td>
+      <td style={td}>{getDuration(block)}</td>
+      <td style={td}>
+        {block.appliedByName
+          ? <span style={{ fontSize: "12px" }}>{block.appliedByName}<br/><span style={{ color: "#6b7280", fontWeight: 600 }}>{block.appliedByPhone ?? ""}</span></span>
+          : <span style={{ color: "#9ca3af" }}>Not applied</span>}
+      </td>
+      <td style={{ ...td, color: ss.color }}>{ss.text}</td>
+      <td style={{ ...td, fontSize: "11px", textAlign: "left", maxWidth: "220px", wordBreak: "break-word" }}>{det}</td>
+    </tr>
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// ── Main page ──────────────────────────────────────────────────────────────────
 export default function AvailBlockPage() {
   const { data: session } = useSession();
   const router = useRouter();
   const now = useClock();
+  const qc = useQueryClient();
 
-  const { data: myBlocksData, isLoading: myLoading } = useGetMyAvailBlocks();
-  const { data: otherData, isLoading: otherLoading } = useGetPendingAvailConcurrences();
+  const { data: depotData, isLoading: depotLoading } = useGetDepotBlocks();
+  const { data: myPartData } = useGetMyParticipations();
+  const { data: concurData } = useGetPendingAvailConcurrences();
 
-  const myBlocks: RequestItem[] = myBlocksData?.data?.blocks ?? [];
-  const otherBlocks: RequestItem[] = otherData?.data?.pendingConcurrences ?? [];
-  const isSSE = session?.user?.role === "USER";
+  const depotBlocks: any[] = depotData?.data?.blocks ?? [];
+  const myParticipations: any[] = myPartData?.data?.blocks ?? [];
+  const concurrenceBlocks: any[] = concurData?.data?.pendingConcurrences ?? [];
+
+  // Build a map: requestId → my AvailParticipant record (from myParticipations)
+  const myPartMap = new Map<string, any>();
+  myParticipations.forEach(b => { if (b.myParticipant) myPartMap.set(b.id, b.myParticipant); });
+
+  // Merge depot blocks + my participations (dedup by id)
+  const allBlockMap = new Map<string, any>();
+  depotBlocks.forEach(b => allBlockMap.set(b.id, b));
+  myParticipations.forEach(b => { if (!allBlockMap.has(b.id)) allBlockMap.set(b.id, b); });
+  const allBlocks = [...allBlockMap.values()];
+
+  // Dedup concurrence blocks (remove if already in allBlocks as depot member)
+  const concurrenceOnly = concurrenceBlocks.filter(b => !allBlockMap.has(b.id));
+
+  // Badge count
+  const badgeCount =
+    concurrenceOnly.length +
+    allBlocks.filter(b => {
+      const p = myPartMap.get(b.id);
+      if (p?.blockBurst && !p?.closureSubmittedAt) return true;
+      if (b.overAllStatus === "SM Approved" && p?.smAckStatus === null) return true;
+      if (b.overAllStatus === "Availing Active" && p?.availStartedAt && !p?.closureSubmittedAt) {
+        const { toMs } = getEffectiveTimes(b);
+        const effTo = p.smExtensionGrantedTo ? new Date(p.smExtensionGrantedTo).getTime() : toMs;
+        if (effTo && (effTo - nowIST()) < 20 * 60 * 1000) return true;
+      }
+      return false;
+    }).length;
+
+  useEffect(() => { (window as any).__availBadgeCount = badgeCount; }, [badgeCount]);
+
+  // Beep for urgent items
+  const lastBeepRef = useRef<Record<string, number>>({});
+  useEffect(() => {
+    const urgentIds = [
+      ...concurrenceOnly.map(b => b.id),
+      ...allBlocks.filter(b => getUrgency(b, myPartMap.get(b.id)) === "urgent").map(b => b.id),
+    ];
+    const nowMs = nowIST();
+    for (const id of urgentIds) {
+      const last = lastBeepRef.current[id] ?? 0;
+      if (nowMs - last > 8000) { playBeep(); lastBeepRef.current[id] = nowMs; }
+    }
+  });
+
+  const handleRefresh = () => {
+    qc.invalidateQueries({ queryKey: ["avail-depot-blocks"] });
+    qc.invalidateQueries({ queryKey: ["avail-my-participations"] });
+    qc.invalidateQueries({ queryKey: ["avail-concurrences"] });
+  };
+
+  const navigateToBlock = (id: string) => router.push(`/avail-block/${id}`);
+  const navigateToConcurrence = (id: string) => router.push(`/avail-block/${id}/concurrence`);
+
+  // Sort: concurrences first, then active, then SM approved, then pending, then ready
+  const statusOrder = (b: any) => {
+    const s = b.overAllStatus ?? "";
+    if (s === "Availing Active") return 1;
+    if (s === "SM Approved") return 2;
+    if (s === "All Closures Submitted") return 3;
+    if (s === "Pending SM Approval") return 4;
+    if (s === "Pending Concurrences") return 5;
+    if (s === "Sanctioned and Accepted by SSE") return 6;
+    return 7;
+  };
+  const sortedBlocks = [...allBlocks].sort((a, b) => statusOrder(a) - statusOrder(b));
+
+  const isEmpty = sortedBlocks.length === 0 && concurrenceOnly.length === 0;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#c8e6c9", padding: "0 0 40px" }}>
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div style={{ background: "#4caf50", textAlign: "center", padding: "14px 20px 12px" }}>
-        <div style={{ fontSize: "20px", fontWeight: 700, color: "#fff", letterSpacing: 1, marginBottom: "10px" }}>
-          AVAIL BLOCK AT SITE
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "8px" }}>
-          <span style={{ background: "#ef8c00", color: "#fff", padding: "5px 14px", borderRadius: "6px", fontWeight: 600 }}>
-            Date — {format(now, "dd-MM-yyyy")}
-          </span>
-          <span style={{ background: "#fff", color: "#333", border: "1px solid #ccc", padding: "5px 14px", borderRadius: "6px", fontWeight: 600 }}>
-            Time — {format(now, "HH:mm:ss")}
-          </span>
-          <span style={{ background: "#fff", color: "#333", border: "1px solid #ccc", padding: "5px 14px", borderRadius: "6px", fontWeight: 600 }}>
-            Applicant — {session?.user?.name ?? "—"}
-          </span>
-        </div>
+    <div style={{ minHeight: "100vh", background: "#c8f0c8", fontFamily: "Arial, sans-serif" }}>
+      <style>{`
+        @keyframes blink { 0%,100% { opacity:1 } 50% { opacity:0.2 } }
+        @media (max-width:640px) { .avail-info-row { flex-direction:column !important } }
+      `}</style>
+
+      {/* Header */}
+      <div style={{ background: "#fef08a", padding: "12px 16px", textAlign: "center" }}>
+        <span style={{ fontSize: "30px", fontWeight: 900, color: "#7c3aed", letterSpacing: "3px" }}>RBMS</span>
       </div>
 
-      <div style={{ padding: "16px" }}>
-        {/* ── Section 1: My blocks ────────────────────────────────────────── */}
-        <h3 style={{ marginBottom: "4px", fontWeight: 700 }}>
-          Upcoming Sanctioned Blocks of My section (Next 12 Hr)
-        </h3>
-        <p style={{ marginBottom: "10px", fontSize: "12px", color: "#555", fontStyle: "italic" }}>
-          (Click ID to view &amp; submit the Request)
-        </p>
-        {myLoading ? <p>Loading...</p> : <BlockTable blocks={myBlocks} onRowClick={(id) => router.push(`/avail-block/${id}`)} />}
+      {/* Top bar */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 16px 0" }}>
+        <div style={{ fontWeight: 800, fontSize: "13px", color: "#374151" }}>
+          Depot: <span style={{ color: "#7c3aed" }}>{session?.user?.depot}</span>
+          {" · "}{session?.user?.name}
+        </div>
+        <button onClick={handleRefresh} style={{ background: "#0d9488", color: "#fff", border: "none", borderRadius: "8px", padding: "8px 16px", fontWeight: 700, fontSize: "14px", cursor: "pointer" }}>
+          ↻ Refresh
+        </button>
+      </div>
 
-        {/* ── Section 2: Other dept blocks (SSE only) ─────────────────────── */}
-        {isSSE && (
-          <>
-            <h3 style={{ marginTop: "32px", marginBottom: "4px", fontWeight: 700 }}>
-              Other upcoming sanctioned blocks in my section
-            </h3>
-            <p style={{ marginBottom: "10px", fontSize: "12px", color: "#555", fontStyle: "italic" }}>
-              (Blocks needing your department&apos;s concurrence — click ID to submit)
-            </p>
-            {otherLoading ? <p>Loading...</p> : <BlockTable blocks={otherBlocks} onRowClick={(id) => router.push(`/avail-block/${id}`)} />}
-          </>
+      <div style={{ padding: "10px 16px" }}>
+        {/* Banner */}
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: "10px" }}>
+          <div style={{ background: "#4ade80", border: "3px solid #16a34a", borderRadius: "10px", fontWeight: 900, color: "#000", letterSpacing: "1px", textAlign: "center", width: "100%", maxWidth: "700px", padding: "12px 24px", fontSize: "18px" }}>
+            AVAIL BLOCK AT SITE
+          </div>
+        </div>
+
+        {/* Date/Time */}
+        <div className="avail-info-row" style={{ display: "flex", gap: "10px", justifyContent: "center", marginBottom: "14px" }}>
+          <div style={{ background: "#fb923c", border: "2px solid #ea580c", borderRadius: "8px", padding: "7px 14px", fontWeight: 800, fontSize: "13px" }}>
+            Date — {fmtDate(new Date().toISOString())}
+          </div>
+          <div style={{ background: "#dde4ff", border: "2px solid #a5b4fc", borderRadius: "8px", padding: "7px 14px", fontWeight: 800, fontSize: "13px" }}>
+            Time — {clockStr(now)}
+          </div>
+        </div>
+
+        {badgeCount > 0 && (
+          <div style={{ background: "#dc2626", color: "#fff", borderRadius: "8px", padding: "8px 16px", fontWeight: 800, fontSize: "14px", textAlign: "center", marginBottom: "12px" }}>
+            ⚡ {badgeCount} item{badgeCount !== 1 ? "s" : ""} need your immediate attention
+          </div>
         )}
 
-        {/* ── Back ────────────────────────────────────────────────────────── */}
-        <button
-          onClick={() => router.push("/dashboard")}
-          style={{ marginTop: "28px", background: "#e8d5f5", border: "1px solid #b39ddb", padding: "8px 20px", borderRadius: "8px", cursor: "pointer", fontWeight: 600 }}
-        >
+        <p style={{ textAlign: "center", fontStyle: "italic", fontWeight: 700, fontSize: "13px", color: "#374151", margin: "0 0 10px 0" }}>
+          Click the Block ID to view details &amp; take action
+        </p>
+
+        {depotLoading ? (
+          <div style={{ textAlign: "center", padding: "40px", fontWeight: 800, fontSize: "16px" }}>Loading…</div>
+        ) : (
+          <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" as any }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid #374151", background: "#fff", minWidth: "900px" }}>
+              <thead>
+                <tr style={{ background: "#d8b4fe" }}>
+                  <th style={th}>Date</th>
+                  <th style={th}>Block ID</th>
+                  <th style={th}>Section</th>
+                  <th style={th}>From</th>
+                  <th style={th}>To</th>
+                  <th style={th}>Duration</th>
+                  <th style={th}>Applied By</th>
+                  <th style={th}>Status</th>
+                  <th style={th}>Detailed Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {isEmpty && (
+                  <tr>
+                    <td colSpan={9} style={{ padding: "32px", textAlign: "center", color: "#6b7280", fontWeight: 700 }}>
+                      No sanctioned blocks found for your depot
+                    </td>
+                  </tr>
+                )}
+
+                {/* Concurrence blocks first (red, blinking) */}
+                {concurrenceOnly.map(b => (
+                  <BlockRow key={b.id} block={b} isConcurrence onNavigate={navigateToBlock} onNavigateConcurrence={navigateToConcurrence} />
+                ))}
+
+                {/* All depot/my blocks */}
+                {sortedBlocks.map(b => (
+                  <BlockRow
+                    key={b.id}
+                    block={b}
+                    myParticipant={myPartMap.get(b.id)}
+                    onNavigate={navigateToBlock}
+                    onNavigateConcurrence={navigateToConcurrence}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Back */}
+      <div style={{ display: "flex", justifyContent: "center", padding: "20px 16px 28px" }}>
+        <button onClick={() => router.push("/dashboard")} style={{ background: "#fff", border: "2px solid #374151", borderRadius: "8px", padding: "12px 40px", fontWeight: 900, fontSize: "16px", cursor: "pointer", color: "#000" }}>
           &lt; BACK
         </button>
       </div>

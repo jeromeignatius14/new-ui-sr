@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BAA — Post-Sanctioning: The Gap &amp; The Solution</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 210mm; background: white; }
+
+  @media print {
+    html, body { width: 210mm; }
+    @page { size: A4 portrait; margin: 15mm 18mm 15mm 18mm; }
+  }
+
+  body {
+    font-family: 'Arial', sans-serif;
+    font-size: 10.5pt;
+    color: #111;
+    padding: 15mm 18mm;
+  }
+
+  .doc-header {
+    border-bottom: 3px solid #1a3264;
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+  }
+  .org-line { font-size: 8.5pt; color: #555; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .doc-title { font-size: 18pt; font-weight: 900; color: #1a3264; line-height: 1.1; }
+  .doc-subtitle { font-size: 10pt; color: #444; margin-top: 3px; }
+  .doc-meta { float: right; text-align: right; font-size: 8.5pt; color: #666; line-height: 1.6; }
+
+  /* ── BEFORE / AFTER ── */
+  .ba-grid { display: table; width: 100%; border-collapse: separate; border-spacing: 8px 0; margin-bottom: 12px; }
+  .ba-col { display: table-cell; vertical-align: top; width: 50%; }
+
+  .before-head { background: #c62828; color: white; padding: 6px 12px; font-weight: 800; font-size: 10.5pt; }
+  .before-body { border: 2px solid #c62828; border-top: none; padding: 10px; }
+
+  .after-head { background: #2e7d32; color: white; padding: 6px 12px; font-weight: 800; font-size: 10.5pt; }
+  .after-body { border: 2px solid #2e7d32; border-top: none; padding: 10px; }
+
+  .problem-item { margin-bottom: 8px; padding-left: 20px; position: relative; font-size: 9.5pt; line-height: 1.4; }
+  .problem-item::before { position: absolute; left: 0; top: 0; font-size: 11pt; }
+  .problem-item.x::before { content: '✗'; color: #c62828; font-weight: 900; }
+  .problem-item.ok::before { content: '✓'; color: #2e7d32; font-weight: 900; }
+  .problem-item strong { display: block; font-weight: 800; margin-bottom: 1px; }
+
+  /* ── NEW AVAILING JOURNEY ── */
+  .section-heading { background: #1a3264; color: white; font-size: 10pt; font-weight: 700; padding: 5px 10px; margin-top: 12px; letter-spacing: 0.5px; }
+  .section-body { border: 1.5px solid #1a3264; border-top: none; padding: 10px; }
+
+  .journey-step { display: table; width: 100%; margin-bottom: 7px; }
+  .step-num-col { display: table-cell; vertical-align: top; width: 28px; }
+  .step-num-circle { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 10pt; color: white; }
+  .step-content-col { display: table-cell; vertical-align: top; padding-left: 8px; }
+  .step-arrow-row { padding-left: 36px; color: #888; font-size: 9pt; margin-bottom: 7px; line-height: 1; }
+
+  .step-title { font-weight: 800; font-size: 10pt; }
+  .step-body { font-size: 9pt; color: #333; line-height: 1.5; margin-top: 2px; }
+  .step-status { display: inline-block; font-size: 8pt; font-weight: 700; padding: 1px 7px; border-radius: 2px; margin-top: 3px; color: white; }
+
+  .new-tag { font-size: 7pt; background: #c00; color: white; padding: 0 3px; border-radius: 2px; font-weight: 700; margin-left: 4px; }
+
+  /* ── STATUS TRACKER ── */
+  .tracker { display: table; width: 100%; border-collapse: separate; border-spacing: 3px 0; margin-top: 10px; }
+  .tracker-cell { display: table-cell; text-align: center; vertical-align: middle; }
+  .tracker-box { border: 1.5px solid; border-radius: 3px; padding: 5px 3px; font-size: 7.5pt; font-weight: 700; line-height: 1.3; }
+  .tracker-arrow { font-size: 12pt; color: #888; text-align: center; vertical-align: middle; width: 12px; }
+
+  .doc-footer { border-top: 1.5px solid #1a3264; padding-top: 6px; margin-top: 14px; font-size: 8pt; color: #666; display: table; width: 100%; }
+  .footer-left { display: table-cell; }
+  .footer-right { display: table-cell; text-align: right; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="doc-header">
+  <div class="doc-meta">
+    ADRM, SR-MAS · March 2026<br>
+    Document 2 of 5
+  </div>
+  <div class="org-line">Southern Railway · Block Authorization App (BAA)</div>
+  <div class="doc-title">Post-Sanctioning: The Gap &amp; The Solution</div>
+  <div class="doc-subtitle">What was missing after sanctioning, and what has now been built into BAA</div>
+</div>
+
+<!-- BEFORE / AFTER -->
+<div class="ba-grid">
+  <div class="ba-col">
+    <div class="before-head">✗ &nbsp;BEFORE BMS &amp; BAA — What Was Missing</div>
+    <div class="before-body">
+
+      <div class="problem-item x">
+        <strong>No record of SM approval</strong>
+        SSE called SM on phone. SM gave verbal permission. No timestamp, no audit trail, no record of who approved what.
+      </div>
+
+      <div class="problem-item x">
+        <strong>SSE didn't know block was sanctioned</strong>
+        No notification mechanism. SSE may not be on duty when sanction happens. Blocks passed unused because SSE simply didn't know.
+      </div>
+
+      <div class="problem-item x">
+        <strong>No tracking of actual availing</strong>
+        When a block started, only the field staff knew. Management had no visibility. There was no "Availing In Progress" concept digitally.
+      </div>
+
+      <div class="problem-item x">
+        <strong>Block burst went undetected</strong>
+        When work exceeded sanctioned time, SSE had to call TPC manually. No automated alert, no automatic flag. Safety risk.
+      </div>
+
+      <div class="problem-item x">
+        <strong>Manual paper closure — unreliable</strong>
+        SSE submitted paper forms for availed / not-availed days or weeks later. Data quality was poor. Often not submitted at all.
+      </div>
+
+      <div class="problem-item x">
+        <strong>Zero compliance metrics</strong>
+        Nobody could answer: "Of 100 blocks sanctioned this month, how many were actually availed?" This number was simply not available.
+      </div>
+
+    </div>
+  </div>
+
+  <div class="ba-col">
+    <div class="after-head">✓ &nbsp;NOW IN BAA — What Is Built</div>
+    <div class="after-body">
+
+      <div class="problem-item ok">
+        <strong>Digital SM approval with timestamps</strong>
+        SSE applies in the app → SM sees it on dashboard → SM approves / modifies / rejects. Every action is timestamped and stored with identity.
+      </div>
+
+      <div class="problem-item ok">
+        <strong>Push notification on sanction + escalating alerts</strong>
+        SSE gets an instant push notification when block is sanctioned. Audio beep alert sounds when action is needed. Urgent blinking when time is critical.
+      </div>
+
+      <div class="problem-item ok">
+        <strong>Real-time availing status visible</strong>
+        Once SSE taps "Start Availing," status changes to "Availing In Progress." SM's Active Blocks screen shows elapsed and remaining time live.
+      </div>
+
+      <div class="problem-item ok">
+        <strong>Block burst detection + time extension</strong>
+        When block time is exceeded, "Block Burst" is automatically flagged. SSE can request a time extension — SM must approve it. All tracked.
+      </div>
+
+      <div class="problem-item ok">
+        <strong>Digital closure — SSE submits, SM acknowledges</strong>
+        SSE taps "Submit Closure" in app. SM must acknowledge that section is clear. Block status becomes "Closed ✅". Both parties have digital record.
+      </div>
+
+      <div class="problem-item ok">
+        <strong>Health score per SSE + compliance metrics</strong>
+        Every SSE sees their personal availing health score. Section-wise compliance % (Sanctioned → Closed) is now computable in DRM reports.
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- STATUS TRACKER -->
+<div class="section-heading">The New Availing Status Chain — From Sanctioning to Closure</div>
+<div class="section-body">
+
+  <div class="tracker">
+    <div class="tracker-cell">
+      <div class="tracker-box" style="border-color: #d32f2f; background: #ffebee; color: #b71c1c;">
+        Block<br>Sanctioned<br>by Op. Controller
+      </div>
+    </div>
+    <div class="tracker-cell tracker-arrow">→</div>
+    <div class="tracker-cell">
+      <div class="tracker-box" style="border-color: #7b1fa2; background: #f3e5f5; color: #4a148c;">
+        SSE Applies<br>for Availing<br><span style="font-weight:400;">(+ concurrences)</span>
+      </div>
+    </div>
+    <div class="tracker-cell tracker-arrow">→</div>
+    <div class="tracker-cell">
+      <div class="tracker-box" style="border-color: #1565c0; background: #e3f2fd; color: #0d47a1;">
+        Pending<br>SM<br>Approval
+      </div>
+    </div>
+    <div class="tracker-cell tracker-arrow">→</div>
+    <div class="tracker-cell">
+      <div class="tracker-box" style="border-color: #f57c00; background: #fff3e0; color: #e65100;">
+        SM Approves<br>or Modifies<br>Timing
+      </div>
+    </div>
+    <div class="tracker-cell tracker-arrow">→</div>
+    <div class="tracker-cell">
+      <div class="tracker-box" style="border-color: #1565c0; background: #e3f2fd; color: #0d47a1;">
+        SSE Starts<br>Availing<br>(live timer)
+      </div>
+    </div>
+    <div class="tracker-cell tracker-arrow">→</div>
+    <div class="tracker-cell">
+      <div class="tracker-box" style="border-color: #00838f; background: #e0f7fa; color: #004d40;">
+        SSE Submits<br>Closure
+      </div>
+    </div>
+    <div class="tracker-cell tracker-arrow">→</div>
+    <div class="tracker-cell">
+      <div class="tracker-box" style="border-color: #1b5e20; background: #e8f5e9; color: #1b5e20;">
+        SM<br>Acknowledges<br>Block Closed ✓
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top: 10px; display: table; width: 100%; border-collapse: separate; border-spacing: 8px 0;">
+    <div style="display: table-cell; width: 50%; vertical-align: top; background: #f4f6fb; border: 1.5px solid #1a3264; padding: 8px; font-size: 9pt;">
+      <strong style="display:block; margin-bottom:4px; color:#1a3264;">SM Dashboard — Software Capabilities</strong>
+      · All pending avail requests listed with full request details<br>
+      · One-tap <strong>Approve</strong> with current sanctioned time<br>
+      · <strong>Modify</strong> start/end time before approving — recorded with reason<br>
+      · <strong>Reject</strong> with structured reason — SSE notified instantly via push<br>
+      · Active Blocks screen: live elapsed time + remaining time per block<br>
+      · Closure acknowledgement prompt when SSE submits block return
+    </div>
+    <div style="display: table-cell; width: 50%; vertical-align: top; background: #f4f6fb; border: 1.5px solid #1a3264; padding: 8px; font-size: 9pt;">
+      <strong style="display:block; margin-bottom:4px; color:#1a3264;">SSE Avail Block Screen — Software Capabilities</strong>
+      · All sanctioned blocks listed with granted time and section details<br>
+      · <strong>Compliance health score</strong>: e.g. "14 of 18 blocks acted upon (78%)"<br>
+      · Audio beep alert + urgent visual indicator when action is due<br>
+      · Two-step flow: acknowledge SM approval → tap "Start Availing"<br>
+      · Forced acknowledgement modal if block expires without action (24 hrs)<br>
+      · Time extension request flow — routed to SM for approval
+    </div>
+  </div>
+
+</div>
+
+<div class="doc-footer">
+  <div class="footer-left">Southern Railway · BAA · Developed by ADRIG AI Technologies Pvt. Ltd. · Confidential</div>
+  <div class="footer-right">Document 2 of 5 · March 2026</div>
+</div>
+
+</body>
+</html>

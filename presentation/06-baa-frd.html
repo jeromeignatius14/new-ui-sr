@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BAA — Functional Requirements Document</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 210mm; background: white; }
+
+  @media print {
+    html, body { width: 210mm; }
+    @page { size: A4 portrait; margin: 12mm 16mm 12mm 16mm; }
+    .page-break { page-break-before: always; padding-top: 2mm; }
+    /* Keep headings glued to the content that follows them */
+    .sec-h1 { page-break-after: avoid; }
+    .sec-h2 { page-break-after: avoid; }
+    /* Keep each sub-section block together where possible */
+    .sec-h2-body { page-break-inside: avoid; }
+    .ref-grid { page-break-inside: avoid; }
+    .two-col { page-break-inside: avoid; }
+    .wf-wrapper { page-break-inside: avoid; }
+    /* Never split a table row across pages */
+    tr { page-break-inside: avoid; page-break-after: auto; }
+  }
+
+  body {
+    font-family: 'Arial', sans-serif;
+    font-size: 9.5pt;
+    color: #111;
+    padding: 12mm 16mm;
+    line-height: 1.45;
+  }
+
+  /* ── LETTERHEAD ── */
+  .letterhead {
+    display: table;
+    width: 100%;
+    border-bottom: 3px solid #1a3264;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+  }
+  .lh-left { display: table-cell; vertical-align: middle; }
+  .lh-logo-box {
+    width: 44px; height: 44px; background: #1a3264; border-radius: 4px;
+    display: inline-block; vertical-align: middle; text-align: center;
+    line-height: 44px; font-size: 16pt; font-weight: 900; color: white; margin-right: 8px;
+  }
+  .lh-company { display: inline-block; vertical-align: middle; }
+  .lh-name { font-size: 13pt; font-weight: 900; color: #1a3264; }
+  .lh-tagline { font-size: 7.5pt; color: #555; }
+  .lh-right { display: table-cell; vertical-align: middle; text-align: right; font-size: 7.5pt; color: #555; line-height: 1.6; }
+
+  /* ── DOC TITLE BLOCK ── */
+  .doc-title-block {
+    background: #1a3264;
+    color: white;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    border-radius: 2px;
+  }
+  .doc-type { font-size: 8pt; letter-spacing: 1.5px; text-transform: uppercase; opacity: 0.8; margin-bottom: 2px; }
+  .doc-name { font-size: 16pt; font-weight: 900; line-height: 1.1; }
+  .doc-sub { font-size: 9pt; opacity: 0.85; margin-top: 3px; }
+  .doc-meta-row { display: table; width: 100%; margin-top: 6px; }
+  .doc-meta-cell { display: table-cell; font-size: 8pt; opacity: 0.8; }
+  .doc-meta-cell.right { text-align: right; }
+
+  /* ── REFERENCE BOX ── */
+  .ref-grid { display: table; width: 100%; border-collapse: separate; border-spacing: 6px 0; margin-bottom: 8px; }
+  .ref-col { display: table-cell; vertical-align: top; width: 50%; }
+  .ref-box { border: 1.5px solid; border-radius: 2px; padding: 8px 10px; height: 100%; }
+  .ref-head { font-weight: 800; font-size: 9pt; margin-bottom: 5px; padding-bottom: 4px; border-bottom: 1px solid; }
+  .ref-item { font-size: 8.5pt; line-height: 1.5; margin-bottom: 2px; }
+
+  /* ── SECTION HEADINGS ── */
+  .sec-h1 {
+    background: #1a3264; color: white;
+    font-size: 9.5pt; font-weight: 800;
+    padding: 4px 10px; margin-top: 10px; margin-bottom: 0;
+    letter-spacing: 0.3px;
+    display: table; width: 100%;
+  }
+  .sec-h1 .sec-num { display: table-cell; width: 22px; font-size: 8.5pt; opacity: 0.75; }
+  .sec-h1 .sec-title { display: table-cell; }
+  .sec-body { border: 1.5px solid #1a3264; border-top: none; padding: 8px 10px; margin-bottom: 2px; }
+
+  .sec-h2 {
+    background: #e8ecf5; color: #1a3264;
+    font-size: 9pt; font-weight: 800;
+    padding: 3px 10px; margin-top: 6px; margin-bottom: 0;
+    border-left: 4px solid #1a3264;
+  }
+  .sec-h2-body { padding: 5px 10px 5px 14px; }
+
+  /* ── TABLES ── */
+  table.frd { width: 100%; border-collapse: collapse; font-size: 8.5pt; margin-top: 4px; }
+  table.frd th { background: #1a3264; color: white; padding: 4px 7px; text-align: left; font-size: 8pt; }
+  table.frd td { padding: 4px 7px; border-bottom: 1px solid #ddd; vertical-align: top; }
+  table.frd tr:last-child td { border-bottom: none; }
+  table.frd tr:nth-child(even) td { background: #f4f6fb; }
+  table.frd td.req-id { font-size: 7.5pt; color: #888; white-space: nowrap; font-weight: 700; }
+  table.frd td.pri { text-align: center; }
+
+  /* ── PILLS ── */
+  .pill { display: inline-block; padding: 0 5px; border-radius: 2px; font-size: 7.5pt; font-weight: 700; color: white; white-space: nowrap; }
+  .p-must { background: #c62828; }
+  .p-should { background: #f57c00; }
+  .p-new { background: #1565c0; }
+  .p-ref { background: #555; }
+
+  /* ── WORKFLOW ── */
+  .wf-table { width: 100%; border-collapse: separate; border-spacing: 2px 0; table-layout: fixed; }
+  .wf-step { border: 1.5px solid; border-radius: 3px; padding: 4px 3px; text-align: center;
+             font-size: 6.5pt; overflow: hidden; word-break: break-word; overflow-wrap: break-word; height: 100%; }
+  .wf-num { width: 15px; height: 15px; border-radius: 50%; margin: 0 auto 2px; line-height: 15px; font-size: 7.5pt; font-weight: 900; color: white; }
+  .wf-title { font-weight: 800; font-size: 6.5pt; line-height: 1.2; margin-bottom: 1px; }
+  .wf-actor { font-size: 6pt; color: #555; }
+  .wf-arrow { text-align: center; vertical-align: middle; color: #888; font-size: 9pt; padding: 0 1px; width: 10px; }
+  .wf-note { font-size: 6pt; color: #555; font-style: italic; margin-top: 1px; }
+
+  /* ── INFO BOXES ── */
+  .note-box { border-left: 4px solid #1a3264; padding: 5px 8px; font-size: 8.5pt; background: #f4f6fb; margin: 5px 0; }
+  .warn-box { border-left: 4px solid #c62828; padding: 5px 8px; font-size: 8.5pt; background: #fff4f4; margin: 5px 0; }
+  .new-box  { border-left: 4px solid #1565c0; padding: 5px 8px; font-size: 8.5pt; background: #e8f0ff; margin: 5px 0; }
+
+  /* ── COMPARISON TABLE ── */
+  .cmp-head-old { background: #555; }
+  .cmp-head-new { background: #1565c0; }
+  .cmp-old { background: #fafafa; }
+  .cmp-new { background: #e8f0ff; }
+
+  /* ── TWO COL ── */
+  .two-col { display: table; width: 100%; border-collapse: separate; border-spacing: 6px 0; margin-top: 4px; }
+  .col { display: table-cell; vertical-align: top; }
+
+  ul.req { padding-left: 14px; margin: 0; }
+  ul.req li { margin-bottom: 2px; font-size: 8.5pt; }
+  ul.req li strong { color: #1a3264; }
+
+  /* ── FOOTER ── */
+  .doc-footer { border-top: 1.5px solid #1a3264; padding-top: 5px; margin-top: 10px; font-size: 7.5pt; color: #666; display: table; width: 100%; }
+  .footer-left { display: table-cell; }
+  .footer-right { display: table-cell; text-align: right; }
+
+  /* ── STATUS INDICATOR ── */
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 3px; vertical-align: middle; }
+</style>
+</head>
+<body>
+
+<!-- LETTERHEAD -->
+<div class="letterhead">
+  <div class="lh-left">
+    <div class="lh-logo-box">A</div>
+    <div class="lh-company">
+      <div class="lh-name">ADRIG AI Technologies Private Limited</div>
+      <div class="lh-tagline">No. 2, Sangothi Amman Kovil 4th Street, Sembakkam, Chennai – 600073 &nbsp;·&nbsp; CIN: U62099TN2023PTC164822</div>
+    </div>
+  </div>
+  <div class="lh-right">
+    www.adrig.co.in<br>contact@adrig.co.in<br>@adrig.ai
+  </div>
+</div>
+
+<!-- DOCUMENT TITLE -->
+<div class="doc-title-block">
+  <div class="doc-type">Functional Requirements Document</div>
+  <div class="doc-name">Block Authorization App (BAA)</div>
+  <div class="doc-sub">Post-Sanctioning Availing Module — Rolling Block Management System (RBMS)</div>
+  <div class="doc-meta-row">
+    <div class="doc-meta-cell">Prepared for: Southern Railway · DRM, Southern Railway</div>
+    <div class="doc-meta-cell right">Version 1.0 &nbsp;·&nbsp; March 2026 &nbsp;·&nbsp; Confidential</div>
+  </div>
+</div>
+
+<!-- SECTION 1: INTRODUCTION -->
+<div class="sec-h1"><div class="sec-num">1</div><div class="sec-title">Introduction &amp; Background</div></div>
+<div class="sec-body">
+  <p style="font-size:9pt; margin-bottom:6px;">
+    The <strong>Rolling Block Management System (RBMS)</strong>, developed by ADRIG AI Technologies Private Limited, digitises the complete block lifecycle from request creation through multi-department disconnection approvals, optimisation, and sanctioning by the Traffic Controller. RBMS is live across Southern Railway and handles 5,000+ users daily across 6 divisions.
+  </p>
+  <p style="font-size:9pt; margin-bottom:6px;">
+    The post-sanctioning stage — where a sanctioned block is availed at site — historically had no digital record. Field staff applied verbally to Station Masters, availing status was invisible to management, and block bursts or non-availings went untracked. A separate <strong>Block Authorization App (BAA)</strong> was required to close this gap.
+  </p>
+  <p style="font-size:9pt; margin-bottom:4px;">
+    An earlier version of the BAA was developed by <strong>Plattr Tech Studio</strong> (reference document: <em>Functional Overview – RBMS Availing Part</em>). ADRIG AI Technologies is now developing an enhanced BAA — tightly integrated with RBMS — with additional capabilities including real-time compliance tracking, structured drop-reason capture, and an analytics dashboard. This document specifies the functional requirements for that system.
+  </p>
+</div>
+
+<!-- SECTION 2: REFERENCE DOCUMENTS -->
+<div class="sec-h1"><div class="sec-num">2</div><div class="sec-title">Reference Documents</div></div>
+<div class="sec-body" style="padding-bottom:6px;">
+  <div class="ref-grid">
+    <div class="ref-col">
+      <div class="ref-box" style="border-color:#555;">
+        <div class="ref-head" style="color:#555; border-color:#bbb;">REF-01 &nbsp;·&nbsp; Plattr Tech Studio (Prior BAA)</div>
+        <div class="ref-item"><strong>Document:</strong> Functional Overview – RBMS (Availing Part)</div>
+        <div class="ref-item"><strong>Scope:</strong> Field Staff &amp; SM dashboards; block availing submission flow; time extension; geo-fencing; e-TSR integration; TPC power block flow</div>
+        <div class="ref-item" style="margin-top:4px; color:#555; font-style:italic;">Used as: functional baseline and workflow reference</div>
+      </div>
+    </div>
+    <div class="ref-col">
+      <div class="ref-box" style="border-color:#1a3264;">
+        <div class="ref-head" style="color:#1a3264; border-color:#99a8c8;">REF-02 &nbsp;·&nbsp; ADRIG AI Technologies (RBMS)</div>
+        <div class="ref-item"><strong>Document:</strong> RBMS – Functional Overview &amp; Features</div>
+        <div class="ref-item"><strong>Scope:</strong> Full block lifecycle (creation → sanction); multi-level roles; CUG login; optimisation algorithm; reports (Table A/B/C); Board Controller monitoring</div>
+        <div class="ref-item" style="margin-top:4px; color:#555; font-style:italic;">Used as: integration source — BAA receives sanctioned blocks from RBMS</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 3: SCOPE -->
+<div class="sec-h1"><div class="sec-num">3</div><div class="sec-title">Scope of This Document</div></div>
+<div class="sec-body">
+  <div class="two-col">
+    <div class="col" style="width:50%;">
+      <div class="note-box"><strong>In Scope (BAA):</strong> All functionality from the point a block is sanctioned in RBMS to the point the block is digitally closed and acknowledged — including SM approval, availing start/stop, time extension, closure, compliance tracking, and analytics.</div>
+    </div>
+    <div class="col" style="width:50%;">
+      <div class="warn-box"><strong>Out of Scope:</strong> Block request creation, disconnection approvals, Department Controller gating, optimisation, sanctioning — all of which remain within RBMS. This document does not re-specify RBMS features.</div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 4: USER ROLES -->
+<div class="sec-h1"><div class="sec-num">4</div><div class="sec-title">User Roles &amp; Access in BAA</div></div>
+<div class="sec-body" style="padding:0;">
+  <table class="frd">
+    <thead>
+      <tr>
+        <th style="width:18%;">User</th>
+        <th style="width:20%;">Primary Screen</th>
+        <th>Software Capabilities in BAA</th>
+        <th style="width:10%; text-align:center;">Access Scope</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>JE / SSE / Technician</strong><br><span style="font-size:7.5pt; color:#555;">Field Staff</span></td>
+        <td>Avail Block Dashboard</td>
+        <td>View sanctioned blocks; submit availing application; acknowledge SM approval; start availing; request time extension; submit closure; view personal compliance health score</td>
+        <td style="text-align:center; font-size:8pt;">Own blocks + team hierarchy</td>
+      </tr>
+      <tr>
+        <td><strong>Station Master</strong><br><span style="font-size:7.5pt; color:#555;">SM</span></td>
+        <td>SM Dashboard (BAA)</td>
+        <td>View pending avail requests; approve / modify timing / reject with reason; monitor active blocks in real time; acknowledge block closure; approve time extension requests</td>
+        <td style="text-align:center; font-size:8pt;">Station jurisdiction</td>
+      </tr>
+      <tr>
+        <td><strong>Traction Power Controller</strong><br><span style="font-size:7.5pt; color:#555;">TPC</span></td>
+        <td>TPC Board (BAA)</td>
+        <td>Approve / modify / reject Power Block availing requests; approve Power Block closure; view all power block availing status under jurisdiction</td>
+        <td style="text-align:center; font-size:8pt;">All power blocks</td>
+      </tr>
+      <tr>
+        <td><strong>Dept. Controller</strong></td>
+        <td>Availing Status View</td>
+        <td>View availing status of all blocks under their section; monitor compliance health scores by SSE; view drop-reason analytics</td>
+        <td style="text-align:center; font-size:8pt;">Section / division</td>
+      </tr>
+      <tr>
+        <td><strong>Traffic Controller / DRM</strong></td>
+        <td>Analytics Dashboard</td>
+        <td>Section-wise funnel (Sanctioned → Applied → SM Approved → Availed → Closed); drop-reason analysis; compliance % by section / department / SSE; XLSX export</td>
+        <td style="text-align:center; font-size:8pt;">All sections</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 5: WORKFLOW -->
+<div class="sec-h1"><div class="sec-num">5</div><div class="sec-title">End-to-End BAA Workflow</div></div>
+<div class="sec-body">
+  <table class="wf-table">
+    <colgroup>
+      <col style="width:11.5%"><col style="width:1%">
+      <col style="width:11.5%"><col style="width:1%">
+      <col style="width:11.5%"><col style="width:1%">
+      <col style="width:11.5%"><col style="width:1%">
+      <col style="width:11.5%"><col style="width:1%">
+      <col style="width:11.5%"><col style="width:1%">
+      <col style="width:11.5%"><col style="width:1%">
+      <col style="width:11.5%">
+    </colgroup>
+    <tr>
+      <td style="padding:2px;">
+        <div class="wf-step" style="border-color:#455a64; background:#eceff1;">
+          <div class="wf-num" style="background:#455a64;">0</div>
+          <div class="wf-title">Block Sanctioned</div>
+          <div class="wf-actor">Traffic Controller</div>
+          <div class="wf-note">BAA receives via API</div>
+        </div>
+      </td>
+      <td class="wf-arrow">→</td>
+      <td style="padding:2px;">
+        <div class="wf-step" style="border-color:#1565c0; background:#e3f2fd;">
+          <div class="wf-num" style="background:#1565c0;">1</div>
+          <div class="wf-title">SSE Submits Avail</div>
+          <div class="wf-actor">Field Staff</div>
+          <div class="wf-note">Location · remarks · geo-check</div>
+        </div>
+      </td>
+      <td class="wf-arrow">→</td>
+      <td style="padding:2px;">
+        <div class="wf-step" style="border-color:#7b1fa2; background:#f3e5f5;">
+          <div class="wf-num" style="background:#7b1fa2;">2</div>
+          <div class="wf-title">TPC Approves</div>
+          <div class="wf-actor">TPC (Power blocks)</div>
+          <div class="wf-note">Parallel to SM</div>
+        </div>
+      </td>
+      <td class="wf-arrow">→</td>
+      <td style="padding:2px;">
+        <div class="wf-step" style="border-color:#2e7d32; background:#e8f5e9;">
+          <div class="wf-num" style="background:#2e7d32;">3</div>
+          <div class="wf-title">SM Approves</div>
+          <div class="wf-actor">Station Master</div>
+          <div class="wf-note">Approve / Modify / Reject</div>
+        </div>
+      </td>
+      <td class="wf-arrow">→</td>
+      <td style="padding:2px;">
+        <div class="wf-step" style="border-color:#f57c00; background:#fff3e0;">
+          <div class="wf-num" style="background:#f57c00;">4</div>
+          <div class="wf-title">SSE Starts Availing</div>
+          <div class="wf-actor">Field Staff</div>
+          <div class="wf-note">Acknowledge → Start (geo-check · live timer)</div>
+        </div>
+      </td>
+      <td class="wf-arrow">→</td>
+      <td style="padding:2px;">
+        <div class="wf-step" style="border-color:#c62828; background:#ffebee;">
+          <div class="wf-num" style="background:#c62828;">5</div>
+          <div class="wf-title">Time Extension</div>
+          <div class="wf-actor">Field Staff → SM</div>
+          <div class="wf-note">If needed · geo-check · SM approves</div>
+        </div>
+      </td>
+      <td class="wf-arrow">→</td>
+      <td style="padding:2px;">
+        <div class="wf-step" style="border-color:#00838f; background:#e0f7fa;">
+          <div class="wf-num" style="background:#00838f;">6</div>
+          <div class="wf-title">SSE Submits Closure</div>
+          <div class="wf-actor">Field Staff</div>
+          <div class="wf-note">Remarks · image · geo-check</div>
+        </div>
+      </td>
+      <td class="wf-arrow">→</td>
+      <td style="padding:2px;">
+        <div class="wf-step" style="border-color:#1b5e20; background:#e8f5e9;">
+          <div class="wf-num" style="background:#1b5e20;">7</div>
+          <div class="wf-title">SM Acknowledges</div>
+          <div class="wf-actor">SM (+ TPC)</div>
+          <div class="wf-note">CLOSED ✓ → Analytics</div>
+        </div>
+      </td>
+    </tr>
+  </table>
+  <div class="warn-box" style="margin-top:6px;"><strong>If no action by SSE within 24 hours of block time:</strong> System triggers a forced "Acknowledge Expired Block" modal on next login. SSE must select a structured reason from the drop-down before proceeding.</div>
+</div>
+
+<!-- PAGE BREAK -->
+<div class="page-break"></div>
+
+<!-- SECTION 6: FUNCTIONAL REQUIREMENTS -->
+<div class="sec-h1"><div class="sec-num">6</div><div class="sec-title">Functional Requirements</div></div>
+<div class="sec-body" style="padding:0;">
+
+  <!-- 6.1 -->
+  <div class="sec-h2">6.1 &nbsp; Authentication &amp; Access Control</div>
+  <div class="sec-h2-body">
+    <table class="frd">
+      <thead><tr><th style="width:8%;">ID</th><th>Requirement</th><th style="width:10%; text-align:center;">Priority</th></tr></thead>
+      <tbody>
+        <tr><td class="req-id">F-01</td><td>Users authenticate via CUG mobile number + OTP (same credential as RBMS). No separate login for BAA.</td><td class="pri"><span class="pill p-must">MUST</span></td></tr>
+        <tr><td class="req-id">F-02</td><td>Role-based dashboard displayed on login. Each user sees only screens relevant to their designation.</td><td class="pri"><span class="pill p-must">MUST</span></td></tr>
+        <tr><td class="req-id">F-03</td><td>Access is restricted to sanctioned blocks within the user's jurisdiction / section mapping.</td><td class="pri"><span class="pill p-must">MUST</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 6.2 -->
+  <div class="sec-h2">6.2 &nbsp; Field Staff — Avail Block Dashboard</div>
+  <div class="sec-h2-body">
+    <table class="frd">
+      <thead><tr><th style="width:8%;">ID</th><th>Requirement</th><th style="width:10%; text-align:center;">Priority</th></tr></thead>
+      <tbody>
+        <tr><td class="req-id">F-04</td><td>Dashboard displays all sanctioned blocks assigned to the logged-in user, their supervisor, and team members under the same hierarchy.</td><td class="pri"><span class="pill p-must">MUST</span></td></tr>
+        <tr><td class="req-id">F-05</td><td>Each block card shows: Section, Granted Time From/To, Block Type (Corridor / Urgent / Outside Corridor), current status, and pending action indicator.</td><td class="pri"><span class="pill p-must">MUST</span></td></tr>
+        <tr><td class="req-id">F-06</td><td>Audio beep alert and red visual urgency indicator triggered in-app when a sanctioned block requires action.</td><td class="pri"><span class="pill p-must">MUST</span></td></tr>
+        <tr><td class="req-id">F-07</td><td>Browser-based push notification delivered to field staff when a block is sanctioned in RBMS. Notification works even when the browser tab is not in focus, using the Web Push API.</td><td class="pri"><span class="pill p-must">MUST</span></td></tr>
+        <tr><td class="req-id">F-08</td><td>Personal compliance health score displayed prominently: e.g. "14 of 18 sanctioned blocks acted upon (78%)". Score updates on each action.</td><td class="pri"><span class="pill p-new">NEW</span></td></tr>
+        <tr><td class="req-id">F-09</td><td>Blocks expiring without action (24 hrs past block time) trigger a mandatory "Acknowledge Expired Block" modal on next login. User must select a drop-down reason before dismissing.</td><td class="pri"><span class="pill p-new">NEW</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 6.3 -->
+  <div class="sec-h2">6.3 &nbsp; Availing Submission Flow</div>
+  <div class="sec-h2-body">
+    <table class="frd">
+      <thead><tr><th style="width:8%;">ID</th><th>Requirement</th><th style="width:10%; text-align:center;">Priority</th></tr></thead>
+      <tbody>
+        <tr><td class="req-id">F-10</td><td>SSE submits availing application with: work location from/to, additional remarks, and any concurrence details required from other departments.</td><td class="pri"><span class="pill p-must">MUST</span></td></tr>
+        <tr><td class="req-id">F-11</td><td><strong>Single-department blocks:</strong> Application submitted directly to SM.</td><td class="pri"><span class="pill p-must">MUST</span></td></tr>
+        <tr><td class="req-id">F-12</td><td><strong>Combined-department blocks:</strong> (a) Without SSE edits — application routes directly to SM; the dependent department field staff is notified that their sanctioned block is being availed. (b) With SSE edits to the application — the dependent department field staff must accept the changes first, then the application routes to SM. (c) If SM modifies the approved timing — the dependent department must again accept the revised timing before availing proceeds.</td><td class="pri"><span class="pill p-must">MUST</span></td></tr>
+        <tr><td class="req-id">F-13</td><td><strong>Power Blocks:</strong> Application submitted in parallel to both SM and Traction Power Controller (TPC). TPC approves first; SM grants subsequently.</td><td class="pri"><span class="pill p-must">MUST</span></td></tr>
+        <tr><td class="req-id">F-14</td><td>Pre-submission time modification allowed only for reduction: blocks &lt; 2 hours → max 30% reduction; blocks ≥ 2 hours → max 10% reduction.</td><td class="pri"><span class="pill p-ref">REF-01</span></td></tr>
+        <tr><td class="req-id">F-14a</td><td><strong>Geo-fencing — Avail Submission:</strong> Device GPS location captured and validated at the time of availing submission. Submission is rejected if the device is outside the permitted radius around the declared work location.</td><td class="pri"><span class="pill p-ref">REF-01</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 6.4 -->
+  <div class="sec-h2">6.4 &nbsp; SM Dashboard &amp; Actions</div>
+  <div class="sec-h2-body">
+    <table class="frd">
+      <thead><tr><th style="width:8%;">ID</th><th>Requirement</th><th style="width:10%; text-align:center;">Priority</th></tr></thead>
+      <tbody>
+        <tr><td class="req-id">F-15</td><td>SM dashboard shows all pending avail requests from field staff under their station jurisdiction, with full block details visible.</td><td class="pri"><span class="pill p-must">MUST</span></td></tr>
+        <tr><td class="req-id">F-16</td><td>SM can: <strong>Approve</strong> as-is; <strong>Modify</strong> start/end time and approve; <strong>Reject</strong> with mandatory reason. All actions are timestamped and attributed to SM identity.</td><td class="pri"><span class="pill p-must">MUST</span></td></tr>
+        <tr><td class="req-id">F-17</td><td>On SM action, field staff receives an instant browser notification. On rejection, reason is shown prominently in the field staff's dashboard.</td><td class="pri"><span class="pill p-must">MUST</span></td></tr>
+        <tr><td class="req-id">F-18</td><td><strong>Active Blocks screen:</strong> SM sees all currently availing blocks with live elapsed time and remaining time per block. Block burst (time exceeded) shown as a red flag automatically.</td><td class="pri"><span class="pill p-new">NEW</span></td></tr>
+        <tr><td class="req-id">F-19</td><td>SM receives closure acknowledgement prompt when SSE submits block return. SM must acknowledge before block is marked Closed.</td><td class="pri"><span class="pill p-must">MUST</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 6.5 -->
+  <div class="sec-h2">6.5 &nbsp; Field Staff Acknowledgement &amp; Availing Start</div>
+  <div class="sec-h2-body">
+    <table class="frd">
+      <thead><tr><th style="width:8%;">ID</th><th>Requirement</th><th style="width:10%; text-align:center;">Priority</th></tr></thead>
+      <tbody>
+        <tr><td class="req-id">F-20</td><td>After SM approval, field staff must explicitly acknowledge before availing starts. If SM modified timing, SSE sees the modified time and must accept or reject the modification.</td><td class="pri"><span class="pill p-must">MUST</span></td></tr>
+        <tr><td class="req-id">F-21</td><td>Only after acknowledgement can SSE tap "Start Availing". A live countdown timer is displayed from the moment availing starts.</td><td class="pri"><span class="pill p-must">MUST</span></td></tr>
+        <tr><td class="req-id">F-22</td><td>Once availing is started, block status updates to "Availing In Progress" — visible to SM, Dept. Controller, and Traffic Controller in real time.</td><td class="pri"><span class="pill p-new">NEW</span></td></tr>
+        <tr><td class="req-id">F-22a</td><td><strong>Geo-fencing — Availing Start:</strong> Device GPS location captured and validated when SSE taps "Start Availing". The action is blocked if the device is outside the permitted radius around the declared work location.</td><td class="pri"><span class="pill p-ref">REF-01</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 6.6 -->
+  <div class="page-break"></div>
+  <div class="sec-h2">6.6 &nbsp; Time Extension</div>
+  <div class="sec-h2-body">
+    <table class="frd">
+      <thead><tr><th style="width:8%;">ID</th><th>Requirement</th><th style="width:10%; text-align:center;">Priority</th></tr></thead>
+      <tbody>
+        <tr><td class="req-id">F-23</td><td>Time extension can only be requested after availing has started (not before). SSE must enter additional time required and provide reason.</td><td class="pri"><span class="pill p-must">MUST</span></td></tr>
+        <tr><td class="req-id">F-24</td><td>Extension request routed to SM (and TPC for power blocks). SM/TPC can approve or reject with mandatory remarks.</td><td class="pri"><span class="pill p-must">MUST</span></td></tr>
+        <tr><td class="req-id">F-25</td><td>If block time is exceeded without an approved extension, system auto-flags "Block Burst" on SM's active blocks screen.</td><td class="pri"><span class="pill p-new">NEW</span></td></tr>
+        <tr><td class="req-id">F-25a</td><td><strong>Geo-fencing — Time Extension Request:</strong> Device GPS location is validated when SSE submits a time extension request. The request is rejected if the device is outside the permitted radius of the work location.</td><td class="pri"><span class="pill p-ref">REF-01</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 6.7 -->
+  <div class="sec-h2">6.7 &nbsp; Block Closure</div>
+  <div class="sec-h2-body">
+    <table class="frd">
+      <thead><tr><th style="width:8%;">ID</th><th>Requirement</th><th style="width:10%; text-align:center;">Priority</th></tr></thead>
+      <tbody>
+        <tr><td class="req-id">F-26</td><td>SSE submits closure with: completion remarks and optional image attachment. System records exact closure submission timestamp.</td><td class="pri"><span class="pill p-must">MUST</span></td></tr>
+        <tr><td class="req-id">F-27</td><td>SM reviews and approves closure. For Power Blocks: TPC closes first, then SM closes other department blocks.</td><td class="pri"><span class="pill p-must">MUST</span></td></tr>
+        <tr><td class="req-id">F-28</td><td>Only after SM (and TPC where applicable) approval does block status change to <strong>CLOSED</strong>. This is the terminal state — no further actions possible.</td><td class="pri"><span class="pill p-must">MUST</span></td></tr>
+        <tr><td class="req-id">F-29</td><td>Closed block data (availed time, actual duration, section, km, department) transmitted to e-TSR server via API. Transmission status visible on SM Dashboard.</td><td class="pri"><span class="pill p-ref">REF-01</span></td></tr>
+        <tr><td class="req-id">F-29a</td><td><strong>Geo-fencing — Closure Submission:</strong> Device GPS location captured and validated when SSE submits block closure. Closure is rejected if the device is outside the permitted radius of the work location at the time of submission.</td><td class="pri"><span class="pill p-ref">REF-01</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 6.8 -->
+  <div class="sec-h2">6.8 &nbsp; Drop-Reason Capture &nbsp;<span class="pill p-new" style="font-size:7pt;">NEW — Not in Prior BAA</span></div>
+  <div class="sec-h2-body">
+    <table class="frd">
+      <thead><tr><th style="width:8%;">ID</th><th>Requirement</th><th style="width:10%; text-align:center;">Priority</th></tr></thead>
+      <tbody>
+        <tr><td class="req-id">F-30</td><td>When an SSE does not submit an availing application for a sanctioned block (block expires), a mandatory reason dropdown is shown. Options include: "Work already completed", "Material not ready", "Manpower unavailable", "Section not available", "SM not reachable", "Time not suitable", "Other (enter remarks)".</td><td class="pri"><span class="pill p-new">NEW</span></td></tr>
+        <tr><td class="req-id">F-31</td><td>When SM rejects an availing request, SM must select a structured reason from a dropdown (in addition to free-text remarks). Options include: "Line not clear", "Train movement conflict", "Other department pending", "Safety concern", "Other".</td><td class="pri"><span class="pill p-new">NEW</span></td></tr>
+        <tr><td class="req-id">F-32</td><td>All drop-reasons are stored against the block record and surfaced in the Analytics Dashboard for section-wise and stage-wise analysis.</td><td class="pri"><span class="pill p-new">NEW</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 6.9 -->
+  <div class="sec-h2">6.9 &nbsp; Analytics &amp; Compliance Dashboard &nbsp;<span class="pill p-new" style="font-size:7pt;">NEW — Not in Prior BAA</span></div>
+  <div class="sec-h2-body">
+    <table class="frd">
+      <thead><tr><th style="width:8%;">ID</th><th>Requirement</th><th style="width:10%; text-align:center;">Priority</th></tr></thead>
+      <tbody>
+        <tr><td class="req-id">F-33</td><td>Section-wise funnel dashboard showing count and % at each stage: Sanctioned → Applied → SM Approved → Availing Started → Closed. Accessible to Traffic Controller and DRM.</td><td class="pri"><span class="pill p-new">NEW</span></td></tr>
+        <tr><td class="req-id">F-34</td><td>Stage-wise drop-reason breakdown: for each stage transition where a drop occurs, the top reasons (from F-30, F-31) shown as a ranked list with count and %.</td><td class="pri"><span class="pill p-new">NEW</span></td></tr>
+        <tr><td class="req-id">F-35</td><td>SSE-level compliance health score visible to Dept. Controller: shows each SSE's acted / total sanctioned ratio and trend over last 4 weeks.</td><td class="pri"><span class="pill p-new">NEW</span></td></tr>
+        <tr><td class="req-id">F-36</td><td>All analytics filterable by: date range, section, department, block type. XLSX export available for all views.</td><td class="pri"><span class="pill p-new">NEW</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- PAGE BREAK -->
+<div class="page-break"></div>
+
+<!-- SECTION 7: WHAT IS NEW VS PRIOR BAA -->
+<div class="sec-h1"><div class="sec-num">7</div><div class="sec-title">Comparison: ADRIG BAA vs. Prior BAA (Plattr Tech Studio)</div></div>
+<div class="sec-body" style="padding:0;">
+  <table class="frd">
+    <thead>
+      <tr>
+        <th style="width:28%;">Feature Area</th>
+        <th class="cmp-head-old" style="width:33%; text-align:center; background:#555;">Prior BAA — Plattr Tech Studio (REF-01)</th>
+        <th class="cmp-head-new" style="width:39%; text-align:center; background:#1565c0;">ADRIG BAA — This Document</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Core availing flow</strong></td>
+        <td class="cmp-old">✓ Submit → SM approve → acknowledge → start → closure</td>
+        <td class="cmp-new">✓ Same core flow, same SM/TPC approval sequence</td>
+      </tr>
+      <tr>
+        <td><strong>Power Block / TPC flow</strong></td>
+        <td class="cmp-old">✓ TPC approves first, SM follows for combined blocks</td>
+        <td class="cmp-new">✓ Retained. TPC closure before SM closure for combined blocks</td>
+      </tr>
+      <tr>
+        <td><strong>Time modification limits</strong></td>
+        <td class="cmp-old">✓ &lt;2 hrs: 30% max reduction; ≥2 hrs: 10% max reduction</td>
+        <td class="cmp-new">✓ Same limits enforced in software</td>
+      </tr>
+      <tr>
+        <td><strong>Time extension</strong></td>
+        <td class="cmp-old">✓ SSE requests; SM approves/rejects with remarks</td>
+        <td class="cmp-new">✓ Same flow + Block Burst auto-flag when time exceeded</td>
+      </tr>
+      <tr>
+        <td><strong>Closure + image attachment</strong></td>
+        <td class="cmp-old">✓ SSE submits; SM/TPC approves</td>
+        <td class="cmp-new">✓ Retained</td>
+      </tr>
+      <tr>
+        <td><strong>e-TSR integration</strong></td>
+        <td class="cmp-old">✓ Block data sent to e-TSR via API on closure</td>
+        <td class="cmp-new">✓ Retained. Status of transmission shown on SM dashboard</td>
+      </tr>
+      <tr>
+        <td><strong>Geo-fencing</strong></td>
+        <td class="cmp-old">✓ Location check required for avail / extension / closure</td>
+        <td class="cmp-new">✓ Retained. GPS validated at 4 points: avail submission, availing start, time extension request, and closure submission. Location logged against each action.</td>
+      </tr>
+      <tr>
+        <td><strong>Live active block tracking</strong></td>
+        <td class="cmp-old">— Not specified</td>
+        <td class="cmp-new"><span class="pill p-new">NEW</span> SM Active Blocks screen with live elapsed + remaining time per block</td>
+      </tr>
+      <tr>
+        <td><strong>Compliance health score (SSE)</strong></td>
+        <td class="cmp-old">— Not specified</td>
+        <td class="cmp-new"><span class="pill p-new">NEW</span> Personal score on SSE dashboard + visible to Dept. Controller</td>
+      </tr>
+      <tr>
+        <td><strong>Drop-reason capture</strong></td>
+        <td class="cmp-old">— Not specified</td>
+        <td class="cmp-new"><span class="pill p-new">NEW</span> Structured dropdown at every non-progression point (SSE + SM)</td>
+      </tr>
+      <tr>
+        <td><strong>Analytics dashboard</strong></td>
+        <td class="cmp-old">— Not specified</td>
+        <td class="cmp-new"><span class="pill p-new">NEW</span> Section-wise funnel, stage-wise drop-reason breakdown, XLSX export</td>
+      </tr>
+      <tr>
+        <td><strong>Forced expired-block acknowledgement</strong></td>
+        <td class="cmp-old">— Not specified</td>
+        <td class="cmp-new"><span class="pill p-new">NEW</span> Modal on next login if block expires without any SSE action</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- PAGE BREAK -->
+<div class="page-break"></div>
+
+<!-- SECTION 8: NON-FUNCTIONAL -->
+<div class="sec-h1"><div class="sec-num">8</div><div class="sec-title">Non-Functional Requirements</div></div>
+<div class="sec-body" style="padding:0;">
+  <table class="frd">
+    <thead><tr><th style="width:8%;">ID</th><th style="width:22%;">Category</th><th>Requirement</th></tr></thead>
+    <tbody>
+      <tr><td class="req-id">NF-01</td><td><strong>Platform</strong></td><td>BAA works on any mobile browser (iOS Safari, Android Chrome) without App Store installation (PWA). Also usable on desktop.</td></tr>
+      <tr><td class="req-id">NF-02</td><td><strong>Authentication</strong></td><td>Integrated with RBMS CUG + OTP authentication. Sessions effectively persistent for field staff (no repeated logins).</td></tr>
+      <tr><td class="req-id">NF-03</td><td><strong>Notifications</strong></td><td>Browser-based push notifications via Web Push API. Delivered even when the browser tab is in background. Works on both iOS Safari and Android Chrome without any native app installation.</td></tr>
+      <tr><td class="req-id">NF-04</td><td><strong>Audit Trail</strong></td><td>Every action (submit, approve, reject, modify, extend, close) stored with user identity, timestamp, and structured reason. Immutable audit log.</td></tr>
+      <tr><td class="req-id">NF-05</td><td><strong>Performance</strong></td><td>All dashboard screens load within 3 seconds on a standard 4G connection. Live timers update every second without page refresh.</td></tr>
+      <tr><td class="req-id">NF-06</td><td><strong>Security</strong></td><td>JWT-based access token with auto-refresh. All API calls over HTTPS. Jurisdiction-based data filtering enforced at backend, not just frontend.</td></tr>
+      <tr><td class="req-id">NF-07</td><td><strong>Scalability</strong></td><td>System must handle concurrent availing actions across all 6 SR divisions simultaneously without degradation.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- PREPARED BY -->
+<div style="margin-top: 10px; border: 1.5px solid #1a3264; padding: 8px 12px; display: table; width: 100%;">
+  <div style="display:table-cell; vertical-align:middle; width:60%;">
+    <div style="font-weight:800; font-size:10pt; color:#1a3264; margin-bottom:2px;">Prepared by</div>
+    <div style="font-size:9pt;">Vijay Murugadoss &nbsp;·&nbsp; Founder &amp; CEO, ADRIG AI Technologies Private Limited</div>
+    <div style="font-size:8.5pt; color:#555; margin-top:2px;">No. 2, Sangothi Amman Kovil 4th Street, Sembakkam, Chennai – 600073 &nbsp;·&nbsp; contact@adrig.co.in</div>
+  </div>
+  <div style="display:table-cell; vertical-align:middle; text-align:right; width:40%;">
+    <div style="font-size:8.5pt; color:#555;">Version 1.0 &nbsp;·&nbsp; March 2026</div>
+    <div style="font-size:8.5pt; color:#555; margin-top:2px;">Submitted to: DRM, Southern Railway</div>
+    <div style="margin-top:18px; border-top:1px solid #555; padding-top:3px; font-size:8pt; color:#888;">Authorised Signature &amp; Stamp</div>
+  </div>
+</div>
+
+<div class="doc-footer">
+  <div class="footer-left">Southern Railway · BAA Functional Requirements Document · ADRIG AI Technologies Pvt. Ltd. · Confidential</div>
+  <div class="footer-right">v1.0 · March 2026</div>
+</div>
+
+</body>
+</html>
