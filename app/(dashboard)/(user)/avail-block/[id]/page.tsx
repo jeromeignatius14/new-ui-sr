@@ -24,11 +24,6 @@ function fmtDt(dt?: string | null) {
   } catch { return "—"; }
 }
 
-// function getYards(block: any): string[] {
-//   const section = (block.missionBlock ?? block.selectedSection ?? "").split(",")[0].trim();
-//   return blockSectionYards[section] ?? [];
-// }
-
 // Derive station codes from missionBlock (e.g. "TVC-NCJ" or "TVC-NCJ,NCJ-TEN")
 // "TVC-NCJ" → ["TVC", "NCJ"]
 // "TVC-NCJ,NCJ-TEN" → ["TVC", "NCJ", "TEN"]
