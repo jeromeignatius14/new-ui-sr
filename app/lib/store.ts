@@ -9835,3 +9835,13 @@ export const departmentDepot = {
         "MSB"
     ]
 }
+
+export const AVAIL_STATUS = {
+  PENDING_CONCURRENCES:   "Pending Concurrences",
+  PENDING_SM_APPROVAL:    "Pending SM Approval",
+  SM_APPROVED:            "SM Approved",
+  AVAILING_ACTIVE:        "Availing Active",
+  ALL_CLOSURES_SUBMITTED: "All Closures Submitted",
+  BLOCK_CLOSED:           "Block Closed",
+  AVAILING_CANCELLED:     "Availing Cancelled",
+} as const;
