@@ -132,6 +132,32 @@ export default function Sidebar({ user }: SidebarProps) {
               path="/dashboard/settings"
               active={pathname === "/dashboard/settings"}
             />
+            {/* SM role — availing management links */}
+            {user?.role === "SM" && (
+              <>
+                <NavItem
+                  icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>}
+                  label="Pending Avails"
+                  path="/sm/pending-avails"
+                  active={pathname === "/sm/pending-avails"}
+                />
+                <NavItem
+                  icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>}
+                  label="Active Blocks"
+                  path="/sm/active-blocks"
+                  active={pathname === "/sm/active-blocks"}
+                />
+              </>
+            )}
+            {/* USER/JE role — avail block link */}
+            {(user?.role === "USER" || user?.role === "JE") && (
+              <NavItem
+                icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>}
+                label="Avail Block"
+                path="/avail-block"
+                active={pathname?.startsWith("/avail-block")}
+              />
+            )}
           </ul>
         </nav>
       </div>
