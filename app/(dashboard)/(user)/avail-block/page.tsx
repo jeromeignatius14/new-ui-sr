@@ -277,20 +277,70 @@ export default function AvailBlockPage() {
   const navigateToBlock = (id: string) => router.push(`/avail-block/${id}`);
   const navigateToConcurrence = (id: string) => router.push(`/avail-block/${id}/concurrence`);
 
-  // Sort: concurrences first, then active, then SM approved, then pending, then ready
-  const statusOrder = (b: any) => {
-    const s = b.overAllStatus ?? "";
-    if (s === "Availing Active") return 1;
-    if (s === "SM Approved") return 2;
-    if (s === "All Closures Submitted") return 3;
-    if (s === "Pending SM Approval") return 4;
-    if (s === "Pending Concurrences") return 5;
-    if (s === "Sanctioned and Accepted by SSE") return 6;
-    return 7;
-  };
-  const sortedBlocks = [...allBlocks].sort((a, b) => statusOrder(a) - statusOrder(b));
+  // ── Categorize into 4 priority sections ──────────────────────────────────────
+  const TWELVE_HRS  = 12 * 60 * 60 * 1000;
+  const TWENTYFOUR_HRS = 24 * 60 * 60 * 1000;
 
-  const isEmpty = sortedBlocks.length === 0 && concurrenceOnly.length === 0;
+  type SectionKey = "inProgress" | "needsAction" | "next12h" | "prev24h" | "other";
+  type BlockEntry = { block: any; myParticipant?: any; isConcurrence?: boolean };
+
+  function categorize(block: any, mp: any): SectionKey {
+    const now = nowIST();
+    const { fromMs } = getEffectiveTimes(block);
+    const s = block.overAllStatus ?? "";
+
+    // Section 1 — actively availing (started or submitted closure)
+    if (
+      (s === "Availing Active" || s === "All Closures Submitted") &&
+      mp?.availStartedAt
+    ) return "inProgress";
+
+    // Section 2 — needs MY immediate action
+    if (s === "SM Approved" && mp?.smAckStatus === null) return "needsAction";
+    if (s === "Availing Active" && mp && !mp.availStartedAt) return "needsAction";
+    if (mp?.blockBurst && !mp?.closureSubmittedAt) return "needsAction";
+
+    // Section 3 — upcoming in next 12 hours
+    if (fromMs && fromMs > now && fromMs <= now + TWELVE_HRS) return "next12h";
+
+    // Section 4 — past 24 hours, incomplete / no action taken
+    if (fromMs && fromMs < now && fromMs > now - TWENTYFOUR_HRS) {
+      if (s !== "Block Closed" && s !== "Availing Cancelled") return "prev24h";
+    }
+
+    return "other";
+  }
+
+  const buckets: Record<SectionKey, BlockEntry[]> = {
+    inProgress:  [],
+    needsAction: [],
+    next12h:     [],
+    prev24h:     [],
+    other:       [],
+  };
+
+  // Concurrences always go to "needsAction"
+  concurrenceOnly.forEach(b => buckets.needsAction.push({ block: b, isConcurrence: true }));
+
+  // All depot/participation blocks
+  allBlocks.forEach(b => {
+    const mp = myPartMap.get(b.id);
+    buckets[categorize(b, mp)].push({ block: b, myParticipant: mp });
+  });
+
+  // Sort within each bucket by effective fromMs (nearest first)
+  const byTime = (a: BlockEntry, b: BlockEntry) => {
+    const at = getEffectiveTimes(a.block).fromMs ?? 0;
+    const bt = getEffectiveTimes(b.block).fromMs ?? 0;
+    return at - bt;
+  };
+  buckets.inProgress.sort(byTime);
+  buckets.needsAction.sort(byTime);
+  buckets.next12h.sort(byTime);
+  buckets.prev24h.sort((a, b) => (getEffectiveTimes(b.block).fromMs ?? 0) - (getEffectiveTimes(a.block).fromMs ?? 0)); // most recent first
+  buckets.other.sort(byTime);
+
+  const isEmpty = buckets.inProgress.length === 0 && buckets.needsAction.length === 0 && buckets.next12h.length === 0 && buckets.prev24h.length === 0;
 
   return (
     <div style={{ minHeight: "100vh", background: "#c8f0c8", fontFamily: "Arial, sans-serif" }}>
@@ -325,10 +375,10 @@ export default function AvailBlockPage() {
 
         {/* Date/Time */}
         <div className="avail-info-row" style={{ display: "flex", gap: "10px", justifyContent: "center", marginBottom: "14px" }}>
-          <div style={{ background: "#fb923c", border: "2px solid #ea580c", borderRadius: "8px", padding: "7px 14px", fontWeight: 800, fontSize: "13px" }}>
+          <div style={{ background: "#fb923c", border: "2px solid #ea580c", borderRadius: "8px", padding: "7px 14px", fontWeight: 800, fontSize: "13px", color: "#000" }}>
             Date — {fmtDate(new Date().toISOString())}
           </div>
-          <div style={{ background: "#dde4ff", border: "2px solid #a5b4fc", borderRadius: "8px", padding: "7px 14px", fontWeight: 800, fontSize: "13px" }}>
+          <div style={{ background: "#4f46e5", border: "2px solid #3730a3", borderRadius: "8px", padding: "7px 14px", fontWeight: 800, fontSize: "13px", color: "#fff" }}>
             Time — {clockStr(now)}
           </div>
         </div>
@@ -344,7 +394,7 @@ export default function AvailBlockPage() {
         </p>
 
         {depotLoading ? (
-          <div style={{ textAlign: "center", padding: "40px", fontWeight: 800, fontSize: "16px" }}>Loading…</div>
+          <div style={{ textAlign: "center", padding: "40px", fontWeight: 800, fontSize: "16px", color: "#111827" }}>Loading…</div>
         ) : (
           <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" as any }}>
             <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid #374151", background: "#fff", minWidth: "900px" }}>
@@ -370,21 +420,54 @@ export default function AvailBlockPage() {
                   </tr>
                 )}
 
-                {/* Concurrence blocks first (red, blinking) */}
-                {concurrenceOnly.map(b => (
-                  <BlockRow key={b.id} block={b} isConcurrence onNavigate={navigateToBlock} onNavigateConcurrence={navigateToConcurrence} />
+                {/* ── Section 1: Currently In Progress ── */}
+                {buckets.inProgress.length > 0 && (
+                  <tr>
+                    <td colSpan={9} style={{ background: "#dcfce7", borderTop: "2px solid #16a34a", borderBottom: "1px solid #16a34a", padding: "6px 12px", fontWeight: 900, fontSize: "13px", color: "#15803d", letterSpacing: "0.5px" }}>
+                      ▶ CURRENTLY IN PROGRESS
+                    </td>
+                  </tr>
+                )}
+                {buckets.inProgress.map(({ block, myParticipant, isConcurrence }) => (
+                  <BlockRow key={block.id} block={block} myParticipant={myParticipant} isConcurrence={isConcurrence} onNavigate={navigateToBlock} onNavigateConcurrence={navigateToConcurrence} />
                 ))}
 
-                {/* All depot/my blocks */}
-                {sortedBlocks.map(b => (
-                  <BlockRow
-                    key={b.id}
-                    block={b}
-                    myParticipant={myPartMap.get(b.id)}
-                    onNavigate={navigateToBlock}
-                    onNavigateConcurrence={navigateToConcurrence}
-                  />
+                {/* ── Section 2: Needs Immediate Action ── */}
+                {buckets.needsAction.length > 0 && (
+                  <tr>
+                    <td colSpan={9} style={{ background: "#fef2f2", borderTop: "2px solid #dc2626", borderBottom: "1px solid #dc2626", padding: "6px 12px", fontWeight: 900, fontSize: "13px", color: "#b91c1c", letterSpacing: "0.5px" }}>
+                      ⚡ NEEDS YOUR IMMEDIATE ACTION
+                    </td>
+                  </tr>
+                )}
+                {buckets.needsAction.map(({ block, myParticipant, isConcurrence }) => (
+                  <BlockRow key={block.id} block={block} myParticipant={myParticipant} isConcurrence={isConcurrence} onNavigate={navigateToBlock} onNavigateConcurrence={navigateToConcurrence} />
                 ))}
+
+                {/* ── Section 3: Next 12 Hours ── */}
+                {buckets.next12h.length > 0 && (
+                  <tr>
+                    <td colSpan={9} style={{ background: "#fefce8", borderTop: "2px solid #ca8a04", borderBottom: "1px solid #ca8a04", padding: "6px 12px", fontWeight: 900, fontSize: "13px", color: "#92400e", letterSpacing: "0.5px" }}>
+                      🕐 UPCOMING — NEXT 12 HOURS
+                    </td>
+                  </tr>
+                )}
+                {buckets.next12h.map(({ block, myParticipant, isConcurrence }) => (
+                  <BlockRow key={block.id} block={block} myParticipant={myParticipant} isConcurrence={isConcurrence} onNavigate={navigateToBlock} onNavigateConcurrence={navigateToConcurrence} />
+                ))}
+
+                {/* ── Section 4: Previous 24 Hours — No Action ── */}
+                {buckets.prev24h.length > 0 && (
+                  <tr>
+                    <td colSpan={9} style={{ background: "#f1f5f9", borderTop: "2px solid #64748b", borderBottom: "1px solid #64748b", padding: "6px 12px", fontWeight: 900, fontSize: "13px", color: "#475569", letterSpacing: "0.5px" }}>
+                      ⏰ PREVIOUS 24 HOURS — NO ACTION TAKEN
+                    </td>
+                  </tr>
+                )}
+                {buckets.prev24h.map(({ block, myParticipant, isConcurrence }) => (
+                  <BlockRow key={block.id} block={block} myParticipant={myParticipant} isConcurrence={isConcurrence} onNavigate={navigateToBlock} onNavigateConcurrence={navigateToConcurrence} />
+                ))}
+
               </tbody>
             </table>
           </div>

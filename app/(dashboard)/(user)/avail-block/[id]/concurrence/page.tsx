@@ -102,7 +102,7 @@ export default function ConcurrencePage({ params }: { params: Promise<{ id: stri
         </p>
 
         {isLoading && (
-          <div style={{ padding: "40px", fontWeight: 800, fontSize: "16px", textAlign: "center" }}>Loading…</div>
+          <div style={{ padding: "40px", fontWeight: 800, fontSize: "16px", textAlign: "center", color: "#111827" }}>Loading…</div>
         )}
 
         {!isLoading && !block && (

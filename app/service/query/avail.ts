@@ -2,8 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { availService } from "../api/avail";
 
+// Keep showing previous data while refetching (no loading flash)
+const keep = (prev: unknown) => prev;
+
 // GET: All blocks for a depot (sanctioned + applied pipeline)
-// Everyone in the depot sees these — SSE, JE, Tech
 export function useGetDepotBlocks() {
   const { data: session } = useSession();
   const depot = session?.user?.depot;
@@ -11,8 +13,10 @@ export function useGetDepotBlocks() {
     queryKey: ["avail-depot-blocks", depot],
     queryFn: () => availService.getDepotBlocks(depot!),
     enabled: !!depot,
-    staleTime: 1000 * 60 * 2,
-    refetchInterval: 1000 * 60 * 3,
+    staleTime: 0,
+    refetchInterval: 8_000,
+    refetchOnWindowFocus: true,
+    placeholderData: keep,
   });
 }
 
@@ -24,8 +28,10 @@ export function useGetMyParticipations() {
     queryKey: ["avail-my-participations", userId],
     queryFn: () => availService.getMyParticipations(),
     enabled: !!userId,
-    staleTime: 1000 * 60 * 2,
-    refetchInterval: 1000 * 60 * 2,
+    staleTime: 0,
+    refetchInterval: 8_000,
+    refetchOnWindowFocus: true,
+    placeholderData: keep,
   });
 }
 
@@ -39,12 +45,14 @@ export function useGetPendingAvailConcurrences() {
     queryKey: ["avail-concurrences", depot, userDepartment],
     queryFn: () => availService.getPendingConcurrences(depot!, userDepartment!),
     enabled: !!depot && !!userDepartment && (role === "USER" || role === "JE"),
-    staleTime: 1000 * 60 * 2,
-    refetchInterval: 1000 * 60 * 3,
+    staleTime: 0,
+    refetchInterval: 8_000,
+    refetchOnWindowFocus: true,
+    placeholderData: keep,
   });
 }
 
-// GET: SM pending dashboard
+// GET: SM pending dashboard — needs the tightest polling (live operations)
 export function useGetSmPending() {
   const { data: session } = useSession();
   const stationCode = session?.user?.depot;
@@ -52,23 +60,27 @@ export function useGetSmPending() {
     queryKey: ["sm-pending", stationCode],
     queryFn: () => availService.getSmPending(stationCode!),
     enabled: !!stationCode && session?.user?.role === "SM",
-    staleTime: 1000 * 60 * 2,
-    refetchInterval: 1000 * 60 * 3,
+    staleTime: 0,
+    refetchInterval: 6_000,
+    refetchOnWindowFocus: true,
+    placeholderData: keep,
   });
 }
 
-// GET: Single avail request detail
+// GET: Single avail request detail — tightest polling (field worker watching status)
 export function useGetAvailRequestById(requestId: string) {
   return useQuery({
     queryKey: ["avail-request", requestId],
     queryFn: () => availService.getAvailRequestById(requestId),
     enabled: !!requestId,
-    staleTime: 30 * 1000,
-    refetchInterval: 30 * 1000,
+    staleTime: 0,
+    refetchInterval: 6_000,
+    refetchOnWindowFocus: true,
+    placeholderData: keep,
   });
 }
 
-// GET: My own avail blocks (blocks I applied to avail) — alias for useGetMyParticipations for dashboard badge
+// GET: My own avail blocks — alias for dashboard badge
 export function useGetMyAvailBlocks() {
   const { data: session } = useSession();
   const userId = session?.user?.id;
@@ -76,16 +88,32 @@ export function useGetMyAvailBlocks() {
     queryKey: ["avail-my-blocks", userId],
     queryFn: () => availService.getMyParticipations(),
     enabled: !!userId,
-    staleTime: 1000 * 60 * 2,
-    refetchInterval: 1000 * 60 * 2,
+    staleTime: 0,
+    refetchInterval: 8_000,
+    refetchOnWindowFocus: true,
+    placeholderData: keep,
   });
 }
 
-// GET: SM station codes
+// GET: SM station codes — static-ish, no need for aggressive polling
 export function useGetSmStations() {
   return useQuery({
     queryKey: ["sm-stations"],
     queryFn: () => availService.getSmStations(),
     staleTime: 1000 * 60 * 10,
+  });
+}
+
+// GET: TRD Controller permit dashboard
+export function useGetTrdPending() {
+  const { data: session } = useSession();
+  return useQuery({
+    queryKey: ["trd-pending"],
+    queryFn: () => availService.getTrdPending(),
+    enabled: session?.user?.role === "DEPT_CONTROLLER" && session?.user?.department === "TRD",
+    staleTime: 0,
+    refetchInterval: 6_000,
+    refetchOnWindowFocus: true,
+    placeholderData: keep,
   });
 }
