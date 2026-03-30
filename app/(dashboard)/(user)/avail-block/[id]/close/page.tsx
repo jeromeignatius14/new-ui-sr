@@ -205,6 +205,9 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
   const { data, isLoading } = useGetAvailRequestById(id);
   const closeMut = useCloseBlock();
 
+  // Snapshot current time once on mount — this is the actual availing end time (closure submission)
+  const [closureNow] = useState(() => new Date().toISOString());
+
   const [closureRemarks, setClosureRemarks] = useState("");
   const [reconnectedSignal, setReconnectedSignal] = useState("N");
   const [cautionKmph, setCautionKmph] = useState("");
@@ -217,8 +220,10 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
   const block = data?.data ?? null;
   const blockId = block?.divisionId ?? id?.slice(0, 8).toUpperCase();
 
-  const availFrom = block?.AvailedTimeFrom ?? block?.availingStartedAt;
-  const smTimeTo = block?.smApprovedTimeTo ?? block?.grantedToTime ?? block?.sanctionedTimeTo;
+  // Find my participant record for actual availed times
+  const myParticipant = block?.availParticipants?.find((p: any) => p.userId === session?.user?.id);
+  const availFrom = myParticipant?.availStartedAt ?? block?.AvailedTimeFrom ?? block?.availingStartedAt;
+  const availTo   = closureNow; // actual end = now (when the user opens the closure form)
 
   // Sections from missionBlock (comma-separated)
   const sections = block?.missionBlock
@@ -226,6 +231,15 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
     : block?.selectedSection
       ? [block.selectedSection]
       : ["—"];
+
+  // Parse processedLineSections for auto-filled LINE column
+  const parsedLineSections: any[] = (() => {
+    try {
+      const v = block?.processedLineSections;
+      if (!v) return [];
+      return typeof v === "string" ? JSON.parse(v) : (Array.isArray(v) ? v : []);
+    } catch { return []; }
+  })();
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null;
@@ -258,7 +272,7 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
 
   if (isLoading || !block) {
     return (
-      <div style={{ minHeight: "100vh", background: "#fdf8e7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", color: "#6b7280" }}>
+      <div style={{ minHeight: "100vh", background: "#fdf8e7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", fontWeight: 800, color: "#111827" }}>
         Loading...
       </div>
     );
@@ -268,25 +282,28 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
     maxWidth: "700px", margin: "0 auto", width: "calc(100% - 24px)",
     background: "#fef9ee", border: "2px solid #222", borderRadius: "14px",
     padding: "20px 16px", marginBottom: "18px",
+    boxSizing: "border-box", overflow: "hidden",
   };
 
   const thStyle: React.CSSProperties = {
-    background: "#e8d5f5", padding: "10px 8px", fontSize: "13px",
-    fontWeight: 700, color: "#1a1a2e", textAlign: "center",
-    border: "1px solid #c4a8e8", whiteSpace: "nowrap",
+    background: "linear-gradient(135deg, #7c3aed, #5b21b6)", padding: "12px 8px", fontSize: "11px",
+    fontWeight: 800, color: "#fff", textAlign: "center",
+    border: "none", whiteSpace: "nowrap", letterSpacing: "0.3px", textTransform: "uppercase",
   };
 
   const tdStyle: React.CSSProperties = {
-    padding: "9px 8px", fontSize: "13px", color: "#1a1a2e",
-    textAlign: "center", border: "1px solid #d1c4e9", background: "#fff",
+    padding: "10px 8px", fontSize: "12px", color: "#1a1a2e",
+    textAlign: "center", border: "1px solid #ede9fe", background: "#fff",
+    fontWeight: 600, wordBreak: "break-word", maxWidth: "120px",
   };
 
   const labelStyle: React.CSSProperties = {
-    fontSize: "13px", fontWeight: 700, color: "#555", marginBottom: "6px", display: "block",
+    fontSize: "12px", fontWeight: 800, color: "#4c1d95", marginBottom: "6px", display: "block",
+    textTransform: "uppercase", letterSpacing: "0.5px",
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#fdf8e7", fontFamily: "Arial, sans-serif", paddingBottom: "40px" }}>
+    <div style={{ minHeight: "100vh", background: "#fdf8e7", fontFamily: "Arial, sans-serif", paddingBottom: "40px", boxSizing: "border-box", overflowX: "hidden" }}>
       <Toaster position="top-center" />
 
       {/* RBMS header */}
@@ -312,7 +329,7 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
             Summary of Block (ID: {blockId})
           </div>
           <div style={{ fontSize: "13px", color: "#555", marginTop: "6px" }}>
-            Availed from {fmtDt(availFrom)} To {fmtDt(smTimeTo)}
+            Availed from {fmtDt(availFrom)} To {fmtDt(availTo)}
           </div>
           <div style={{ fontSize: "12px", color: "#7a6000", marginTop: "4px" }}>
             Section: {block.selectedSection ?? block.missionBlock ?? "—"} &nbsp;|&nbsp; Dept: {block.selectedDepartment ?? "—"}
@@ -338,9 +355,11 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
                 {sections.map((sec: string, i: number) => (
                   <tr key={i}>
                     <td style={{ ...tdStyle, fontWeight: 700 }}>{sec}</td>
-                    <td style={{ ...tdStyle, color: "#888" }}>{block.lineType ?? "—"}</td>
-                    <td style={tdStyle}>{fmtDt(availFrom)}</td>
-                    <td style={tdStyle}>{fmtDt(smTimeTo)}</td>
+                    <td style={{ ...tdStyle, fontWeight: 700, color: "#5b21b6" }}>
+                      {parsedLineSections[i]?.lineName ?? parsedLineSections[0]?.lineName ?? block.lineType ?? "—"}
+                    </td>
+                    <td style={{ ...tdStyle, fontWeight: 700, color: "#166534" }}>{fmtDt(availFrom)}</td>
+                    <td style={{ ...tdStyle, fontWeight: 700, color: "#166534" }}>{fmtDt(availTo)}</td>
                     {/* Inline editable — only first row; rest show the same value */}
                     <td style={{ ...tdStyle, padding: "4px 6px" }}>
                       {i === 0 ? (
@@ -348,7 +367,7 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
                           value={reconnectedSignal}
                           onChange={(e) => setReconnectedSignal(e.target.value)}
                           placeholder="N"
-                          style={{ width: "100%", border: "none", borderBottom: "2px solid #c4a8e8", background: "transparent", fontSize: "14px", fontWeight: 700, color: "#7c3aed", textAlign: "center", outline: "none", padding: "4px 2px" }}
+                          style={{ width: "100%", border: "1.5px solid #8b5cf6", borderRadius: "6px", background: "#faf5ff", fontSize: "14px", fontWeight: 700, color: "#5b21b6", textAlign: "center", outline: "none", padding: "6px 4px", boxSizing: "border-box" as "border-box" }}
                         />
                       ) : (
                         <span style={{ fontWeight: 700, color: "#7c3aed" }}>{reconnectedSignal || "N"}</span>
@@ -362,7 +381,7 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
                           placeholder="—"
                           type="number"
                           inputMode="numeric"
-                          style={{ width: "100%", border: "none", borderBottom: "2px solid #c4a8e8", background: "transparent", fontSize: "14px", fontWeight: 700, color: "#7c3aed", textAlign: "center", outline: "none", padding: "4px 2px" }}
+                          style={{ width: "100%", border: "1.5px solid #8b5cf6", borderRadius: "6px", background: "#faf5ff", fontSize: "14px", fontWeight: 700, color: "#5b21b6", textAlign: "center", outline: "none", padding: "6px 4px", boxSizing: "border-box" as "border-box" }}
                         />
                       ) : (
                         <span style={{ fontWeight: 700, color: "#7c3aed" }}>{cautionKmph || "—"}</span>
@@ -374,10 +393,10 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
                           onClick={() => setOheMadeFit(v => !v)}
                           style={{ cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", userSelect: "none", padding: "6px 0" }}
                         >
-                          <div style={{ width: "22px", height: "22px", borderRadius: "5px", border: `2px solid ${oheMadeFit ? "#16a34a" : "#c4a8e8"}`, background: oheMadeFit ? "#16a34a" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                            {oheMadeFit && <span style={{ color: "#fff", fontSize: "13px", fontWeight: 900, lineHeight: 1 }}>✓</span>}
+                          <div style={{ width: "28px", height: "28px", borderRadius: "8px", border: `2.5px solid ${oheMadeFit ? "#16a34a" : "#8b5cf6"}`, background: oheMadeFit ? "#16a34a" : "#faf5ff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: oheMadeFit ? "0 0 0 3px #dcfce7" : "none", transition: "all 0.2s" }}>
+                            {oheMadeFit && <span style={{ color: "#fff", fontSize: "15px", fontWeight: 900, lineHeight: 1 }}>✓</span>}
                           </div>
-                          <span style={{ fontWeight: 800, fontSize: "15px", color: oheMadeFit ? "#16a34a" : "#9ca3af" }}>{oheMadeFit ? "Y" : "N"}</span>
+                          <span style={{ fontWeight: 900, fontSize: "14px", color: oheMadeFit ? "#16a34a" : "#8b5cf6", background: oheMadeFit ? "#dcfce7" : "#f3e8ff", borderRadius: "6px", padding: "2px 10px" }}>{oheMadeFit ? "YES" : "NO"}</span>
                         </div>
                       ) : (
                         <span style={{ fontWeight: 700, color: oheMadeFit ? "#16a34a" : "#888" }}>{oheMadeFit ? "Y" : "N"}</span>
@@ -421,10 +440,11 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
           <button
             onClick={() => fileRef.current?.click()}
             style={{
-              background: "#7c3aed", color: "#fff", border: "none",
-              borderRadius: "22px", padding: "10px 28px",
-              fontWeight: 700, fontSize: "14px", cursor: "pointer",
-              display: "block", margin: "0 auto",
+              background: "linear-gradient(135deg, #7c3aed, #5b21b6)", color: "#fff", border: "none",
+              borderRadius: "12px", padding: "12px 32px",
+              fontWeight: 800, fontSize: "14px", cursor: "pointer",
+              display: "block", margin: "0 auto", letterSpacing: "0.3px",
+              boxShadow: "0 4px 12px rgba(124,58,237,0.3)",
             }}
           >
             📎 Attach Image
@@ -478,12 +498,13 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
             <button
               onClick={() => setConfirmed(true)}
               style={{
-                width: "100%", background: "#4f46e5", color: "#fff", border: "none",
-                borderRadius: "28px", padding: "16px", fontWeight: 800, fontSize: "16px",
-                cursor: "pointer", letterSpacing: "0.3px",
+                width: "100%", background: "linear-gradient(135deg, #7c3aed, #4f46e5)", color: "#fff", border: "none",
+                borderRadius: "16px", padding: "18px", fontWeight: 900, fontSize: "16px",
+                cursor: "pointer", letterSpacing: "0.5px",
+                boxShadow: "0 6px 20px rgba(79,70,229,0.4)",
               }}
             >
-              Click to Submit Closure
+              ✓ Submit Block Closure
             </button>
           </div>
         ) : (
@@ -502,21 +523,22 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
                 onClick={handleSubmit}
                 disabled={closeMut.isPending}
                 style={{
-                  flex: 1, background: "#dc2626", color: "#fff", border: "none",
-                  borderRadius: "28px", padding: "16px", fontWeight: 800, fontSize: "15px",
+                  flex: 1, background: "linear-gradient(135deg, #dc2626, #b91c1c)", color: "#fff", border: "none",
+                  borderRadius: "14px", padding: "16px", fontWeight: 900, fontSize: "15px",
                   cursor: closeMut.isPending ? "not-allowed" : "pointer", opacity: closeMut.isPending ? 0.7 : 1,
+                  boxShadow: "0 4px 14px rgba(220,38,38,0.35)",
                 }}
               >
-                {closeMut.isPending ? "Submitting..." : "Yes, Close Block"}
+                {closeMut.isPending ? "Submitting..." : "✓ Yes, Close Block"}
               </button>
               <button
                 onClick={() => setConfirmed(false)}
                 style={{
                   flex: 1, background: "#fff", color: "#374151", border: "2px solid #d1d5db",
-                  borderRadius: "28px", padding: "16px", fontWeight: 700, fontSize: "15px", cursor: "pointer",
+                  borderRadius: "14px", padding: "16px", fontWeight: 700, fontSize: "15px", cursor: "pointer",
                 }}
               >
-                Go Back
+                ← Go Back
               </button>
             </div>
           </div>

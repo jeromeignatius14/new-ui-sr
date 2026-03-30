@@ -11,7 +11,8 @@ import {
   useStartAvailing,
   useRequestExtension,
 } from "@/app/service/mutation/avail";
-import { AVAIL_STATUS} from "@/app/lib/store";
+import { AVAIL_STATUS } from "@/app/lib/store";
+import { LoadingBar } from "@/app/components/ui/LoadingBar";
 import { toast, Toaster } from "react-hot-toast";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -61,7 +62,11 @@ function getStatusLabel(status: string, myParticipant?: any): string {
   if (status === "Sanctioned and Accepted by SSE") return "Ready to Apply";
   if (status === AVAIL_STATUS.PENDING_CONCURRENCES) return "Pending\nConcurrences";
   if (status === AVAIL_STATUS.PENDING_SM_APPROVAL)  return "Pending\nSM Approval";
-  if (status === AVAIL_STATUS.SM_APPROVED)          return "SM Approved\nAwaiting Acknowledgement";
+  if (status === AVAIL_STATUS.SM_APPROVED) {
+    if (myParticipant?.smAckStatus === "ACCEPTED") return "SM Approved\nAwaiting Other SSEs";
+    if (myParticipant?.smAckStatus === "REJECTED") return "SM Approved\n(You Declined)";
+    return "SM Approved\nAwaiting Your Acknowledgement";
+  }
   if (status === AVAIL_STATUS.AVAILING_ACTIVE) {
     if (myParticipant?.blockBurst && !myParticipant?.closureSubmittedAt) return "⚠ Block Burst";
     if (myParticipant?.closureSubmittedAt) return "Closure Submitted\nAwaiting Others";
@@ -82,7 +87,8 @@ function getStatusBg(status: string, myParticipant?: any): string {
   }
   if (status === AVAIL_STATUS.ALL_CLOSURES_SUBMITTED) return "#0369a1";
   if (status === AVAIL_STATUS.BLOCK_CLOSED)           return "#1d4ed8";
-  if (status === AVAIL_STATUS.SM_APPROVED)            return "#047857";
+  if (status === AVAIL_STATUS.SM_APPROVED)
+    return myParticipant?.smAckStatus === "ACCEPTED" ? "#0369a1" : "#047857";
   if (status === AVAIL_STATUS.AVAILING_CANCELLED)     return "#7f1d1d";
   return "#374151";
 }
@@ -127,7 +133,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 }
 
 // ── Audit Trail ───────────────────────────────────────────────────────────────
-function AuditTrail({ block }: { block: any }) {
+function AuditTrail({ block, myParticipant }: { block: any; myParticipant?: any }) {
   type AuditEntry = { icon: string; label: string; at?: string | null; sub?: string; color: string };
   const entries: AuditEntry[] = [];
 
@@ -163,22 +169,25 @@ function AuditTrail({ block }: { block: any }) {
   if (block.availingStartedAt)
     entries.push({ icon: "▶", label: "Availing Acknowledged & Started", at: block.availingStartedAt, color: "#16a34a" });
 
-  if (block.extensionRequestedAt)
+  const mp = myParticipant;
+  if (mp?.extensionRequestedAt)
     entries.push({
-      icon: block.extensionIsEmergency ? "🚨" : "⏳",
-      label: block.extensionIsEmergency ? "Emergency Time Extension Requested" : "Time Extension Requested",
-      at: block.extensionRequestedAt,
-      sub: block.extensionIsEmergency && block.extensionEmergencyReason ? `Emergency: ${block.extensionEmergencyReason}` : (block.extensionRemarks ?? undefined),
-      color: block.extensionIsEmergency ? "#dc2626" : "#b45309",
+      icon: mp.extensionIsEmergency ? "🚨" : "⏳",
+      label: mp.extensionIsEmergency ? "Emergency Time Extension Requested" : "Time Extension Requested",
+      at: mp.extensionRequestedAt,
+      sub: mp.extensionIsEmergency && mp.extensionEmergencyReason ? `Emergency: ${mp.extensionEmergencyReason}` : (mp.extensionRemarks ?? undefined),
+      color: mp.extensionIsEmergency ? "#dc2626" : "#b45309",
     });
 
-  if (block.smExtensionApprovedAt)
+  if (mp?.smExtensionApprovedAt)
     entries.push({
-      icon: block.extensionStatus === "APPROVED" ? "✅" : "❌",
-      label: block.extensionStatus === "APPROVED" ? "SM Approved Time Extension" : "SM Rejected Time Extension",
-      at: block.smExtensionApprovedAt,
-      sub: block.smExtensionRemarks ?? undefined,
-      color: block.extensionStatus === "APPROVED" ? "#047857" : "#dc2626",
+      icon: mp.extensionStatus === "APPROVED" ? "✅" : "❌",
+      label: mp.extensionStatus === "APPROVED"
+        ? `SM Approved Extension — new end: ${mp.smExtensionGrantedTo ? new Date(mp.smExtensionGrantedTo).toISOString().slice(11,16) : "—"}`
+        : "SM Rejected Time Extension",
+      at: mp.smExtensionApprovedAt,
+      sub: mp.smExtensionRemarks ?? undefined,
+      color: mp.extensionStatus === "APPROVED" ? "#047857" : "#dc2626",
     });
 
   if (block.closureSubmittedAt)
@@ -227,6 +236,13 @@ const fieldInput: React.CSSProperties = {
   background: "#f9fafb", color: "#111827",
 };
 
+// datetime-local → explicit UTC ISO (app convention: IST wall-clock in UTC slot)
+function toUTCSlot(s: string): string {
+  if (!s) return s;
+  const withSeconds = s.length === 16 ? `${s}:00` : s;
+  return `${withSeconds}.000Z`;
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function AvailBlockDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -236,6 +252,7 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
   const { data, isLoading, refetch } = useGetAvailRequestById(id);
   const block = data?.data ?? null;
 
+  const [syncing, setSyncing] = useState(false);
   const [modal, setModal] = useState<"apply" | "concurrence" | "extend" | null>(null);
 
   const [selectedStation, setSelectedStation]       = useState("");
@@ -295,50 +312,78 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
   const handleApply = () => {
     const station = manualStation.trim() || selectedStation;
     if (!station) { toast.error("Select or enter a station code"); return; }
+    setSyncing(true);
     applyMut.mutate({
       requestId: id,
       smStation: station,
-      requestedTimeFrom: applyTimeFrom || undefined,
-      requestedTimeTo: applyTimeTo || undefined,
+      requestedTimeFrom: applyTimeFrom ? toUTCSlot(applyTimeFrom) : undefined,
+      requestedTimeTo: applyTimeTo ? toUTCSlot(applyTimeTo) : undefined,
     }, {
-      onSuccess: () => { setModal(null); setSelectedStation(""); setManualStation(""); setApplyTimeFrom(""); setApplyTimeTo(""); refetch(); toast.success("Application submitted"); },
-      onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed"),
+      onSuccess: async () => {
+        setModal(null); setSelectedStation(""); setManualStation(""); setApplyTimeFrom(""); setApplyTimeTo("");
+        toast.success("Application submitted");
+        await refetch();
+        setSyncing(false);
+      },
+      onError: (e: any) => { setSyncing(false); toast.error(e?.response?.data?.message ?? "Failed"); },
     });
   };
 
   const handleConcurrence = () => {
+    setSyncing(true);
     concurrenceMut.mutate({ requestId: id, accept: true, remarks: concurrenceRemarks, userDepartment: userDept }, {
-      onSuccess: () => { setModal(null); refetch(); toast.success("Concurrence submitted"); },
-      onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed"),
+      onSuccess: async () => {
+        setModal(null);
+        toast.success("Concurrence submitted");
+        await refetch();
+        setSyncing(false);
+      },
+      onError: (e: any) => { setSyncing(false); toast.error(e?.response?.data?.message ?? "Failed"); },
     });
   };
 
   const handleAcknowledge = (accept: boolean) => {
+    setSyncing(true);
     sseRespondMut.mutate({ requestId: id, accept }, {
-      onSuccess: () => { refetch(); toast.success(accept ? "SM grant acknowledged" : "Availing declined"); },
-      onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed"),
+      onSuccess: async () => {
+        toast.success(accept ? "SM grant acknowledged" : "Availing declined");
+        await refetch();
+        setSyncing(false);
+      },
+      onError: (e: any) => { setSyncing(false); toast.error(e?.response?.data?.message ?? "Failed"); },
     });
   };
 
   const handleStart = () => {
-    startMut.mutate(
-      { requestId: id },
-      { onSuccess: () => { refetch(); toast.success("Availing started"); }, onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed") }
-    );
+    setSyncing(true);
+    startMut.mutate({ requestId: id }, {
+      onSuccess: async () => {
+        toast.success("Availing started");
+        await refetch();
+        setSyncing(false);
+      },
+      onError: (e: any) => { setSyncing(false); toast.error(e?.response?.data?.message ?? "Failed"); },
+    });
   };
 
   const handleExtension = () => {
     if (!newEndTime) { toast.error("Select a new end time"); return; }
     if (extensionIsEmergency && !extensionEmergencyReason.trim()) { toast.error("Please describe the emergency"); return; }
+    setSyncing(true);
     extensionMut.mutate({
       requestId: id,
-      newEndTime,
+      newEndTime: toUTCSlot(newEndTime),
       remarks: extensionRemarks,
       isEmergency: extensionIsEmergency,
       emergencyReason: extensionIsEmergency ? extensionEmergencyReason : undefined,
     }, {
-      onSuccess: () => { setModal(null); refetch(); toast.success("Extension requested"); },
-      onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed"),
+      onSuccess: async () => {
+        setModal(null);
+        toast.success("Extension requested");
+        await refetch();
+        setSyncing(false);
+      },
+      onError: (e: any) => { setSyncing(false); toast.error(e?.response?.data?.message ?? "Failed"); },
     });
   };
 
@@ -375,6 +420,7 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <div style={{ minHeight: "100vh", background: "#c8f0c8", fontFamily: "Arial, sans-serif" }}>
+      <LoadingBar active={syncing} />
       <Toaster position="top-center" />
 
       {/* ── Yellow RBMS header ── */}
@@ -431,11 +477,13 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
             </div>
           ))}
 
-          {/* Sanctioned / Granted time */}
-          {(block.grantedFromTime || block.sanctionedTimeFrom) && (
+          {/* Sanctioned / Granted time — only show before SM acts as a pending reference */}
+          {(block.grantedFromTime || block.sanctionedTimeFrom) && !block.smApprovedTimeFrom && (
             <div style={{ marginTop: "10px", background: "#f0fdf4", borderRadius: "8px", padding: "10px 12px" }}>
-              <p style={{ fontSize: "13px", fontWeight: 700, color: "#15803d", margin: "0 0 4px" }}>Sanctioned Time</p>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px", fontWeight: 700, color: "#14532d" }}>
+              <p style={{ fontSize: "13px", fontWeight: 700, color: "#15803d", margin: "0 0 4px" }}>
+                Admin Sanctioned Time <span style={{ fontSize: "11px", fontWeight: 500, color: "#6b7280" }}>(pending SM approval)</span>
+              </p>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px", fontWeight: 700, color: "#14532d", flexWrap: "wrap", gap: "4px" }}>
                 <span>From: {fmtDt(block.grantedFromTime ?? block.sanctionedTimeFrom)}</span>
                 <span>To: {fmtDt(block.grantedToTime ?? block.sanctionedTimeTo)}</span>
               </div>
@@ -461,6 +509,23 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
               </div>
             );
           })()}
+
+          {/* Approved extension time */}
+          {myParticipant?.extensionStatus === "APPROVED" && myParticipant?.smExtensionGrantedTo && (
+            <div style={{ marginTop: "8px", background: "#fefce8", border: "2px solid #fbbf24", borderRadius: "8px", padding: "10px 12px" }}>
+              <p style={{ fontSize: "13px", fontWeight: 800, color: "#92400e", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                ✅ Extension Approved — New End Time
+              </p>
+              <div style={{ fontSize: "16px", fontWeight: 900, color: "#78350f" }}>
+                {fmtDt(myParticipant.smExtensionGrantedTo)}
+              </div>
+              {myParticipant.smExtensionRemarks && (
+                <p style={{ fontSize: "12px", color: "#78350f", margin: "4px 0 0", fontStyle: "italic" }}>
+                  SM: "{myParticipant.smExtensionRemarks}"
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Actual availed time */}
           {block.availingStartedAt && (
@@ -552,7 +617,8 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
           {canSubmit && (
             <button
               onClick={() => setModal("apply")}
-              style={{ background: "#4f46e5", color: "#fff", border: "none", borderRadius: "50px", padding: "14px 52px", fontWeight: 800, fontSize: "17px", cursor: "pointer", letterSpacing: "0.3px" }}
+              disabled={syncing}
+              style={{ background: "#4f46e5", color: "#fff", border: "none", borderRadius: "50px", padding: "14px 52px", fontWeight: 800, fontSize: "17px", cursor: syncing ? "not-allowed" : "pointer", letterSpacing: "0.3px", opacity: syncing ? 0.7 : 1 }}
             >
               Click to Submit
             </button>
@@ -560,18 +626,18 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
 
           {/* Give Concurrence */}
           {canConcur && (
-            <button onClick={() => setModal("concurrence")} style={wideBtn("#4f46e5")}>
+            <button onClick={() => setModal("concurrence")} disabled={syncing} style={{ ...wideBtn("#4f46e5"), opacity: syncing ? 0.7 : 1 }}>
               Give Concurrence
             </button>
           )}
 
-          {/* SM approved — Acknowledge / Decline */}
-          {myAckPending && secs <= 0 && (
+          {/* SM approved — Acknowledge / Decline (allowed immediately; availing only starts at granted time) */}
+          {myAckPending && (
             <>
-              <button onClick={() => handleAcknowledge(true)} disabled={sseRespondMut.isPending} style={wideBtn("#16a34a")}>
-                {sseRespondMut.isPending ? "Submitting..." : "✅ Acknowledge SM Grant"}
+              <button onClick={() => handleAcknowledge(true)} disabled={sseRespondMut.isPending || syncing} style={{ ...wideBtn("#16a34a"), opacity: syncing ? 0.7 : 1 }}>
+                {syncing ? "Updating..." : sseRespondMut.isPending ? "Submitting..." : "✅ Acknowledge SM Grant"}
               </button>
-              <button onClick={() => handleAcknowledge(false)} disabled={sseRespondMut.isPending} style={wideBtn("#dc2626")}>
+              <button onClick={() => handleAcknowledge(false)} disabled={sseRespondMut.isPending || syncing} style={{ ...wideBtn("#dc2626"), opacity: syncing ? 0.7 : 1 }}>
                 Decline
               </button>
             </>
@@ -579,8 +645,8 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
 
           {/* Start Availing */}
           {canStart && (
-            <button onClick={handleStart} disabled={startMut.isPending} style={wideBtn("#16a34a")}>
-              {startMut.isPending ? "Starting..." : "▶ Start Availing"}
+            <button onClick={handleStart} disabled={startMut.isPending || syncing} style={{ ...wideBtn("#16a34a"), opacity: syncing ? 0.7 : 1 }}>
+              {syncing ? "Updating..." : startMut.isPending ? "Starting..." : "▶ Start Availing"}
             </button>
           )}
 
@@ -620,7 +686,7 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
         </div>
 
         {/* ── Audit Trail ── */}
-        <AuditTrail block={block} />
+        <AuditTrail block={block} myParticipant={myParticipant} />
 
         {/* ── BACK ── */}
         <div style={{ display: "flex", justifyContent: "center", marginTop: "28px" }}>
@@ -640,50 +706,62 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
 
       {/* ── Modals ── */}
       {modal === "apply" && (() => {
+        const isTrdBlock = block.selectedDepartment === "TRD";
         const stationOptions = getStationsFromBlock(block);
-        const canApply = !!(selectedStation || manualStation.trim());
+        const canApply = isTrdBlock ? true : !!(selectedStation || manualStation.trim());
         return (
           <Modal title="Apply for Availing" onClose={() => { setModal(null); setSelectedStation(""); setManualStation(""); setApplyTimeFrom(""); setApplyTimeTo(""); }}>
-            <p style={{ fontSize: "13px", color: "#6b7280", marginBottom: "12px" }}>
-              Select the SM station for this block section:
-            </p>
-            {/* Station options — tap to select */}
-            <div style={{ marginBottom: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
-              {stationOptions.map((code) => {
-                const isSelected = selectedStation === code;
-                return (
-                  <button
-                    key={code}
-                    type="button"
-                    onClick={() => { setSelectedStation(code); setManualStation(""); }}
-                    style={{
-                      padding: "14px 18px", borderRadius: "10px",
-                      fontSize: "17px", fontWeight: 700, textAlign: "left",
-                      cursor: "pointer", border: "2px solid",
-                      borderColor: isSelected ? "#16a34a" : "#e5e7eb",
-                      background: isSelected ? "#f0fdf4" : "#fff",
-                      color: isSelected ? "#15803d" : "#111827",
-                      display: "flex", alignItems: "center", justifyContent: "space-between",
-                    }}
-                  >
-                    {code}
-                    {isSelected && <span style={{ fontSize: "18px" }}>✓</span>}
-                  </button>
-                );
-              })}
-            </div>
 
-            {/* Manual station input */}
-            <div style={{ marginBottom: "16px" }}>
-              <label style={fieldLabel}>Or enter station code manually</label>
-              <input
-                type="text"
-                placeholder="e.g. TVC"
-                value={manualStation}
-                onChange={(e) => { setManualStation(e.target.value.toUpperCase()); setSelectedStation(""); }}
-                style={fieldInput}
-              />
-            </div>
+            {isTrdBlock ? (
+              /* TRD block — no SM station needed, goes to TRD Controller */
+              <div style={{ background: "#fff7ed", border: "2px solid #f59e0b", borderRadius: "10px", padding: "12px 14px", marginBottom: "14px" }}>
+                <div style={{ fontWeight: 800, fontSize: "14px", color: "#78350f", marginBottom: "4px" }}>⚡ TRD Department Block</div>
+                <div style={{ fontSize: "13px", color: "#92400e" }}>
+                  This block will be routed to the <strong>TRD Controller</strong> for permit — no SM station needed.
+                </div>
+              </div>
+            ) : (
+              /* Non-TRD block — SM station required */
+              <>
+                <p style={{ fontSize: "13px", color: "#6b7280", marginBottom: "12px" }}>
+                  Select the SM station for this block section:
+                </p>
+                <div style={{ marginBottom: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {stationOptions.map((code) => {
+                    const isSelected = selectedStation === code;
+                    return (
+                      <button
+                        key={code}
+                        type="button"
+                        onClick={() => { setSelectedStation(code); setManualStation(""); }}
+                        style={{
+                          padding: "14px 18px", borderRadius: "10px",
+                          fontSize: "17px", fontWeight: 700, textAlign: "left",
+                          cursor: "pointer", border: "2px solid",
+                          borderColor: isSelected ? "#16a34a" : "#e5e7eb",
+                          background: isSelected ? "#f0fdf4" : "#fff",
+                          color: isSelected ? "#15803d" : "#111827",
+                          display: "flex", alignItems: "center", justifyContent: "space-between",
+                        }}
+                      >
+                        {code}
+                        {isSelected && <span style={{ fontSize: "18px" }}>✓</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div style={{ marginBottom: "16px" }}>
+                  <label style={fieldLabel}>Or enter station code manually</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. TVC"
+                    value={manualStation}
+                    onChange={(e) => { setManualStation(e.target.value.toUpperCase()); setSelectedStation(""); }}
+                    style={fieldInput}
+                  />
+                </div>
+              </>
+            )}
 
             {/* Optional time edit */}
             <div style={{ background: "#f0f9ff", border: "1.5px solid #bae6fd", borderRadius: "10px", padding: "12px 14px", marginBottom: "16px" }}>
@@ -706,22 +784,13 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
               />
             </div>
 
-            {/* Cancel / Submit row */}
-            <div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}>
-              <button
-                onClick={() => { setModal(null); setSelectedStation(""); setManualStation(""); setApplyTimeFrom(""); setApplyTimeTo(""); }}
-                style={{ flex: 1, padding: "12px", borderRadius: "8px", border: "1px solid #d1d5db", background: "#f3f4f6", fontWeight: 700, fontSize: "15px", cursor: "pointer", color: "#374151" }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleApply}
-                disabled={applyMut.isPending || !canApply}
-                style={{ flex: 1, padding: "12px", borderRadius: "8px", border: "none", background: canApply ? "#16a34a" : "#d1d5db", fontWeight: 700, fontSize: "15px", cursor: canApply ? "pointer" : "not-allowed", color: canApply ? "#fff" : "#9ca3af" }}
-              >
-                {applyMut.isPending ? "Submitting..." : "Submit"}
-              </button>
-            </div>
+            <button
+              onClick={handleApply}
+              disabled={applyMut.isPending || !canApply}
+              style={{ width: "100%", padding: "14px", borderRadius: "8px", border: "none", background: canApply ? "#16a34a" : "#d1d5db", fontWeight: 800, fontSize: "16px", cursor: canApply ? "pointer" : "not-allowed", color: canApply ? "#fff" : "#9ca3af" }}
+            >
+              {applyMut.isPending ? "Submitting..." : "Submit Application"}
+            </button>
           </Modal>
         );
       })()}
@@ -795,11 +864,14 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
 }
 
 // ── Button helpers ─────────────────────────────────────────────────────────────
-function wideBtn(bg: string): React.CSSProperties {
+function wideBtn(bg: string, textColor?: string): React.CSSProperties {
+  // Auto-pick dark text for light/amber backgrounds
+  const lightBgs = ["#f59e0b", "#fbbf24", "#fcd34d", "#fde68a", "#fef3c7"];
+  const color = textColor ?? (lightBgs.includes(bg) ? "#1a1a2e" : "#fff");
   return {
     width: "100%", padding: "16px 24px", borderRadius: "14px",
     fontSize: "17px", fontWeight: 800, border: "none",
-    textAlign: "center", color: "#fff", cursor: "pointer",
+    textAlign: "center", color, cursor: "pointer",
     background: bg, letterSpacing: "0.2px",
   };
 }

@@ -118,3 +118,33 @@ export function useSmAcknowledgeClosure() {
     onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed"),
   });
 }
+
+export function useTrdPermitAvail() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: { requestId: string; action: "APPROVE" | "APPROVE_WITH_MODIFICATION" | "REJECT"; smApprovedTimeFrom?: string; smApprovedTimeTo?: string; smRemarks?: string }) =>
+      availService.trdPermitAvail(p.requestId, p.action, { smApprovedTimeFrom: p.smApprovedTimeFrom, smApprovedTimeTo: p.smApprovedTimeTo, smRemarks: p.smRemarks }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["trd-pending"] }); toast.success("Action completed"); },
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed"),
+  });
+}
+
+export function useTrdApproveExtension() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: { requestId: string; participantId: string; action: "APPROVE" | "REJECT"; smRemarks?: string }) =>
+      availService.trdApproveExtension(p.requestId, p.participantId, p.action, p.smRemarks),
+    onSuccess: (_, v) => { qc.invalidateQueries({ queryKey: ["trd-pending"] }); toast.success(v.action === "APPROVE" ? "Extension approved" : "Extension rejected"); },
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed"),
+  });
+}
+
+export function useTrdAcknowledgeClosure() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: { requestId: string; smClosureRemarks: string }) =>
+      availService.trdAcknowledgeClosure(p.requestId, p.smClosureRemarks),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["trd-pending"] }); toast.success("Block closed ✓"); },
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed"),
+  });
+}

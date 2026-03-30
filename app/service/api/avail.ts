@@ -151,4 +151,45 @@ export const availService = {
     });
     return response.data;
   },
+
+  // ── TRD Controller endpoints ──────────────────────────────────────────────
+
+  // GET: TRD Controller permit dashboard
+  getTrdPending: async () => {
+    const response = await axiosInstance.get("/api/avail/trd/pending");
+    return response.data;
+  },
+
+  // PUT: TRD Controller permits/rejects availing
+  trdPermitAvail: async (
+    requestId: string,
+    action: "APPROVE" | "APPROVE_WITH_MODIFICATION" | "REJECT",
+    payload: { smApprovedTimeFrom?: string; smApprovedTimeTo?: string; smRemarks?: string }
+  ) => {
+    const response = await axiosInstance.put(`/api/avail/trd/permit/${requestId}`, {
+      action, ...payload, mobileView: true,
+    });
+    return response.data;
+  },
+
+  // PUT: TRD Controller approves/rejects extension
+  trdApproveExtension: async (
+    requestId: string,
+    participantId: string,
+    action: "APPROVE" | "REJECT",
+    smRemarks?: string
+  ) => {
+    const response = await axiosInstance.put(`/api/avail/trd/extension/${requestId}`, {
+      participantId, action, smRemarks, mobileView: true,
+    });
+    return response.data;
+  },
+
+  // PUT: TRD Controller acknowledges final closure
+  trdAcknowledgeClosure: async (requestId: string, smClosureRemarks: string) => {
+    const response = await axiosInstance.put(`/api/avail/trd/close-ack/${requestId}`, {
+      smClosureRemarks, mobileView: true,
+    });
+    return response.data;
+  },
 };
