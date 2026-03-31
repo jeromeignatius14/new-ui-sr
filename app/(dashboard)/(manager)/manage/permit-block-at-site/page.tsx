@@ -281,21 +281,23 @@ export default function PermitBlockAtSitePage() {
   const [extAction,  setExtAction]  = useState<"APPROVE" | "REJECT">("APPROVE");
   const [extRemarks, setExtRemarks] = useState("");
 
-  const rawPendingPermits:    any[] = data?.data?.pendingPermits    ?? [];
-  const rawPendingClosures:   any[] = data?.data?.pendingClosures   ?? [];
-  const rawPendingExtensions: any[] = data?.data?.pendingExtensions ?? [];
-  const rawInProgress:        any[] = data?.data?.inProgress        ?? [];
-  const rawTrdApproved:       any[] = data?.data?.trdApproved       ?? [];
-  const rawAlreadyAvailed:    any[] = data?.data?.alreadyAvailed    ?? [];
+  const rawPendingPermits:       any[] = data?.data?.pendingPermits       ?? [];
+  const rawPendingClosures:      any[] = data?.data?.pendingClosures      ?? [];
+  const rawPendingExtensions:    any[] = data?.data?.pendingExtensions    ?? [];
+  const rawInProgress:           any[] = data?.data?.inProgress           ?? [];
+  const rawTrdApproved:          any[] = data?.data?.trdApproved          ?? [];
+  const rawAlreadyAvailed:       any[] = data?.data?.alreadyAvailed       ?? [];
+  const rawUpcomingSanctioned:   any[] = data?.data?.upcomingSanctioned   ?? [];
 
   const applyFilter = <T,>(arr: T[]) => selectedBoard ? filterByBoard(arr as any[], selectedBoard.depots) as T[] : arr;
 
-  const pendingPermits    = applyFilter(rawPendingPermits);
-  const pendingClosures   = applyFilter(rawPendingClosures);
-  const pendingExtensions = applyFilter(rawPendingExtensions);
-  const inProgress        = applyFilter(rawInProgress);
-  const trdApproved       = applyFilter(rawTrdApproved);
-  const alreadyAvailed    = applyFilter(rawAlreadyAvailed);
+  const pendingPermits      = applyFilter(rawPendingPermits);
+  const pendingClosures     = applyFilter(rawPendingClosures);
+  const pendingExtensions   = applyFilter(rawPendingExtensions);
+  const inProgress          = applyFilter(rawInProgress);
+  const trdApproved         = applyFilter(rawTrdApproved);
+  const alreadyAvailed      = applyFilter(rawAlreadyAvailed);
+  const upcomingSanctioned  = applyFilter(rawUpcomingSanctioned);
 
   const pendingAction = [...pendingPermits, ...pendingExtensions, ...pendingClosures];
   const underProgress = [...inProgress, ...trdApproved];
@@ -487,6 +489,7 @@ export default function PermitBlockAtSitePage() {
         <div style={{ padding: "0 12px 16px" }}>
           <SectionTable title="TRD BLOCKS PENDING PERMIT / CANCELLATION" subtitle="(CLICK ID TO TAKE ACTION)" headerColor="#b45309" rows={pendingAction} blink onClickId={openModal} emptyMsg="No pending permits" />
           <SectionTable title="BLOCKS UNDER PROGRESS" subtitle="(CLICK ID TO SEE DETAILS)" headerColor="#7c3aed" rows={underProgress} onClickId={openModal} emptyMsg="No blocks in progress" />
+          <SectionTable title="UPCOMING SANCTIONED BLOCKS" subtitle="(CLICK ID TO SEE DETAILS)" headerColor="#2e7d32" rows={upcomingSanctioned} onClickId={openModal} emptyMsg="No upcoming sanctioned blocks" />
           <SectionTable title="BLOCKS ALREADY AVAILED" subtitle="(CLICK ID TO SEE DETAILS)" headerColor="#1565c0" rows={alreadyAvailed} onClickId={openModal} emptyMsg="No availed blocks in last 48 hrs" />
         </div>
       )}

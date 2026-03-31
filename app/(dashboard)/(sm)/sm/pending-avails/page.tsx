@@ -273,12 +273,13 @@ export default function SmPendingAvailsPage() {
   const [extAction,   setExtAction]   = useState<"APPROVE"|"REJECT">("APPROVE");
   const [extRemarks,  setExtRemarks]  = useState("");
 
-  const pendingApprovals:  any[] = data?.data?.pendingApprovals  ?? [];
-  const pendingClosures:   any[] = data?.data?.pendingClosures   ?? [];
-  const pendingExtensions: any[] = data?.data?.pendingExtensions ?? [];
-  const inProgress:        any[] = data?.data?.inProgress        ?? [];
-  const smApproved:        any[] = data?.data?.smApproved        ?? [];
-  const alreadyAvailed:    any[] = data?.data?.alreadyAvailed    ?? [];
+  const pendingApprovals:    any[] = data?.data?.pendingApprovals    ?? [];
+  const pendingClosures:     any[] = data?.data?.pendingClosures     ?? [];
+  const pendingExtensions:   any[] = data?.data?.pendingExtensions   ?? [];
+  const inProgress:          any[] = data?.data?.inProgress          ?? [];
+  const smApproved:          any[] = data?.data?.smApproved          ?? [];
+  const alreadyAvailed:      any[] = data?.data?.alreadyAvailed      ?? [];
+  const upcomingSanctioned:  any[] = data?.data?.upcomingSanctioned  ?? [];
 
   const pendingAction = [...pendingApprovals, ...pendingExtensions, ...pendingClosures];
   const underProgress = [...inProgress, ...smApproved];
@@ -474,7 +475,7 @@ export default function SmPendingAvailsPage() {
 
             <SectionTable title="REQUESTS PENDING FOR AVAILING / CANCELLATION BLOCKS" subtitle="(CLICK ID TO TAKE ACTION)" headerColor="#c2185b" rows={pendingAction} blink onClickId={openModal} emptyMsg="No pending requests" />
             <SectionTable title="BLOCKS UNDER PROGRESS" subtitle="(CLICK ID TO SEE FULL DETAILS)" headerColor="#e65100" rows={underProgress} onClickId={openModal} emptyMsg="No blocks in progress" />
-            <SectionTable title="UPCOMING SANCTIONED BLOCKS" subtitle="(CLICK ID TO SEE FULL DETAILS)" headerColor="#2e7d32" rows={[]} onClickId={openModal} emptyMsg="No upcoming sanctioned blocks" />
+            <SectionTable title="UPCOMING SANCTIONED BLOCKS" subtitle="(CLICK ID TO SEE FULL DETAILS)" headerColor="#2e7d32" rows={upcomingSanctioned} onClickId={openModal} emptyMsg="No upcoming sanctioned blocks" />
             <SectionTable title="BLOCKS ALREADY AVAILED" subtitle="(CLICK ID TO SEE FULL DETAILS)" headerColor="#1565c0" rows={alreadyAvailed} onClickId={openModal} emptyMsg="No availed blocks in last 48 hrs" />
 
           </div>
@@ -484,10 +485,10 @@ export default function SmPendingAvailsPage() {
       {/* HOME / LOGOUT / BACK */}
       <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 16px 28px", alignItems: "center" }}>
         <div style={{ display: "flex", gap: "10px" }}>
-          <button onClick={() => window.location.href = "/dashboard"} style={{ background: "#e0e7ff", border: "2px solid #a5b4fc", borderRadius: "24px", padding: "9px 22px", fontWeight: 800, fontSize: "14px", cursor: "pointer" }}>🏠 HOME</button>
-          <button onClick={() => signOut({ callbackUrl: "/auth/login" })} style={{ background: "#e0e7ff", border: "2px solid #a5b4fc", borderRadius: "24px", padding: "9px 22px", fontWeight: 800, fontSize: "14px", cursor: "pointer" }}>⏻ LOGOUT</button>
+          <button onClick={() => window.location.href = "/dashboard"} style={{ background: "#1d4ed8", border: "2px solid #1e40af", borderRadius: "24px", padding: "9px 22px", fontWeight: 800, fontSize: "14px", cursor: "pointer", color: "#fff" }}>🏠 HOME</button>
+          <button onClick={() => signOut({ callbackUrl: "/auth/login" })} style={{ background: "#dc2626", border: "2px solid #b91c1c", borderRadius: "24px", padding: "9px 22px", fontWeight: 800, fontSize: "14px", cursor: "pointer", color: "#fff" }}>⏻ LOGOUT</button>
         </div>
-        <button onClick={() => window.history.back()} style={{ background: "#e0e7ff", border: "2px solid #a5b4fc", borderRadius: "24px", padding: "9px 26px", fontWeight: 800, fontSize: "14px", cursor: "pointer" }}>&lt; BACK</button>
+        <button onClick={() => window.history.back()} style={{ background: "#374151", border: "2px solid #1f2937", borderRadius: "24px", padding: "9px 26px", fontWeight: 800, fontSize: "14px", cursor: "pointer", color: "#fff" }}>&lt; BACK</button>
       </div>
 
       {/* ══════════════════════════════════════════════════════════════════════
