@@ -21,6 +21,13 @@ export interface RequestResponse {
 }
 
 export interface RequestItem {
+  rejectedBy: any;
+  sntDisconnections: boolean;
+  trdDisconnections: boolean;
+  enggDisconnections: boolean;
+  AvailedTimeTo: any;
+  AvailedTimeFrom: any;
+  userResponse: any;
   rejectionRemarks?: string;
   assetName?: any;
   assetNumber?: any;

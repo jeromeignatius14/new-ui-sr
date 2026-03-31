@@ -11,7 +11,7 @@ import {
   useStartAvailing,
   useRequestExtension,
 } from "@/app/service/mutation/avail";
-import { AVAIL_STATUS, blockSectionYards } from "@/app/lib/store";
+import { AVAIL_STATUS} from "@/app/lib/store";
 import { toast, Toaster } from "react-hot-toast";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -24,10 +24,10 @@ function fmtDt(dt?: string | null) {
   } catch { return "—"; }
 }
 
-function getYards(block: any): string[] {
-  const section = (block.missionBlock ?? block.selectedSection ?? "").split(",")[0].trim();
-  return blockSectionYards[section] ?? [];
-}
+// function getYards(block: any): string[] {
+//   const section = (block.missionBlock ?? block.selectedSection ?? "").split(",")[0].trim();
+//   return blockSectionYards[section] ?? [];
+// }
 
 // Derive station codes from missionBlock (e.g. "TVC-NCJ" or "TVC-NCJ,NCJ-TEN")
 // "TVC-NCJ" → ["TVC", "NCJ"]
