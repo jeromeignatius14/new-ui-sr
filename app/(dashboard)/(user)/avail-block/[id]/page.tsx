@@ -708,60 +708,62 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
       {modal === "apply" && (() => {
         const isTrdBlock = block.selectedDepartment === "TRD";
         const stationOptions = getStationsFromBlock(block);
-        const canApply = isTrdBlock ? true : !!(selectedStation || manualStation.trim());
+        const canApply = !!(selectedStation || manualStation.trim());
         return (
           <Modal title="Apply for Availing" onClose={() => { setModal(null); setSelectedStation(""); setManualStation(""); setApplyTimeFrom(""); setApplyTimeTo(""); }}>
 
-            {isTrdBlock ? (
-              /* TRD block — no SM station needed, goes to TRD Controller */
-              <div style={{ background: "#fff7ed", border: "2px solid #f59e0b", borderRadius: "10px", padding: "12px 14px", marginBottom: "14px" }}>
-                <div style={{ fontWeight: 800, fontSize: "14px", color: "#78350f", marginBottom: "4px" }}>⚡ TRD Department Block</div>
-                <div style={{ fontSize: "13px", color: "#92400e" }}>
-                  This block will be routed to the <strong>TRD Controller</strong> for permit — no SM station needed.
+            {isTrdBlock && (
+              /* TRD info banner — still need station selection below */
+              <div style={{ background: "#fff7ed", border: "2px solid #f59e0b", borderRadius: "10px", padding: "10px 14px", marginBottom: "12px" }}>
+                <div style={{ fontWeight: 800, fontSize: "13px", color: "#78350f", marginBottom: "2px" }}>⚡ TRD Department Block</div>
+                <div style={{ fontSize: "12px", color: "#92400e" }}>
+                  After applying, this block goes to the <strong>TRD Controller</strong> for permit. Select the depot / station code for this block below.
                 </div>
               </div>
-            ) : (
-              /* Non-TRD block — SM station required */
-              <>
-                <p style={{ fontSize: "13px", color: "#6b7280", marginBottom: "12px" }}>
-                  Select the SM station for this block section:
-                </p>
-                <div style={{ marginBottom: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
-                  {stationOptions.map((code) => {
-                    const isSelected = selectedStation === code;
-                    return (
-                      <button
-                        key={code}
-                        type="button"
-                        onClick={() => { setSelectedStation(code); setManualStation(""); }}
-                        style={{
-                          padding: "14px 18px", borderRadius: "10px",
-                          fontSize: "17px", fontWeight: 700, textAlign: "left",
-                          cursor: "pointer", border: "2px solid",
-                          borderColor: isSelected ? "#16a34a" : "#e5e7eb",
-                          background: isSelected ? "#f0fdf4" : "#fff",
-                          color: isSelected ? "#15803d" : "#111827",
-                          display: "flex", alignItems: "center", justifyContent: "space-between",
-                        }}
-                      >
-                        {code}
-                        {isSelected && <span style={{ fontSize: "18px" }}>✓</span>}
-                      </button>
-                    );
-                  })}
-                </div>
-                <div style={{ marginBottom: "16px" }}>
-                  <label style={fieldLabel}>Or enter station code manually</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. TVC"
-                    value={manualStation}
-                    onChange={(e) => { setManualStation(e.target.value.toUpperCase()); setSelectedStation(""); }}
-                    style={fieldInput}
-                  />
-                </div>
-              </>
             )}
+
+            {/* Station selection — required for all departments including TRD */}
+            <>
+              <p style={{ fontSize: "13px", color: "#6b7280", marginBottom: "12px" }}>
+                {isTrdBlock
+                  ? "Select the depot / station code for this block:"
+                  : "Select the SM station for this block section:"}
+              </p>
+              <div style={{ marginBottom: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                {stationOptions.map((code) => {
+                  const isSelected = selectedStation === code;
+                  return (
+                    <button
+                      key={code}
+                      type="button"
+                      onClick={() => { setSelectedStation(code); setManualStation(""); }}
+                      style={{
+                        padding: "14px 18px", borderRadius: "10px",
+                        fontSize: "17px", fontWeight: 700, textAlign: "left",
+                        cursor: "pointer", border: "2px solid",
+                        borderColor: isSelected ? "#16a34a" : "#e5e7eb",
+                        background: isSelected ? "#f0fdf4" : "#fff",
+                        color: isSelected ? "#15803d" : "#111827",
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                      }}
+                    >
+                      {code}
+                      {isSelected && <span style={{ fontSize: "18px" }}>✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ marginBottom: "16px" }}>
+                <label style={fieldLabel}>Or enter depot / station code manually</label>
+                <input
+                  type="text"
+                  placeholder="e.g. TVC"
+                  value={manualStation}
+                  onChange={(e) => { setManualStation(e.target.value.toUpperCase()); setSelectedStation(""); }}
+                  style={fieldInput}
+                />
+              </div>
+            </>
 
             {/* Optional time edit */}
             <div style={{ background: "#f0f9ff", border: "1.5px solid #bae6fd", borderRadius: "10px", padding: "12px 14px", marginBottom: "16px" }}>
