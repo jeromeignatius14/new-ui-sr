@@ -253,7 +253,7 @@ function filterByBoard(arr: any[], boardDepots: string[]): any[] {
 export default function PermitBlockAtSitePage() {
   const { data: session } = useSession();
   const router = useRouter();
-  const { data, isLoading, refetch } = useGetTrdPending();
+  const { data, isLoading, isError, refetch } = useGetTrdPending();
   const [syncing, setSyncing] = useState(false);
   const [selectedBoard, setSelectedBoard] = useState<{ name: string; depots: string[] } | null>(null);
 
@@ -475,6 +475,14 @@ export default function PermitBlockAtSitePage() {
         </div>
       ) : isLoading ? (
         <div style={{ textAlign: "center", padding: "60px", fontWeight: 800, fontSize: "16px", color: "#111827" }}>Loading…</div>
+      ) : isError ? (
+        <div style={{ textAlign: "center", padding: "40px 20px" }}>
+          <div style={{ background: "#fef2f2", border: "2px solid #dc2626", borderRadius: "10px", padding: "20px", maxWidth: "480px", margin: "0 auto" }}>
+            <div style={{ fontWeight: 900, fontSize: "16px", color: "#dc2626", marginBottom: "8px" }}>Unable to connect to server</div>
+            <div style={{ fontSize: "13px", color: "#374151", fontWeight: 600, marginBottom: "16px" }}>The availing module may not be activated yet on the server. Please contact the admin or try again in a moment.</div>
+            <button onClick={() => refetch()} style={{ background: "#dc2626", color: "#fff", border: "none", borderRadius: "8px", padding: "10px 24px", fontWeight: 800, fontSize: "14px", cursor: "pointer" }}>Retry</button>
+          </div>
+        </div>
       ) : (
         <div style={{ padding: "0 12px 16px" }}>
           <SectionTable title="TRD BLOCKS PENDING PERMIT / CANCELLATION" subtitle="(CLICK ID TO TAKE ACTION)" headerColor="#b45309" rows={pendingAction} blink onClickId={openModal} emptyMsg="No pending permits" />

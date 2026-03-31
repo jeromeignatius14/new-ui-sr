@@ -216,7 +216,7 @@ export default function AvailBlockPage() {
   const now = useClock();
   const qc = useQueryClient();
 
-  const { data: depotData, isLoading: depotLoading } = useGetDepotBlocks();
+  const { data: depotData, isLoading: depotLoading, isError: depotError } = useGetDepotBlocks();
   const { data: myPartData } = useGetMyParticipations();
   const { data: concurData } = useGetPendingAvailConcurrences();
 
@@ -395,6 +395,11 @@ export default function AvailBlockPage() {
 
         {depotLoading ? (
           <div style={{ textAlign: "center", padding: "40px", fontWeight: 800, fontSize: "16px", color: "#111827" }}>Loading…</div>
+        ) : depotError ? (
+          <div style={{ background: "#fef2f2", border: "2px solid #dc2626", borderRadius: "10px", padding: "20px", margin: "0 0 16px", textAlign: "center" }}>
+            <div style={{ fontWeight: 900, fontSize: "15px", color: "#dc2626", marginBottom: "6px" }}>Unable to connect to server</div>
+            <div style={{ fontSize: "13px", color: "#374151", fontWeight: 600 }}>The availing module may not be activated yet. Please contact the admin or try again.</div>
+          </div>
         ) : (
           <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" as any }}>
             <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid #374151", background: "#fff", minWidth: "900px" }}>
