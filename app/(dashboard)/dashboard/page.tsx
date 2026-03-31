@@ -1610,13 +1610,10 @@ if (session?.user?.role === "PUNCTUALITY_CONTROLLER") {
     const managerCug = response.data?.data?.managerPhone;
 
     if (managerCug) {
-      window.location.href = `https://smr-dashboard.plattorian.tech/?cugNumber=${managerCug}&token=W1IU66ZFEBFBF6C1dGmouN6PVyHARQJg`
-    } else {
-      alert("Manager CUG number not found");
+      window.location.href = "/avail-block";
     }
   } catch (error) {
-    console.error("Error fetching manager phone:", error);
-    alert("Something went wrong while fetching manager CUG.");
+    window.location.href = "/avail-block";
   }
 };
     return (
