@@ -19,7 +19,7 @@ function fmtDt(dt?: string | null) {
 }
 
 // ── Full Audit Trail — entire block lifecycle ─────────────────────────────────
-function AuditTrail({ block }: { block: any }) {
+function AuditTrail({ block, myParticipant }: { block: any; myParticipant?: any }) {
   type Entry = { icon: string; label: string; at?: string | null; sub?: string | null; color: string; phase: string };
   const entries: Entry[] = [];
 
@@ -138,26 +138,26 @@ function AuditTrail({ block }: { block: any }) {
   if (block.availingStartedAt)
     entries.push({ icon: "▶", phase: "Availing", label: "Availing Acknowledged & Started", at: block.availingStartedAt, sub: null, color: "#16a34a" });
 
-  if (block.extensionRequestedAt)
+  if (myParticipant?.extensionRequestedAt)
     entries.push({
-      icon: block.extensionIsEmergency ? "🚨" : "⏳",
+      icon: myParticipant.extensionIsEmergency ? "🚨" : "⏳",
       phase: "Extension",
-      label: block.extensionIsEmergency ? "Emergency Time Extension Requested" : "Time Extension Requested",
-      at: block.extensionRequestedAt,
-      sub: block.extensionIsEmergency && block.extensionEmergencyReason
-        ? `Emergency: ${block.extensionEmergencyReason}`
-        : (block.extensionRemarks ?? null),
-      color: block.extensionIsEmergency ? "#dc2626" : "#b45309",
+      label: myParticipant.extensionIsEmergency ? "Emergency Time Extension Requested" : "Time Extension Requested",
+      at: myParticipant.extensionRequestedAt,
+      sub: myParticipant.extensionIsEmergency && myParticipant.extensionEmergencyReason
+        ? `Emergency: ${myParticipant.extensionEmergencyReason}`
+        : (myParticipant.extensionRemarks ?? null),
+      color: myParticipant.extensionIsEmergency ? "#dc2626" : "#b45309",
     });
 
-  if (block.smExtensionApprovedAt)
+  if (myParticipant?.smExtensionApprovedAt)
     entries.push({
-      icon: block.extensionStatus === "APPROVED" ? "✅" : "❌",
+      icon: myParticipant.extensionStatus === "APPROVED" ? "✅" : "❌",
       phase: "Extension",
-      label: block.extensionStatus === "APPROVED" ? "SM Approved Time Extension" : "SM Rejected Time Extension",
-      at: block.smExtensionApprovedAt,
-      sub: block.smExtensionRemarks ?? null,
-      color: block.extensionStatus === "APPROVED" ? "#047857" : "#dc2626",
+      label: myParticipant.extensionStatus === "APPROVED" ? "SM Approved Time Extension" : "SM Rejected Time Extension",
+      at: myParticipant.smExtensionApprovedAt,
+      sub: myParticipant.smExtensionRemarks ?? null,
+      color: myParticipant.extensionStatus === "APPROVED" ? "#047857" : "#dc2626",
     });
 
   const phaseColors: Record<string, string> = {
@@ -489,7 +489,7 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
               <div style={{ fontSize: "12px", color: "#6b7280", marginTop: "1px" }}>From request creation through to current availing — review before closing</div>
             </div>
           </div>
-          <AuditTrail block={block} />
+          <AuditTrail block={block} myParticipant={myParticipant} />
         </div>
 
         {/* Confirm & Submit */}

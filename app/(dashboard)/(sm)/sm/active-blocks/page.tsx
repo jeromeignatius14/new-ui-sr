@@ -39,7 +39,11 @@ export default function SmActiveBlocksPage() {
 
   // Time elapsed display (minutes)
   const getElapsedMinutes = (req: any): number => {
-    const start = req.availingStartedAt || req.smApprovedTimeFrom || req.grantedFromTime;
+    const earliestParticipantStart = (req.availParticipants ?? [])
+      .map((p: any) => p.availStartedAt)
+      .filter(Boolean)
+      .sort()[0];
+    const start = earliestParticipantStart || req.smApprovedTimeFrom || req.grantedFromTime;
     if (!start) return 0;
     return Math.floor((nowIST() - new Date(start).getTime()) / 60000);
   };
