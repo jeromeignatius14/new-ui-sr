@@ -51,7 +51,10 @@ export default function ManageUsersTable() {
 
   // Add user handler
   const handleAddUser = async (formData: any) => {
-    await addUserMutation.mutateAsync(formData);
+    await addUserMutation.mutateAsync({
+      ...formData,
+      division: session?.user?.location,
+    });
     setAddModalOpen(false);
     setRefetchLoading(true);
     await refetch();
@@ -61,7 +64,10 @@ export default function ManageUsersTable() {
   // Edit user handler
   const handleEditUser = async (formData: any) => {
     if (!editUserId) return;
-    await editUserMutation.mutateAsync({ userId: editUserId, data: formData });
+    await editUserMutation.mutateAsync({
+      userId: editUserId,
+      data: { ...formData, division: session?.user?.location },
+    });
     setEditUserId(null);
     setEditData(null);
     setRefetchLoading(true);
