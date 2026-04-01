@@ -10,7 +10,7 @@ interface AddUserModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSubmit: (data: any) => void;
-    users: Array<{ id: string; name: string }>;
+    users: Array<{ id: string; name: string; phone?: string }>;
     department?: Department; // User's department
 }
 
@@ -29,7 +29,7 @@ export default function AddUserModal({ isOpen, onClose, onSubmit, users, departm
     const [checkingEmail, setCheckingEmail] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [selectedManager, setSelectedManager] = useState<{ id: string; name: string; depot?: string } | null>(null);
+    const [selectedManager, setSelectedManager] = useState<{ id: string; name: string; depot?: string; phone?: string } | null>(null);
     const [showDepotSelection, setShowDepotSelection] = useState(false);
 
     const resetForm = () => {
@@ -142,7 +142,8 @@ const isDepotSelected = (depot: string) => {
                                 phone,
                                 depot: submissionDepot,
                                 role,
-                                managerId: role === "JE" ? managerId : undefined
+                                managerId: role === "JE" ? managerId : undefined,
+                                managerPhone: role === "JE" ? selectedManager?.phone : undefined,
                             });
                             resetForm();
                         } catch (error: any) {
