@@ -724,12 +724,18 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
 
             {/* Station selection — required for all departments including TRD */}
             <>
-              <p style={{ fontSize: "13px", color: "#6b7280", marginBottom: "12px" }}>
-                {isTrdBlock
+            {!isTrdBlock && <>
+                          <p style={{ fontSize: "13px", color: "#6b7280", marginBottom: "12px" }}>
+                {/* {isTrdBlock
                   ? "Select the depot / station code for this block:"
-                  : "Select the SM station for this block section:"}
+                  : "Select the SM station for this block section:"} */}
+
+                  Select the SM station for this block section:
               </p>
-              <div style={{ marginBottom: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
+            </>}
+
+              {!isTrdBlock&& <>
+                <div style={{ marginBottom: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
                 {stationOptions.map((code) => {
                   const isSelected = selectedStation === code;
                   return (
@@ -753,11 +759,19 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
                   );
                 })}
               </div>
+              
+              </>}
+            
               <div style={{ marginBottom: "16px" }}>
-                <label style={fieldLabel}>Or enter depot / station code manually</label>
+                {/* <label style={fieldLabel}>Or enter depot / station code manually</label> */}
+                <label style={fieldLabel}>
+  {isTrdBlock 
+    ? "Enter Depot name where work is to be done" 
+    : "Or enter depot / station code manually"}
+</label>
                 <input
                   type="text"
-                  placeholder="e.g. TVC"
+                  placeholder="e.g. VM"
                   value={manualStation}
                   onChange={(e) => { setManualStation(e.target.value.toUpperCase()); setSelectedStation(""); }}
                   style={fieldInput}
