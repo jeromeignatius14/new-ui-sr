@@ -63,6 +63,7 @@ function getStatusLabel(status: string, myParticipant?: any): string {
   if (status === AVAIL_STATUS.PENDING_CONCURRENCES) return "Pending\nConcurrences";
   if (status === AVAIL_STATUS.PENDING_SM_APPROVAL)  return "Pending\nSM Approval";
   if (status === AVAIL_STATUS.SM_APPROVED) {
+    if (!myParticipant) return "SM Approved\nAwaiting Acknowledgement";
     if (myParticipant?.smAckStatus === "ACCEPTED") return "SM Approved\nAwaiting Other SSEs";
     if (myParticipant?.smAckStatus === "REJECTED") return "SM Approved\n(You Declined)";
     return "SM Approved\nAwaiting Your Acknowledgement";
