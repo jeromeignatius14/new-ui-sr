@@ -768,7 +768,7 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
                 <label style={fieldLabel}>
   {isTrdBlock 
     ? "Enter Depot name where work is to be done" 
-    : "Or enter depot / station code manually"}
+    : "Or enter station code manually"}
 </label>
                 <input
                   type="text"
