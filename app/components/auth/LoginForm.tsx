@@ -304,6 +304,7 @@ export default function PhoneLoginForm() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [selectedDepot, setSelectedDepot] = useState<string>("");
   const [smStations, setSmStations] = useState<string[]>([]);
+  const [manualStation, setManualStation] = useState<string>("");
 
   // ── Forgot OTP modal ──
   const [showForgotModal, setShowForgotModal] = useState(false);
@@ -590,18 +591,44 @@ export default function PhoneLoginForm() {
                 <button
                   key={station}
                   type="button"
-                  onClick={() => setSelectedDepot(station)}
+                  onClick={() => {
+                    setSelectedDepot(station);
+                    setManualStation("");
+                  }}
                   className="px-6 py-3 rounded-xl font-bold text-lg border-2 transition-all"
                   style={{
-                    backgroundColor: selectedDepot === station ? "#f4a47c" : "#eeb8f7",
-                    borderColor: selectedDepot === station ? "#d97706" : "#c084fc",
-                    color: selectedDepot === station ? "#000" : "#fff",
-                    boxShadow: selectedDepot === station ? "0 2px 8px rgba(0,0,0,0.15)" : "none",
+                    backgroundColor: selectedDepot === station && manualStation === "" ? "#f4a47c" : "#eeb8f7",
+                    borderColor: selectedDepot === station && manualStation === "" ? "#d97706" : "#c084fc",
+                    color: selectedDepot === station && manualStation === "" ? "#000" : "#fff",
+                    boxShadow: selectedDepot === station && manualStation === "" ? "0 2px 8px rgba(0,0,0,0.15)" : "none",
                   }}
                 >
                   {station}
                 </button>
               ))}
+            </div>
+
+            {/* Manual station code entry for SM who has moved to a different station */}
+            <div className="w-full flex flex-col gap-1 mt-2">
+              <p className="text-xs font-semibold text-gray-500 text-center">
+                Moved to a different station? Type the station code below
+              </p>
+              <input
+                type="text"
+                value={manualStation}
+                onChange={(e) => {
+                  const val = e.target.value.toUpperCase();
+                  setManualStation(val);
+                  setSelectedDepot(val.trim());
+                }}
+                placeholder="e.g. TVC"
+                maxLength={10}
+                className="w-full bg-white text-black font-bold rounded-xl px-4 py-3 text-xl text-center focus:outline-none focus:ring-2 focus:ring-orange-400 border-2 placeholder:text-gray-300 placeholder:font-normal tracking-widest"
+                style={{
+                  borderColor: manualStation ? "#d97706" : "#e9d5ff",
+                  boxShadow: manualStation ? "0 2px 8px rgba(217,119,6,0.15)" : "none",
+                }}
+              />
             </div>
           </div>
         )}
