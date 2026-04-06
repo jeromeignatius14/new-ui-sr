@@ -1487,6 +1487,9 @@ if (session?.user?.role === "BOARD_CONTROLLER") {
 if (session?.user?.role === "SM") {
     window.location.href = "/sm/pending-avails";
 }
+if (session?.user?.role === "ANALYST") {
+    window.location.href = "/analyst";
+}
   // Custom admin dashboard UI (match manager dashboard style)
   if (session?.user?.role === "ADMIN") {
     return (
