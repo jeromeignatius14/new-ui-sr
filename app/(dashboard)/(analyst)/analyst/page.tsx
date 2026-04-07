@@ -49,7 +49,8 @@ const STATUS_LABEL: Record<string, { label: string; severity: "red" | "amber" | 
   "Availing Active":                              { label: "Block being availed — participants haven't filed closure yet",  severity: "amber" },
   "All Closures Submitted":                       { label: "All participants closed — SM hasn't acknowledged yet",         severity: "amber" },
   "Block Closed":                                 { label: "Successfully closed ✓",                                        severity: "green" },
-  "Availing Cancelled":                           { label: "Block availing was cancelled after SM already approved it — participant withdrew or rejected the grant", severity: "red"   },
+  "Availing Cancelled":                           { label: "Participant rejected the block grant after SM approval",                                             severity: "red"   },
+  "SM Rejected":                                  { label: "Station Master rejected the avail request — block not granted",                                      severity: "red"   },
 };
 
 function explainStatus(raw: string): { label: string; severity: "red" | "amber" | "blue" | "green" } {
