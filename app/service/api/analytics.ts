@@ -22,4 +22,15 @@ export const analyticsService = {
         const r = await axiosInstance.get(`/api/analytics/summary${buildQuery(filters)}`);
         return r.data;
     },
+    exportGap: async (filters: AnalyticsFilters, gapKey: string, status: string) => {
+        const params = new URLSearchParams();
+        params.set("gapKey", gapKey);
+        params.set("status", status);
+        if (filters.startDate)  params.set("startDate",  filters.startDate);
+        if (filters.endDate)    params.set("endDate",    filters.endDate);
+        if (filters.location)   params.set("location",   filters.location);
+        if (filters.department) params.set("department", filters.department);
+        const r = await axiosInstance.get(`/api/analytics/export-gap?${params.toString()}`);
+        return r.data;
+    },
 };

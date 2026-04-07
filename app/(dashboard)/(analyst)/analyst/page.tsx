@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useAnalyticsSummary } from "@/app/service/query/analytics";
+import { analyticsService, AnalyticsFilters } from "@/app/service/api/analytics";
+import * as XLSX from "xlsx";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, LabelList,
@@ -47,7 +49,7 @@ const STATUS_LABEL: Record<string, { label: string; severity: "red" | "amber" | 
   "Availing Active":                              { label: "Block being availed — participants haven't filed closure yet",  severity: "amber" },
   "All Closures Submitted":                       { label: "All participants closed — SM hasn't acknowledged yet",         severity: "amber" },
   "Block Closed":                                 { label: "Successfully closed ✓",                                        severity: "green" },
-  "Availing Cancelled":                           { label: "Availing was cancelled by SSE",                           severity: "red"   },
+  "Availing Cancelled":                           { label: "Block availing was cancelled after SM already approved it — participant withdrew or rejected the grant", severity: "red"   },
 };
 
 function explainStatus(raw: string): { label: string; severity: "red" | "amber" | "blue" | "green" } {
@@ -65,29 +67,66 @@ function pct(num: number, den: number) {
   return den > 0 ? Math.round((num / den) * 100) : 0;
 }
 
+// ── Excel download helper ─────────────────────────────────────────────────────
+async function downloadGapExcel(
+  filters: AnalyticsFilters,
+  gapKey: string,
+  rawStatus: string,
+) {
+  const res = await analyticsService.exportGap(filters, gapKey, rawStatus);
+  const rows: Record<string, unknown>[] = res?.data ?? [];
+  if (!rows.length) { alert("No data to download."); return; }
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(rows);
+  // Auto column widths
+  const maxLen = (key: string) => Math.max(key.length, ...rows.map((r) => String(r[key] ?? "").length));
+  ws["!cols"] = Object.keys(rows[0]).map((k) => ({ wch: Math.min(maxLen(k) + 2, 40) }));
+  XLSX.utils.book_append_sheet(wb, ws, "Requests");
+  const statusSlug = rawStatus.replace(/[^a-zA-Z0-9]/g, "_").slice(0, 30);
+  const from = filters.startDate ?? "all";
+  const to   = filters.endDate   ?? "today";
+  XLSX.writeFile(wb, `RBMS_${gapKey}_${statusSlug}_${from}_to_${to}_${rows.length}rows.xlsx`);
+}
+
 // ── Gap breakdown panel ───────────────────────────────────────────────────────
-function GapBreakdown({ title, rows, total }: {
-  title: string;
+function GapBreakdown({ gapKey, rows, total, filters }: {
+  gapKey: string;
   rows: { status: string; count: number }[];
   total: number;
+  filters: AnalyticsFilters;
 }) {
+  const [loading, setLoading] = useState<string | null>(null);
   const severityColor = { red: RED, amber: AMBER, blue: INDIGO, green: GREEN };
   const severityBg    = { red: "bg-red-50 border-red-100", amber: "bg-amber-50 border-amber-100", blue: "bg-indigo-50 border-indigo-100", green: "bg-green-50 border-green-100" };
+
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
       <div className="text-xs font-extrabold text-gray-500 uppercase tracking-widest mb-3">
-        Where are these {total} requests?
+        Where are these {total} requests? — click ⬇ to download that group as Excel
       </div>
       <div className="space-y-2">
         {rows.map((r, i) => {
           const { label, severity } = explainStatus(r.status);
           const p     = total > 0 ? Math.round((r.count / total) * 100) : 0;
           const color = severityColor[severity];
+          const isDownloading = loading === r.status;
           return (
             <div key={i} className={`flex items-center gap-3 rounded-lg border px-3 py-2 ${severityBg[severity]}`}>
               <div className="flex-1 text-xs font-semibold text-gray-800 leading-snug">{label}</div>
               <div className="text-lg font-extrabold shrink-0" style={{ color }}>{r.count}</div>
               <div className="text-xs text-gray-400 shrink-0 w-8 text-right">{p}%</div>
+              <button
+                disabled={isDownloading}
+                onClick={async () => {
+                  setLoading(r.status);
+                  try { await downloadGapExcel(filters, gapKey, r.status); }
+                  finally { setLoading(null); }
+                }}
+                className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700 text-xs font-bold transition-all disabled:opacity-50"
+                title={`Download these ${r.count} requests as Excel`}
+              >
+                {isDownloading ? "..." : "⬇ Excel"}
+              </button>
             </div>
           );
         })}
@@ -157,12 +196,13 @@ function Alert({ children, severity = "red" }: { children: React.ReactNode; seve
 
 // ── Gap Connector ─────────────────────────────────────────────────────────────
 function GapConnector({
-  dropped, label, gapKey, rows, activeGap, setActiveGap,
+  dropped, label, gapKey, rows, activeGap, setActiveGap, filters,
 }: {
   dropped: number; label: string; gapKey: string;
   rows: { status: string; count: number }[];
   activeGap: string | null;
   setActiveGap: (k: string | null) => void;
+  filters: AnalyticsFilters;
 }) {
   const isOpen = activeGap === gapKey;
   const total  = rows.reduce((s, r) => s + r.count, 0);
@@ -189,7 +229,7 @@ function GapConnector({
       )}
       {isOpen && total > 0 && (
         <div className="w-full mt-2">
-          <GapBreakdown title={label} rows={rows} total={total} />
+          <GapBreakdown gapKey={gapKey} rows={rows} total={total} filters={filters} />
         </div>
       )}
       <div className="w-px h-6 bg-gray-300" />
@@ -201,25 +241,30 @@ function GapConnector({
 export default function AnalystDashboard() {
   const { data: session } = useSession({ required: true, onUnauthenticated() { window.location.href = "/auth/login"; } });
 
-  const today = new Date();
-  const sixMonthsAgo = new Date(today);
-  sixMonthsAgo.setMonth(today.getMonth() - 6);
+  const today    = new Date();
+  const APP_START = "2026-04-01"; // authorisation app went live on this date
 
   const [filters, setFilters] = useState({
-    startDate: sixMonthsAgo.toISOString().split("T")[0],
+    startDate: APP_START,
     endDate:   today.toISOString().split("T")[0],
     department: "", location: "",
   });
-  const [draft,     setDraft]     = useState({ ...filters });
-  const [activeGap, setActiveGap] = useState<string | null>(null);
+  const [draft,        setDraft]        = useState({ ...filters });
+  const [activeGap,    setActiveGap]    = useState<string | null>(null);
+  const [dateWarning,  setDateWarning]  = useState(false);
 
   const { data: raw, isLoading, isError, refetch } = useAnalyticsSummary(filters);
   const d = raw?.data;
 
-  const applyFilters = () => { setFilters({ ...draft }); setActiveGap(null); };
+  const applyFilters = () => {
+    if (draft.startDate < APP_START) { setDateWarning(true); return; }
+    setDateWarning(false);
+    setFilters({ ...draft });
+    setActiveGap(null);
+  };
   const resetFilters = () => {
-    const r = { startDate: sixMonthsAgo.toISOString().split("T")[0], endDate: today.toISOString().split("T")[0], department: "", location: "" };
-    setDraft(r); setFilters(r); setActiveGap(null);
+    const r = { startDate: APP_START, endDate: today.toISOString().split("T")[0], department: "", location: "" };
+    setDraft(r); setFilters(r); setActiveGap(null); setDateWarning(false);
   };
 
   const f      = d?.funnel;
@@ -240,13 +285,26 @@ export default function AnalystDashboard() {
           </div>
           <div>
             <div className="font-extrabold text-gray-900 text-sm">RBMS Analytics</div>
-            <div className="text-xs text-gray-400">{session?.user?.name} · ANALYST</div>
+            <div className="text-xs text-gray-400">{session?.user?.name} · {session?.user?.role}</div>
           </div>
         </div>
-        <button onClick={() => signOut({ callbackUrl: "/auth/login" })}
-          className="text-xs font-bold text-gray-500 hover:text-red-500 border border-gray-200 rounded-lg px-3 py-1.5 transition-colors">
-          Logout
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              const role = session?.user?.role;
+              const back = role === "DRM" ? "/drm/generate-report"
+                : role === "HQ"  ? "/hq/generate-report"
+                : "/dashboard";
+              window.location.href = back;
+            }}
+            className="text-xs font-bold text-gray-500 hover:text-indigo-600 border border-gray-200 rounded-lg px-3 py-1.5 transition-colors">
+            ← Back
+          </button>
+          <button onClick={() => signOut({ callbackUrl: "/auth/login" })}
+            className="text-xs font-bold text-gray-500 hover:text-red-500 border border-gray-200 rounded-lg px-3 py-1.5 transition-colors">
+            Logout
+          </button>
+        </div>
       </div>
 
       <div className="max-w-3xl mx-auto px-4 py-6">
@@ -254,18 +312,32 @@ export default function AnalystDashboard() {
         {/* ── Filters ── */}
         <div className="bg-white border border-gray-200 rounded-xl p-4 mb-6 shadow-sm">
           <div className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wide">Filters</div>
-          <div className="flex flex-wrap gap-3 items-end">
-            {([
-              { label: "From", type: "date", val: draft.startDate, key: "startDate" },
-              { label: "To",   type: "date", val: draft.endDate,   key: "endDate"   },
-            ] as { label: string; type: string; val: string; key: string }[]).map(({ label, type, val, key }) => (
-              <div key={key} className="flex flex-col gap-1">
-                <label className="text-xs text-gray-500 font-semibold">{label}</label>
-                <input type={type} value={val}
-                  onChange={(e) => setDraft((p) => ({ ...p, [key as string]: e.target.value }))}
-                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+          {dateWarning && (
+            <div className="mb-3 flex items-start gap-2.5 bg-amber-50 border border-amber-300 rounded-xl px-4 py-3">
+              <span className="text-amber-500 text-lg shrink-0">⚠</span>
+              <div>
+                <div className="text-sm font-bold text-amber-800">No data before 1 April 2026</div>
+                <div className="text-xs text-amber-700 mt-0.5">The ADRIG authorisation app was implemented on <strong>1 Apr 2026</strong>. There are no block requests before this date. Please set the &quot;From&quot; date to 1 Apr 2026 or later.</div>
               </div>
-            ))}
+              <button onClick={() => { setDraft(p => ({ ...p, startDate: APP_START })); setDateWarning(false); }}
+                className="ml-auto shrink-0 text-xs font-bold text-amber-700 hover:text-amber-900 border border-amber-300 rounded-lg px-2.5 py-1 bg-white">
+                Reset to 1 Apr
+              </button>
+            </div>
+          )}
+          <div className="flex flex-wrap gap-3 items-end">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-500 font-semibold">From</label>
+              <input type="date" value={draft.startDate} min={APP_START}
+                onChange={(e) => { setDraft((p) => ({ ...p, startDate: e.target.value })); setDateWarning(false); }}
+                className={`border rounded-lg px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-300 ${draft.startDate < APP_START ? "border-amber-400 bg-amber-50" : "border-gray-200"}`} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-500 font-semibold">To</label>
+              <input type="date" value={draft.endDate}
+                onChange={(e) => setDraft((p) => ({ ...p, endDate: e.target.value }))}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+            </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs text-gray-500 font-semibold">Department</label>
               <select value={draft.department} onChange={(e) => setDraft((p) => ({ ...p, department: e.target.value }))}
@@ -335,17 +407,11 @@ export default function AnalystDashboard() {
               rows={gaps?.notSanctioned ?? []}
               activeGap={activeGap}
               setActiveGap={setActiveGap}
+              filters={filters}
             />
 
             {/* Stage 2 — Sanctioned */}
-            <StageCard icon="✅" title="Sanctioned" count={f.sanctioned} prev={f.totalRequests} color={AMBER}>
-              {d.rejectionReasons?.slice(0, 3).map((r: any, i: number) => (
-                <div key={i} className="flex items-center justify-between text-xs">
-                  <span className="text-gray-600 font-semibold">{r.reason}</span>
-                  <span className="font-extrabold text-red-500">{r.count} rejected</span>
-                </div>
-              ))}
-            </StageCard>
+            <StageCard icon="✅" title="Sanctioned" count={f.sanctioned} prev={f.totalRequests} color={AMBER} />
 
             {/* Gap 2 — SSE not accepted */}
             <GapConnector
@@ -355,6 +421,7 @@ export default function AnalystDashboard() {
               rows={gaps?.sseNotAccepted ?? []}
               activeGap={activeGap}
               setActiveGap={setActiveGap}
+              filters={filters}
             />
 
             {/* Stage 3 — SSE Accepted */}
@@ -374,6 +441,7 @@ export default function AnalystDashboard() {
               rows={gaps?.notAvailApplied ?? []}
               activeGap={activeGap}
               setActiveGap={setActiveGap}
+              filters={filters}
             />
 
             {/* Stage 4 — Avail Applied */}
@@ -441,6 +509,7 @@ export default function AnalystDashboard() {
               rows={gaps?.smNotApproved ?? []}
               activeGap={activeGap}
               setActiveGap={setActiveGap}
+              filters={filters}
             />
 
             {/* Stage 5 — SM Approved */}
@@ -468,6 +537,7 @@ export default function AnalystDashboard() {
               rows={gaps?.smApprovedNotClosed ?? []}
               activeGap={activeGap}
               setActiveGap={setActiveGap}
+              filters={filters}
             />
 
             {/* Stage 6 — Block Closed */}

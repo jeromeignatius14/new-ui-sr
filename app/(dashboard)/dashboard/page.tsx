@@ -1712,6 +1712,11 @@ if (session?.user?.role === "PUNCTUALITY_CONTROLLER") {
               BLOCK SUMMARY REPORT
             </button>
           </Link>
+          <Link href="/analyst" className="w-full">
+            <button className="w-full rounded-2xl bg-[#d4edda] border border-black py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
+              ANALYSE IN DETAIL
+            </button>
+          </Link>
         </div>
 
         <button
@@ -1766,6 +1771,13 @@ if (session?.user?.role === "PUNCTUALITY_CONTROLLER") {
               BLOCK SUMMARY REPORT
             </button>
           </Link>
+          {session?.user?.role === "BRANCH_OFFICER" && (
+            <Link href="/analyst" className="w-full">
+              <button className="w-full rounded-2xl bg-[#d4edda] border border-black py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
+                ANALYSE IN DETAIL
+              </button>
+            </Link>
+          )}
         </div>
 
         <button
@@ -1821,6 +1833,14 @@ if (session?.user?.role === "PUNCTUALITY_CONTROLLER") {
                   BLOCK SUMMARY REPORT
                 </button>
               </a>
+            </div>
+          ) : session?.user?.role === "SUPER_ADMIN" ? (
+            <div className="flex flex-col gap-8 mt-8 w-full max-w-md items-center">
+              <Link href="/analyst" className="w-72">
+                <button className="w-full rounded-2xl bg-[#d4edda] border border-black py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
+                  ANALYSE IN DETAIL
+                </button>
+              </Link>
             </div>
           ) : null
         }
