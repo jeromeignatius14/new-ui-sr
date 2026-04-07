@@ -2810,18 +2810,34 @@ useEffect(() => {
   // Add after your existing useEffects
 // Close dropdowns when clicking outside
 useEffect(() => {
-  const handleClickOutside = (event: MouseEvent) => {
-    if (globalWorkTypeDropdownRef.current && !globalWorkTypeDropdownRef.current.contains(event.target as Node)) {
-      setShowGlobalWorkTypeDropdown(false);
-    }
-    if (globalActivityDropdownRef.current && !globalActivityDropdownRef.current.contains(event.target as Node)) {
-      setShowGlobalActivityDropdown(false);
-    }
-    if (durationDropdownRef.current && !durationDropdownRef.current.contains(event.target as Node)) {
-      setShowDurationDropdown(false);
-    }
-  };
-
+  // const handleClickOutside = (event: MouseEvent) => {
+  //   if (globalWorkTypeDropdownRef.current && !globalWorkTypeDropdownRef.current.contains(event.target as Node)) {
+  //     setShowGlobalWorkTypeDropdown(false);
+  //   }
+  //   if (globalActivityDropdownRef.current && !globalActivityDropdownRef.current.contains(event.target as Node)) {
+  //     setShowGlobalActivityDropdown(false);
+  //   }
+  //   if (durationDropdownRef.current && !durationDropdownRef.current.contains(event.target as Node)) {
+  //     setShowDurationDropdown(false);
+  //   }
+  // };
+const handleClickOutside = (event: MouseEvent) => {
+  if (globalWorkTypeDropdownRef.current && !globalWorkTypeDropdownRef.current.contains(event.target as Node)) {
+    setShowGlobalWorkTypeDropdown(false);
+  }
+  if (globalActivityDropdownRef.current && !globalActivityDropdownRef.current.contains(event.target as Node)) {
+    setShowGlobalActivityDropdown(false);
+  }
+  if (durationDropdownRef.current && !durationDropdownRef.current.contains(event.target as Node)) {
+    setShowDurationDropdown(false);
+  }
+  if (sseDropdownRef.current && !sseDropdownRef.current.contains(event.target as Node)) {
+    setSseDropdownOpen(false);
+  }
+  if (sectionDropdownRefB.current && !sectionDropdownRefB.current.contains(event.target as Node)) {
+    setSectionDropdownOpenB(false);
+  }
+};
   document.addEventListener('mousedown', handleClickOutside);
   return () => document.removeEventListener('mousedown', handleClickOutside);
 }, []);
@@ -5845,10 +5861,14 @@ const handleDownloadDepartmentCount = () => {
             </div>
           </div>
 
-          <div className="flex flex-col md:flex-row w-full items-center gap-2">
+          {/* <div className="flex flex-col md:flex-row w-full items-center gap-2">
             <div className="bg-[#f1a983] text-[16px] md:text-[24px] font-bold border-2 border-black px-2 py-1 text-center w-full md:w-auto">
               (B) Summary of Blocks
-            </div>
+            </div> */}
+                        <div className="flex flex-col md:flex-row w-full items-center gap-2" style={{overflow: 'visible', position: 'relative', zIndex: 50}}>
+  <div className="bg-[#f1a983] text-[16px] md:text-[24px] font-bold border-2 border-black px-2 py-1 text-center w-full md:w-auto">
+    (B) Summary of Blocks
+  </div>
             <div className="flex items-center gap-2">
               <div className="relative inline-block" ref={sectionDropdownRefB}>
                 <button
@@ -5895,8 +5915,10 @@ const handleDownloadDepartmentCount = () => {
         {sseFilter === "All" ? "All SSE" : sseFilter}
         <span className="ml-1">▼</span>
       </button>
-      {sseDropdownOpen && (
-        <div className="absolute z-10 mt-2 w-32 md:w-40 bg-white border-2 border-black rounded shadow-lg max-h-60 overflow-y-auto">
+      {/* {sseDropdownOpen && (
+        <div className="absolute z-10 mt-2 w-32 md:w-40 bg-white border-2 border-black rounded shadow-lg max-h-60 overflow-y-auto"> */}
+              {sseDropdownOpen && (
+  <div className="absolute z-10 mt-2 w-40 md:w-48 bg-white border-2 border-black rounded shadow-lg max-h-60 overflow-y-auto right-0">
           <div
             className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-[12px] md:text-base"
             onClick={() => {
@@ -5924,9 +5946,12 @@ const handleDownloadDepartmentCount = () => {
 </div>
           </div>
 
-          <div className="w-full mt-4 overflow-x-auto" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+          {/* <div className="w-full mt-4 overflow-x-auto" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
             <table className="w-full border-2 border-black min-w-[900px] text-[12px] md:text-[20px]">
-              <thead className="sticky top-0 z-10">
+              <thead className="sticky top-0 z-10"> */}
+                           <div className="w-full mt-4" style={{ maxHeight: '70vh', overflowY: 'auto', overflowX: 'auto' }}>
+  <table className="w-full border-2 border-black min-w-[900px] text-[12px] md:text-[20px]">
+    <thead className="sticky top-0 z-10">
                    <tr className="bg-[#e49edd] text-black text-[12px] md:text-[20px] font-bold">
                   <th className="border-2 border-black px-1 md:px-2 py-2">S.No</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">RequestId</th>
