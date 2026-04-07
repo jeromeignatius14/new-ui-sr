@@ -294,6 +294,7 @@ export default function AnalystDashboard() {
               const role = session?.user?.role;
               const back = role === "DRM" ? "/drm/generate-report"
                 : role === "HQ"  ? "/hq/generate-report"
+                : role === "PUNCTUALITY_CONTROLLER" ? "/dashboard"
                 : "/dashboard";
               window.location.href = back;
             }}

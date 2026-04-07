@@ -1573,10 +1573,14 @@ if (session?.user?.role === "PUNCTUALITY_CONTROLLER") {
         </div>
         {/* Navigation buttons */}
         <div className="w-full flex flex-col items-center gap-8 mt-10 px-2 max-w-md mb-2">
-          
           <Link href="/punctuality_controller/generate-reports" className="w-full">
             <button className="w-full rounded-2xl bg-[#c7c7f7] border border-black py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
               GENERATE REPORT
+            </button>
+          </Link>
+          <Link href="/analyst" className="w-full">
+            <button className="w-full rounded-2xl bg-[#d4edda] border border-black py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
+              ANALYSE IN DETAIL
             </button>
           </Link>
         </div>
