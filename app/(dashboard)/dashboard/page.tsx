@@ -1775,7 +1775,7 @@ if (session?.user?.role === "PUNCTUALITY_CONTROLLER") {
               BLOCK SUMMARY REPORT
             </button>
           </Link>
-          {session?.user?.role === "BRANCH_OFFICER" && (
+          {["BRANCH_OFFICER", "SENIOR_OFFICER", "JUNIOR_OFFICER"].includes(session?.user?.role ?? "") && (
             <Link href="/analyst" className="w-full">
               <button className="w-full rounded-2xl bg-[#d4edda] border border-black py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
                 ANALYSE IN DETAIL
