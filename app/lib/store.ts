@@ -2118,7 +2118,7 @@ export const depot: DepotStructure = {
 
   "CAN-MAQ-MAJN": {
     'TRD': ["CS","CHV","ULL"],
-    'S&T': ["CAN","MAQ"],
+    'S&T': ["CAN","MAQ","KGQ"],
     'ENGG': ["CAN","PAY","KGQ","MAQ","PGT"]
   },
 
@@ -3209,7 +3209,7 @@ export const departmentDepot = {
   ],
 
   "S&T": [
-    "CAN", "CLT", "MDKI", "MAQ", "PGT", "PGTN", "SRR", "TIR"
+    "CAN", "CLT", "MDKI", "MAQ", "PGT", "PGTN", "SRR", "TIR","KGQ"
   ],
 
   "ENGG": [
