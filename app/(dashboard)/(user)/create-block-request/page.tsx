@@ -1170,8 +1170,8 @@ const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
         if (!(userDept in depotData)) return false;
 
         // FIX: Handle multiple depots
-        const userDepots = userDepot.split(',').map(d => d.trim());
-        const sectionDepots = depotData[userDept];
+        const userDepots = userDepot.split(',').map(d => d.trim().toLowerCase());
+        const sectionDepots = depotData[userDept].map((d: string) => d.toLowerCase());;
         
         // Check if ANY user depot exists in section depots
         return userDepots.some(depot => sectionDepots.includes(depot));

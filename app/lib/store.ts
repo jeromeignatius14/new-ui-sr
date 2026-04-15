@@ -5086,7 +5086,7 @@ export let lineData = {
 export const depot: DepotStructure = {
   "TPJ-VM": {
     'ENGG': ["TPJ","LLI","ALU","A-VRI","VM","BRI-TPJ"],
-    'S&T': ["RRI","Lines","VRI-A","VRI-B","VM"],
+    'S&T': ["RRI","LINES","VRI-A","VRI-B","VM"],
     'TRD': ["TPJ", "ALU","VRI","VM"]
   },
 
@@ -5140,7 +5140,7 @@ export const depot: DepotStructure = {
 
   "TPJ-TP": {
     'TRD': ["TPJ"],
-    'S&T': ["RRI", "Lines"],
+    'S&T': ["RRI", "LINES"],
     'ENGG': ["TPJ","BRI-TPJ"]
   },
 
@@ -6351,7 +6351,7 @@ export const departmentDepot = {
   ],
 
   "S&T": [
-    "RRI", "Lines", "VRI-A", "VRI-B", "VM", "CUPJ", "MV", "TPJ", "TJ", "KIK",
+    "RRI", "LINES", "VRI-A", "VRI-B", "VM", "CUPJ", "MV", "TPJ", "TJ", "KIK",
     "TVR", "PKT", "TTP", "PGT", "SRR", "TIR", "CLT", "CAN", "MAQ", "PGTN",
     "SA", "ED", "MAP", "BQI", "TUP", "PTJ", "CBE", "KRR/W", "KRR/E", "VRI",
     "KRR/E", "KRR/W"
@@ -7316,7 +7316,7 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
 
   "TPJ-TP": {
       "TPJ-TP": {
-        "S&T": "Lines",
+        "S&T": "LINES",
         "TRD": "TPJ",
         "ENGG": "TPJ"
       },
@@ -7326,7 +7326,7 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
         "ENGG": "TPJ"
       },
       "TP-YD": {
-        "S&T": "Lines",
+        "S&T": "LINES",
         "TRD": "TPJ",
         "ENGG": "TPJ"
       }
