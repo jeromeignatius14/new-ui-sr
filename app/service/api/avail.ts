@@ -54,16 +54,16 @@ export const availService = {
   },
 
   // PUT: Acknowledge SM's grant
-  acknowledgeSmGrant: async (requestId: string, accept: boolean, remarks?: string) => {
+  acknowledgeSmGrant: async (requestId: string, accept: boolean, remarks?: string, lat?: number, lng?: number, geoOverride?: boolean) => {
     const response = await axiosInstance.put(`/api/avail/acknowledge/${requestId}`, {
-      accept, remarks, mobileView: true,
+      accept, remarks, lat, lng, geoOverride: geoOverride ?? false, mobileView: true,
     });
     return response.data;
   },
 
   // POST: Start availing (this participant)
-  startAvailing: async (requestId: string) => {
-    const response = await axiosInstance.post(`/api/avail/start/${requestId}`, { mobileView: true });
+  startAvailing: async (requestId: string, lat?: number, lng?: number, geoOverride?: boolean) => {
+    const response = await axiosInstance.post(`/api/avail/start/${requestId}`, { lat, lng, geoOverride: geoOverride ?? false, mobileView: true });
     return response.data;
   },
 
@@ -74,7 +74,10 @@ export const availService = {
     closureImage?: File | null,
     closureReconnectedSignal?: string,
     closureCautionKmph?: string,
-    closureOheMadeFit?: boolean
+    closureOheMadeFit?: boolean,
+    lat?: number,
+    lng?: number,
+    geoOverride?: boolean,
   ) => {
     const form = new FormData();
     if (closureRemarks) form.append("closureRemarks", closureRemarks);
@@ -82,6 +85,9 @@ export const availService = {
     if (closureReconnectedSignal) form.append("closureReconnectedSignal", closureReconnectedSignal);
     if (closureCautionKmph) form.append("closureCautionKmph", closureCautionKmph);
     form.append("closureOheMadeFit", closureOheMadeFit ? "true" : "false");
+    if (lat != null) form.append("lat", String(lat));
+    if (lng != null) form.append("lng", String(lng));
+    form.append("geoOverride", geoOverride ? "true" : "false");
     const response = await axiosInstance.post(`/api/avail/close/${requestId}`, form, {
       headers: { "Content-Type": "multipart/form-data" },
     });
@@ -94,12 +100,16 @@ export const availService = {
     newEndTime: string,
     remarks?: string,
     isEmergency?: boolean,
-    emergencyReason?: string
+    emergencyReason?: string,
+    lat?: number,
+    lng?: number,
+    geoOverride?: boolean,
   ) => {
     const response = await axiosInstance.post(`/api/avail/request-extension/${requestId}`, {
       newEndTime, remarks,
       isEmergency: isEmergency ?? false,
       emergencyReason: isEmergency ? emergencyReason : undefined,
+      lat, lng, geoOverride: geoOverride ?? false,
       mobileView: true,
     });
     return response.data;
@@ -109,6 +119,14 @@ export const availService = {
   getAvailRequestById: async (requestId: string) => {
     const response = await axiosInstance.get(`/api/avail/request/${requestId}`);
     return response.data;
+  },
+
+  // GET: Geo-fence pre-check before submitting an action
+  geoCheck: async (station: string, lat: number, lng: number) => {
+    const response = await axiosInstance.get(
+      `/api/avail/geo-check?station=${encodeURIComponent(station)}&lat=${lat}&lng=${lng}`
+    );
+    return response.data?.data as { insideFence: boolean; distanceMeters: number | null; fenceFound: boolean };
   },
 
   // ── SM endpoints ──────────────────────────────────────────────────────────

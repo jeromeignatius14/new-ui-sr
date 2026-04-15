@@ -7,6 +7,8 @@ import { toast, Toaster } from "react-hot-toast";
 import { useGetAvailRequestById } from "@/app/service/query/avail";
 import { useCloseBlock } from "@/app/service/mutation/avail";
 import { AVAIL_STATUS } from "@/app/lib/store";
+import { getCurrentPosition } from "@/app/hooks/useGeoLocation";
+import { availService } from "@/app/service/api/avail";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function fmtDt(dt?: string | null) {
@@ -215,6 +217,7 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
+  const [geoWarn, setGeoWarn] = useState<{ distanceMeters: number; pos: { lat: number; lng: number } } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const block = data?.data ?? null;
@@ -253,7 +256,7 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
     }
   }
 
-  function handleSubmit() {
+  const submitClosure = (lat?: number, lng?: number, geoOverride?: boolean) => {
     closeMut.mutate({
       requestId: id,
       closureRemarks: closureRemarks || undefined,
@@ -261,6 +264,7 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
       closureReconnectedSignal: reconnectedSignal || undefined,
       closureCautionKmph: cautionKmph || undefined,
       closureOheMadeFit: oheMadeFit,
+      lat, lng, geoOverride,
     }, {
       onSuccess: () => {
         toast.success("Block closure submitted");
@@ -268,6 +272,20 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
       },
       onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to submit closure"),
     });
+  };
+
+  async function handleSubmit() {
+    const pos = await getCurrentPosition();
+    if (!pos) { submitClosure(); return; }
+    const station = block?.smStation ?? block?.missionBlock ?? "";
+    try {
+      const geo = await availService.geoCheck(station, pos.lat, pos.lng);
+      if (geo?.fenceFound && !geo?.insideFence && geo.distanceMeters != null) {
+        setGeoWarn({ distanceMeters: geo.distanceMeters, pos });
+        return;
+      }
+    } catch { /* geo check failed — proceed */ }
+    submitClosure(pos.lat, pos.lng, false);
   }
 
   if (isLoading || !block) {
@@ -305,6 +323,33 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
   return (
     <div style={{ minHeight: "100vh", background: "#fdf8e7", fontFamily: "Arial, sans-serif", paddingBottom: "40px", boxSizing: "border-box", overflowX: "hidden" }}>
       <Toaster position="top-center" />
+
+      {/* ── Geo-fence override warning dialog ── */}
+      {geoWarn && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: "#fff", borderRadius: "12px", padding: "24px 20px", maxWidth: "320px", width: "90%", textAlign: "center", boxShadow: "0 8px 32px rgba(0,0,0,0.25)" }}>
+            <div style={{ fontSize: "32px", marginBottom: "8px" }}>⚠️</div>
+            <div style={{ fontWeight: 700, fontSize: "16px", color: "#92400e", marginBottom: "8px" }}>Outside Work Location</div>
+            <div style={{ fontSize: "14px", color: "#374151", marginBottom: "20px" }}>
+              You are <strong>{geoWarn.distanceMeters.toLocaleString()} m</strong> away from the work location geo-fence. Do you want to proceed with closure anyway?
+            </div>
+            <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+              <button
+                onClick={() => setGeoWarn(null)}
+                style={{ padding: "10px 20px", borderRadius: "8px", border: "1px solid #d1d5db", background: "#f9fafb", fontWeight: 600, cursor: "pointer" }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { const p = geoWarn.pos; setGeoWarn(null); submitClosure(p.lat, p.lng, true); }}
+                style={{ padding: "10px 20px", borderRadius: "8px", border: "none", background: "#dc2626", color: "#fff", fontWeight: 600, cursor: "pointer" }}
+              >
+                Proceed Anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* RBMS header */}
       <div style={{ background: "#fef08a", padding: "12px 16px", textAlign: "center", borderBottom: "2px solid #eab308" }}>

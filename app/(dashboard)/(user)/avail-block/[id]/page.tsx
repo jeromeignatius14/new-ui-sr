@@ -14,6 +14,8 @@ import {
 import { AVAIL_STATUS } from "@/app/lib/store";
 import { LoadingBar } from "@/app/components/ui/LoadingBar";
 import { toast, Toaster } from "react-hot-toast";
+import { getCurrentPosition } from "@/app/hooks/useGeoLocation";
+import { availService } from "@/app/service/api/avail";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function fmtDt(dt?: string | null) {
@@ -266,6 +268,13 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
   const [extensionIsEmergency, setExtensionIsEmergency] = useState(false);
   const [extensionEmergencyReason, setExtensionEmergencyReason] = useState("");
 
+  // ── Geo-fence override dialog state ─────────────────────────────────────
+  const [geoWarn, setGeoWarn] = useState<{
+    action: "ack" | "ackDecline" | "start" | "extend";
+    distanceMeters: number;
+    pos: { lat: number; lng: number };
+  } | null>(null);
+
   const applyMut       = useApplyForAvailing();
   const concurrenceMut = useSubmitAvailConcurrence();
   const sseRespondMut  = useSseRespondToSmModification();
@@ -343,9 +352,9 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
     });
   };
 
-  const handleAcknowledge = (accept: boolean) => {
+  const submitAcknowledge = (accept: boolean, lat?: number, lng?: number, geoOverride?: boolean) => {
     setSyncing(true);
-    sseRespondMut.mutate({ requestId: id, accept }, {
+    sseRespondMut.mutate({ requestId: id, accept, lat, lng, geoOverride }, {
       onSuccess: async () => {
         toast.success(accept ? "SM grant acknowledged" : "Availing declined");
         await refetch();
@@ -355,9 +364,33 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
     });
   };
 
-  const handleStart = () => {
+  // Helper: get GPS then check fence; if outside show warning dialog, else proceed directly
+  const withGeoCheck = async (
+    action: "ack" | "ackDecline" | "start" | "extend",
+    proceed: (lat?: number, lng?: number, geoOverride?: boolean) => void
+  ) => {
+    const pos = await getCurrentPosition();
+    if (!pos) { proceed(); return; }
+    const station = block.smStation ?? block.missionBlock ?? "";
+    try {
+      const geo = await availService.geoCheck(station, pos.lat, pos.lng);
+      if (geo?.fenceFound && !geo?.insideFence && geo.distanceMeters != null) {
+        setGeoWarn({ action, distanceMeters: geo.distanceMeters, pos });
+        return;
+      }
+    } catch { /* geo check failed — proceed without blocking */ }
+    proceed(pos.lat, pos.lng, false);
+  };
+
+  const handleAcknowledge = async (accept: boolean) => {
+    await withGeoCheck(accept ? "ack" : "ackDecline", (lat, lng, geoOverride) =>
+      submitAcknowledge(accept, lat, lng, geoOverride)
+    );
+  };
+
+  const submitStart = (lat?: number, lng?: number, geoOverride?: boolean) => {
     setSyncing(true);
-    startMut.mutate({ requestId: id }, {
+    startMut.mutate({ requestId: id, lat, lng, geoOverride }, {
       onSuccess: async () => {
         toast.success("Availing started");
         await refetch();
@@ -367,9 +400,11 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
     });
   };
 
-  const handleExtension = () => {
-    if (!newEndTime) { toast.error("Select a new end time"); return; }
-    if (extensionIsEmergency && !extensionEmergencyReason.trim()) { toast.error("Please describe the emergency"); return; }
+  const handleStart = async () => {
+    await withGeoCheck("start", submitStart);
+  };
+
+  const submitExtension = (lat?: number, lng?: number, geoOverride?: boolean) => {
     setSyncing(true);
     extensionMut.mutate({
       requestId: id,
@@ -377,6 +412,7 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
       remarks: extensionRemarks,
       isEmergency: extensionIsEmergency,
       emergencyReason: extensionIsEmergency ? extensionEmergencyReason : undefined,
+      lat, lng, geoOverride,
     }, {
       onSuccess: async () => {
         setModal(null);
@@ -386,6 +422,23 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
       },
       onError: (e: any) => { setSyncing(false); toast.error(e?.response?.data?.message ?? "Failed"); },
     });
+  };
+
+  const handleExtension = async () => {
+    if (!newEndTime) { toast.error("Select a new end time"); return; }
+    if (extensionIsEmergency && !extensionEmergencyReason.trim()) { toast.error("Please describe the emergency"); return; }
+    await withGeoCheck("extend", submitExtension);
+  };
+
+  // ── Geo-override: proceed despite being outside fence ───────────────────
+  const handleGeoOverrideProceed = () => {
+    if (!geoWarn) return;
+    const { action, pos } = geoWarn;
+    setGeoWarn(null);
+    if (action === "ack") submitAcknowledge(true, pos.lat, pos.lng, true);
+    else if (action === "ackDecline") submitAcknowledge(false, pos.lat, pos.lng, true);
+    else if (action === "start") submitStart(pos.lat, pos.lng, true);
+    else if (action === "extend") submitExtension(pos.lat, pos.lng, true);
   };
 
   // ── Action flags ─────────────────────────────────────────────────────────
@@ -423,6 +476,33 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
     <div style={{ minHeight: "100vh", background: "#c8f0c8", fontFamily: "Arial, sans-serif" }}>
       <LoadingBar active={syncing} />
       <Toaster position="top-center" />
+
+      {/* ── Geo-fence override warning dialog ── */}
+      {geoWarn && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: "#fff", borderRadius: "12px", padding: "24px 20px", maxWidth: "320px", width: "90%", textAlign: "center", boxShadow: "0 8px 32px rgba(0,0,0,0.25)" }}>
+            <div style={{ fontSize: "32px", marginBottom: "8px" }}>⚠️</div>
+            <div style={{ fontWeight: 700, fontSize: "16px", color: "#92400e", marginBottom: "8px" }}>Outside Work Location</div>
+            <div style={{ fontSize: "14px", color: "#374151", marginBottom: "20px" }}>
+              You are <strong>{geoWarn.distanceMeters.toLocaleString()} m</strong> away from the work location geo-fence. Do you want to proceed anyway?
+            </div>
+            <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+              <button
+                onClick={() => setGeoWarn(null)}
+                style={{ padding: "10px 20px", borderRadius: "8px", border: "1px solid #d1d5db", background: "#f9fafb", fontWeight: 600, cursor: "pointer" }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleGeoOverrideProceed}
+                style={{ padding: "10px 20px", borderRadius: "8px", border: "none", background: "#dc2626", color: "#fff", fontWeight: 600, cursor: "pointer" }}
+              >
+                Proceed Anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Yellow RBMS header ── */}
       <div style={{ background: "#fef08a", padding: "12px 16px", textAlign: "center" }}>

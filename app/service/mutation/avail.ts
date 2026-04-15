@@ -38,8 +38,8 @@ export function useSubmitConcurrence() {
 export function useAcknowledgeSmGrant() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (p: { requestId: string; accept: boolean; remarks?: string }) =>
-      availService.acknowledgeSmGrant(p.requestId, p.accept, p.remarks),
+    mutationFn: (p: { requestId: string; accept: boolean; remarks?: string; lat?: number; lng?: number; geoOverride?: boolean }) =>
+      availService.acknowledgeSmGrant(p.requestId, p.accept, p.remarks, p.lat, p.lng, p.geoOverride),
     onSuccess: (_, v) => { invalidateAll(qc); toast.success(v.accept ? "Grant accepted — availing will begin soon" : "Grant rejected"); },
     onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to acknowledge"),
   });
@@ -48,10 +48,8 @@ export function useAcknowledgeSmGrant() {
 export function useStartAvailing() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (p: string | { requestId: string; latitude?: number | null; longitude?: number | null; geoCheckBypassed?: boolean }) => {
-      const requestId = typeof p === "string" ? p : p.requestId;
-      return availService.startAvailing(requestId);
-    },
+    mutationFn: (p: { requestId: string; lat?: number; lng?: number; geoOverride?: boolean }) =>
+      availService.startAvailing(p.requestId, p.lat, p.lng, p.geoOverride),
     onSuccess: () => { invalidateAll(qc); toast.success("Availing started"); },
     onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to start availing"),
   });
@@ -67,7 +65,10 @@ export function useCloseBlock() {
       closureReconnectedSignal?: string;
       closureCautionKmph?: string;
       closureOheMadeFit?: boolean;
-    }) => availService.closeBlock(p.requestId, p.closureRemarks, p.closureImage, p.closureReconnectedSignal, p.closureCautionKmph, p.closureOheMadeFit),
+      lat?: number;
+      lng?: number;
+      geoOverride?: boolean;
+    }) => availService.closeBlock(p.requestId, p.closureRemarks, p.closureImage, p.closureReconnectedSignal, p.closureCautionKmph, p.closureOheMadeFit, p.lat, p.lng, p.geoOverride),
     onSuccess: () => { invalidateAll(qc); toast.success("Closure submitted — awaiting SM acknowledgement"); },
     onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to submit closure"),
   });
@@ -76,8 +77,8 @@ export function useCloseBlock() {
 export function useRequestExtension() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (p: { requestId: string; newEndTime: string; remarks?: string; isEmergency?: boolean; emergencyReason?: string }) =>
-      availService.requestExtension(p.requestId, p.newEndTime, p.remarks, p.isEmergency, p.emergencyReason),
+    mutationFn: (p: { requestId: string; newEndTime: string; remarks?: string; isEmergency?: boolean; emergencyReason?: string; lat?: number; lng?: number; geoOverride?: boolean }) =>
+      availService.requestExtension(p.requestId, p.newEndTime, p.remarks, p.isEmergency, p.emergencyReason, p.lat, p.lng, p.geoOverride),
     onSuccess: () => { invalidateAll(qc); toast.success("Extension requested — awaiting SM"); },
     onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to request extension"),
   });
