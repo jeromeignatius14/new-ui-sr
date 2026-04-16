@@ -261,6 +261,7 @@ export default function SmPendingAvailsPage() {
   const [smTimeFrom,  setSmTimeFrom]  = useState("");
   const [smTimeTo,    setSmTimeTo]    = useState("");
   const [smRemarks,   setSmRemarks]   = useState("");
+  const [smFromAutoFilled, setSmFromAutoFilled] = useState(false);
 
   // Reject form (inside approval modal)
   const [rejectMode,  setRejectMode]  = useState(false);
@@ -296,14 +297,29 @@ export default function SmPendingAvailsPage() {
   }, [pendingAction.length]);
 
   // ── Open modal ──────────────────────────────────────────────────────────────
+  function nowISTDatetimeLocal(): string {
+    return new Date(Date.now() + 5.5 * 60 * 60 * 1000).toISOString().slice(0, 16);
+  }
+
   function openModal(req: any) {
     setActiveReq(req);
     setRejectMode(false);
     setModifyTime(true);
-    setSmTimeFrom(toDatetimeLocal(req.requestedTimeFrom ?? req.grantedFromTime ?? req.sanctionedTimeFrom));
-    setSmTimeTo(toDatetimeLocal(req.requestedTimeTo ?? req.grantedToTime ?? req.sanctionedTimeTo));
     setSmRemarks("");
     setRejectRmk(""); setClosureRmk(""); setExtRemarks(""); setExtAction("APPROVE");
+
+    // If the requested from time has already passed, pre-fill with current IST time
+    const requestedFrom = req.requestedTimeFrom ?? req.grantedFromTime ?? req.sanctionedTimeFrom;
+    const requestedFromMs = requestedFrom ? new Date(requestedFrom).getTime() : null;
+    const nowAsIST = Date.now() + 5.5 * 60 * 60 * 1000;
+    if (requestedFromMs && nowAsIST > requestedFromMs) {
+      setSmTimeFrom(nowISTDatetimeLocal());
+      setSmFromAutoFilled(true);
+    } else {
+      setSmTimeFrom(toDatetimeLocal(requestedFrom));
+      setSmFromAutoFilled(false);
+    }
+    setSmTimeTo(toDatetimeLocal(req.requestedTimeTo ?? req.grantedToTime ?? req.sanctionedTimeTo));
 
     if (pendingApprovals.some((r: any) => (r._id||r.id) === (req._id||req.id))) {
       setModalType("approval");
@@ -541,6 +557,14 @@ export default function SmPendingAvailsPage() {
           {!rejectMode ? (
             <>
               <div style={{ background: "#fffbeb", border: "2px solid #f59e0b", borderRadius: "12px", padding: "16px", marginBottom: "14px" }}>
+                {smFromAutoFilled && (
+                  <div style={{ background: "#fef2f2", border: "1.5px solid #fca5a5", borderRadius: "8px", padding: "10px 12px", marginBottom: "12px" }}>
+                    <div style={{ fontWeight: 800, fontSize: "13px", color: "#991b1b" }}>⚠️ Requested from time has already passed</div>
+                    <div style={{ fontSize: "12px", color: "#7f1d1d", marginTop: "3px" }}>
+                      The from time has been set to the current IST time. Please review and adjust if needed before approving.
+                    </div>
+                  </div>
+                )}
                 <div style={{ fontSize: "12px", color: "#92400e", fontWeight: 800, marginBottom: "12px", letterSpacing: "0.3px" }}>
                   ENTER ACTUAL PERMITTED TIME WINDOW
                 </div>

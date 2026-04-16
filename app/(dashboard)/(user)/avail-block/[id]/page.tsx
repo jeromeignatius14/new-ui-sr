@@ -268,6 +268,16 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
   const [extensionIsEmergency, setExtensionIsEmergency] = useState(false);
   const [extensionEmergencyReason, setExtensionEmergencyReason] = useState("");
 
+  // ── Apply modal auto-fill flag ───────────────────────────────────────────
+  const [applyFromAutoFilled, setApplyFromAutoFilled] = useState(false);
+
+  // ── 1-second ticker so canStart re-evaluates when granted from time arrives
+  const [startTimeTick, setStartTimeTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setStartTimeTick(t => t + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+
   // ── Geo-fence override dialog state ─────────────────────────────────────
   const [geoWarn, setGeoWarn] = useState<{
     action: "ack" | "ackDecline" | "start" | "extend";
@@ -453,11 +463,20 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
   // SM approved — I'm a participant who hasn't acknowledged yet
   const myAckPending = isParticipant && myParticipant.smAckStatus === null && status === AVAIL_STATUS.SM_APPROVED;
 
-  // Can start: participant, acknowledged ACCEPTED, block active, not started
+  // Can start: participant, acknowledged ACCEPTED, block active, not started, AND start time reached
+  // startTimeTick >= 0 always true but references the ticker so this re-evaluates each second
+  const startTimeReached = startTimeTick >= 0 && secondsUntilStart(block) <= 0;
   const canStart = isParticipant
     && myParticipant.smAckStatus === "ACCEPTED"
     && status === AVAIL_STATUS.AVAILING_ACTIVE
-    && !myAvailStarted;
+    && !myAvailStarted
+    && startTimeReached;
+  // Acknowledged but waiting for start time
+  const awaitingStartTime = isParticipant
+    && myParticipant.smAckStatus === "ACCEPTED"
+    && status === AVAIL_STATUS.AVAILING_ACTIVE
+    && !myAvailStarted
+    && !startTimeReached;
 
   // In progress: started and not closed
   const isInProgress = isParticipant && myAvailStarted && !myClosed;
@@ -697,7 +716,21 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
           {/* Apply for availing */}
           {canSubmit && (
             <button
-              onClick={() => setModal("apply")}
+              onClick={() => {
+                // If sanctioned from time has already passed, pre-fill current IST time
+                const sanctionedFrom = block.grantedFromTime ?? block.sanctionedTimeFrom ?? block.demandTimeFrom;
+                const sanctionedFromMs = sanctionedFrom ? new Date(sanctionedFrom).getTime() : null;
+                const nowAsIST = Date.now() + IST_OFFSET_MS;
+                if (sanctionedFromMs && nowAsIST > sanctionedFromMs) {
+                  const nowDTL = new Date(nowAsIST).toISOString().slice(0, 16);
+                  setApplyTimeFrom(nowDTL);
+                  setApplyFromAutoFilled(true);
+                } else {
+                  setApplyTimeFrom("");
+                  setApplyFromAutoFilled(false);
+                }
+                setModal("apply");
+              }}
               disabled={syncing}
               style={{ background: "#4f46e5", color: "#fff", border: "none", borderRadius: "50px", padding: "14px 52px", fontWeight: 800, fontSize: "17px", cursor: syncing ? "not-allowed" : "pointer", letterSpacing: "0.3px", opacity: syncing ? 0.7 : 1 }}
             >
@@ -729,6 +762,19 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
             <button onClick={handleStart} disabled={startMut.isPending || syncing} style={{ ...wideBtn("#16a34a"), opacity: syncing ? 0.7 : 1 }}>
               {syncing ? "Updating..." : startMut.isPending ? "Starting..." : "▶ Start Availing"}
             </button>
+          )}
+
+          {/* Acknowledged but waiting for SM granted from time */}
+          {awaitingStartTime && (
+            <div style={{ width: "100%", maxWidth: "420px" }}>
+              <CountdownBadge block={block} />
+              <div style={{ background: "#f0f9ff", border: "1.5px solid #93c5fd", borderRadius: "10px", padding: "12px 16px", textAlign: "center", marginTop: "6px" }}>
+                <div style={{ fontWeight: 800, fontSize: "14px", color: "#1e40af" }}>✅ Grant Acknowledged</div>
+                <div style={{ fontSize: "13px", color: "#1e40af", marginTop: "4px" }}>
+                  The "Start Availing" button will appear once the SM-granted start time arrives.
+                </div>
+              </div>
+            </div>
           )}
 
           {/* Request for Time Extension */}
@@ -862,6 +908,14 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
 
             {/* Optional time edit */}
             <div style={{ background: "#f0f9ff", border: "1.5px solid #bae6fd", borderRadius: "10px", padding: "12px 14px", marginBottom: "16px" }}>
+              {applyFromAutoFilled && (
+                <div style={{ background: "#fffbeb", border: "1.5px solid #f59e0b", borderRadius: "8px", padding: "10px 12px", marginBottom: "10px" }}>
+                  <div style={{ fontWeight: 800, fontSize: "13px", color: "#92400e" }}>⚠️ Sanctioned start time has passed</div>
+                  <div style={{ fontSize: "12px", color: "#b45309", marginTop: "3px" }}>
+                    The from time has been set to the current time. Please review and edit if needed before submitting.
+                  </div>
+                </div>
+              )}
               <p style={{ fontSize: "13px", fontWeight: 700, color: "#0369a1", margin: "0 0 10px" }}>
                 ✏️ Edit requested times (optional — leave blank to use sanctioned times)
               </p>
