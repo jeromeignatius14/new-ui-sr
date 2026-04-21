@@ -8,7 +8,7 @@ export default function AnalystLayout({ children }: { children: React.ReactNode 
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  const allowed = ["ANALYST", "DRM", "HQ", "BRANCH_OFFICER", "SENIOR_OFFICER", "JUNIOR_OFFICER", "SUPER_ADMIN", "PUNCTUALITY_CONTROLLER"];
+  const allowed = ["ANALYST", "DRM", "HQ", "BRANCH_OFFICER", "SENIOR_OFFICER", "JUNIOR_OFFICER", "SUPER_ADMIN", "PUNCTUALITY_CONTROLLER", "DEPT_CONTROLLER"];
 
   useEffect(() => {
     if (status === "authenticated" && !allowed.includes(session?.user?.role ?? "")) {
