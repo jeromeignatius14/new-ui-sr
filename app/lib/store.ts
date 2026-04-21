@@ -1845,7 +1845,7 @@ export let blockSection = {
   "QLN-TVC": [
     "QLN-PVU", "PVU-VAK", "VAK-KVU", "KVU-MQU", "MQU-KZK",
     "KZK-TVCN", "TVCN-TVC",
-    "QLN-YD", "PVU-YD", "VAK-YD", "KVU-YD", "MQU-YD", "KZK-YD", "TVC-YD"
+    "QLN-YD", "PVU-YD", "VAK-YD", "KVU-YD", "MQU-YD", "KZK-YD", "TVCN-YD", "TVC-YD"
   ],
   "TVC-NCJ": [
     "TVC-TVCS", "TVCS-NYY", "NYY-PASA", "PASA-KZT", "KZT-ERL",
