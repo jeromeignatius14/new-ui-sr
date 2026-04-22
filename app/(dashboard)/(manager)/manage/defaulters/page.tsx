@@ -170,7 +170,7 @@ export default function DefaultersPage() {
             {/* Date Range Filter */}
             <div className="bg-white border border-gray-200 rounded-xl p-4 mb-6 flex flex-wrap gap-4 items-end shadow-sm">
                 <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">From Date</label>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Block Working Date — From</label>
                     <input
                         type="date"
                         value={startDate}
@@ -179,7 +179,7 @@ export default function DefaultersPage() {
                     />
                 </div>
                 <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">To Date</label>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Block Working Date — To</label>
                     <input
                         type="date"
                         value={endDate}

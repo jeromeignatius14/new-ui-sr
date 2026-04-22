@@ -1475,8 +1475,38 @@ const hasInProgressBlock = requestsData?.data?.requests?.find(
   }
 
 if (session?.user?.role === "DEPT_CONTROLLER") {
-    window.location.href = "/manage/request-table";
-}
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center bg-[#fffbe9]">
+        <div className="w-full border border-black bg-yellow-200 flex items-center justify-center relative p-2" style={{ minHeight: 60 }}>
+          <span className="absolute left-4 top-1/2 -translate-y-1/2">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 32 32" stroke="black" strokeWidth={2} className="w-9 h-9"><rect x="6" y="12" width="20" height="12" rx="2" fill="#fffbe9" stroke="black" strokeWidth="2" /><path d="M4 14L16 4L28 14" stroke="black" strokeWidth="2" fill="none" /></svg>
+          </span>
+          <span className="text-2xl font-bold text-black">Home</span>
+        </div>
+        <div className="w-full flex justify-center mt-4">
+          <div className="bg-green-200 rounded-2xl px-8 py-2">
+            <span className="text-4xl font-extrabold text-[#b07be0] tracking-wide">RBMS-{session?.user?.location}-DIVN</span>
+          </div>
+        </div>
+        <div className="w-full flex justify-center mt-4">
+          <div className="bg-[#ffeaea] rounded-full px-6 py-2 border border-black flex flex-col items-center" style={{ maxWidth: '90vw' }}>
+            <span className="text-lg font-bold text-black tracking-wide">{session?.user?.name}</span>
+            <span className="text-sm text-gray-600">{session?.user?.department} — Dept Controller</span>
+          </div>
+        </div>
+        <ManagerQuickLinks />
+        <button
+          onClick={async () => {
+            const { signOut } = await import("next-auth/react");
+            await signOut({ redirect: true, callbackUrl: "/auth/login" });
+          }}
+          className="mt-10 mb-6 bg-[#FFB74D] border border-black px-6 py-1.5 rounded text-lg font-bold text-black"
+        >
+          Logout
+        </button>
+      </div>
+    );
+  }
 if (session?.user?.role === "HQ") {
     window.location.href = "/hq/generate-report";
 }
