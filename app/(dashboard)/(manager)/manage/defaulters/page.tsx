@@ -15,6 +15,7 @@ interface DefaulterRow {
     workType: string;
     demandTime: string;
     sanctionedTime: string | null;
+    sanctionedTimeModified: boolean;
     applicantName: string;
     applicantPhone: string;
     sanctionedAt: string | null;
@@ -173,11 +174,22 @@ function DefaulterTable({ rows, emptyMessage }: { rows: DefaulterRow[]; emptyMes
                                 </td>
                                 <td className="px-4 py-3">
                                     {r.sanctionedTime ? (
-                                        <span className="text-xs font-semibold text-green-800 bg-green-50 border border-green-300 px-2 py-1 rounded whitespace-nowrap">
-                                            {r.sanctionedTime}
-                                        </span>
+                                        <div className="flex flex-col gap-1">
+                                            <span className={`text-xs font-semibold px-2 py-1 rounded whitespace-nowrap ${
+                                                r.sanctionedTimeModified
+                                                    ? "text-green-800 bg-green-100 border border-green-400"
+                                                    : "text-gray-700 bg-gray-100 border border-gray-300"
+                                            }`}>
+                                                {r.sanctionedTime}
+                                            </span>
+                                            {r.sanctionedTimeModified && (
+                                                <span className="text-[10px] text-green-700 font-semibold uppercase tracking-wide">
+                                                    ✎ Modified by admin
+                                                </span>
+                                            )}
+                                        </div>
                                     ) : (
-                                        <span className="text-xs text-gray-400 italic">Not sanctioned</span>
+                                        <span className="text-xs text-gray-400 italic">—</span>
                                     )}
                                 </td>
                                 <td className="px-4 py-3">
