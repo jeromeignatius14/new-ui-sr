@@ -264,38 +264,37 @@ export default function DefaultersPage() {
 
             <div className="px-4 py-5 max-w-screen-xl mx-auto">
                 {/* Filter card */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 mb-6 flex flex-wrap gap-4 items-end">
-                    <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
-                            Demanded Working Date — From
-                        </label>
-                        <input
-                            type="date"
-                            value={startDate}
-                            onChange={(e) => setStartDate(e.target.value)}
-                            className="border-2 border-gray-200 focus:border-indigo-500 rounded-lg px-3 py-2 text-sm focus:outline-none transition"
-                        />
+                <div className="bg-white rounded-2xl shadow-md border border-gray-300 p-5 mb-6">
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Filter by Demanded Working Date</p>
+                    <div className="flex flex-wrap gap-4 items-end">
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-sm font-semibold text-gray-700">From</label>
+                            <input
+                                type="date"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                                className="border-2 border-gray-400 bg-gray-50 hover:border-indigo-400 focus:border-indigo-600 focus:bg-white rounded-lg px-4 py-2.5 text-sm font-medium text-gray-800 focus:outline-none transition shadow-sm"
+                            />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-sm font-semibold text-gray-700">To</label>
+                            <input
+                                type="date"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                                className="border-2 border-gray-400 bg-gray-50 hover:border-indigo-400 focus:border-indigo-600 focus:bg-white rounded-lg px-4 py-2.5 text-sm font-medium text-gray-800 focus:outline-none transition shadow-sm"
+                            />
+                        </div>
+                        <button
+                            onClick={applyFilter}
+                            className="bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow transition"
+                        >
+                            Apply Filter
+                        </button>
+                        {isLoading && (
+                            <span className="text-sm text-gray-500 italic self-center">Loading…</span>
+                        )}
                     </div>
-                    <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
-                            Demanded Working Date — To
-                        </label>
-                        <input
-                            type="date"
-                            value={endDate}
-                            onChange={(e) => setEndDate(e.target.value)}
-                            className="border-2 border-gray-200 focus:border-indigo-500 rounded-lg px-3 py-2 text-sm focus:outline-none transition"
-                        />
-                    </div>
-                    <button
-                        onClick={applyFilter}
-                        className="bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-sm transition"
-                    >
-                        Apply Filter
-                    </button>
-                    {isLoading && (
-                        <span className="text-sm text-gray-400 italic self-center">Loading…</span>
-                    )}
                 </div>
 
                 {isError && (

@@ -516,7 +516,15 @@ const handleDownloadExcel = async () => {
       
 
       {/* Top Yellow Bar */}
-      <div className="w-full bg-[#FFF86B] py-2 flex flex-col items-center">
+      <div className="w-full bg-[#FFF86B] py-2 flex items-center justify-center relative">
+        {session?.user?.role === "DEPT_CONTROLLER" && (
+          <a
+            href="/dashboard"
+            className="absolute left-3 flex items-center gap-1 bg-white border border-gray-400 rounded-lg px-3 py-1 text-sm font-bold text-gray-700 shadow hover:bg-gray-50 transition"
+          >
+            🏠 Home
+          </a>
+        )}
         <span className="text-[9vw] min-[430px]:text-4xl font-bold text-[#B57CF6] tracking-widest">
             RBMS-{session?.user?.location}-DIVN
         </span>
