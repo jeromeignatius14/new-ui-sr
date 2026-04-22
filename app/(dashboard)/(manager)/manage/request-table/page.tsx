@@ -529,17 +529,6 @@ const handleDownloadExcel = async () => {
         </span>
       </div>
 
-      {/* Defaulters button — DEPT_CONTROLLER only */}
-      {session?.user?.role === "DEPT_CONTROLLER" && (
-        <div className="flex justify-center mt-4 px-4">
-          <a
-            href="/manage/defaulters"
-            className="w-full max-w-2xl block rounded-2xl bg-[#ffd6d6] border-2 border-[#dc2626] py-5 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition"
-          >
-            ⚠️ DEFAULTERS LIST
-          </a>
-        </div>
-      )}
 <div className="mx-4">
   
 <div className="flex justify-center mt-8 mb-6">
@@ -930,6 +919,13 @@ const handleDownloadExcel = async () => {
     MANAGE USERS
   </button>
 </Link>
+{session?.user?.role === "DEPT_CONTROLLER" && (
+<Link href="/manage/defaulters">
+  <button className="w-fit px-16 rounded-full bg-[#ffd6d6] border-2 border-[#dc2626] py-6 text-2xl font-extrabold text-black text-center shadow-lg hover:scale-105 transition min-w-[320px]">
+    ⚠️ DEFAULTERS LIST
+  </button>
+</Link>
+)}
 {session?.user.department==="S&T"&&<Link href="/manage/manage-pc">
   <button className="w-fit px-16 rounded-full bg-[#ffd180] border-2 border-black py-6 text-2xl font-extrabold text-black text-center shadow-lg hover:scale-105 transition min-w-[320px]">
     PC Installed In Stations
