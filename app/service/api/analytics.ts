@@ -22,6 +22,10 @@ export const analyticsService = {
         const r = await axiosInstance.get(`/api/analytics/summary${buildQuery(filters)}`);
         return r.data;
     },
+    getDefaulters: async (filters: AnalyticsFilters = {}) => {
+        const r = await axiosInstance.get(`/api/analytics/defaulters${buildQuery(filters)}`);
+        return r.data;
+    },
     exportGap: async (filters: AnalyticsFilters, gapKey: string, status: string) => {
         const params = new URLSearchParams();
         params.set("gapKey", gapKey);

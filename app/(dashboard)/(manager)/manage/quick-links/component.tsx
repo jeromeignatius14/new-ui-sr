@@ -24,7 +24,8 @@ const QuickAction = ({
 
 export default function ManagerQuickLinks() {
     const { data: session } = useSession();
-    const isTrdController = session?.user?.role === "DEPT_CONTROLLER" && session?.user?.department === "TRD";
+    const isDeptController = session?.user?.role === "DEPT_CONTROLLER";
+    const isTrdController = isDeptController && session?.user?.department === "TRD";
 
     return (
         <div className="w-full flex flex-col items-center gap-5 mt-6 px-2 max-w-md">
@@ -32,6 +33,9 @@ export default function ManagerQuickLinks() {
             <a href="/manage/block-summary" className="w-full rounded-2xl bg-[#aee6f7] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">BLOCK SUMMARY REPORT</a>
             {isTrdController && (
                 <a href="/manage/permit-block-at-site" className="w-full rounded-2xl bg-[#fde68a] border-2 border-[#d97706] py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">⚡ PERMIT BLOCK AT SITE</a>
+            )}
+            {isDeptController && (
+                <a href="/manage/defaulters" className="w-full rounded-2xl bg-[#ffd6d6] border-2 border-[#dc2626] py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">⚠️ DEFAULTERS LIST</a>
             )}
             <a href="/analyst" className="w-full rounded-2xl bg-[#d4edda] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">ANALYSE IN DETAIL</a>
         </div>
