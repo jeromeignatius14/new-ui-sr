@@ -40,6 +40,7 @@ const STATUS_LABEL: Record<string, { label: string; severity: "red" | "amber" | 
   "Sanctioned, Pending with SSE For Acceptance":  { label: "Sanctioned by admin — SSE hasn't accepted it yet",             severity: "amber" },
   "Sanctioned":                                   { label: "Sanctioned — nobody has applied for availing yet",             severity: "amber" },
   "Sanctioned And Accepted By SSE":               { label: "SSE accepted — but nobody applied for block availing",         severity: "amber" },
+  "Sanctioned and Accepted by SSE":               { label: "Sanctioned and accepted by SSE — submitted for block availing", severity: "amber" },
 
   // ── Avail pipeline
   "Pending Concurrences":                         { label: "Waiting for TRD / S&T / ENGG concurrences before SM can act", severity: "amber" },
@@ -49,7 +50,7 @@ const STATUS_LABEL: Record<string, { label: string; severity: "red" | "amber" | 
   "Availing Active":                              { label: "Block being availed — participants haven't filed closure yet",  severity: "amber" },
   "All Closures Submitted":                       { label: "All participants closed — SM hasn't acknowledged yet",         severity: "amber" },
   "Block Closed":                                 { label: "Successfully closed ✓",                                        severity: "green" },
-  "Availing Cancelled":                           { label: "Participant rejected the block grant after SM approval",                                             severity: "red"   },
+  "Availing Cancelled":                           { label: "Exited without availing the block",                                                                 severity: "red"   },
   "SM Rejected":                                  { label: "Station Master rejected the avail request — block not granted",                                      severity: "red"   },
 };
 
