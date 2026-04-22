@@ -10,6 +10,7 @@ import {
   useSseRespondToSmModification,
   useStartAvailing,
   useRequestExtension,
+  useExitWithoutAvailing,
 } from "@/app/service/mutation/avail";
 import { AVAIL_STATUS } from "@/app/lib/store";
 import { LoadingBar } from "@/app/components/ui/LoadingBar";
@@ -256,7 +257,7 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
   const block = data?.data ?? null;
 
   const [syncing, setSyncing] = useState(false);
-  const [modal, setModal] = useState<"apply" | "concurrence" | "extend" | null>(null);
+  const [modal, setModal] = useState<"apply" | "concurrence" | "extend" | "exit" | null>(null);
 
   const [selectedStation, setSelectedStation]       = useState("");
   const [manualStation, setManualStation]           = useState("");
@@ -290,6 +291,11 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
   const sseRespondMut  = useSseRespondToSmModification();
   const startMut       = useStartAvailing();
   const extensionMut   = useRequestExtension();
+  const exitMut        = useExitWithoutAvailing();
+
+  const EXIT_REASONS = ["Caution not permitted", "Labour didn't turn up", "Machine not deployed", "Other"];
+  const [exitReason, setExitReason] = useState("");
+  const [exitOtherReason, setExitOtherReason] = useState("");
 
   if (isLoading) return (
     <div style={{ minHeight: "100vh", background: "#c8f0c8", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -738,6 +744,17 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
             </button>
           )}
 
+          {/* Exit without availing */}
+          {canSubmit && (
+            <button
+              onClick={() => { setExitReason(""); setExitOtherReason(""); setModal("exit"); }}
+              disabled={syncing}
+              style={{ background: "#fff", color: "#dc2626", border: "2px solid #dc2626", borderRadius: "50px", padding: "12px 40px", fontWeight: 800, fontSize: "15px", cursor: syncing ? "not-allowed" : "pointer", opacity: syncing ? 0.7 : 1 }}
+            >
+              Exit without availing Block
+            </button>
+          )}
+
           {/* Give Concurrence */}
           {canConcur && (
             <button onClick={() => setModal("concurrence")} disabled={syncing} style={{ ...wideBtn("#4f46e5"), opacity: syncing ? 0.7 : 1 }}>
@@ -1006,6 +1023,52 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
 
           <button onClick={handleExtension} disabled={extensionMut.isPending} style={{ ...wideBtn(extensionIsEmergency ? "#dc2626" : "#f59e0b"), marginTop: "4px" }}>
             {extensionMut.isPending ? "Submitting..." : extensionIsEmergency ? "🚨 Submit Emergency Extension" : "Request Extension"}
+          </button>
+        </Modal>
+      )}
+
+      {/* ── Exit without availing modal ── */}
+      {modal === "exit" && (
+        <Modal title="Exit without availing Block" onClose={() => setModal(null)}>
+          <div style={{ background: "#fef2f2", border: "1.5px solid #fca5a5", borderRadius: "8px", padding: "12px 14px", marginBottom: "16px", fontSize: "13px", color: "#991b1b", fontWeight: 700 }}>
+            ⚠ This will mark the block as not availed. This action cannot be undone.
+          </div>
+          <label style={fieldLabel}>Reason for not availing *</label>
+          <select
+            style={{ ...fieldInput, background: "#fff" }}
+            value={exitReason}
+            onChange={(e) => { setExitReason(e.target.value); setExitOtherReason(""); }}
+          >
+            <option value="">-- Select a reason --</option>
+            {EXIT_REASONS.map(r => <option key={r} value={r}>{r}</option>)}
+          </select>
+          {exitReason === "Other" && (
+            <>
+              <label style={{ ...fieldLabel, marginTop: "12px" }}>Please specify *</label>
+              <textarea
+                style={{ ...fieldInput, height: "70px", resize: "vertical" }}
+                placeholder="Enter reason..."
+                value={exitOtherReason}
+                onChange={(e) => setExitOtherReason(e.target.value)}
+              />
+            </>
+          )}
+          <button
+            disabled={exitMut.isPending || !exitReason || (exitReason === "Other" && !exitOtherReason.trim())}
+            onClick={() => {
+              const finalReason = exitReason === "Other" ? exitOtherReason.trim() : exitReason;
+              exitMut.mutate({ requestId: id as string, reason: finalReason }, {
+                onSuccess: () => { setModal(null); router.push("/avail-block"); },
+              });
+            }}
+            style={{
+              ...wideBtn("#dc2626"),
+              marginTop: "16px",
+              opacity: (!exitReason || (exitReason === "Other" && !exitOtherReason.trim())) ? 0.5 : 1,
+              cursor: (!exitReason || (exitReason === "Other" && !exitOtherReason.trim())) ? "not-allowed" : "pointer",
+            }}
+          >
+            {exitMut.isPending ? "Submitting..." : "Confirm Exit without Availing"}
           </button>
         </Modal>
       )}

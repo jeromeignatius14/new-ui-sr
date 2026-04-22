@@ -210,4 +210,10 @@ export const availService = {
     });
     return response.data;
   },
+
+  // POST: Exit without availing (cancel before applying)
+  exitWithoutAvailing: async (requestId: string, reason: string) => {
+    const response = await axiosInstance.post(`/api/avail/exit-without-availing/${requestId}`, { reason });
+    return response.data;
+  },
 };

@@ -149,3 +149,17 @@ export function useTrdAcknowledgeClosure() {
     onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed"),
   });
 }
+
+export function useExitWithoutAvailing() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: { requestId: string; reason: string }) =>
+      availService.exitWithoutAvailing(p.requestId, p.reason),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["avail-depot-blocks"] });
+      qc.invalidateQueries({ queryKey: ["avail-my-participations"] });
+      toast.success("Block exited without availing");
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to exit"),
+  });
+}

@@ -674,6 +674,72 @@ export default function AnalystDashboard() {
               </div>
             )}
 
+            {/* ── Exit without availing records ── */}
+            {d.exitWithoutAvailingRecords?.length > 0 && (
+              <div className="mt-8">
+                <div className="mb-2 text-xs font-extrabold text-gray-400 uppercase tracking-widest">Blocks Exited Without Availing</div>
+                <div className="bg-white border border-red-200 rounded-xl shadow-sm overflow-hidden">
+                  <div className="bg-red-50 border-b border-red-200 px-4 py-3 flex items-center justify-between">
+                    <div className="font-extrabold text-red-700 text-sm">
+                      ⛔ {d.exitWithoutAvailingRecords.length} block{d.exitWithoutAvailingRecords.length !== 1 ? "s" : ""} exited without availing
+                    </div>
+                    <div className="text-xs text-red-500 font-semibold">
+                      Reason, who & when — all recorded
+                    </div>
+                  </div>
+
+                  {/* Reason summary pills */}
+                  <div className="px-4 py-3 flex flex-wrap gap-2 border-b border-gray-100">
+                    {Object.entries(
+                      d.exitWithoutAvailingRecords.reduce((acc: Record<string, number>, r: any) => {
+                        acc[r.reason] = (acc[r.reason] ?? 0) + 1;
+                        return acc;
+                      }, {})
+                    ).map(([reason, count]) => (
+                      <span key={reason} className="bg-red-100 text-red-700 text-xs font-bold px-3 py-1 rounded-full">
+                        {reason}: {count as number}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Detail table */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="bg-gray-50 text-gray-500 font-extrabold uppercase text-left">
+                          <th className="px-4 py-2">Block ID</th>
+                          <th className="px-4 py-2">Mission Block</th>
+                          <th className="px-4 py-2">Date</th>
+                          <th className="px-4 py-2">Reason</th>
+                          <th className="px-4 py-2">Exited By</th>
+                          <th className="px-4 py-2">Exited At</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {d.exitWithoutAvailingRecords.map((r: any, i: number) => (
+                          <tr key={i} className="border-t border-gray-100 hover:bg-red-50">
+                            <td className="px-4 py-2 font-bold text-gray-800">{r.divisionId ?? "—"}</td>
+                            <td className="px-4 py-2 font-semibold text-gray-700">{r.missionBlock ?? "—"}</td>
+                            <td className="px-4 py-2 text-gray-600">{r.date ? new Date(r.date).toLocaleDateString("en-IN") : "—"}</td>
+                            <td className="px-4 py-2">
+                              <span className="bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded">{r.reason}</span>
+                            </td>
+                            <td className="px-4 py-2 font-semibold text-gray-700">
+                              {r.exitedByName ?? "—"}
+                              {r.exitedByPhone && <span className="text-gray-400 ml-1">({r.exitedByPhone})</span>}
+                            </td>
+                            <td className="px-4 py-2 text-gray-500">
+                              {r.exitedAt ? new Date(r.exitedAt).toLocaleString("en-IN") : "—"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* ── Action summary ── */}
             <div className="mt-6 bg-amber-50 border border-amber-200 rounded-xl p-5">
               <div className="font-extrabold text-amber-800 mb-3 text-sm">📋 What Needs Immediate Attention</div>
@@ -695,6 +761,9 @@ export default function AnalystDashboard() {
                 )}
                 {d.burstStats?.burstRate > 20 && (
                   <li>🟠 <strong>{d.burstStats.burstRate}%</strong> of closed blocks ran over their granted time window.</li>
+                )}
+                {d.exitWithoutAvailingRecords?.length > 0 && (
+                  <li>🔴 <strong>{d.exitWithoutAvailingRecords.length}</strong> block{d.exitWithoutAvailingRecords.length !== 1 ? "s" : ""} exited without availing — review reasons and take corrective action.</li>
                 )}
               </ul>
             </div>
