@@ -309,6 +309,7 @@ export default function PhoneLoginForm() {
   const [conflictInfo, setConflictInfo] = useState<{ userName: string; userPhone: string | null; loginTime: string } | null>(null);
   const [conflictLoading, setConflictLoading] = useState(false);
   const pendingDepot = useRef<string>("");
+  const pendingPhone = useRef<string>("");
 
   // ── Forgot OTP modal ──
   const [showForgotModal, setShowForgotModal] = useState(false);
@@ -407,9 +408,15 @@ export default function PhoneLoginForm() {
     } catch (err) {
       console.error("[SM Session] Failed to register session:", err);
     }
-    // Store selected station so verify endpoint knows which station to check
     sessionStorage.setItem("smActiveStation", depot);
-    loginWithDepot({ phone, depot });
+    loginWithDepot(
+      { phone, depot },
+      {
+        onError: (err: any) => {
+          setAuthError(err?.message || "Login failed. Please try again.");
+        },
+      }
+    );
   };
 
   // ── Main form submit ──
@@ -417,6 +424,7 @@ export default function PhoneLoginForm() {
     setAuthError(null);
 
     if (step === "phone") {
+      pendingPhone.current = data.phone;
       requestOtp({ phone: data.phone });
     } else if (step === "otp" && otpId) {
       verifyOtp({ phone: data.phone, otp: data.otp || "", otpId });
@@ -449,17 +457,45 @@ export default function PhoneLoginForm() {
   // ── Force logout existing SM and proceed ──
   const handleForceLogout = async () => {
     const depot = pendingDepot.current;
-    if (!depot) return;
+    const phone = pendingPhone.current;
+    if (!depot || !phone) {
+      setAuthError("Session expired — please restart the login process.");
+      setConflictInfo(null);
+      return;
+    }
     setConflictLoading(true);
     try {
       await smSessionApi.forceLogout(depot);
     } catch {
-      // Proceed anyway
+      // Proceed even if force-logout API fails — register will overwrite anyway
     }
+    // Register session first, then trigger login
+    try {
+      const smUserData = JSON.parse(sessionStorage.getItem("smUserData") || "{}");
+      const smUser = smUserData?.user;
+      if (smUser?.id) {
+        await smSessionApi.register({
+          stationCode: depot,
+          userId: smUser.id,
+          userName: smUser.name ?? "SM",
+          userPhone: smUser.phone ?? undefined,
+        });
+      }
+    } catch (err) {
+      console.error("[SM Session] Register after force-logout failed:", err);
+    }
+    sessionStorage.setItem("smActiveStation", depot);
+    // Now clear conflict screen and trigger login
     setConflictInfo(null);
     setConflictLoading(false);
-    const phone = watch("phone");
-    await completeSmLogin(phone, depot);
+    loginWithDepot(
+      { phone, depot },
+      {
+        onError: (err: any) => {
+          setAuthError(err?.message || "Login failed after force-logout. Please try again from the start.");
+        },
+      }
+    );
   };
 
   // ── Modal: resend OTP ──
