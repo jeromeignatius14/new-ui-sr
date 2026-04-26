@@ -127,6 +127,7 @@ interface DetailedData {
   AvailedTimeFrom?: any;
   isGranted?: boolean;
   isSanctioned?: boolean;
+  overAllStatus?: string;
   Date: string;
   Section: string;
   Duration: number;
