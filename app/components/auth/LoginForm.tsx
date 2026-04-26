@@ -295,6 +295,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PhoneLoginInput, phoneLoginSchema } from "@/app/validation/auth";
 import { usePhoneAuth } from "@/app/service/query/auth";
+import { smSessionApi } from "@/app/service/api/smSession";
 
 const RESEND_COOLDOWN = 30;
 
@@ -305,6 +306,9 @@ export default function PhoneLoginForm() {
   const [selectedDepot, setSelectedDepot] = useState<string>("");
   const [smStations, setSmStations] = useState<string[]>([]);
   const [manualStation, setManualStation] = useState<string>("");
+  const [conflictInfo, setConflictInfo] = useState<{ userName: string; userPhone: string | null; loginTime: string } | null>(null);
+  const [conflictLoading, setConflictLoading] = useState(false);
+  const pendingDepot = useRef<string>("");
 
   // ── Forgot OTP modal ──
   const [showForgotModal, setShowForgotModal] = useState(false);
@@ -385,6 +389,25 @@ export default function PhoneLoginForm() {
     if (step === "otp") document.querySelector<HTMLInputElement>('input[name="otp"]')?.focus();
   }, [step]);
 
+  // ── Register SM session then complete login ──
+  const completeSmLogin = async (phone: string, depot: string) => {
+    try {
+      const smUserData = JSON.parse(sessionStorage.getItem("smUserData") || "{}");
+      const smUser = smUserData?.user;
+      if (smUser?.id) {
+        await smSessionApi.register({
+          stationCode: depot,
+          userId: smUser.id,
+          userName: smUser.name ?? "SM",
+          userPhone: smUser.phone ?? undefined,
+        });
+      }
+    } catch {
+      // Don't block login if session registration fails
+    }
+    loginWithDepot({ phone, depot });
+  };
+
   // ── Main form submit ──
   const onSubmit = async (data: PhoneLoginInput & { depot?: string }) => {
     setAuthError(null);
@@ -395,8 +418,37 @@ export default function PhoneLoginForm() {
       verifyOtp({ phone: data.phone, otp: data.otp || "", otpId });
     } else if (step === "depot") {
       if (!selectedDepot) { setAuthError("Please select a station"); return; }
-      loginWithDepot({ phone: data.phone, depot: selectedDepot });
+      setConflictLoading(true);
+      pendingDepot.current = selectedDepot;
+      try {
+        const res = await smSessionApi.check(selectedDepot);
+        if (res.data?.data?.active) {
+          setConflictInfo(res.data.data);
+          setConflictLoading(false);
+          return;
+        }
+      } catch {
+        // If check fails, proceed with login anyway
+      }
+      setConflictLoading(false);
+      await completeSmLogin(data.phone, selectedDepot);
     }
+  };
+
+  // ── Force logout existing SM and proceed ──
+  const handleForceLogout = async () => {
+    const depot = pendingDepot.current;
+    if (!depot) return;
+    setConflictLoading(true);
+    try {
+      await smSessionApi.forceLogout(depot);
+    } catch {
+      // Proceed anyway
+    }
+    setConflictInfo(null);
+    setConflictLoading(false);
+    const phone = watch("phone");
+    await completeSmLogin(phone, depot);
   };
 
   // ── Modal: resend OTP ──
@@ -457,6 +509,69 @@ export default function PhoneLoginForm() {
 
   return (
     <>
+      {/* ══════════════════════════════
+          SM CONFLICT SCREEN
+      ══════════════════════════════ */}
+      {conflictInfo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-7 w-full max-w-sm flex flex-col items-center gap-5">
+            {/* Warning icon */}
+            <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center">
+              <span className="text-3xl">⚠️</span>
+            </div>
+
+            <h2 className="text-lg font-bold text-gray-800 text-center leading-snug">
+              Another SM is Already Logged In
+            </h2>
+
+            {/* Existing SM details */}
+            <div className="w-full bg-orange-50 border border-orange-200 rounded-xl p-4 flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-gray-500 w-16 shrink-0">Name</span>
+                <span className="text-sm font-bold text-gray-800">{conflictInfo.userName}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-gray-500 w-16 shrink-0">CUG</span>
+                <span className="text-sm font-bold text-gray-800">{conflictInfo.userPhone ?? "—"}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-gray-500 w-16 shrink-0">Logged in</span>
+                <span className="text-sm font-bold text-gray-800">
+                  {conflictInfo.loginTime
+                    ? new Date(conflictInfo.loginTime).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })
+                    : "—"}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-gray-500 w-16 shrink-0">Station</span>
+                <span className="text-sm font-bold text-orange-700">{pendingDepot.current}</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-500 text-center">
+              Only one SM can be active at a station at a time. Force logout the current SM to proceed.
+            </p>
+
+            <button
+              onClick={handleForceLogout}
+              disabled={conflictLoading}
+              className="w-full py-3 rounded-xl font-bold text-white text-base transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: "#ef4444" }}
+            >
+              {conflictLoading ? "Logging out..." : `Force Logout ${conflictInfo.userName}`}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { setConflictInfo(null); setConflictLoading(false); }}
+              className="text-sm font-semibold text-gray-400 hover:text-gray-600 underline underline-offset-2"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ══════════════════════════════
           FORGOT OTP MODAL
       ══════════════════════════════ */}
@@ -641,7 +756,7 @@ export default function PhoneLoginForm() {
         {/* Submit */}
         <button
           type="submit"
-          disabled={isLoading || (step === "depot" && !selectedDepot)}
+          disabled={isLoading || conflictLoading || (step === "depot" && !selectedDepot)}
           className="flex items-center justify-center font-bold text-black text-2xl"
           style={{
             width: "180px",
@@ -652,7 +767,9 @@ export default function PhoneLoginForm() {
             border: "none",
           }}
         >
-          {isLoading
+          {conflictLoading
+            ? "Checking..."
+            : isLoading
             ? step === "phone" ? "Sending OTP..." : step === "otp" ? "Verifying..." : "Logging in..."
             : step === "phone"
             ? "GET OTP"
