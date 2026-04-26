@@ -431,9 +431,15 @@ export default function PhoneLoginForm() {
           setConflictLoading(false);
           return;
         }
-      } catch (err) {
+      } catch (err: any) {
+        const status = err?.response?.status;
+        if (status === 404) {
+          setConflictLoading(false);
+          setAuthError("Server not updated — please restart the backend server and try again.");
+          return;
+        }
+        // Other network errors: allow login but warn
         console.error("[SM Session] Check failed:", err);
-        // If check fails (e.g. server not restarted), still proceed with login
       }
       setConflictLoading(false);
       await completeSmLogin(data.phone, selectedDepot);
