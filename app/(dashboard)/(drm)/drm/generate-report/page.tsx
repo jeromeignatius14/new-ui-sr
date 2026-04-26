@@ -777,7 +777,10 @@ const handleDepartmentFilterClick = (
 
   const totalRequested = detailedData.length;
   const totalSanctioned = detailedData.filter(block => block.isSanctioned === true).length;
+  const totalApplied = detailedData.filter(block => block.isApplied === true).length;
+  const totalGranted = detailedData.filter(block => block.isGranted === true).length;
   const totalAvailed = detailedData.filter(block => block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length;
+  const totalClosed = detailedData.filter(block => block.overAllStatus === "Block Closed").length;
 
   const filteredBlocks = filteredUpcomingBlocks.filter((block) => {
     if (activeFilter === "approved" && !block.isSanctioned) return false;
@@ -1054,90 +1057,97 @@ const handleDownloadUpcomingBlocks = () => {
     const excelData = [
       // ENGG Rows
       {
-        "Location": "MAS",
-        "Department": "ENGG",
-        "Supporting Department": "-",
+        "Location": "MAS", "Department": "ENGG", "Supporting Department": "-",
         "Total Block Requested": enggTotal,
-        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.isSanctioned).length,
-        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
+        "Total Block Sanctioned": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.isSanctioned && b.powerBlockRequired === false && b.sntDisconnectionRequired === false).length,
+        "Total Block Applied": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === false && b.sntDisconnectionRequired === false && b.isApplied === true).length,
+        "Total Block Granted": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === false && b.sntDisconnectionRequired === false && b.isGranted === true).length,
+        "Total Block Availed": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.AvailedTimeFrom !== null && b.AvailedTimeTo !== null && b.powerBlockRequired === false && b.sntDisconnectionRequired === false).length,
+        "Total Block Closed": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === false && b.sntDisconnectionRequired === false && b.overAllStatus === "Block Closed").length,
       },
       {
-        "Location": "MAS",
-        "Department": "ENGG",
-        "Supporting Department": "S&T",
+        "Location": "MAS", "Department": "ENGG", "Supporting Department": "S&T",
         "Total Block Requested": enggWithSnt,
-        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.isSanctioned).length,
-        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
+        "Total Block Sanctioned": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.isSanctioned && b.powerBlockRequired === false).length,
+        "Total Block Applied": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.powerBlockRequired === false && b.isApplied === true).length,
+        "Total Block Granted": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.powerBlockRequired === false && b.isGranted === true).length,
+        "Total Block Availed": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.AvailedTimeFrom !== null && b.AvailedTimeTo !== null && b.powerBlockRequired === false).length,
+        "Total Block Closed": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.powerBlockRequired === false && b.overAllStatus === "Block Closed").length,
       },
       {
-        "Location": "MAS",
-        "Department": "ENGG",
-        "Supporting Department": "TRD",
+        "Location": "MAS", "Department": "ENGG", "Supporting Department": "TRD",
         "Total Block Requested": enggWithPower,
-        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.isSanctioned).length,
-        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
+        "Total Block Sanctioned": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === true && b.sntDisconnectionRequired === false && b.isSanctioned).length,
+        "Total Block Applied": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === true && b.sntDisconnectionRequired === false && b.isApplied === true).length,
+        "Total Block Granted": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === true && b.sntDisconnectionRequired === false && b.isGranted === true).length,
+        "Total Block Availed": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === true && b.AvailedTimeFrom !== null && b.AvailedTimeTo !== null && b.sntDisconnectionRequired === false).length,
+        "Total Block Closed": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === true && b.sntDisconnectionRequired === false && b.overAllStatus === "Block Closed").length,
       },
       {
-        "Location": "MAS",
-        "Department": "ENGG",
-        "Supporting Department": "S&T and TRD",
+        "Location": "MAS", "Department": "ENGG", "Supporting Department": "S&T and TRD",
         "Total Block Requested": enggWithSntAndPower,
-        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.powerBlockRequired === true && block.isSanctioned).length,
-        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
+        "Total Block Sanctioned": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.powerBlockRequired === true && b.isSanctioned).length,
+        "Total Block Applied": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.powerBlockRequired === true && b.isApplied === true).length,
+        "Total Block Granted": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.powerBlockRequired === true && b.isGranted === true).length,
+        "Total Block Availed": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.powerBlockRequired === true && b.AvailedTimeFrom !== null && b.AvailedTimeTo !== null).length,
+        "Total Block Closed": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.powerBlockRequired === true && b.overAllStatus === "Block Closed").length,
       },
-      
       // TRD Rows
       {
-        "Location": "MAS",
-        "Department": "TRD",
-        "Supporting Department": "-",
+        "Location": "MAS", "Department": "TRD", "Supporting Department": "-",
         "Total Block Requested": trdTotal,
-        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "TRD" && block.isSanctioned).length,
-        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "TRD" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
+        "Total Block Sanctioned": detailedData.filter(b => b.selectedDepartment === "TRD" && b.isSanctioned).length,
+        "Total Block Applied": detailedData.filter(b => b.selectedDepartment === "TRD" && b.isApplied === true).length,
+        "Total Block Granted": detailedData.filter(b => b.selectedDepartment === "TRD" && b.isGranted === true).length,
+        "Total Block Availed": detailedData.filter(b => b.selectedDepartment === "TRD" && b.AvailedTimeFrom !== null && b.AvailedTimeTo !== null).length,
+        "Total Block Closed": detailedData.filter(b => b.selectedDepartment === "TRD" && b.overAllStatus === "Block Closed").length,
       },
-      
       // S&T Rows
       {
-        "Location": "MAS",
-        "Department": "S&T",
-        "Supporting Department": "-",
+        "Location": "MAS", "Department": "S&T", "Supporting Department": "-",
         "Total Block Requested": sntTotal,
-        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "S&T" && block.isSanctioned).length,
-        "Total Block Availed":detailedData.filter(block => block.selectedDepartment === "S&T" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
+        "Total Block Sanctioned": detailedData.filter(b => b.selectedDepartment === "S&T" && b.isSanctioned).length,
+        "Total Block Applied": detailedData.filter(b => b.selectedDepartment === "S&T" && b.isApplied === true).length,
+        "Total Block Granted": detailedData.filter(b => b.selectedDepartment === "S&T" && b.isGranted === true).length,
+        "Total Block Availed": detailedData.filter(b => b.selectedDepartment === "S&T" && b.AvailedTimeFrom !== null && b.AvailedTimeTo !== null).length,
+        "Total Block Closed": detailedData.filter(b => b.selectedDepartment === "S&T" && b.overAllStatus === "Block Closed").length,
       },
       {
-        "Location": "MAS",
-        "Department": "S&T",
-        "Supporting Department": "ENGG",
+        "Location": "MAS", "Department": "S&T", "Supporting Department": "ENGG",
         "Total Block Requested": sntWithEngg,
-        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.isSanctioned).length,
-        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
+        "Total Block Sanctioned": detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.isSanctioned).length,
+        "Total Block Applied": detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.isApplied === true).length,
+        "Total Block Granted": detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.isGranted === true).length,
+        "Total Block Availed": detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.AvailedTimeFrom !== null && b.AvailedTimeTo !== null).length,
+        "Total Block Closed": detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.overAllStatus === "Block Closed").length,
       },
       {
-        "Location": "MAS",
-        "Department": "S&T",
-        "Supporting Department": "TRD",
+        "Location": "MAS", "Department": "S&T", "Supporting Department": "TRD",
         "Total Block Requested": sntWithPower,
-        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.isSanctioned).length,
-        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
+        "Total Block Sanctioned": detailedData.filter(b => b.selectedDepartment === "S&T" && b.powerBlockRequired === true && b.isSanctioned).length,
+        "Total Block Applied": detailedData.filter(b => b.selectedDepartment === "S&T" && b.powerBlockRequired === true && b.isApplied === true).length,
+        "Total Block Granted": detailedData.filter(b => b.selectedDepartment === "S&T" && b.powerBlockRequired === true && b.isGranted === true).length,
+        "Total Block Availed": detailedData.filter(b => b.selectedDepartment === "S&T" && b.powerBlockRequired === true && b.AvailedTimeFrom !== null && b.AvailedTimeTo !== null).length,
+        "Total Block Closed": detailedData.filter(b => b.selectedDepartment === "S&T" && b.powerBlockRequired === true && b.overAllStatus === "Block Closed").length,
       },
       {
-        "Location": "MAS",
-        "Department": "S&T",
-        "Supporting Department": "ENGG and TRD",
+        "Location": "MAS", "Department": "S&T", "Supporting Department": "ENGG and TRD",
         "Total Block Requested": sntWithEnggAndPower,
-        "Total Block Sanctioned": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.powerBlockRequired === true && block.isSanctioned).length,
-        "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
+        "Total Block Sanctioned": detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.powerBlockRequired === true && b.isSanctioned).length,
+        "Total Block Applied": detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.powerBlockRequired === true && b.isApplied === true).length,
+        "Total Block Granted": detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.powerBlockRequired === true && b.isGranted === true).length,
+        "Total Block Availed": detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.powerBlockRequired === true && b.AvailedTimeFrom !== null && b.AvailedTimeTo !== null).length,
+        "Total Block Closed": detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.powerBlockRequired === true && b.overAllStatus === "Block Closed").length,
       },
-      
       // Total Row
       {
-        "Location": "TOTAL",
-        "Department": "",
-        "Supporting Department": "",
+        "Location": "TOTAL", "Department": "", "Supporting Department": "",
         "Total Block Requested": totalRequested,
         "Total Block Sanctioned": totalSanctioned,
-        "Total Block Availed": totalAvailed
+        "Total Block Applied": totalApplied,
+        "Total Block Granted": totalGranted,
+        "Total Block Availed": totalAvailed,
+        "Total Block Closed": totalClosed,
       }
     ];
 
@@ -2226,7 +2236,10 @@ const handleDownloadUpcomingBlocks = () => {
         <th className="border-2 border-black px-1 md:px-2 py-2">Supporting Department</th>
         <th className="border-2 border-black px-1 md:px-2 py-2">Total Block Requested</th>
         <th className="border-2 border-black px-1 md:px-2 py-2">Total Block Sanctioned</th>
+        <th className="border-2 border-black px-1 md:px-2 py-2">Total Block Applied</th>
+        <th className="border-2 border-black px-1 md:px-2 py-2">Total Block Granted</th>
         <th className="border-2 border-black px-1 md:px-2 py-2">Total Block Availed</th>
+        <th className="border-2 border-black px-1 md:px-2 py-2">Total Block Closed</th>
       </tr>
     </thead>
 <tbody>
@@ -2285,6 +2298,12 @@ const handleDownloadUpcomingBlocks = () => {
                     ).length
                   }
                 </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === false && b.sntDisconnectionRequired === false && b.isApplied === true).length}
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === false && b.sntDisconnectionRequired === false && b.isGranted === true).length}
+                </td>
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
@@ -2311,6 +2330,9 @@ const handleDownloadUpcomingBlocks = () => {
                         block.sntDisconnectionRequired === false
                     ).length
                   }
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === false && b.sntDisconnectionRequired === false && b.overAllStatus === "Block Closed").length}
                 </td>
               </tr>)}
              
@@ -2369,6 +2391,12 @@ const handleDownloadUpcomingBlocks = () => {
                     ).length
                   }
                 </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.powerBlockRequired === false && b.isApplied === true).length}
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.powerBlockRequired === false && b.isGranted === true).length}
+                </td>
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
@@ -2396,6 +2424,9 @@ const handleDownloadUpcomingBlocks = () => {
                         block.enggDisconnectionsRequired === false
                     ).length
                   }
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.powerBlockRequired === false && b.overAllStatus === "Block Closed").length}
                 </td>
               </tr>)}
              
@@ -2453,6 +2484,12 @@ const handleDownloadUpcomingBlocks = () => {
                     ).length
                   }
                 </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === true && b.sntDisconnectionRequired === false && b.isApplied === true).length}
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === true && b.sntDisconnectionRequired === false && b.isGranted === true).length}
+                </td>
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
@@ -2478,6 +2515,9 @@ const handleDownloadUpcomingBlocks = () => {
                         block.AvailedTimeTo !== null&&block.sntDisconnectionRequired === false
                     ).length
                   }
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === true && b.sntDisconnectionRequired === false && b.overAllStatus === "Block Closed").length}
                 </td>
               </tr>
 )}
@@ -2537,6 +2577,12 @@ const handleDownloadUpcomingBlocks = () => {
                     ).length
                   }
                 </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.powerBlockRequired === true && b.isApplied === true).length}
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.powerBlockRequired === true && b.isGranted === true).length}
+                </td>
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
@@ -2563,6 +2609,9 @@ const handleDownloadUpcomingBlocks = () => {
                         block.AvailedTimeTo !== null
                     ).length
                   }
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.powerBlockRequired === true && b.overAllStatus === "Block Closed").length}
                 </td>
               </tr>
 )}
@@ -2614,6 +2663,12 @@ const handleDownloadUpcomingBlocks = () => {
                     ).length
                   }
                 </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(b => b.selectedDepartment === "TRD" && b.isApplied === true).length}
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(b => b.selectedDepartment === "TRD" && b.isGranted === true).length}
+                </td>
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
@@ -2636,6 +2691,9 @@ const handleDownloadUpcomingBlocks = () => {
                         block.AvailedTimeTo !== null
                     ).length
                   }
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(b => b.selectedDepartment === "TRD" && b.overAllStatus === "Block Closed").length}
                 </td>
               </tr>
             )}
@@ -2695,6 +2753,12 @@ const handleDownloadUpcomingBlocks = () => {
                     ).length
                   }
                 </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(b => b.selectedDepartment === "S&T" && b.isApplied === true).length}
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(b => b.selectedDepartment === "S&T" && b.isGranted === true).length}
+                </td>
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
@@ -2719,6 +2783,9 @@ const handleDownloadUpcomingBlocks = () => {
                         block.AvailedTimeTo !== null
                     ).length
                   }
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(b => b.selectedDepartment === "S&T" && b.overAllStatus === "Block Closed").length}
                 </td>
               </tr>)}
             
@@ -2775,6 +2842,12 @@ const handleDownloadUpcomingBlocks = () => {
                     ).length
                   }
                 </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.isApplied === true).length}
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.isGranted === true).length}
+                </td>
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
@@ -2800,6 +2873,9 @@ const handleDownloadUpcomingBlocks = () => {
                         block.AvailedTimeTo !== null
                     ).length
                   }
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.overAllStatus === "Block Closed").length}
                 </td>
               </tr>)}
              
@@ -2856,6 +2932,12 @@ const handleDownloadUpcomingBlocks = () => {
                     ).length
                   }
                 </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(b => b.selectedDepartment === "S&T" && b.powerBlockRequired === true && b.isApplied === true).length}
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(b => b.selectedDepartment === "S&T" && b.powerBlockRequired === true && b.isGranted === true).length}
+                </td>
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
@@ -2881,6 +2963,9 @@ const handleDownloadUpcomingBlocks = () => {
                         block.AvailedTimeTo !== null
                     ).length
                   }
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(b => b.selectedDepartment === "S&T" && b.powerBlockRequired === true && b.overAllStatus === "Block Closed").length}
                 </td>
               </tr>)}
               
@@ -2938,6 +3023,12 @@ const handleDownloadUpcomingBlocks = () => {
                     ).length
                   }
                 </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.powerBlockRequired === true && b.isApplied === true).length}
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.powerBlockRequired === true && b.isGranted === true).length}
+                </td>
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
@@ -2965,6 +3056,9 @@ const handleDownloadUpcomingBlocks = () => {
                     ).length
                   }
                 </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.powerBlockRequired === true && b.overAllStatus === "Block Closed").length}
+                </td>
               </tr>)}
 
   {/* Total Row */}
@@ -2977,7 +3071,16 @@ const handleDownloadUpcomingBlocks = () => {
       {totalSanctioned}
     </td>
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+      {totalApplied}
+    </td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+      {totalGranted}
+    </td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
       {totalAvailed}
+    </td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+      {totalClosed}
     </td>
   </tr>
 </tbody>
