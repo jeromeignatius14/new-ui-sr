@@ -28,8 +28,11 @@ export default function SmLayout({
 
     const check = async () => {
       if (forcedOutRef.current) return;
+      // Use the station the SM selected at login (may differ from their DB depot field)
+      const activeStation = sessionStorage.getItem("smActiveStation");
+      if (!activeStation) return; // session not yet registered, skip
       try {
-        const res = await smSessionApi.verify();
+        const res = await smSessionApi.verify(activeStation);
         const data = res.data?.data;
         if (!data?.valid) {
           forcedOutRef.current = true;

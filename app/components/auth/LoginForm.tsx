@@ -401,10 +401,14 @@ export default function PhoneLoginForm() {
           userName: smUser.name ?? "SM",
           userPhone: smUser.phone ?? undefined,
         });
+      } else {
+        console.warn("[SM Session] No user data in sessionStorage — session not registered");
       }
-    } catch {
-      // Don't block login if session registration fails
+    } catch (err) {
+      console.error("[SM Session] Failed to register session:", err);
     }
+    // Store selected station so verify endpoint knows which station to check
+    sessionStorage.setItem("smActiveStation", depot);
     loginWithDepot({ phone, depot });
   };
 
@@ -427,8 +431,9 @@ export default function PhoneLoginForm() {
           setConflictLoading(false);
           return;
         }
-      } catch {
-        // If check fails, proceed with login anyway
+      } catch (err) {
+        console.error("[SM Session] Check failed:", err);
+        // If check fails (e.g. server not restarted), still proceed with login
       }
       setConflictLoading(false);
       await completeSmLogin(data.phone, selectedDepot);

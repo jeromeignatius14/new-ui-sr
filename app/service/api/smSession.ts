@@ -10,5 +10,6 @@ export const smSessionApi = {
   forceLogout: (station: string) =>
     axiosPublicInstance.post("/api/sm-session/force-logout", { station }),
 
-  verify: () => axiosInstance.get("/api/avail/sm-session/verify"),
+  verify: (station: string) =>
+    axiosInstance.get(`/api/avail/sm-session/verify?station=${encodeURIComponent(station)}`),
 };
