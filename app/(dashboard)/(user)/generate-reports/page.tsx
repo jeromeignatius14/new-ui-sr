@@ -2832,6 +2832,7 @@ const clearGlobalFilters = () => {
                   </th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Demanded time</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Sanctioned time</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Granted time</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">
                     Availed time
                   </th>
@@ -2846,7 +2847,7 @@ const clearGlobalFilters = () => {
               <tbody>
                 {filteredUpcomingBlocks.length === 0 ? (
                   <tr className="bg-white">
-                    <td colSpan={9} className="text-center py-4 text-black">
+                    <td colSpan={14} className="text-center py-4 text-black">
                       No data found.
                     </td>
                   </tr>
@@ -2926,7 +2927,17 @@ const clearGlobalFilters = () => {
                                                     ) : (
                                                       "Not Availed Yet"
                                                     )}
-                                                  </td> 
+                                                  </td>
+                                                  <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
+                                                    {block.GrantedTimeFrom && block.GrantedTimeTo ? (
+                                                      <>
+                                                        {formatTime(block.GrantedTimeFrom)} to{" "}
+                                                        {formatTime(block.GrantedTimeTo)}
+                                                      </>
+                                                    ) : (
+                                                      "-"
+                                                    )}
+                                                  </td>
                           <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
                             {block.AvailedTimeFrom && block.AvailedTimeTo ? (
                               <>
