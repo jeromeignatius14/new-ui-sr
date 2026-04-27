@@ -28,6 +28,7 @@ import { useRouter } from "next/navigation";
 import Papa from "papaparse";
 import { useQuery } from "@tanstack/react-query";
 import { userRequestService } from "@/app/service/api/user-request";
+import { useGetMyParticipations, useGetDepotBlocks } from "@/app/service/query/avail";
 import roadData from "../../../../public/roadData.json";
 import { createSiteLocationChangeHandler, getSiteLocationRange, validateSiteLocationPair, getAllAvailableDepots, getAutoAssignedDepots } from './features/siteLocation';
 
@@ -2086,6 +2087,69 @@ const findCutoffThursday = () => {
   // Add reviewMode state
   const [reviewMode, setReviewMode] = useState(false);
 
+  // Pending-actions warning before new request submission
+  const [showPendingModal, setShowPendingModal] = useState(false);
+  const [pendingActionBlocks, setPendingActionBlocks] = useState<any[]>([]);
+
+  // Live avail data to detect unresolved blocks
+  const { data: myParticipationsData } = useGetMyParticipations();
+  const { data: depotBlocksData } = useGetDepotBlocks();
+
+  const getPendingActionBlocks = () => {
+    const result: any[] = [];
+    const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+    const nowIST = Date.now() + IST_OFFSET_MS;
+    const TWENTYFOUR_HRS = 24 * 60 * 60 * 1000;
+    const myUserId = session?.user?.id;
+
+    // From participations: blocks needing immediate action or actively in progress
+    const participations: any[] = myParticipationsData?.data?.blocks ?? [];
+    participations.forEach((block: any) => {
+      const s = block.overAllStatus ?? "";
+      const mp = (block.availParticipants ?? []).find((p: any) => p.userId === myUserId);
+      if (s === "Block Closed" || s === "Availing Cancelled") return;
+
+      // SM approved but I haven't acknowledged
+      if (s === "SM Approved" && mp?.smAckStatus === null) {
+        result.push({ block, reason: "SM has approved — waiting for your acknowledgment" });
+        return;
+      }
+      // Availing active but I haven't started
+      if (s === "Availing Active" && mp && !mp.availStartedAt) {
+        result.push({ block, reason: "Availing is active — you haven't started yet" });
+        return;
+      }
+      // Availing started but closure not submitted
+      if ((s === "Availing Active" || s === "All Closures Submitted") && mp?.availStartedAt && !mp?.closureSubmittedAt) {
+        result.push({ block, reason: "Availing in progress — closure not submitted" });
+        return;
+      }
+      // Block burst — overdue but not closed
+      if (mp?.blockBurst && !mp?.closureSubmittedAt) {
+        result.push({ block, reason: "Block time exceeded — closure pending" });
+        return;
+      }
+      // Past 24h, incomplete
+      const grantedFrom = block.smApprovedTimeFrom ?? block.grantedFromTime;
+      if (grantedFrom) {
+        const fromMs = new Date(grantedFrom).getTime();
+        if (fromMs < nowIST && fromMs > nowIST - TWENTYFOUR_HRS) {
+          result.push({ block, reason: "Recent block not yet closed or exited" });
+        }
+      }
+    });
+
+    // From depot blocks: sanctioned blocks waiting for my acceptance/rejection
+    const depotBlocks: any[] = depotBlocksData?.data?.blocks ?? [];
+    depotBlocks.forEach((block: any) => {
+      if (block.overAllStatus === "Sanctioned, Pending with SSE For Acceptance") {
+        result.push({ block, reason: "Sanctioned block — awaiting your acceptance or rejection" });
+      }
+    });
+
+    return result;
+  };
+
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log("level entry");
@@ -2098,7 +2162,13 @@ const findCutoffThursday = () => {
 
     // ─── 1. Review‑mode guard ──────────────────────────────────────────────
     if (!reviewMode) {
-      // Instead of immediately setting reviewMode, show the confirmation modal
+      // Check for pending unresolved blocks first
+      const pending = getPendingActionBlocks();
+      if (pending.length > 0) {
+        setPendingActionBlocks(pending);
+        setShowPendingModal(true);
+        return;
+      }
       setShowReviewModal(true);
       return;
     }
@@ -3837,6 +3907,61 @@ useEffect(() => {
           <span className="text-lg font-bold text-black">Depot/SSE:</span>
           <span className="ml-2 text-lg font-semibold text-gray-700">{formData.selectedDepo || session?.user?.depot || "Not assigned"}</span>
         </div>
+        {/* ── Pending Actions Warning Modal ─────────────────────────────── */}
+        {showPendingModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col max-h-[85vh]">
+              {/* Header */}
+              <div className="flex items-center gap-3 p-5 border-b border-gray-100">
+                <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                  <span className="text-xl">⚠️</span>
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-gray-800">Pending Actions on Existing Blocks</h2>
+                  <p className="text-xs text-gray-500 mt-0.5">Please take action on these before submitting a new request</p>
+                </div>
+              </div>
+
+              {/* Block list */}
+              <div className="overflow-y-auto flex-1 p-4 flex flex-col gap-3">
+                {pendingActionBlocks.map(({ block, reason }, i) => (
+                  <div key={i} className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex flex-col gap-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-bold text-gray-800">{block.divisionId ?? block.id?.slice(0, 8)}</span>
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-200 text-amber-800 shrink-0">
+                        {block.overAllStatus ?? "—"}
+                      </span>
+                    </div>
+                    {block.selectedDepo && (
+                      <span className="text-xs text-gray-500">Depot: {block.selectedDepo}</span>
+                    )}
+                    <span className="text-xs font-semibold text-red-600">{reason}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Actions */}
+              <div className="p-4 border-t border-gray-100 flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setShowPendingModal(false); window.location.href = "/avail-block"; }}
+                  className="w-full py-3 rounded-xl font-bold text-white text-sm"
+                  style={{ backgroundColor: "#13529e" }}
+                >
+                  Go to Avail Block Screen
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setShowPendingModal(false); setShowReviewModal(true); }}
+                  className="w-full py-2.5 rounded-xl font-bold text-gray-600 text-sm border-2 border-gray-200 hover:bg-gray-50"
+                >
+                  Proceed Anyway
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleFormSubmit} className="space-y-10">
           <div className="grid grid-cols-1 gap-y-8 mb-8">
             {/* Date of Block */}
