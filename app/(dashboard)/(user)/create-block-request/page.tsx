@@ -2139,11 +2139,21 @@ const findCutoffThursday = () => {
       }
     });
 
-    // From depot blocks: sanctioned blocks waiting for my acceptance/rejection
+    // From depot blocks: sanctioned blocks waiting for acceptance OR accepted but not applied within next 3h
+    const THREE_HRS = 3 * 60 * 60 * 1000;
     const depotBlocks: any[] = depotBlocksData?.data?.blocks ?? [];
     depotBlocks.forEach((block: any) => {
       if (block.overAllStatus === "Sanctioned, Pending with SSE For Acceptance") {
         result.push({ block, reason: "Sanctioned block — awaiting your acceptance or rejection" });
+        return;
+      }
+      if (block.overAllStatus === "Sanctioned and Accepted by SSE") {
+        const fromTime = block.sanctionedTimeFrom ?? block.demandTimeFrom;
+        if (!fromTime) return;
+        const fromMs = new Date(fromTime).getTime();
+        if (fromMs > nowIST && fromMs <= nowIST + THREE_HRS) {
+          result.push({ block, reason: "Block starts within 3 hours — not yet applied or exited" });
+        }
       }
     });
 
