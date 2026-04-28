@@ -224,7 +224,7 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
 
   const block = data?.data ?? null;
   const blockId = block?.divisionId ?? id?.slice(0, 8).toUpperCase();
-  const smStations: { code: string; smName: string }[] = smStationsData?.data ?? [];
+  const smStations: { code: string; smName: string }[] = Array.isArray(smStationsData?.data) ? smStationsData.data : [];
 
   // Default closure-ack SM to the granting SM station once block loads
   useEffect(() => {
