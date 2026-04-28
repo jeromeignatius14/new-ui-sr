@@ -276,6 +276,7 @@ export default function SmPendingAvailsPage() {
 
   const pendingApprovals:    any[] = data?.data?.pendingApprovals    ?? [];
   const pendingClosures:     any[] = data?.data?.pendingClosures     ?? [];
+  const closureViewOnly:     any[] = data?.data?.closureViewOnly     ?? [];
   const pendingExtensions:   any[] = data?.data?.pendingExtensions   ?? [];
   const inProgress:          any[] = data?.data?.inProgress          ?? [];
   const smApproved:          any[] = data?.data?.smApproved          ?? [];
@@ -491,6 +492,16 @@ export default function SmPendingAvailsPage() {
 
             <SectionTable title="REQUESTS PENDING FOR AVAILING / CANCELLATION BLOCKS" subtitle="(CLICK ID TO TAKE ACTION)" headerColor="#c2185b" rows={pendingAction} blink onClickId={openModal} emptyMsg="No pending requests" />
             <SectionTable title="BLOCKS UNDER PROGRESS" subtitle="(CLICK ID TO SEE FULL DETAILS)" headerColor="#e65100" rows={underProgress} onClickId={openModal} emptyMsg="No blocks in progress" />
+            {closureViewOnly.length > 0 && (
+              <SectionTable
+                title="CLOSURE SUBMITTED — AWAITING OTHER SM'S ACKNOWLEDGEMENT"
+                subtitle="(VIEW ONLY — YOU GRANTED THIS BLOCK, ANOTHER SM WAS SELECTED FOR CLOSURE ACK)"
+                headerColor="#7c3aed"
+                rows={closureViewOnly}
+                onClickId={openModal}
+                emptyMsg=""
+              />
+            )}
             <SectionTable title="UPCOMING SANCTIONED BLOCKS" subtitle="(CLICK ID TO SEE FULL DETAILS)" headerColor="#2e7d32" rows={upcomingSanctioned} onClickId={openModal} emptyMsg="No upcoming sanctioned blocks" />
             <SectionTable title="BLOCKS ALREADY AVAILED" subtitle="(CLICK ID TO SEE FULL DETAILS)" headerColor="#1565c0" rows={alreadyAvailed} onClickId={openModal} emptyMsg="No availed blocks in last 48 hrs" />
 

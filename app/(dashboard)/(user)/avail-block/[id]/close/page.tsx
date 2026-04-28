@@ -4,7 +4,7 @@ import { use, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast, Toaster } from "react-hot-toast";
-import { useGetAvailRequestById } from "@/app/service/query/avail";
+import { useGetAvailRequestById, useGetSmStations } from "@/app/service/query/avail";
 import { useCloseBlock } from "@/app/service/mutation/avail";
 import { AVAIL_STATUS } from "@/app/lib/store";
 import { getCurrentPosition } from "@/app/hooks/useGeoLocation";
@@ -206,6 +206,7 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
   const { data: session } = useSession();
   const { data, isLoading } = useGetAvailRequestById(id);
   const closeMut = useCloseBlock();
+  const { data: smStationsData } = useGetSmStations();
 
   // Snapshot current time once on mount — this is the actual availing end time (closure submission)
   const [closureNow] = useState(() => new Date().toISOString());
@@ -217,11 +218,18 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
+  const [closureAckSmStation, setClosureAckSmStation] = useState<string>("");
   const [geoWarn, setGeoWarn] = useState<{ distanceMeters: number; pos: { lat: number; lng: number } } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const block = data?.data ?? null;
   const blockId = block?.divisionId ?? id?.slice(0, 8).toUpperCase();
+  const smStations: { code: string; smName: string }[] = smStationsData?.data ?? [];
+
+  // Default closure-ack SM to the granting SM station if not yet chosen
+  if (block?.smStation && !closureAckSmStation) {
+    setClosureAckSmStation(block.smStation);
+  }
 
   // Find my participant record for actual availed times
   const myParticipant = block?.availParticipants?.find((p: any) => p.userId === session?.user?.id);
@@ -264,6 +272,7 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
       closureReconnectedSignal: reconnectedSignal || undefined,
       closureCautionKmph: cautionKmph || undefined,
       closureOheMadeFit: oheMadeFit,
+      closureAckSmStation: closureAckSmStation || undefined,
       lat, lng, geoOverride,
     }, {
       onSuccess: () => {
@@ -512,6 +521,40 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
               >
                 ✕ Remove
               </button>
+            </div>
+          )}
+        </div>
+
+        {/* SM closure acknowledgement station selector */}
+        <div style={{ ...card, background: "#fffbeb", border: "2px solid #f59e0b" }}>
+          <label style={{ ...labelStyle, color: "#92400e" }}>
+            SM Station for Closure Acknowledgement
+          </label>
+          <div style={{ fontSize: "12px", color: "#78350f", marginBottom: "10px", lineHeight: "1.5" }}>
+            Select which SM station should acknowledge this closure. Defaults to the granting SM ({block?.smStation ?? "—"}).
+            Change this only if manpower/machines are being cleared at a different station.
+          </div>
+          <select
+            value={closureAckSmStation}
+            onChange={(e) => setClosureAckSmStation(e.target.value)}
+            style={{
+              width: "100%", padding: "12px 14px", border: "2px solid #f59e0b",
+              borderRadius: "10px", fontSize: "15px", fontWeight: 600,
+              background: "#fffbeb", color: "#1a1a2e", outline: "none",
+              boxSizing: "border-box",
+            }}
+          >
+            <option value="">-- Select SM Station --</option>
+            {smStations.map((s) => (
+              <option key={s.code} value={s.code}>
+                {s.code}{s.smName ? ` (${s.smName})` : ""}
+                {s.code === block?.smStation ? " ★ Granting SM" : ""}
+              </option>
+            ))}
+          </select>
+          {closureAckSmStation && closureAckSmStation !== block?.smStation && (
+            <div style={{ marginTop: "8px", fontSize: "12px", color: "#b45309", fontWeight: 700 }}>
+              ⚠ Closure ack routed to {closureAckSmStation} — the granting SM ({block?.smStation}) will see this as view-only.
             </div>
           )}
         </div>

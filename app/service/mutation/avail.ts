@@ -68,7 +68,8 @@ export function useCloseBlock() {
       lat?: number;
       lng?: number;
       geoOverride?: boolean;
-    }) => availService.closeBlock(p.requestId, p.closureRemarks, p.closureImage, p.closureReconnectedSignal, p.closureCautionKmph, p.closureOheMadeFit, p.lat, p.lng, p.geoOverride),
+      closureAckSmStation?: string;
+    }) => availService.closeBlock(p.requestId, p.closureRemarks, p.closureImage, p.closureReconnectedSignal, p.closureCautionKmph, p.closureOheMadeFit, p.lat, p.lng, p.geoOverride, p.closureAckSmStation),
     onSuccess: () => { invalidateAll(qc); toast.success("Closure submitted — awaiting SM acknowledgement"); },
     onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to submit closure"),
   });

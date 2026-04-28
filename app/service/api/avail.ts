@@ -78,6 +78,7 @@ export const availService = {
     lat?: number,
     lng?: number,
     geoOverride?: boolean,
+    closureAckSmStation?: string,
   ) => {
     const form = new FormData();
     if (closureRemarks) form.append("closureRemarks", closureRemarks);
@@ -88,6 +89,7 @@ export const availService = {
     if (lat != null) form.append("lat", String(lat));
     if (lng != null) form.append("lng", String(lng));
     form.append("geoOverride", geoOverride ? "true" : "false");
+    if (closureAckSmStation) form.append("closureAckSmStation", closureAckSmStation);
     const response = await axiosInstance.post(`/api/avail/close/${requestId}`, form, {
       headers: { "Content-Type": "multipart/form-data" },
     });
