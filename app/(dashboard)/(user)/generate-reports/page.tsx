@@ -608,6 +608,9 @@ const clearGlobalFilters = () => {
   const totalAvailed = detailedData.filter(
     (block) => block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null
   ).length;
+  const totalGrantedCount = detailedData.filter(
+    (block) => block.isGranted === true
+  ).length;
 
   const filteredBlocks = filteredUpcomingBlocks.filter((block) => {
     if (activeFilter === "approved" && !block.isSanctioned) return false;
@@ -1994,6 +1997,9 @@ const clearGlobalFilters = () => {
                   Total Block Sanctioned
                 </th>
                 <th className="border-2 border-black px-1 md:px-2 py-2">
+                  Total Block Granted
+                </th>
+                <th className="border-2 border-black px-1 md:px-2 py-2">
                   Total Block Availed
                 </th>
               </tr>
@@ -2051,6 +2057,15 @@ const clearGlobalFilters = () => {
                         block.sntDisconnectionRequired === false
                     ).length
                   }
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(
+                    (block) =>
+                      block.selectedDepartment === "ENGG" &&
+                      block.isGranted === true &&
+                      block.powerBlockRequired === false &&
+                      block.sntDisconnectionRequired === false
+                  ).length}
                 </td>
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
@@ -2133,6 +2148,16 @@ const clearGlobalFilters = () => {
                     ).length
                   }
                 </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(
+                    (block) =>
+                      block.selectedDepartment === "ENGG" &&
+                      block.sntDisconnectionRequired === true &&
+                      block.isGranted === true &&
+                      block.powerBlockRequired === false &&
+                      block.enggDisconnectionsRequired === false
+                  ).length}
+                </td>
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
@@ -2213,6 +2238,15 @@ const clearGlobalFilters = () => {
                         block.isSanctioned
                     ).length
                   }
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(
+                    (block) =>
+                      block.selectedDepartment === "ENGG" &&
+                      block.powerBlockRequired === true &&
+                      block.sntDisconnectionRequired === false &&
+                      block.isGranted === true
+                  ).length}
                 </td>
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
@@ -2295,6 +2329,15 @@ const clearGlobalFilters = () => {
                     ).length
                   }
                 </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(
+                    (block) =>
+                      block.selectedDepartment === "ENGG" &&
+                      block.sntDisconnectionRequired === true &&
+                      block.powerBlockRequired === true &&
+                      block.isGranted === true
+                  ).length}
+                </td>
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
@@ -2368,6 +2411,12 @@ const clearGlobalFilters = () => {
                         block.selectedDepartment === "TRD" && block.isSanctioned
                     ).length
                   }
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(
+                    (block) =>
+                      block.selectedDepartment === "TRD" && block.isGranted === true
+                  ).length}
                 </td>
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
@@ -2447,6 +2496,12 @@ const clearGlobalFilters = () => {
                     ).length
                   }
                 </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(
+                    (block) =>
+                      block.selectedDepartment === "S&T" && block.isGranted === true
+                  ).length}
+                </td>
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
@@ -2523,6 +2578,14 @@ const clearGlobalFilters = () => {
                         block.isSanctioned
                     ).length
                   }
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(
+                    (block) =>
+                      block.selectedDepartment === "S&T" &&
+                      block.enggDisconnectionsRequired === true &&
+                      block.isGranted === true
+                  ).length}
                 </td>
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
@@ -2601,6 +2664,14 @@ const clearGlobalFilters = () => {
                         block.isSanctioned
                     ).length
                   }
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(
+                    (block) =>
+                      block.selectedDepartment === "S&T" &&
+                      block.powerBlockRequired === true &&
+                      block.isGranted === true
+                  ).length}
                 </td>
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
@@ -2681,6 +2752,15 @@ const clearGlobalFilters = () => {
                     ).length
                   }
                 </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(
+                    (block) =>
+                      block.selectedDepartment === "S&T" &&
+                      block.enggDisconnectionsRequired === true &&
+                      block.powerBlockRequired === true &&
+                      block.isGranted === true
+                  ).length}
+                </td>
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
@@ -2723,6 +2803,9 @@ const clearGlobalFilters = () => {
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   {totalSanctioned}
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {totalGrantedCount}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   {totalAvailed}
