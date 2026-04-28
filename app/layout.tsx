@@ -5,6 +5,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import AddToHomeScreenPrompt from "./components/AddToHomeScreenPrompt";
 import NotificationsInit from './components/NotificationsInit';
+import ServiceWorkerUpdater from "./components/ServiceWorkerUpdater";
 import packageJson from "../package.json";
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,7 +43,8 @@ export default function RootLayout({
           Version:{packageJson.version}
         </small>
         <Providers>
-          <AddToHomeScreenPrompt /> 
+          <ServiceWorkerUpdater />
+          <AddToHomeScreenPrompt />
           <NotificationsInit />
           {children}
         </Providers>

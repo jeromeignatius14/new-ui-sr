@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast, Toaster } from "react-hot-toast";
@@ -226,10 +226,12 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
   const blockId = block?.divisionId ?? id?.slice(0, 8).toUpperCase();
   const smStations: { code: string; smName: string }[] = smStationsData?.data ?? [];
 
-  // Default closure-ack SM to the granting SM station if not yet chosen
-  if (block?.smStation && !closureAckSmStation) {
-    setClosureAckSmStation(block.smStation);
-  }
+  // Default closure-ack SM to the granting SM station once block loads
+  useEffect(() => {
+    if (block?.smStation && !closureAckSmStation) {
+      setClosureAckSmStation(block.smStation);
+    }
+  }, [block?.smStation]);
 
   // Find my participant record for actual availed times
   const myParticipant = block?.availParticipants?.find((p: any) => p.userId === session?.user?.id);
