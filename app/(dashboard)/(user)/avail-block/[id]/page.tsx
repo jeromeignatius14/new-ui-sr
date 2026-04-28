@@ -570,18 +570,32 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
         <div style={{ background: "#fff", border: "1.5px solid #e5e7eb", borderRadius: "12px", padding: "16px", marginBottom: "18px" }}>
           <p style={{ fontWeight: 800, fontSize: "14px", color: "#7c3aed", textTransform: "uppercase", letterSpacing: "1px", margin: "0 0 12px" }}>Block Details</p>
           {[
-            { label: "Section",      value: block.selectedSection },
-            { label: "Mission Block", value: block.missionBlock },
-            { label: "Department",   value: block.selectedDepartment },
-            { label: "Work Type",    value: block.workType },
-            { label: "Activity",     value: block.activity },
-            { label: "Date",         value: block.date ? fmtDt(block.date) : null },
+            { label: "Date",           value: block.date ? fmtDt(block.date) : null },
+            { label: "Section",        value: block.selectedSection },
+            { label: "Mission Block",  value: block.missionBlock },
+            { label: "Department",     value: block.selectedDepartment },
+            { label: "Depot",          value: block.selectedDepo },
+            { label: "Work Type",      value: block.workType },
+            { label: "Work Nature",    value: block.workNature },
+            { label: "Activity",       value: block.activity },
+            { label: "Work Location",  value: block.workLocationFrom && block.workLocationTo ? `${block.workLocationFrom} → ${block.workLocationTo}` : (block.workLocationFrom || block.workLocationTo || null) },
+            { label: "Asset Name",     value: block.assetName },
+            { label: "Asset Number",   value: block.assetNumber },
+            { label: "Applied By",     value: block.appliedByName ? `${block.appliedByName}${block.appliedByPhone ? ` (${block.appliedByPhone})` : ""}` : null },
           ].filter(r => r.value).map(({ label, value }) => (
             <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid #f3f4f6", gap: "12px" }}>
               <span style={{ fontSize: "14px", color: "#6b7280", fontWeight: 600, flexShrink: 0 }}>{label}</span>
               <span style={{ fontSize: "14px", color: "#111827", fontWeight: 700, textAlign: "right" }}>{value}</span>
             </div>
           ))}
+
+          {/* Remarks — shown separately as a full-width block since it can be long */}
+          {block.requestremarks && (
+            <div style={{ marginTop: "10px", background: "#fefce8", border: "1.5px solid #fbbf24", borderRadius: "8px", padding: "10px 12px" }}>
+              <p style={{ fontSize: "12px", fontWeight: 700, color: "#92400e", textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 4px" }}>Remarks</p>
+              <p style={{ fontSize: "14px", color: "#111827", fontWeight: 600, margin: 0, lineHeight: 1.5 }}>{block.requestremarks}</p>
+            </div>
+          )}
 
           {/* Sanctioned / Granted time — only show before SM acts as a pending reference */}
           {(block.grantedFromTime || block.sanctionedTimeFrom) && !block.smApprovedTimeFrom && (
