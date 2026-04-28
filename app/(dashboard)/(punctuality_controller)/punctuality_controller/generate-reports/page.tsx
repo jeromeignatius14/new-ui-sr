@@ -308,7 +308,7 @@ export default function GenerateReportPage() {
 const [departmentCountFilter, setDepartmentCountFilter] = useState<{
   department: string;
   supportingDepartment: string;
-  filterType: 'requested' | 'sanctioned' | 'availed';
+  filterType: 'requested' | 'sanctioned' | 'availed' | 'granted';
 } | null>(() => {
   const params = new URLSearchParams(searchParams);
   const deptFilter = params.get('deptFilter');
@@ -460,9 +460,9 @@ const [departmentCountFilter, setDepartmentCountFilter] = useState<{
   ]);
 // === ADD THIS HELPER FUNCTION ===
 const handleDepartmentFilterClick = (
-  department: string, 
-  supportingDepartment: string, 
-  filterType: 'requested' | 'sanctioned' | 'availed'
+  department: string,
+  supportingDepartment: string,
+  filterType: 'requested' | 'sanctioned' | 'availed' | 'granted'
 ) => {
   setDepartmentCountFilter({
     department,
@@ -715,6 +715,8 @@ const handleDepartmentFilterClick = (
         return true;
       case 'sanctioned':
         return block.isSanctioned === true;
+      case 'granted':
+        return block.isGranted === true;
       case 'availed':
         return block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null;
       default:
@@ -2279,7 +2281,20 @@ const handleDownloadUpcomingBlocks = () => {
                     ).length
                   }
                 </td>
-                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setActiveFilter("all");
+                    setActiveSection(null);
+                    scrollToUpcomingBlocks();
+                    setDepartmentCountFilter({
+                      department: "ENGG",
+                      supportingDepartment: "-",
+                      filterType: "granted",
+                    });
+                    toast.success("Showing granted ENGG blocks (no supporting departments)");
+                  }}
+                >
                   {
                     detailedData.filter(
                       (block) =>
@@ -2374,7 +2389,20 @@ const handleDownloadUpcomingBlocks = () => {
                     ).length
                   }
                 </td>
-                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setActiveFilter("all");
+                    setActiveSection(null);
+                    scrollToUpcomingBlocks();
+                    setDepartmentCountFilter({
+                      department: "ENGG",
+                      supportingDepartment: "S&T",
+                      filterType: "granted",
+                    });
+                    toast.success("Showing granted ENGG blocks with S&T support");
+                  }}
+                >
                   {
                     detailedData.filter(
                       (block) =>
@@ -2470,7 +2498,20 @@ const handleDownloadUpcomingBlocks = () => {
                     ).length
                   }
                 </td>
-                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setActiveFilter("all");
+                    setActiveSection(null);
+                    scrollToUpcomingBlocks();
+                    setDepartmentCountFilter({
+                      department: "ENGG",
+                      supportingDepartment: "TRD",
+                      filterType: "granted",
+                    });
+                    toast.success("Showing granted ENGG blocks with TRD support");
+                  }}
+                >
                   {
                     detailedData.filter(
                       (block) =>
@@ -2565,7 +2606,20 @@ const handleDownloadUpcomingBlocks = () => {
                     ).length
                   }
                 </td>
-                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setActiveFilter("all");
+                    setActiveSection(null);
+                    scrollToUpcomingBlocks();
+                    setDepartmentCountFilter({
+                      department: "ENGG",
+                      supportingDepartment: "S&T and TRD",
+                      filterType: "granted",
+                    });
+                    toast.success("Showing granted ENGG blocks with S&T and TRD support");
+                  }}
+                >
                   {
                     detailedData.filter(
                       (block) =>
@@ -2653,7 +2707,20 @@ const handleDownloadUpcomingBlocks = () => {
                     ).length
                   }
                 </td>
-                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setActiveFilter("all");
+                    setActiveSection(null);
+                    scrollToUpcomingBlocks();
+                    setDepartmentCountFilter({
+                      department: "TRD",
+                      supportingDepartment: "-",
+                      filterType: "granted",
+                    });
+                    toast.success("Showing granted TRD blocks");
+                  }}
+                >
                   {
                     detailedData.filter(
                       (block) =>
@@ -2742,7 +2809,20 @@ const handleDownloadUpcomingBlocks = () => {
                     ).length
                   }
                 </td>
-                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setActiveFilter("all");
+                    setActiveSection(null);
+                    scrollToUpcomingBlocks();
+                    setDepartmentCountFilter({
+                      department: "S&T",
+                      supportingDepartment: "-",
+                      filterType: "granted",
+                    });
+                    toast.success("Showing granted S&T blocks (no supporting departments)");
+                  }}
+                >
                   {
                     detailedData.filter(
                       (block) =>
@@ -2830,7 +2910,20 @@ const handleDownloadUpcomingBlocks = () => {
                     ).length
                   }
                 </td>
-                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setActiveFilter("all");
+                    setActiveSection(null);
+                    scrollToUpcomingBlocks();
+                    setDepartmentCountFilter({
+                      department: "S&T",
+                      supportingDepartment: "ENGG",
+                      filterType: "granted",
+                    });
+                    toast.success("Showing granted S&T blocks with ENGG support");
+                  }}
+                >
                   {
                     detailedData.filter(
                       (block) =>
@@ -2921,7 +3014,20 @@ const handleDownloadUpcomingBlocks = () => {
                     ).length
                   }
                 </td>
-                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setActiveFilter("all");
+                    setActiveSection(null);
+                    scrollToUpcomingBlocks();
+                    setDepartmentCountFilter({
+                      department: "S&T",
+                      supportingDepartment: "TRD",
+                      filterType: "granted",
+                    });
+                    toast.success("Showing granted S&T blocks with TRD support");
+                  }}
+                >
                   {
                     detailedData.filter(
                       (block) =>
@@ -3013,7 +3119,20 @@ const handleDownloadUpcomingBlocks = () => {
                     ).length
                   }
                 </td>
-                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setActiveFilter("all");
+                    setActiveSection(null);
+                    scrollToUpcomingBlocks();
+                    setDepartmentCountFilter({
+                      department: "S&T",
+                      supportingDepartment: "ENGG and TRD",
+                      filterType: "granted",
+                    });
+                    toast.success("Showing granted S&T blocks with ENGG and TRD support");
+                  }}
+                >
                   {
                     detailedData.filter(
                       (block) =>
