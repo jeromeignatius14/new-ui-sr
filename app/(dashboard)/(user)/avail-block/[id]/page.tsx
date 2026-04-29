@@ -272,12 +272,16 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
   // ── Apply modal auto-fill flag ───────────────────────────────────────────
   const [applyFromAutoFilled, setApplyFromAutoFilled] = useState(false);
 
-  // ── 1-second ticker so canStart re-evaluates when granted from time arrives
+  // ── 1-second ticker drives auto-start re-evaluation each second
   const [startTimeTick, setStartTimeTick] = useState(0);
   useEffect(() => {
     const id = setInterval(() => setStartTimeTick(t => t + 1), 1000);
     return () => clearInterval(id);
   }, []);
+
+  // ── Auto-acknowledge + auto-start refs ───────────────────────────────────
+  const autoAckedRef  = useRef(false);
+  const autoStartedRef = useRef(false);
 
   // ── Geo-fence override dialog state ─────────────────────────────────────
   const [geoWarn, setGeoWarn] = useState<{
@@ -285,6 +289,48 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
     distanceMeters: number;
     pos: { lat: number; lng: number };
   } | null>(null);
+
+  // ── Reset auto-act guards when navigating to a different block ──────────
+  useEffect(() => {
+    autoAckedRef.current  = false;
+    autoStartedRef.current = false;
+  }, [id]);
+
+  // ── Periodic refetch when SM Approved / about to auto-start ─────────────
+  // Ensures multi-participant blocks update when others ack and status flips.
+  useEffect(() => {
+    if (!block) return;
+    const s = block.overAllStatus ?? "";
+    if (s !== "SM Approved" && !(s === "Availing Active")) return;
+    const interval = setInterval(() => refetch(), 8000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [block?.overAllStatus]);
+
+  // ── Auto-acknowledge + auto-start at granted from time ───────────────────
+  // Fires every second (via startTimeTick). At the granted time, silently
+  // acknowledges the SM grant then starts availing — no button click needed.
+  useEffect(() => {
+    if (!block || !isParticipant || myAvailStarted || myClosed || isTerminal) return;
+    if (secondsUntilStart(block) > 0) return; // not yet time
+
+    const s = block.overAllStatus ?? "";
+
+    if (s === AVAIL_STATUS.SM_APPROVED && myParticipant?.smAckStatus === null && !autoAckedRef.current && !sseRespondMut.isPending) {
+      autoAckedRef.current = true;
+      sseRespondMut.mutate({ requestId: id, accept: true }, {
+        onSuccess: () => refetch(),
+        onError:   () => { autoAckedRef.current = false; }, // allow retry next tick
+      });
+    } else if (s === AVAIL_STATUS.AVAILING_ACTIVE && !myAvailStarted && !autoStartedRef.current && !startMut.isPending) {
+      autoStartedRef.current = true;
+      startMut.mutate({ requestId: id }, {
+        onSuccess: () => refetch(),
+        onError:   () => { autoStartedRef.current = false; },
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startTimeTick]);
 
   const applyMut       = useApplyForAvailing();
   const concurrenceMut = useSubmitAvailConcurrence();
@@ -465,24 +511,6 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
 
   // Can give concurrence: my dept has a pending record and I'm not already a participant
   const canConcur = status === AVAIL_STATUS.PENDING_CONCURRENCES && hasPendingConcurrence && !myParticipant;
-
-  // SM approved — I'm a participant who hasn't acknowledged yet
-  const myAckPending = isParticipant && myParticipant.smAckStatus === null && status === AVAIL_STATUS.SM_APPROVED;
-
-  // Can start: participant, acknowledged ACCEPTED, block active, not started, AND start time reached
-  // startTimeTick >= 0 always true but references the ticker so this re-evaluates each second
-  const startTimeReached = startTimeTick >= 0 && secondsUntilStart(block) <= 0;
-  const canStart = isParticipant
-    && myParticipant.smAckStatus === "ACCEPTED"
-    && status === AVAIL_STATUS.AVAILING_ACTIVE
-    && !myAvailStarted
-    && startTimeReached;
-  // Acknowledged but waiting for start time
-  const awaitingStartTime = isParticipant
-    && myParticipant.smAckStatus === "ACCEPTED"
-    && status === AVAIL_STATUS.AVAILING_ACTIVE
-    && !myAvailStarted
-    && !startTimeReached;
 
   // In progress: started and not closed
   const isInProgress = isParticipant && myAvailStarted && !myClosed;
@@ -677,8 +705,20 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
           )}
         </div>
 
-        {/* Countdown (SM approved, not yet started) */}
-        {myAckPending && secs > 0 && <CountdownBadge block={block} />}
+        {/* Countdown + auto-start notice (SM approved, not yet started) */}
+        {isParticipant && (status === AVAIL_STATUS.SM_APPROVED || (status === AVAIL_STATUS.AVAILING_ACTIVE && !myAvailStarted)) && !isTerminal && (
+          <div style={{ width: "100%", maxWidth: "420px" }}>
+            {secs > 0 && <CountdownBadge block={block} />}
+            <div style={{ background: "#f0f9ff", border: "1.5px solid #93c5fd", borderRadius: "10px", padding: "12px 16px", textAlign: "center", marginTop: secs > 0 ? "6px" : "0" }}>
+              <div style={{ fontWeight: 800, fontSize: "14px", color: "#1e40af" }}>✅ SM Approved — Block Auto-Starts</div>
+              <div style={{ fontSize: "13px", color: "#1e40af", marginTop: "4px" }}>
+                {secs > 0
+                  ? `Your block will start automatically at ${fmtDt(block.smApprovedTimeFrom ?? block.grantedFromTime)}. Please be at the work site.`
+                  : "Starting availing automatically… Please wait."}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* My closure submitted notice */}
         {myClosed && status !== AVAIL_STATUS.BLOCK_CLOSED && (
@@ -776,37 +816,6 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
             </button>
           )}
 
-          {/* SM approved — Acknowledge / Decline (allowed immediately; availing only starts at granted time) */}
-          {myAckPending && (
-            <>
-              <button onClick={() => handleAcknowledge(true)} disabled={sseRespondMut.isPending || syncing} style={{ ...wideBtn("#16a34a"), opacity: syncing ? 0.7 : 1 }}>
-                {syncing ? "Updating..." : sseRespondMut.isPending ? "Submitting..." : "✅ Acknowledge SM Grant"}
-              </button>
-              <button onClick={() => handleAcknowledge(false)} disabled={sseRespondMut.isPending || syncing} style={{ ...wideBtn("#dc2626"), opacity: syncing ? 0.7 : 1 }}>
-                Decline
-              </button>
-            </>
-          )}
-
-          {/* Start Availing */}
-          {canStart && (
-            <button onClick={handleStart} disabled={startMut.isPending || syncing} style={{ ...wideBtn("#16a34a"), opacity: syncing ? 0.7 : 1 }}>
-              {syncing ? "Updating..." : startMut.isPending ? "Starting..." : "▶ Start Availing"}
-            </button>
-          )}
-
-          {/* Acknowledged but waiting for SM granted from time */}
-          {awaitingStartTime && (
-            <div style={{ width: "100%", maxWidth: "420px" }}>
-              <CountdownBadge block={block} />
-              <div style={{ background: "#f0f9ff", border: "1.5px solid #93c5fd", borderRadius: "10px", padding: "12px 16px", textAlign: "center", marginTop: "6px" }}>
-                <div style={{ fontWeight: 800, fontSize: "14px", color: "#1e40af" }}>✅ Grant Acknowledged</div>
-                <div style={{ fontSize: "13px", color: "#1e40af", marginTop: "4px" }}>
-                  The "Start Availing" button will appear once the SM-granted start time arrives.
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Request for Time Extension */}
           {isInProgress && (

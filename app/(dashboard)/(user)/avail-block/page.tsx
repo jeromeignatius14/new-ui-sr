@@ -22,6 +22,12 @@ function fmtDt(dt?: string | Date | null): string {
   catch { return "—"; }
 }
 
+function fmtTime(dt?: string | Date | null): string {
+  if (!dt) return "—";
+  try { return new Date(dt).toISOString().slice(11, 16); }
+  catch { return "—"; }
+}
+
 function getEffectiveTimes(block: any): { fromMs: number | null; toMs: number | null } {
   const f = block.smApprovedTimeFrom ?? block.requestedTimeFrom ?? block.grantedFromTime ?? block.sanctionedTimeFrom ?? block.demandTimeFrom;
   const t = block.smApprovedTimeTo   ?? block.requestedTimeTo   ?? block.grantedToTime   ?? block.sanctionedTimeTo   ?? block.demandTimeTo;
@@ -34,6 +40,18 @@ function getDuration(block: any): string {
   const mins = Math.round((toMs - fromMs) / 60000);
   if (mins <= 0) return "—";
   return `${Math.floor(mins / 60)}h ${mins % 60}m`;
+}
+
+// ── SM Approved visibility gate ────────────────────────────────────────────────
+// Only show "SM Approved" blocks within 10 minutes of the granted start time.
+// If SM approves very close to start (already within 10 min window), show immediately.
+// Rejection is always shown immediately (different status — SM Rejected / Availing Cancelled).
+function isSmApprovedVisible(block: any): boolean {
+  if (block.overAllStatus !== "SM Approved") return true;
+  const approvedFrom = block.smApprovedTimeFrom ?? block.grantedFromTime ?? block.sanctionedTimeFrom;
+  if (!approvedFrom) return true; // no time info → show by default
+  const fromMs = new Date(approvedFrom).getTime();
+  return (fromMs - nowIST()) <= 10 * 60 * 1000; // within 10 mins of start
 }
 
 // ── Clock ──────────────────────────────────────────────────────────────────────
@@ -89,17 +107,14 @@ function shortStatus(block: any, myParticipant?: any): { text: string; color: st
   if (s === "Sanctioned and Accepted by SSE") return { text: "Ready to Apply", color: "#16a34a" };
   if (s === "Pending Concurrences") return { text: "Pending Concurrence", color: "#c2410c" };
   if (s === "Pending SM Approval") return { text: "Pending SM Approval", color: "#9333ea" };
-  if (s === "SM Approved") {
-    if (myParticipant && myParticipant.smAckStatus === null)
-      return { text: "Acknowledge SM Grant", color: "#d97706" };
-    return { text: "SM Approved ✔", color: "#047857" };
-  }
+  if (s === "SM Approved") return { text: "SM Approved ✔ — Auto-starting", color: "#047857" };
+  if (s === "SM Rejected") return { text: "SM Rejected ✗ — No Work Today", color: "#dc2626" };
   if (s === "Availing Active") {
     if (myParticipant?.availStartedAt && !myParticipant?.closureSubmittedAt)
       return { text: "In Progress ▶", color: "#2563eb" };
     if (myParticipant?.closureSubmittedAt)
       return { text: "Closed ✓ (awaiting others)", color: "#0d9488" };
-    return { text: "Active — Start Availing", color: "#16a34a" };
+    return { text: "Active — Auto-Starting", color: "#16a34a" };
   }
   if (s === "All Closures Submitted") return { text: "Awaiting SM Closure Ack", color: "#0369a1" };
   if (s === "Block Closed") return { text: "Block Closed ✓", color: "#1d4ed8" };
@@ -126,9 +141,11 @@ function detailedStatus(block: any): string {
   }
   if (s === "Pending SM Approval") return `${appliedBy} Pending with SM at station ${block.smStation ?? "—"}`;
   if (s === "SM Approved") {
-    const notAcked = (block.availParticipants ?? []).filter((p: any) => p.smAckStatus === null)
-      .map((p: any) => `${p.userName}${p.userPhone ? ` (${p.userPhone})` : ""}`);
-    return `${appliedBy} SM granted. Awaiting acknowledgement from: ${notAcked.join(", ") || "all acknowledged"}`;
+    const startAt = block.smApprovedTimeFrom ?? block.grantedFromTime;
+    return `${appliedBy} SM granted. Block auto-starts at ${fmtTime(startAt)}. Please be at the work site.`;
+  }
+  if (s === "SM Rejected") {
+    return `${appliedBy} SM rejected availing${block.smRemarks ? ` — "${block.smRemarks}"` : ""}. No work today.`;
   }
   if (s === "Availing Active") {
     const parts = (block.availParticipants ?? []).map((p: any) => {
@@ -167,9 +184,12 @@ function BlockRow({
   const blinkOp = (urgency === "urgent" || isConcurrence) ? (tick % 2 === 0 ? 1 : 0.2) : 1;
   const rowBg = isConcurrence
     ? (tick % 2 === 0 ? "#fecaca" : "#fff0f0")
+    : block.overAllStatus === "SM Rejected"
+    ? "#fef2f2"
     : urgency === "urgent" ? (tick % 2 === 0 ? "#fca5a5" : "#fff")
     : urgency === "near" ? "#fef9c3"
     : block.overAllStatus === "Availing Active" ? "#f0fdf4"
+    : block.overAllStatus === "SM Approved" ? "#f0fdf4"
     : block.overAllStatus === "Sanctioned and Accepted by SSE" ? "#f8fafc"
     : "#fff";
 
@@ -243,7 +263,10 @@ export default function AvailBlockPage() {
     allBlocks.filter(b => {
       const p = myPartMap.get(b.id);
       if (p?.blockBurst && !p?.closureSubmittedAt) return true;
-      if (b.overAllStatus === "SM Approved" && p?.smAckStatus === null) return true;
+      // SM Rejected — badge immediately so SSE knows
+      if (b.overAllStatus === "SM Rejected") return true;
+      // SM Approved — badge only within 10-min window (and only if visible to this user)
+      if (b.overAllStatus === "SM Approved" && isSmApprovedVisible(b)) return true;
       if (b.overAllStatus === "Availing Active" && p?.availStartedAt && !p?.closureSubmittedAt) {
         const { toMs } = getEffectiveTimes(b);
         const effTo = p.smExtensionGrantedTo ? new Date(p.smExtensionGrantedTo).getTime() : toMs;
@@ -277,7 +300,7 @@ export default function AvailBlockPage() {
   const navigateToBlock = (id: string) => router.push(`/avail-block/${id}`);
   const navigateToConcurrence = (id: string) => router.push(`/avail-block/${id}/concurrence`);
 
-  // ── Categorize into 4 priority sections ──────────────────────────────────────
+  // ── Categorize into priority sections ─────────────────────────────────────────
   const TWELVE_HRS  = 12 * 60 * 60 * 1000;
   const TWENTYFOUR_HRS = 24 * 60 * 60 * 1000;
 
@@ -295,15 +318,22 @@ export default function AvailBlockPage() {
       mp?.availStartedAt
     ) return "inProgress";
 
-    // Section 2 — needs MY immediate action
-    if (s === "SM Approved" && mp?.smAckStatus === null) return "needsAction";
+    // Section 2 — SM Rejected: show prominently so SSE knows immediately
+    if (s === "SM Rejected") return "needsAction";
+
+    // Section 2 — auto-starting soon (SM Approved, in the 10-min window)
+    if (s === "SM Approved") return "needsAction";
+
+    // Section 2 — availing active but my start is pending (auto-start will fire on detail page)
     if (s === "Availing Active" && mp && !mp.availStartedAt) return "needsAction";
+
+    // Section 2 — burst
     if (mp?.blockBurst && !mp?.closureSubmittedAt) return "needsAction";
 
     // Section 3 — upcoming in next 12 hours
     if (fromMs && fromMs > now && fromMs <= now + TWELVE_HRS) return "next12h";
 
-    // Section 4 — past 24 hours, incomplete / no action taken
+    // Section 4 — past 24 hours, incomplete
     if (fromMs && fromMs < now && fromMs > now - TWENTYFOUR_HRS) {
       if (s !== "Block Closed" && s !== "Availing Cancelled") return "prev24h";
     }
@@ -322,8 +352,9 @@ export default function AvailBlockPage() {
   // Concurrences always go to "needsAction"
   concurrenceOnly.forEach(b => buckets.needsAction.push({ block: b, isConcurrence: true }));
 
-  // All depot/participation blocks
+  // All depot/participation blocks — skip SM Approved blocks outside the 10-min visibility window
   allBlocks.forEach(b => {
+    if (!isSmApprovedVisible(b)) return; // hide SM Approved until 10 mins before start
     const mp = myPartMap.get(b.id);
     buckets[categorize(b, mp)].push({ block: b, myParticipant: mp });
   });
@@ -337,7 +368,7 @@ export default function AvailBlockPage() {
   buckets.inProgress.sort(byTime);
   buckets.needsAction.sort(byTime);
   buckets.next12h.sort(byTime);
-  buckets.prev24h.sort((a, b) => (getEffectiveTimes(b.block).fromMs ?? 0) - (getEffectiveTimes(a.block).fromMs ?? 0)); // most recent first
+  buckets.prev24h.sort((a, b) => (getEffectiveTimes(b.block).fromMs ?? 0) - (getEffectiveTimes(a.block).fromMs ?? 0));
   buckets.other.sort(byTime);
 
   const isEmpty = buckets.inProgress.length === 0 && buckets.needsAction.length === 0 && buckets.next12h.length === 0 && buckets.prev24h.length === 0;
@@ -437,11 +468,11 @@ export default function AvailBlockPage() {
                   <BlockRow key={block.id} block={block} myParticipant={myParticipant} isConcurrence={isConcurrence} onNavigate={navigateToBlock} onNavigateConcurrence={navigateToConcurrence} />
                 ))}
 
-                {/* ── Section 2: Needs Immediate Action ── */}
+                {/* ── Section 2: Attention Needed ── */}
                 {buckets.needsAction.length > 0 && (
                   <tr>
                     <td colSpan={9} style={{ background: "#fef2f2", borderTop: "2px solid #dc2626", borderBottom: "1px solid #dc2626", padding: "6px 12px", fontWeight: 900, fontSize: "13px", color: "#b91c1c", letterSpacing: "0.5px" }}>
-                      ⚡ NEEDS YOUR IMMEDIATE ACTION
+                      ⚡ ATTENTION — SM APPROVED / STARTING SOON / REJECTED
                     </td>
                   </tr>
                 )}
