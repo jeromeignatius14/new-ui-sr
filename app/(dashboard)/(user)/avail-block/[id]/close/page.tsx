@@ -527,8 +527,8 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
           )}
         </div>
 
-        {/* SM closure acknowledgement station selector */}
-        <div style={{ ...card, background: "#fffbeb", border: "2px solid #f59e0b" }}>
+        {/* SM closure acknowledgement station selector — hidden for TRD blocks */}
+        {block.selectedDepartment !== "TRD" && <div style={{ ...card, background: "#fffbeb", border: "2px solid #f59e0b" }}>
           <label style={{ ...labelStyle, color: "#92400e" }}>
             SM Station for Closure Acknowledgement
           </label>
@@ -574,7 +574,7 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
               ⚠ Closure ack routed to {closureAckSmStation} — the granting SM ({block?.smStation}) will see this as view-only.
             </div>
           )}
-        </div>
+        </div>}
 
         {/* Certification text */}
         <div style={{ ...card, background: "#f0f4ff", border: "1.5px solid #c7d2fe", textAlign: "center", padding: "14px 18px" }}>
