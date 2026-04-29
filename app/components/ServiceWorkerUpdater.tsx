@@ -6,19 +6,12 @@ export default function ServiceWorkerUpdater() {
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
 
-    // When skipWaiting is true, a new SW activates immediately and fires
-    // controllerchange. Reloading here ensures every open tab (and installed
-    // PWA shortcut) picks up the new cached assets instead of serving stale ones.
+    // skipWaiting:true in next-pwa means the new SW activates immediately
+    // and fires controllerchange. Reloading ensures the tab picks up new code.
+    // NOTE: the inline <script> in layout.tsx catches this BEFORE React loads,
+    // covering old PWA installs that don't have this component yet.
     const reload = () => window.location.reload();
     navigator.serviceWorker.addEventListener("controllerchange", reload);
-
-    // Also check if a waiting SW already exists on first load (e.g. user had
-    // the tab open when the new deploy happened) and tell it to skip waiting.
-    navigator.serviceWorker.ready.then((reg) => {
-      if (reg.waiting) {
-        reg.waiting.postMessage({ type: "SKIP_WAITING" });
-      }
-    });
 
     return () => {
       navigator.serviceWorker.removeEventListener("controllerchange", reload);
