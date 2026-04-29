@@ -2925,6 +2925,9 @@ const clearGlobalFilters = () => {
                   <th className="border-2 border-black px-1 md:px-2 py-2">
                     Status
                   </th>
+                    <th className="border-2 border-black px-1 md:px-2 py-2">
+                    Remarks
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -3039,6 +3042,9 @@ const clearGlobalFilters = () => {
                             style={statusStyle}
                           >
                             {statusLabel}
+                          </td>
+                          <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
+                            {block.requestremarks || "-"}
                           </td>
                         </tr>
                       );

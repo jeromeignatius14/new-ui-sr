@@ -3354,6 +3354,7 @@ const handleDownloadUpcomingBlocks = () => {
                   <th className="border-2 border-black px-1 md:px-2 py-2">Granted time</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Availed time</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Status</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Remarks</th>
                 </tr>
               </thead>
               <tbody>
@@ -3461,6 +3462,9 @@ const handleDownloadUpcomingBlocks = () => {
                           style={statusStyle}
                         >
                           {statusLabel}
+                        </td>
+                        <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
+                          {block.requestremarks || "-"}
                         </td>
                       </tr>
                     );
