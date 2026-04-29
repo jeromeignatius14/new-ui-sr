@@ -2995,7 +2995,7 @@ export let blockSection = {
   ],
   'TJ-KIK': [
     "TJ-SMM", "SMM-NMJ",
-    "NMJ-KDE", "KDE-KU", "KU-TVR", "TVR-KVL", "KVL-NGT", "NGT-NCR", "NCR-KIK", "TJ-YD", "SMM-YD", "NMJ-YD", "KDE-YD", "KU-YD", "TVR-YD", "KVL-YD", "NGT-YD", "NCR-YD", "KIK-YD","KIKPN-YD"
+    "NMJ-KDE", "KDE-KU", "KU-TVR", "TVR-KVL", "KVL-NGT", "NGT-NCR", "NCR-KIK","KIK-KIKPN" , "TJ-YD", "SMM-YD", "NMJ-YD", "KDE-YD", "KU-YD", "TVR-YD", "KVL-YD", "NGT-YD", "NCR-YD", "KIK-YD","KIKPN-YD"
   ],
   'MV-TVR': [
     "MV-PEM", "PEM-NNM", "NNM-TVR", "MV-YD", "PEM-YD", "NNM-YD", "TVR-YD"
@@ -4555,6 +4555,7 @@ export let lineData = {
   'KVL-NGT': ['SINGLE'],  // NGT is junction with NGT-VLNK line
   'NGT-NCR': ['SINGLE'],
   'NCR-KIK': ['SINGLE'],
+  'KIK-KIKPN': ['SINGLE'],
   // 'TJ-YD': ['SINGLE'],  // Already listed in TPJ-MV
   'SMM-YD': ['SINGLE'],
   'NMJ-YD': ['SINGLE'],  // Appears in both TJ-KIK and NMJ-MQ sections
