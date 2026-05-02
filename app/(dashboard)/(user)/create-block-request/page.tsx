@@ -2097,15 +2097,26 @@ const findCutoffThursday = () => {
   const { data: myParticipationsData } = useGetMyParticipations();
   const { data: depotBlocksData } = useGetDepotBlocks();
 
-  // Shadow block: derive eligible parent blocks from already-fetched depotBlocksData
-  // (avoids a separate API call and is more reliable)
+  // Shadow block: eligible parent blocks — same dept+depot, within next 12h or already active
   const shadowParentBlocks = useMemo(() => {
     const blocks: any[] = depotBlocksData?.data?.blocks ?? [];
-    return blocks.filter(
-      (b: any) =>
-        b.overAllStatus === "Sanctioned and Accepted by SSE" &&
-        b.isShadowBlock !== true,
-    );
+    const IST_MS = 5.5 * 60 * 60 * 1000;
+    const now = Date.now() + IST_MS;
+    const TWELVE_H = 12 * 60 * 60 * 1000;
+    const EXCLUDED = new Set(["Block Closed", "Availing Cancelled", "SM Rejected"]);
+    return blocks.filter((b: any) => {
+      if (b.isShadowBlock === true) return false;
+      if (EXCLUDED.has(b.overAllStatus ?? "")) return false;
+      const fromMs = b.sanctionedTimeFrom
+        ? new Date(b.sanctionedTimeFrom).getTime()
+        : b.demandTimeFrom ? new Date(b.demandTimeFrom).getTime() : null;
+      const toMs = b.sanctionedTimeTo
+        ? new Date(b.sanctionedTimeTo).getTime()
+        : b.demandTimeTo ? new Date(b.demandTimeTo).getTime() : null;
+      if (!fromMs || !toMs) return false;
+      // starts within next 12h AND hasn't been over for more than 1h
+      return fromMs <= now + TWELVE_H && toMs >= now - 60 * 60 * 1000;
+    });
   }, [depotBlocksData]);
 
   const getPendingActionBlocks = () => {
@@ -4034,6 +4045,15 @@ useEffect(() => {
                           ? sections.map((s: any) => [s.lineName, s.otherLines, s.road, s.otherRoads].filter(Boolean).join(", ")).filter(Boolean).join(" | ")
                           : null;
                         const isSelected = shadowParentId === b.id;
+                        const statusMeta: Record<string, { label: string; bg: string; color: string }> = {
+                          "Sanctioned and Accepted by SSE": { label: "Ready to Apply", bg: "#d1fae5", color: "#065f46" },
+                          "Pending Concurrences":           { label: "Pending Concurrence", bg: "#fee2e2", color: "#991b1b" },
+                          "Pending SM Approval":            { label: "Pending SM", bg: "#ede9fe", color: "#5b21b6" },
+                          "SM Approved":                    { label: "SM Approved ✔", bg: "#dcfce7", color: "#14532d" },
+                          "Availing Active":                { label: "Availing Active ▶", bg: "#dbeafe", color: "#1e40af" },
+                          "All Closures Submitted":         { label: "Closures Submitted", bg: "#fef9c3", color: "#713f12" },
+                        };
+                        const sm = statusMeta[b.overAllStatus ?? ""] ?? { label: b.overAllStatus ?? "—", bg: "#f3f4f6", color: "#374151" };
                         return (
                           <div
                             key={b.id}
@@ -4047,7 +4067,7 @@ useEffect(() => {
                               transition: "border-color 0.15s, background 0.15s",
                             }}
                           >
-                            {/* Row 1: ID + date + sanctioned window */}
+                            {/* Row 1: ID + date + sanctioned window + status */}
                             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
                               <span style={{ fontWeight: 900, fontSize: "15px", color: "#1e40af", background: "#dbeafe", borderRadius: "6px", padding: "2px 8px" }}>
                                 {b.divisionId ?? b.id.slice(0, 8)}
@@ -4055,6 +4075,9 @@ useEffect(() => {
                               <span style={{ fontSize: "13px", color: "#374151", fontWeight: 700 }}>{dateStr}</span>
                               <span style={{ fontWeight: 900, fontSize: "15px", color: "#065f46", background: "#d1fae5", borderRadius: "6px", padding: "2px 10px", letterSpacing: "0.5px" }}>
                                 ⏱ {fromT} – {toT}
+                              </span>
+                              <span style={{ fontSize: "12px", fontWeight: 800, background: sm.bg, color: sm.color, borderRadius: "5px", padding: "1px 8px" }}>
+                                {sm.label}
                               </span>
                               {isSelected && (
                                 <span style={{ marginLeft: "auto", fontWeight: 800, fontSize: "13px", color: "#1e40af" }}>✔ Selected</span>
