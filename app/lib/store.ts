@@ -2367,6 +2367,13 @@ export const streamData = {
     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5"],
     "both direction not affected": []
   },
+  "TVCN-YD": {
+    "up direction affected": [],
+    "down direction affected": [],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5","Rd 6","Rd 7","Rd 8","Rd 9","Rd 10","Rd 11","Rd 12","Rd 13","Rd 14"],
+    "both direction not affected": []
+  },
+
   "NEM-YD": {
     "up direction affected": [],
     "down direction affected": [],
