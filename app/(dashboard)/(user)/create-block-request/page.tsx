@@ -1335,10 +1335,18 @@ const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
   const [isShadowBlock, setIsShadowBlock] = useState(false);
   const [shadowParentId, setShadowParentId] = useState<string>("");
   const [shadowListExpanded, setShadowListExpanded] = useState(true);
-  // Clear demand times when shadow parent changes so user picks within the new window
+  // When shadow parent changes: auto-set date from parent and clear demand times
   useEffect(() => {
     if (isShadowBlock && shadowParentId) {
-      setFormData(prev => ({ ...prev, demandTimeFrom: "", demandTimeTo: "" }));
+      const parent = shadowParentBlocks.find((b: any) => b.id === shadowParentId);
+      // Date stored as IST-in-UTC — toISOString().slice(0,10) gives the IST date correctly
+      const parentDate = parent?.date ? new Date(parent.date).toISOString().slice(0, 10) : "";
+      setFormData(prev => ({
+        ...prev,
+        demandTimeFrom: "",
+        demandTimeTo: "",
+        ...(parentDate ? { date: parentDate } : {}),
+      }));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shadowParentId]);
@@ -4080,7 +4088,7 @@ useEffect(() => {
                       const sel = shadowParentBlocks.find((b: any) => b.id === shadowParentId);
                       if (!sel) return null;
                       const ist = (dt: string | null | undefined) =>
-                        dt ? new Date(dt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Kolkata" }) : "--";
+                        dt ? new Date(dt).toISOString().slice(11, 16) : "--";
                       const selFromT = ist(sel.sanctionedTimeFrom ?? sel.demandTimeFrom);
                       const selToT   = ist(sel.sanctionedTimeTo   ?? sel.demandTimeTo);
                       const statusMeta2: Record<string, { label: string; bg: string; color: string }> = {
@@ -4130,7 +4138,7 @@ useEffect(() => {
                     <div className="flex flex-col gap-3 w-full">
                       {shadowParentBlocks.map((b: any) => {
                         const ist = (dt: string | null | undefined) =>
-                          dt ? new Date(dt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Kolkata" }) : "--";
+                          dt ? new Date(dt).toISOString().slice(11, 16) : "--";
                         const fromT = ist(b.sanctionedTimeFrom ?? b.demandTimeFrom);
                         const toT   = ist(b.sanctionedTimeTo   ?? b.demandTimeTo);
                         const dateStr = b.date
@@ -4250,7 +4258,8 @@ useEffect(() => {
                   name="date"
                   value={formData.date || ""}
                   onChange={handleInputChange}
-                  className="border-2 border-black rounded-xl px-8 py-4 text-[24px] font-bold bg-[#f7f7a1] text-black shadow-md focus:outline-none focus:ring-2 focus:ring-[#b07be0] min-w-[180px] max-w-[240px]"
+                  disabled={isShadowBlock && !!shadowParentId}
+                  className={`border-2 border-black rounded-xl px-8 py-4 text-[24px] font-bold shadow-md focus:outline-none focus:ring-2 focus:ring-[#b07be0] min-w-[180px] max-w-[240px] ${isShadowBlock && shadowParentId ? "bg-[#e5e7eb] text-[#6b7280] cursor-not-allowed" : "bg-[#f7f7a1] text-black"}`}
                   aria-required="true"
                   aria-label="Select date of block"
                   style={{ boxShadow: "2px 2px 6px #bbb" }}
@@ -4268,6 +4277,11 @@ useEffect(() => {
                   placeholder="Select date"
                   required
                 />
+                {isShadowBlock && shadowParentId && formData.date && (
+                  <span style={{ fontSize: "13px", fontWeight: 700, color: "#065f46", background: "#d1fae5", borderRadius: "6px", padding: "2px 8px", whiteSpace: "nowrap" }}>
+                    📅 Auto-set from parent
+                  </span>
+                )}
                 {/* Type of Block - compact, right of date */}
                 {formData.date && (
                   <div className="flex flex-row items-center gap-2 ml-2">
