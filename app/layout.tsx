@@ -42,6 +42,23 @@ export default function RootLayout({
               window.location.reload();
             });
           }
+          // Auto-reload on Next.js chunk load errors (stale PWA cache after deploy)
+          function _isChunkError(msg) {
+            return msg && (
+              msg.indexOf('ChunkLoadError') !== -1 ||
+              msg.indexOf('Loading chunk') !== -1 ||
+              msg.indexOf('Failed to fetch') !== -1 ||
+              msg.indexOf('Importing a module script failed') !== -1 ||
+              msg.indexOf('dynamically imported module') !== -1
+            );
+          }
+          window.addEventListener('error', function(e) {
+            if (_isChunkError(e.message)) { window.location.reload(); }
+          });
+          window.addEventListener('unhandledrejection', function(e) {
+            var msg = e.reason && (e.reason.message || String(e.reason));
+            if (_isChunkError(msg)) { window.location.reload(); }
+          });
         ` }} />
       </head>
       <body

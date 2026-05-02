@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useCreateUserRequest } from "@/app/service/mutation/user-request";
 import { useSession, signOut } from "next-auth/react";
 import { ToastContainer, toast } from "react-toastify";
@@ -29,7 +29,6 @@ import Papa from "papaparse";
 import { useQuery } from "@tanstack/react-query";
 import { userRequestService } from "@/app/service/api/user-request";
 import { useGetMyParticipations, useGetDepotBlocks } from "@/app/service/query/avail";
-import { availService, type ShadowParentBlock } from "@/app/service/api/avail";
 import roadData from "../../../../public/roadData.json";
 import { createSiteLocationChangeHandler, getSiteLocationRange, validateSiteLocationPair, getAllAvailableDepots, getAutoAssignedDepots } from './features/siteLocation';
 
@@ -2098,13 +2097,16 @@ const findCutoffThursday = () => {
   const { data: myParticipationsData } = useGetMyParticipations();
   const { data: depotBlocksData } = useGetDepotBlocks();
 
-  // Shadow block: eligible parent blocks from same dept+depot
-  const { data: shadowParentBlocks = [] } = useQuery<ShadowParentBlock[]>({
-    queryKey: ["shadowParents", session?.user?.depot, session?.user?.department],
-    queryFn: () => availService.getSanctionedForShadow(session!.user.depot, session!.user.department),
-    enabled: isShadowBlock && !!session?.user?.depot && !!session?.user?.department,
-    staleTime: 60_000,
-  });
+  // Shadow block: derive eligible parent blocks from already-fetched depotBlocksData
+  // (avoids a separate API call and is more reliable)
+  const shadowParentBlocks = useMemo(() => {
+    const blocks: any[] = depotBlocksData?.data?.blocks ?? [];
+    return blocks.filter(
+      (b: any) =>
+        b.overAllStatus === "Sanctioned and Accepted by SSE" &&
+        b.isShadowBlock !== true,
+    );
+  }, [depotBlocksData]);
 
   const getPendingActionBlocks = () => {
     const result: any[] = [];
@@ -4032,7 +4034,7 @@ useEffect(() => {
                           : "--";
                         return (
                           <option key={b.id} value={b.id}>
-                            {b.requestId} — {b.missionBlock ?? "Block"} ({fromT} – {toT})
+                            {b.divisionId ?? b.id.slice(0, 8)} — {b.missionBlock ?? "Block"} ({fromT} – {toT})
                           </option>
                         );
                       })}
