@@ -4724,14 +4724,12 @@ useEffect(() => {
                       {[...Array(24).keys()].map((h) => {
                         const hourStr = h.toString().padStart(2, "0");
                         if (isShadowBlock && parentTimeConstraint) {
+                          // Shadow: only allow hours within parent's window; skip isToday filter
                           if (h < parentTimeConstraint.fromH || h > parentTimeConstraint.toH) return null;
-                        }
-                        if (isToday(formData.date)) {
+                        } else if (isToday(formData.date)) {
                           const now = new Date();
                           const currentHour = now.getHours();
-                          if (h < currentHour && h !== 0) {
-                            return null;
-                          }
+                          if (h < currentHour && h !== 0) return null;
                         }
                         return (
                           <option key={h} value={hourStr}>
@@ -4808,11 +4806,7 @@ useEffect(() => {
                         if (isShadowBlock && parentTimeConstraint) {
                           if (h < parentTimeConstraint.fromH || h > parentTimeConstraint.toH) return null;
                         }
-                        return (
-                          <option key={h} value={hourStr}>
-                            {hourStr}
-                          </option>
-                        );
+                        return <option key={h} value={hourStr}>{hourStr}</option>;
                       })}
                     </select>
                     <span className="text-[#2c3e50] font-bold text-[24px]">:</span>
