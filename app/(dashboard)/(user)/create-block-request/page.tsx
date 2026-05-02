@@ -4010,7 +4010,7 @@ useEffect(() => {
                 )}
               </div>
               {isShadowBlock && (
-                <div className="flex flex-col gap-2 w-full">
+                <div className="flex flex-col gap-3 w-full">
                   <label className="text-[20px] font-bold text-[#1e40af]">
                     Select Parent Block <span className="text-red-500">*</span>
                   </label>
@@ -4019,41 +4019,108 @@ useEffect(() => {
                       No sanctioned blocks available for your depot &amp; department to use as parent.
                     </div>
                   ) : (
-                    <select
-                      value={shadowParentId}
-                      onChange={(e) => setShadowParentId(e.target.value)}
-                      className="border-2 border-[#1e40af] rounded-xl px-4 py-3 text-[20px] font-bold bg-white text-black focus:outline-none focus:ring-2 focus:ring-[#1e40af] w-full max-w-xl"
-                    >
-                      <option value="">-- Select Parent Block --</option>
-                      {shadowParentBlocks.map((b) => {
-                        const fromT = b.sanctionedTimeFrom
-                          ? new Date(b.sanctionedTimeFrom).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Kolkata" })
+                    <div className="flex flex-col gap-3 w-full">
+                      {shadowParentBlocks.map((b: any) => {
+                        const ist = (dt: string | null | undefined) =>
+                          dt ? new Date(dt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Kolkata" }) : "--";
+                        const fromT = ist(b.sanctionedTimeFrom ?? b.demandTimeFrom);
+                        const toT   = ist(b.sanctionedTimeTo   ?? b.demandTimeTo);
+                        const dateStr = b.date
+                          ? (() => { const d = new Date(b.date); return `${String(d.getDate()).padStart(2,"0")}-${String(d.getMonth()+1).padStart(2,"0")}-${d.getFullYear()}`; })()
                           : "--";
-                        const toT = b.sanctionedTimeTo
-                          ? new Date(b.sanctionedTimeTo).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Kolkata" })
-                          : "--";
+                        // Lines / roads from processedLineSections
+                        const sections: any[] = Array.isArray(b.processedLineSections) ? b.processedLineSections : [];
+                        const linesLabel = sections.length > 0
+                          ? sections.map((s: any) => [s.lineName, s.otherLines, s.road, s.otherRoads].filter(Boolean).join(", ")).filter(Boolean).join(" | ")
+                          : null;
+                        const isSelected = shadowParentId === b.id;
                         return (
-                          <option key={b.id} value={b.id}>
-                            {b.divisionId ?? b.id.slice(0, 8)} — {b.missionBlock ?? "Block"} ({fromT} – {toT})
-                          </option>
+                          <div
+                            key={b.id}
+                            onClick={() => setShadowParentId(b.id)}
+                            style={{
+                              border: isSelected ? "2.5px solid #1e40af" : "1.5px solid #bfdbfe",
+                              borderRadius: "14px",
+                              padding: "14px 16px",
+                              background: isSelected ? "#eff6ff" : "#fff",
+                              cursor: "pointer",
+                              transition: "border-color 0.15s, background 0.15s",
+                            }}
+                          >
+                            {/* Row 1: ID + date + sanctioned window */}
+                            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                              <span style={{ fontWeight: 900, fontSize: "15px", color: "#1e40af", background: "#dbeafe", borderRadius: "6px", padding: "2px 8px" }}>
+                                {b.divisionId ?? b.id.slice(0, 8)}
+                              </span>
+                              <span style={{ fontSize: "13px", color: "#374151", fontWeight: 700 }}>{dateStr}</span>
+                              <span style={{ fontWeight: 900, fontSize: "15px", color: "#065f46", background: "#d1fae5", borderRadius: "6px", padding: "2px 10px", letterSpacing: "0.5px" }}>
+                                ⏱ {fromT} – {toT}
+                              </span>
+                              {isSelected && (
+                                <span style={{ marginLeft: "auto", fontWeight: 800, fontSize: "13px", color: "#1e40af" }}>✔ Selected</span>
+                              )}
+                            </div>
+                            {/* Row 2: Section + Mission Block */}
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "4px" }}>
+                              {b.selectedSection && (
+                                <span style={{ fontSize: "13px", fontWeight: 700, color: "#374151" }}>
+                                  📍 {b.selectedSection}
+                                </span>
+                              )}
+                              {b.missionBlock && (
+                                <span style={{ fontSize: "13px", fontWeight: 700, color: "#374151" }}>
+                                  › <span style={{ color: "#7c3aed" }}>{b.missionBlock}</span>
+                                </span>
+                              )}
+                            </div>
+                            {/* Row 3: Work location */}
+                            {(b.workLocationFrom || b.workLocationTo) && (
+                              <div style={{ fontSize: "13px", color: "#374151", fontWeight: 600, marginBottom: "4px" }}>
+                                📌 {[b.workLocationFrom, b.workLocationTo].filter(Boolean).join(" → ")}
+                              </div>
+                            )}
+                            {/* Row 4: Lines / Roads */}
+                            {linesLabel && (
+                              <div style={{ fontSize: "12px", color: "#374151", fontWeight: 600, marginBottom: "4px" }}>
+                                🛤 {linesLabel}
+                              </div>
+                            )}
+                            {/* Row 5: Work type + Activity */}
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "4px" }}>
+                              {b.workType && (
+                                <span style={{ fontSize: "12px", background: "#f3f4f6", borderRadius: "5px", padding: "1px 7px", fontWeight: 700, color: "#1f2937" }}>
+                                  {b.workType}
+                                </span>
+                              )}
+                              {b.activity && (
+                                <span style={{ fontSize: "12px", background: "#fef3c7", borderRadius: "5px", padding: "1px 7px", fontWeight: 700, color: "#92400e" }}>
+                                  {b.activity}
+                                </span>
+                              )}
+                            </div>
+                            {/* Row 6: Remarks */}
+                            {b.requestremarks && (
+                              <div style={{ fontSize: "12px", color: "#6b7280", fontStyle: "italic", marginTop: "2px" }}>
+                                &ldquo;{b.requestremarks}&rdquo;
+                              </div>
+                            )}
+                          </div>
                         );
                       })}
-                    </select>
+                    </div>
                   )}
                   {errors.shadowParentId && (
                     <span className="text-[20px] text-[#e07a5f] font-medium">{errors.shadowParentId}</span>
                   )}
                   {shadowParentId && (() => {
-                    const parent = shadowParentBlocks.find(b => b.id === shadowParentId);
+                    const parent = shadowParentBlocks.find((b: any) => b.id === shadowParentId);
                     if (!parent) return null;
-                    const fromT = parent.sanctionedTimeFrom
-                      ? new Date(parent.sanctionedTimeFrom).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Kolkata" })
-                      : "--";
-                    const toT = parent.sanctionedTimeTo
-                      ? new Date(parent.sanctionedTimeTo).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Kolkata" })
-                      : "--";
+                    const ist = (dt: string | null | undefined) =>
+                      dt ? new Date(dt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Kolkata" }) : "--";
+                    const fromT = ist(parent.sanctionedTimeFrom ?? parent.demandTimeFrom);
+                    const toT   = ist(parent.sanctionedTimeTo   ?? parent.demandTimeTo);
                     return (
-                      <div className="text-[18px] text-[#1e40af] bg-[#f0f9ff] border border-[#93c5fd] rounded-xl px-4 py-2">
+                      <div style={{ fontSize: "15px", color: "#1e40af", background: "#f0f9ff", border: "1px solid #93c5fd", borderRadius: "10px", padding: "8px 14px", fontWeight: 700 }}>
                         ℹ️ Your shadow block times must be within <strong>{fromT} – {toT}</strong> (parent&apos;s sanctioned window).
                       </div>
                     );
