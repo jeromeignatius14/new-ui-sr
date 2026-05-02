@@ -229,6 +229,10 @@ function BlockRow({
   );
 }
 
+// ── Constants (module-level so they're never in TDZ when closures capture them) ─
+const TWELVE_HRS    = 12 * 60 * 60 * 1000;
+const TWENTYFOUR_HRS = 24 * 60 * 60 * 1000;
+
 // ── Main page ──────────────────────────────────────────────────────────────────
 export default function AvailBlockPage() {
   const { data: session } = useSession();
@@ -304,13 +308,10 @@ export default function AvailBlockPage() {
   const navigateToConcurrence = (id: string) => router.push(`/avail-block/${id}/concurrence`);
 
   // ── Categorize into priority sections ─────────────────────────────────────────
-  const TWELVE_HRS  = 12 * 60 * 60 * 1000;
-  const TWENTYFOUR_HRS = 24 * 60 * 60 * 1000;
-
   type SectionKey = "inProgress" | "needsAction" | "next12h" | "prev24h" | "other";
   type BlockEntry = { block: any; myParticipant?: any; isConcurrence?: boolean };
 
-  function categorize(block: any, mp: any): SectionKey {
+  const categorize = (block: any, mp: any): SectionKey => {
     const now = nowIST();
     const { fromMs } = getEffectiveTimes(block);
     const s = block.overAllStatus ?? "";
@@ -345,7 +346,7 @@ export default function AvailBlockPage() {
     }
 
     return "other";
-  }
+  };
 
   const buckets: Record<SectionKey, BlockEntry[]> = {
     inProgress:  [],
