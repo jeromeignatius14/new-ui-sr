@@ -29,6 +29,7 @@ import Papa from "papaparse";
 import { useQuery } from "@tanstack/react-query";
 import { userRequestService } from "@/app/service/api/user-request";
 import { useGetMyParticipations, useGetDepotBlocks } from "@/app/service/query/avail";
+import { availService, type ShadowParentBlock } from "@/app/service/api/avail";
 import roadData from "../../../../public/roadData.json";
 import { createSiteLocationChangeHandler, getSiteLocationRange, validateSiteLocationPair, getAllAvailableDepots, getAutoAssignedDepots } from './features/siteLocation';
 
@@ -1332,6 +1333,8 @@ const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
   const [showPopup, setShowPopup] = useState(false);
   const [popupLink, setPopupLink] = useState("");
   const [proceedAnyway, setProceedAnyway] = useState(false);
+  const [isShadowBlock, setIsShadowBlock] = useState(false);
+  const [shadowParentId, setShadowParentId] = useState<string>("");
   // Initialize the depot from session when the session loads
   useEffect(() => {
     if (session?.user?.depot) {
@@ -2095,6 +2098,14 @@ const findCutoffThursday = () => {
   const { data: myParticipationsData } = useGetMyParticipations();
   const { data: depotBlocksData } = useGetDepotBlocks();
 
+  // Shadow block: eligible parent blocks from same dept+depot
+  const { data: shadowParentBlocks = [] } = useQuery<ShadowParentBlock[]>({
+    queryKey: ["shadowParents", session?.user?.depot, session?.user?.department],
+    queryFn: () => availService.getSanctionedForShadow(session!.user.depot, session!.user.department),
+    enabled: isShadowBlock && !!session?.user?.depot && !!session?.user?.department,
+    staleTime: 60_000,
+  });
+
   const getPendingActionBlocks = () => {
     const result: any[] = [];
     const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
@@ -2342,10 +2353,11 @@ const findCutoffThursday = () => {
         processedLineSections: processedSections,
         adminAcceptance: false,
         selectedDepo: userDepot || "",
-        ...(durationMins <= 45 && !formData.sigActionsNeeded && !formData.trdActionsNeeded && {
-          managerAcceptance: true,
-          isSanctioned: true,
-        }),
+        ...(isShadowBlock
+          ? { isShadowBlock: true, shadowParentId, isSanctioned: true, managerAcceptance: true }
+          : durationMins <= 45 && !formData.sigActionsNeeded && !formData.trdActionsNeeded
+          ? { managerAcceptance: true, isSanctioned: true }
+          : {}),
         // activity: formData.activity === "others" ? customActivity : formData.activity
          activity: selectedActivities.includes("others") 
     ? [...selectedActivities.filter(a => a !== "others"), customActivity].join(",")
@@ -2378,6 +2390,8 @@ const findCutoffThursday = () => {
         setSelectedActivities([]);
         setCustomActivity("");
         setErrors({});
+        setIsShadowBlock(false);
+        setShadowParentId("");
         setShowSuccessPage(true);
         setReviewMode(false);
       }
@@ -2533,6 +2547,8 @@ const findCutoffThursday = () => {
     if (!formData.demandTimeFrom)
       errors.demandTimeFrom = "From time is required";
     if (!formData.demandTimeTo) errors.demandTimeTo = "To time is required";
+    if (isShadowBlock && !shadowParentId)
+      errors.shadowParentId = "Please select a parent block for the shadow block";
     if (!formData.selectedDepartment)
       errors.selectedDepartment = "Department is required";
     if (!formData.selectedSection)
@@ -3974,6 +3990,75 @@ useEffect(() => {
 
         <form onSubmit={handleFormSubmit} className="space-y-10">
           <div className="grid grid-cols-1 gap-y-8 mb-8">
+            {/* Shadow Block Toggle */}
+            <div className="flex flex-col gap-3 w-full">
+              <div className="flex flex-row items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => { setIsShadowBlock(!isShadowBlock); setShadowParentId(""); }}
+                  className={`flex items-center gap-2 px-5 py-3 rounded-xl border-2 font-bold text-[20px] transition-all ${isShadowBlock ? "bg-[#1e40af] border-[#1e40af] text-white" : "bg-white border-[#b6c6e6] text-[#1e40af]"}`}
+                >
+                  <span style={{ fontSize: "20px" }}>{isShadowBlock ? "✅" : "☐"}</span>
+                  Shadow Block
+                </button>
+                {isShadowBlock && (
+                  <span className="text-[18px] text-[#1e40af] font-semibold">
+                    This block auto-sanctions immediately and maps to a parent block.
+                  </span>
+                )}
+              </div>
+              {isShadowBlock && (
+                <div className="flex flex-col gap-2 w-full">
+                  <label className="text-[20px] font-bold text-[#1e40af]">
+                    Select Parent Block <span className="text-red-500">*</span>
+                  </label>
+                  {shadowParentBlocks.length === 0 ? (
+                    <div className="text-[18px] text-gray-500 border-2 border-dashed border-[#b6c6e6] rounded-xl px-5 py-4">
+                      No sanctioned blocks available for your depot &amp; department to use as parent.
+                    </div>
+                  ) : (
+                    <select
+                      value={shadowParentId}
+                      onChange={(e) => setShadowParentId(e.target.value)}
+                      className="border-2 border-[#1e40af] rounded-xl px-4 py-3 text-[20px] font-bold bg-white text-black focus:outline-none focus:ring-2 focus:ring-[#1e40af] w-full max-w-xl"
+                    >
+                      <option value="">-- Select Parent Block --</option>
+                      {shadowParentBlocks.map((b) => {
+                        const fromT = b.sanctionedTimeFrom
+                          ? new Date(b.sanctionedTimeFrom).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Kolkata" })
+                          : "--";
+                        const toT = b.sanctionedTimeTo
+                          ? new Date(b.sanctionedTimeTo).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Kolkata" })
+                          : "--";
+                        return (
+                          <option key={b.id} value={b.id}>
+                            {b.requestId} — {b.missionBlock ?? "Block"} ({fromT} – {toT})
+                          </option>
+                        );
+                      })}
+                    </select>
+                  )}
+                  {errors.shadowParentId && (
+                    <span className="text-[20px] text-[#e07a5f] font-medium">{errors.shadowParentId}</span>
+                  )}
+                  {shadowParentId && (() => {
+                    const parent = shadowParentBlocks.find(b => b.id === shadowParentId);
+                    if (!parent) return null;
+                    const fromT = parent.sanctionedTimeFrom
+                      ? new Date(parent.sanctionedTimeFrom).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Kolkata" })
+                      : "--";
+                    const toT = parent.sanctionedTimeTo
+                      ? new Date(parent.sanctionedTimeTo).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Kolkata" })
+                      : "--";
+                    return (
+                      <div className="text-[18px] text-[#1e40af] bg-[#f0f9ff] border border-[#93c5fd] rounded-xl px-4 py-2">
+                        ℹ️ Your shadow block times must be within <strong>{fromT} – {toT}</strong> (parent&apos;s sanctioned window).
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+            </div>
             {/* Date of Block */}
             <div className="flex flex-col md:flex-row md:items-center gap-4 w-full">
               <label

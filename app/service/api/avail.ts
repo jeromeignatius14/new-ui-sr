@@ -218,4 +218,24 @@ export const availService = {
     const response = await axiosInstance.post(`/api/avail/exit-without-availing/${requestId}`, { reason });
     return response.data;
   },
+
+  // GET: Sanctioned blocks eligible as shadow-block parents
+  getSanctionedForShadow: async (depot: string, department: string) => {
+    const params = new URLSearchParams({ depot, department });
+    const response = await axiosInstance.get(`/api/avail/sanctioned-for-shadow?${params}`);
+    return response.data?.data?.blocks as ShadowParentBlock[] ?? [];
+  },
 };
+
+export interface ShadowParentBlock {
+  id: string;
+  requestId: string;
+  selectedDepo: string;
+  selectedDepartment: string;
+  sanctionedTimeFrom: string | null;
+  sanctionedTimeTo: string | null;
+  demandTimeFrom: string | null;
+  demandTimeTo: string | null;
+  missionBlock: string | null;
+  date: string | null;
+}

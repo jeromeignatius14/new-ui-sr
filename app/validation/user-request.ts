@@ -85,6 +85,8 @@ export const userRequestSchema = z.object({
   freshCautionToDate: z.string().optional().nullable(),
   freshCautionFromTime: z.string().optional().nullable(),
   freshCautionToTime: z.string().optional().nullable(),
+  isShadowBlock: z.boolean().optional(),
+  shadowParentId: z.string().optional(),
 });
 
 export type UserRequestInput = z.infer<typeof userRequestSchema>;
