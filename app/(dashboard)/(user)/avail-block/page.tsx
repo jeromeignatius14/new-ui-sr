@@ -263,8 +263,11 @@ export default function AvailBlockPage() {
     allBlocks.filter(b => {
       const p = myPartMap.get(b.id);
       if (p?.blockBurst && !p?.closureSubmittedAt) return true;
-      // SM Rejected — badge immediately so SSE knows
-      if (b.overAllStatus === "SM Rejected") return true;
+      // SM Rejected — badge for 12h only, then auto-vanish
+      if (b.overAllStatus === "SM Rejected") {
+        const { fromMs } = getEffectiveTimes(b);
+        return !fromMs || fromMs > nowIST() - TWELVE_HRS;
+      }
       // SM Approved — badge only within 10-min window (and only if visible to this user)
       if (b.overAllStatus === "SM Approved" && isSmApprovedVisible(b)) return true;
       if (b.overAllStatus === "Availing Active" && p?.availStartedAt && !p?.closureSubmittedAt) {
@@ -318,8 +321,11 @@ export default function AvailBlockPage() {
       mp?.availStartedAt
     ) return "inProgress";
 
-    // Section 2 — SM Rejected: show prominently so SSE knows immediately
-    if (s === "SM Rejected") return "needsAction";
+    // Section 2 — SM Rejected: show prominently so SSE knows, but vanish after 12h
+    if (s === "SM Rejected") {
+      if (!fromMs || fromMs > now - TWELVE_HRS) return "needsAction";
+      // After 12 hours, fall through to prev24h / other naturally
+    }
 
     // Section 2 — auto-starting soon (SM Approved, in the 10-min window)
     if (s === "SM Approved") return "needsAction";
