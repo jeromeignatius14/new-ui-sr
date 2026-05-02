@@ -1334,6 +1334,15 @@ const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
   const [proceedAnyway, setProceedAnyway] = useState(false);
   const [isShadowBlock, setIsShadowBlock] = useState(false);
   const [shadowParentId, setShadowParentId] = useState<string>("");
+  const [shadowListExpanded, setShadowListExpanded] = useState(true);
+  // Clear demand times when shadow parent changes so user picks within the new window
+  useEffect(() => {
+    if (isShadowBlock && shadowParentId) {
+      setFormData(prev => ({ ...prev, demandTimeFrom: "", demandTimeTo: "" }));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shadowParentId]);
+
   // Initialize the depot from session when the session loads
   useEffect(() => {
     if (session?.user?.depot) {
@@ -2119,6 +2128,41 @@ const findCutoffThursday = () => {
     });
   }, [depotBlocksData]);
 
+  // Extract HH:MM bounds from selected parent's sanctioned window
+  const parentTimeConstraint = useMemo(() => {
+    if (!isShadowBlock || !shadowParentId) return null;
+    const parent = shadowParentBlocks.find((b: any) => b.id === shadowParentId);
+    if (!parent) return null;
+    const fromDt = parent.sanctionedTimeFrom ?? parent.demandTimeFrom;
+    const toDt   = parent.sanctionedTimeTo   ?? parent.demandTimeTo;
+    if (!fromDt || !toDt) return null;
+    const f = new Date(fromDt);
+    const t = new Date(toDt);
+    return {
+      fromH: f.getUTCHours(), fromM: f.getUTCMinutes(),
+      toH:   t.getUTCHours(), toM:   t.getUTCMinutes(),
+      fromHHMM: `${String(f.getUTCHours()).padStart(2,"0")}:${String(f.getUTCMinutes()).padStart(2,"0")}`,
+      toHHMM:   `${String(t.getUTCHours()).padStart(2,"0")}:${String(t.getUTCMinutes()).padStart(2,"0")}`,
+    };
+  }, [isShadowBlock, shadowParentId, shadowParentBlocks]);
+
+  // Real-time error when demand times are outside the parent's sanctioned window
+  const shadowTimeError = useMemo(() => {
+    if (!isShadowBlock || !parentTimeConstraint) return null;
+    const [fH, fM] = (formData.demandTimeFrom || "").split(":").map(Number);
+    const [tH, tM] = (formData.demandTimeTo   || "").split(":").map(Number);
+    if (!fH && fH !== 0) return null;
+    const fromMins = fH * 60 + (fM || 0);
+    const toMins   = tH * 60 + (tM || 0);
+    const pFromMins = parentTimeConstraint.fromH * 60 + parentTimeConstraint.fromM;
+    const pToMins   = parentTimeConstraint.toH   * 60 + parentTimeConstraint.toM;
+    if (fromMins < pFromMins)
+      return `Start time must be at or after ${parentTimeConstraint.fromHHMM} (parent block start)`;
+    if (toMins > pToMins)
+      return `End time must be at or before ${parentTimeConstraint.toHHMM} (parent block end)`;
+    return null;
+  }, [isShadowBlock, parentTimeConstraint, formData.demandTimeFrom, formData.demandTimeTo]);
+
   const getPendingActionBlocks = () => {
     const result: any[] = [];
     const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
@@ -2405,6 +2449,7 @@ const findCutoffThursday = () => {
         setErrors({});
         setIsShadowBlock(false);
         setShadowParentId("");
+        setShadowListExpanded(true);
         setShowSuccessPage(true);
         setReviewMode(false);
       }
@@ -4008,7 +4053,7 @@ useEffect(() => {
               <div className="flex flex-row items-center gap-4">
                 <button
                   type="button"
-                  onClick={() => { setIsShadowBlock(!isShadowBlock); setShadowParentId(""); }}
+                  onClick={() => { setIsShadowBlock(!isShadowBlock); setShadowParentId(""); setShadowListExpanded(true); }}
                   className={`flex items-center gap-2 px-5 py-3 rounded-xl border-2 font-bold text-[20px] transition-all ${isShadowBlock ? "bg-[#1e40af] border-[#1e40af] text-white" : "bg-white border-[#b6c6e6] text-[#1e40af]"}`}
                 >
                   <span style={{ fontSize: "20px" }}>{isShadowBlock ? "✅" : "☐"}</span>
@@ -4027,8 +4072,60 @@ useEffect(() => {
                   </label>
                   {shadowParentBlocks.length === 0 ? (
                     <div className="text-[18px] text-gray-500 border-2 border-dashed border-[#b6c6e6] rounded-xl px-5 py-4">
-                      No sanctioned blocks available for your depot &amp; department to use as parent.
+                      No blocks available within next 12 hours for your depot &amp; department.
                     </div>
+                  ) : shadowParentId && !shadowListExpanded ? (
+                    /* ── Collapsed: show selected card summary + Change button ── */
+                    (() => {
+                      const sel = shadowParentBlocks.find((b: any) => b.id === shadowParentId);
+                      if (!sel) return null;
+                      const ist = (dt: string | null | undefined) =>
+                        dt ? new Date(dt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Kolkata" }) : "--";
+                      const selFromT = ist(sel.sanctionedTimeFrom ?? sel.demandTimeFrom);
+                      const selToT   = ist(sel.sanctionedTimeTo   ?? sel.demandTimeTo);
+                      const statusMeta2: Record<string, { label: string; bg: string; color: string }> = {
+                        "Sanctioned and Accepted by SSE": { label: "Ready to Apply", bg: "#d1fae5", color: "#065f46" },
+                        "Pending Concurrences":           { label: "Pending Concurrence", bg: "#fee2e2", color: "#991b1b" },
+                        "Pending SM Approval":            { label: "Pending SM", bg: "#ede9fe", color: "#5b21b6" },
+                        "SM Approved":                    { label: "SM Approved ✔", bg: "#dcfce7", color: "#14532d" },
+                        "Availing Active":                { label: "Availing Active ▶", bg: "#dbeafe", color: "#1e40af" },
+                        "All Closures Submitted":         { label: "Closures Submitted", bg: "#fef9c3", color: "#713f12" },
+                      };
+                      const sm2 = statusMeta2[sel.overAllStatus ?? ""] ?? { label: sel.overAllStatus ?? "—", bg: "#f3f4f6", color: "#374151" };
+                      return (
+                        <div style={{ border: "2.5px solid #1e40af", borderRadius: "14px", padding: "12px 14px", background: "#eff6ff", display: "flex", flexDirection: "column", gap: "6px" }}>
+                          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px" }}>
+                            <span style={{ fontWeight: 900, fontSize: "15px", color: "#1e40af", background: "#dbeafe", borderRadius: "6px", padding: "2px 8px" }}>
+                              {sel.divisionId ?? sel.id.slice(0, 8)}
+                            </span>
+                            <span style={{ fontWeight: 900, fontSize: "15px", color: "#065f46", background: "#d1fae5", borderRadius: "6px", padding: "2px 10px" }}>
+                              ⏱ {selFromT} – {selToT}
+                            </span>
+                            <span style={{ fontSize: "12px", fontWeight: 800, background: sm2.bg, color: sm2.color, borderRadius: "5px", padding: "1px 8px" }}>{sm2.label}</span>
+                            <button
+                              type="button"
+                              onClick={() => setShadowListExpanded(true)}
+                              style={{ marginLeft: "auto", fontSize: "13px", fontWeight: 800, color: "#1e40af", background: "#dbeafe", border: "1.5px solid #1e40af", borderRadius: "8px", padding: "4px 14px", cursor: "pointer" }}
+                            >
+                              Change
+                            </button>
+                          </div>
+                          {sel.missionBlock && (
+                            <div style={{ fontSize: "13px", fontWeight: 700, color: "#374151" }}>
+                              📍 {sel.selectedSection && `${sel.selectedSection} › `}<span style={{ color: "#7c3aed" }}>{sel.missionBlock}</span>
+                            </div>
+                          )}
+                          {(sel.workLocationFrom || sel.workLocationTo) && (
+                            <div style={{ fontSize: "12px", color: "#374151", fontWeight: 600 }}>
+                              📌 {[sel.workLocationFrom, sel.workLocationTo].filter(Boolean).join(" → ")}
+                            </div>
+                          )}
+                          <div style={{ fontSize: "12px", color: "#1e40af", fontWeight: 700, marginTop: "2px" }}>
+                            ✔ Parent selected — your shadow block times must be within {selFromT} – {selToT}
+                          </div>
+                        </div>
+                      );
+                    })()
                   ) : (
                     <div className="flex flex-col gap-3 w-full">
                       {shadowParentBlocks.map((b: any) => {
@@ -4057,7 +4154,7 @@ useEffect(() => {
                         return (
                           <div
                             key={b.id}
-                            onClick={() => setShadowParentId(b.id)}
+                            onClick={() => { setShadowParentId(b.id); setShadowListExpanded(false); }}
                             style={{
                               border: isSelected ? "2.5px solid #1e40af" : "1.5px solid #bfdbfe",
                               borderRadius: "14px",
@@ -4135,19 +4232,6 @@ useEffect(() => {
                   {errors.shadowParentId && (
                     <span className="text-[20px] text-[#e07a5f] font-medium">{errors.shadowParentId}</span>
                   )}
-                  {shadowParentId && (() => {
-                    const parent = shadowParentBlocks.find((b: any) => b.id === shadowParentId);
-                    if (!parent) return null;
-                    const ist = (dt: string | null | undefined) =>
-                      dt ? new Date(dt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Kolkata" }) : "--";
-                    const fromT = ist(parent.sanctionedTimeFrom ?? parent.demandTimeFrom);
-                    const toT   = ist(parent.sanctionedTimeTo   ?? parent.demandTimeTo);
-                    return (
-                      <div style={{ fontSize: "15px", color: "#1e40af", background: "#f0f9ff", border: "1px solid #93c5fd", borderRadius: "10px", padding: "8px 14px", fontWeight: 700 }}>
-                        ℹ️ Your shadow block times must be within <strong>{fromT} – {toT}</strong> (parent&apos;s sanctioned window).
-                      </div>
-                    );
-                  })()}
                 </div>
               )}
             </div>
@@ -4625,6 +4709,9 @@ useEffect(() => {
                       <option value="">--</option>
                       {[...Array(24).keys()].map((h) => {
                         const hourStr = h.toString().padStart(2, "0");
+                        if (isShadowBlock && parentTimeConstraint) {
+                          if (h < parentTimeConstraint.fromH || h > parentTimeConstraint.toH) return null;
+                        }
                         if (isToday(formData.date)) {
                           const now = new Date();
                           const currentHour = now.getHours();
@@ -4632,7 +4719,6 @@ useEffect(() => {
                             return null;
                           }
                         }
-
                         return (
                           <option key={h} value={hourStr}>
                             {hourStr}
@@ -4664,14 +4750,16 @@ useEffect(() => {
                       required
                     >
                       <option value="">--</option>
-                      {[...Array(12).keys()].map((m) => (
-                        <option
-                          key={m}
-                          value={(m * 5).toString().padStart(2, "0")}
-                        >
-                          {(m * 5).toString().padStart(2, "0")}
-                        </option>
-                      ))}
+                      {[...Array(12).keys()].map((m) => {
+                        const minVal = m * 5;
+                        const minStr = minVal.toString().padStart(2, "0");
+                        if (isShadowBlock && parentTimeConstraint) {
+                          const curH = formData.demandTimeFrom ? parseInt(formData.demandTimeFrom.split(":")[0]) : -1;
+                          if (curH === parentTimeConstraint.fromH && minVal < parentTimeConstraint.fromM) return null;
+                          if (curH === parentTimeConstraint.toH   && minVal > parentTimeConstraint.toM)   return null;
+                        }
+                        return <option key={m} value={minStr}>{minStr}</option>;
+                      })}
                     </select>
                   </div>
                   <span className="text-[#2c3e50] font-bold text-[24px] px-2">
@@ -4703,16 +4791,9 @@ useEffect(() => {
                       <option value="">--</option>
                       {[...Array(24).keys()].map((h) => {
                         const hourStr = h.toString().padStart(2, "0");
-                        // If selected date is today, ensure "To" time is after "From" time
-                        // if (isToday(formData.date)) {
-                        //   const fromHour = formData.demandTimeFrom
-                        //     ? parseInt(formData.demandTimeFrom.split(":")[0])
-                        //     : new Date().getHours() + 1;
-                        //   // Only allow hours that are after the from time
-                        //   if (h <= fromHour) {
-                        //     return null; // Skip rendering this option
-                        //   }
-                        // }
+                        if (isShadowBlock && parentTimeConstraint) {
+                          if (h < parentTimeConstraint.fromH || h > parentTimeConstraint.toH) return null;
+                        }
                         return (
                           <option key={h} value={hourStr}>
                             {hourStr}
@@ -4744,17 +4825,29 @@ useEffect(() => {
                       required
                     >
                       <option value="">--</option>
-                      {[...Array(12).keys()].map((m) => (
-                        <option
-                          key={m}
-                          value={(m * 5).toString().padStart(2, "0")}
-                        >
-                          {(m * 5).toString().padStart(2, "0")}
-                        </option>
-                      ))}
+                      {[...Array(12).keys()].map((m) => {
+                        const minVal = m * 5;
+                        const minStr = minVal.toString().padStart(2, "0");
+                        if (isShadowBlock && parentTimeConstraint) {
+                          const curH = formData.demandTimeTo ? parseInt(formData.demandTimeTo.split(":")[0]) : -1;
+                          if (curH === parentTimeConstraint.fromH && minVal < parentTimeConstraint.fromM) return null;
+                          if (curH === parentTimeConstraint.toH   && minVal > parentTimeConstraint.toM)   return null;
+                        }
+                        return <option key={m} value={minStr}>{minStr}</option>;
+                      })}
                     </select>
                   </div>
                 </div>
+                {shadowTimeError && (
+                  <div style={{ fontSize: "14px", fontWeight: 800, color: "#991b1b", background: "#fee2e2", border: "1.5px solid #fca5a5", borderRadius: "8px", padding: "6px 14px", width: "100%", textAlign: "center" }}>
+                    ⚠ {shadowTimeError}
+                  </div>
+                )}
+                {isShadowBlock && parentTimeConstraint && !shadowTimeError && formData.demandTimeFrom && formData.demandTimeTo && (
+                  <div style={{ fontSize: "13px", fontWeight: 700, color: "#065f46", background: "#d1fae5", border: "1px solid #6ee7b7", borderRadius: "8px", padding: "4px 12px", width: "100%", textAlign: "center" }}>
+                    ✔ Times within parent window ({parentTimeConstraint.fromHHMM} – {parentTimeConstraint.toHHMM})
+                  </div>
+                )}
                 <span className="text-[#2c3e50] font-bold text-[24px] mb-1 tracking-wide">
                   Duration
                 </span>
