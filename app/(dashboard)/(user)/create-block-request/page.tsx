@@ -28,6 +28,8 @@ import { useRouter } from "next/navigation";
 import Papa from "papaparse";
 import { useQuery } from "@tanstack/react-query";
 import { userRequestService } from "@/app/service/api/user-request";
+import { availService } from "@/app/service/api/avail";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useGetMyParticipations, useGetDepotBlocks } from "@/app/service/query/avail";
 import roadData from "../../../../public/roadData.json";
 import { createSiteLocationChangeHandler, getSiteLocationRange, validateSiteLocationPair, getAllAvailableDepots, getAutoAssignedDepots } from './features/siteLocation';
@@ -2109,6 +2111,66 @@ const findCutoffThursday = () => {
   // Pending-actions warning before new request submission
   const [showPendingModal, setShowPendingModal] = useState(false);
   const [pendingActionBlocks, setPendingActionBlocks] = useState<any[]>([]);
+  // Per-block inline action state: blockId → { mode, input }
+  const [blockActionState, setBlockActionState] = useState<Record<string, { mode: "idle" | "rejecting" | "exiting"; input: string }>>({});
+  const pendingQC = useQueryClient();
+
+  const acceptMutation = useMutation({
+    mutationFn: (id: string) => userRequestService.acceptUserRequestRemark(id),
+    onSuccess: () => {
+      toast.success("Sanction accepted!");
+      pendingQC.invalidateQueries({ queryKey: ["depot-blocks"] });
+      pendingQC.invalidateQueries({ queryKey: ["user-requests"] });
+      refreshPendingModal();
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to accept"),
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: ({ id, remarks }: { id: string; remarks: string }) =>
+      userRequestService.rejectUserRequestRemark(id, remarks),
+    onSuccess: () => {
+      toast.success("Sanction rejected.");
+      pendingQC.invalidateQueries({ queryKey: ["depot-blocks"] });
+      pendingQC.invalidateQueries({ queryKey: ["user-requests"] });
+      refreshPendingModal();
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to reject"),
+  });
+
+  const exitMutation = useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      availService.exitWithoutAvailing(id, reason),
+    onSuccess: () => {
+      toast.success("Block exited without availing.");
+      pendingQC.invalidateQueries({ queryKey: ["depot-blocks"] });
+      pendingQC.invalidateQueries({ queryKey: ["avail-depot-blocks"] });
+      pendingQC.invalidateQueries({ queryKey: ["avail-my-participations"] });
+      refreshPendingModal();
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to exit"),
+  });
+
+  function refreshPendingModal() {
+    // Small delay so query cache has time to update before re-checking
+    setTimeout(() => {
+      const stillPending = getPendingActionBlocks();
+      setPendingActionBlocks(stillPending);
+      setBlockActionState({});
+      if (stillPending.length === 0) setShowPendingModal(false);
+    }, 800);
+  }
+
+  function setBlockMode(blockId: string, mode: "idle" | "rejecting" | "exiting", input = "") {
+    setBlockActionState((prev) => ({ ...prev, [blockId]: { mode, input } }));
+  }
+
+  function setBlockInput(blockId: string, input: string) {
+    setBlockActionState((prev) => ({
+      ...prev,
+      [blockId]: { ...prev[blockId], input },
+    }));
+  }
 
   // Live avail data to detect unresolved blocks
   const { data: myParticipationsData } = useGetMyParticipations();
@@ -4042,23 +4104,135 @@ useEffect(() => {
 
               {/* Block list */}
               <div className="overflow-y-auto flex-1 p-4 flex flex-col gap-3">
-                {pendingActionBlocks.map(({ block, reason }, i) => (
-                  <div key={i} className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex flex-col gap-1.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm font-bold text-gray-800">{block.divisionId ?? block.id?.slice(0, 8)}</span>
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-200 text-amber-800 shrink-0">
-                        {block.overAllStatus ?? "—"}
-                      </span>
+                {pendingActionBlocks.map(({ block, reason }, i) => {
+                  const blockId = block.id;
+                  const actionState = blockActionState[blockId] ?? { mode: "idle", input: "" };
+                  const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+                  const nowIST = Date.now() + IST_OFFSET_MS;
+                  const toMs = block.sanctionedTimeTo ? new Date(block.sanctionedTimeTo).getTime() : null;
+                  const isPast = toMs !== null && toMs <= nowIST;
+                  const isMine = block.userId === (session?.user as any)?.id;
+                  const isSanctionPending = block.overAllStatus === "Sanctioned, Pending with SSE For Acceptance";
+                  const isAcceptedNotApplied = block.overAllStatus === "Sanctioned and Accepted by SSE";
+                  const isBusy = acceptMutation.isPending || rejectMutation.isPending || exitMutation.isPending;
+
+                  return (
+                    <div key={i} className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex flex-col gap-2">
+                      {/* Block header */}
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm font-bold text-gray-800">{block.divisionId ?? block.id?.slice(0, 8)}</span>
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-200 text-amber-800 shrink-0">
+                          {block.overAllStatus ?? "—"}
+                        </span>
+                      </div>
+                      {block.appliedByName && (
+                        <span className="text-xs text-gray-500">Block owner: <span className="font-semibold text-gray-700">{block.appliedByName}</span></span>
+                      )}
+                      {block.selectedDepo && (
+                        <span className="text-xs text-gray-500">{block.selectedDepartment} — {block.selectedDepo}</span>
+                      )}
+                      <span className="text-xs font-semibold text-red-600">{reason}</span>
+
+                      {/* ── Actions ── */}
+                      {actionState.mode === "idle" && (
+                        <div className="flex gap-2 flex-wrap mt-1">
+                          {/* Sanction pending on MY block → Accept (only if not past) + Reject */}
+                          {isSanctionPending && isMine && !isPast && (
+                            <button
+                              type="button"
+                              disabled={isBusy}
+                              onClick={() => acceptMutation.mutate(blockId)}
+                              className="flex-1 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-xs font-bold disabled:opacity-50 transition"
+                            >
+                              ✓ Accept
+                            </button>
+                          )}
+                          {isSanctionPending && isMine && (
+                            <button
+                              type="button"
+                              disabled={isBusy}
+                              onClick={() => setBlockMode(blockId, "rejecting")}
+                              className="flex-1 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold disabled:opacity-50 transition"
+                            >
+                              ✕ Reject
+                            </button>
+                          )}
+                          {/* Accepted not applied → Exit without availing (any team member) */}
+                          {isAcceptedNotApplied && (
+                            <button
+                              type="button"
+                              disabled={isBusy}
+                              onClick={() => setBlockMode(blockId, "exiting")}
+                              className="flex-1 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold disabled:opacity-50 transition"
+                            >
+                              Exit Without Availing
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Reject form */}
+                      {actionState.mode === "rejecting" && isSanctionPending && isMine && (
+                        <div className="flex flex-col gap-2 mt-1">
+                          <textarea
+                            rows={2}
+                            placeholder="Reason for rejection (required)"
+                            value={actionState.input}
+                            onChange={(e) => setBlockInput(blockId, e.target.value)}
+                            className="w-full text-xs border border-red-300 rounded-lg px-3 py-2 focus:outline-none focus:border-red-500 resize-none"
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              disabled={!actionState.input.trim() || rejectMutation.isPending}
+                              onClick={() => rejectMutation.mutate({ id: blockId, remarks: actionState.input.trim() })}
+                              className="flex-1 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold disabled:opacity-40 transition"
+                            >
+                              {rejectMutation.isPending ? "Rejecting…" : "Confirm Reject"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setBlockMode(blockId, "idle")}
+                              className="py-2 px-3 rounded-lg border border-gray-300 text-gray-600 text-xs font-medium hover:bg-gray-50 transition"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Exit without availing form */}
+                      {actionState.mode === "exiting" && isAcceptedNotApplied && (
+                        <div className="flex flex-col gap-2 mt-1">
+                          <textarea
+                            rows={2}
+                            placeholder="Reason for exiting without availing (required)"
+                            value={actionState.input}
+                            onChange={(e) => setBlockInput(blockId, e.target.value)}
+                            className="w-full text-xs border border-orange-300 rounded-lg px-3 py-2 focus:outline-none focus:border-orange-500 resize-none"
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              disabled={!actionState.input.trim() || exitMutation.isPending}
+                              onClick={() => exitMutation.mutate({ id: blockId, reason: actionState.input.trim() })}
+                              className="flex-1 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold disabled:opacity-40 transition"
+                            >
+                              {exitMutation.isPending ? "Exiting…" : "Confirm Exit"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setBlockMode(blockId, "idle")}
+                              className="py-2 px-3 rounded-lg border border-gray-300 text-gray-600 text-xs font-medium hover:bg-gray-50 transition"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    {block.appliedByName && (
-                      <span className="text-xs text-gray-500">Block owner: <span className="font-semibold text-gray-700">{block.appliedByName}</span></span>
-                    )}
-                    {block.selectedDepo && (
-                      <span className="text-xs text-gray-500">{block.selectedDepartment} — {block.selectedDepo}</span>
-                    )}
-                    <span className="text-xs font-semibold text-red-600">{reason}</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Actions */}
