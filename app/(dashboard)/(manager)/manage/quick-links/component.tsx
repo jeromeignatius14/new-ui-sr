@@ -25,6 +25,7 @@ const QuickAction = ({
 export default function ManagerQuickLinks() {
     const { data: session } = useSession();
     const isDeptController = session?.user?.role === "DEPT_CONTROLLER";
+    const isBranchOfficer = session?.user?.role === "BRANCH_OFFICER";
     const isTrdController = isDeptController && session?.user?.department === "TRD";
 
     return (
@@ -34,7 +35,7 @@ export default function ManagerQuickLinks() {
             {isTrdController && (
                 <a href="/manage/permit-block-at-site" className="w-full rounded-2xl bg-[#fde68a] border-2 border-[#d97706] py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">⚡ PERMIT BLOCK AT SITE</a>
             )}
-            {isDeptController && (
+            {(isDeptController || isBranchOfficer) && (
                 <a href="/manage/defaulters" className="w-full rounded-2xl bg-[#ffd6d6] border-2 border-[#dc2626] py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">⚠️ DEFAULTERS LIST</a>
             )}
             <a href="/analyst" className="w-full rounded-2xl bg-[#d4edda] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">ANALYSE IN DETAIL</a>
