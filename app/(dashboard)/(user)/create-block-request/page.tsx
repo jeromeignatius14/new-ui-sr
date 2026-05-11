@@ -2119,9 +2119,8 @@ const findCutoffThursday = () => {
     mutationFn: (id: string) => userRequestService.acceptUserRequestRemark(id),
     onSuccess: () => {
       toast.success("Sanction accepted!");
-      pendingQC.invalidateQueries({ queryKey: ["depot-blocks"] });
+      pendingQC.invalidateQueries({ queryKey: ["avail-depot-blocks"] });
       pendingQC.invalidateQueries({ queryKey: ["user-requests"] });
-      refreshPendingModal();
     },
     onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to accept"),
   });
@@ -2131,9 +2130,8 @@ const findCutoffThursday = () => {
       userRequestService.rejectUserRequestRemark(id, remarks),
     onSuccess: () => {
       toast.success("Sanction rejected.");
-      pendingQC.invalidateQueries({ queryKey: ["depot-blocks"] });
+      pendingQC.invalidateQueries({ queryKey: ["avail-depot-blocks"] });
       pendingQC.invalidateQueries({ queryKey: ["user-requests"] });
-      refreshPendingModal();
     },
     onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to reject"),
   });
@@ -2143,23 +2141,11 @@ const findCutoffThursday = () => {
       availService.exitWithoutAvailing(id, reason),
     onSuccess: () => {
       toast.success("Block exited without availing.");
-      pendingQC.invalidateQueries({ queryKey: ["depot-blocks"] });
       pendingQC.invalidateQueries({ queryKey: ["avail-depot-blocks"] });
       pendingQC.invalidateQueries({ queryKey: ["avail-my-participations"] });
-      refreshPendingModal();
     },
     onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to exit"),
   });
-
-  function refreshPendingModal() {
-    // Small delay so query cache has time to update before re-checking
-    setTimeout(() => {
-      const stillPending = getPendingActionBlocks();
-      setPendingActionBlocks(stillPending);
-      setBlockActionState({});
-      if (stillPending.length === 0) setShowPendingModal(false);
-    }, 800);
-  }
 
   function setBlockMode(blockId: string, mode: "idle" | "rejecting" | "exiting", input = "") {
     setBlockActionState((prev) => ({ ...prev, [blockId]: { mode, input } }));
@@ -2175,6 +2161,16 @@ const findCutoffThursday = () => {
   // Live avail data to detect unresolved blocks
   const { data: myParticipationsData } = useGetMyParticipations();
   const { data: depotBlocksData } = useGetDepotBlocks();
+
+  // Recompute and sync pending modal whenever depot blocks or participations refresh
+  useEffect(() => {
+    if (!showPendingModal) return;
+    const stillPending = getPendingActionBlocks();
+    setPendingActionBlocks(stillPending);
+    setBlockActionState({});
+    if (stillPending.length === 0) setShowPendingModal(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [depotBlocksData, myParticipationsData]);
 
   // Shadow block: eligible parent blocks — same dept+depot, within next 12h or already active
   const shadowParentBlocks = useMemo(() => {
@@ -2281,6 +2277,8 @@ const findCutoffThursday = () => {
     const myDepot = session?.user?.depot ?? "";
     const myDept  = (session?.user as any)?.department ?? "";
     const depotBlocks: any[] = depotBlocksData?.data?.blocks ?? [];
+    // Only consider blocks from May 10, 2026 onwards to avoid flooding with historical records
+    const POPUP_CUTOFF_MS = new Date("2026-05-10T00:00:00+05:30").getTime();
 
     depotBlocks.forEach((block: any) => {
       const s = block.overAllStatus ?? "";
@@ -2290,6 +2288,8 @@ const findCutoffThursday = () => {
         const toTime  = block.sanctionedTimeTo  ?? block.demandTimeTo;
         const toMs    = toTime ? new Date(toTime).getTime() : null;
         const isPast  = toMs !== null && toMs <= nowIST;
+        // Skip fully-past blocks that predate the cutoff (historical clutter)
+        if (isPast && toMs !== null && toMs < POPUP_CUTOFF_MS) return;
         if (isPast) {
           result.push({ block, reason: "Block time has fully passed — you can only reject this sanctioned block" });
         } else {
@@ -2312,6 +2312,9 @@ const findCutoffThursday = () => {
         const toMs   = toTime ? new Date(toTime).getTime() : null;
         const isFullyPast = toMs !== null && toMs <= nowIST;
         const startsWithin3h = fromMs > nowIST && fromMs <= nowIST + THREE_HRS;
+
+        // Skip fully-past blocks that predate the cutoff (historical clutter)
+        if (isFullyPast && toMs !== null && toMs < POPUP_CUTOFF_MS) return;
 
         if (isFullyPast) {
           result.push({ block, reason: "Your team has a block whose time has fully passed without availing or exit — the whole team is restricted until resolved", subType: "past" });
