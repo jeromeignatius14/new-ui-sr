@@ -22,6 +22,12 @@ interface DefaulterRow {
     hoursSinceSanctioned: number | null;
 }
 
+interface LateExitRow extends DefaulterRow {
+    exitedAt: string | null;
+    exitReason: string | null;
+    hoursBeforeCommencement: number | null;
+}
+
 function fmtHours(h: number | null) {
     if (h === null || h === undefined) return "—";
     if (h < 1) return "< 1 hr";
@@ -63,6 +69,32 @@ function downloadExcel(rows: DefaulterRow[], label: string) {
     XLSX.writeFile(wb, `RBMS_Defaulters_${label.replace(/\s/g, "_")}_${data.length}rows.xlsx`);
 }
 
+function downloadLateExitsExcel(rows: LateExitRow[]) {
+    if (!rows.length) { alert("No data to download."); return; }
+    const data = rows.map((r) => ({
+        "Division ID":               r.divisionId,
+        "Mission Block":             r.missionBlock,
+        "Section":                   r.section,
+        "Depot":                     r.depot,
+        "Department":                r.department,
+        "Work Type":                 r.workType,
+        "Demanded Time":             r.demandTime,
+        "Sanctioned Start Time":     r.sanctionedTime ?? "—",
+        "Exited At":                 r.exitedAt ?? "—",
+        "Hrs Before Commencement":   r.hoursBeforeCommencement !== null ? r.hoursBeforeCommencement.toFixed(1) : "—",
+        "Exit Reason":               r.exitReason ?? "—",
+        "Applicant Name":            r.applicantName,
+        "Applicant Phone":           r.applicantPhone,
+    }));
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(data);
+    ws["!cols"] = Object.keys(data[0]).map((k) => ({
+        wch: Math.min(Math.max(k.length, ...data.map((r) => String(r[k as keyof typeof r] ?? "").length)) + 2, 40),
+    }));
+    XLSX.utils.book_append_sheet(wb, ws, "Late_Exits");
+    XLSX.writeFile(wb, `RBMS_LateExits_${data.length}rows.xlsx`);
+}
+
 function SectionHeader({
     number,
     title,
@@ -75,12 +107,13 @@ function SectionHeader({
     title: string;
     subtitle: string;
     count: number;
-    color: "red" | "amber";
+    color: "red" | "amber" | "purple";
     onDownload: () => void;
 }) {
     const colors = {
-        red:   { border: "border-red-400",   bg: "bg-red-50",   badge: "bg-red-500",   text: "text-red-700",   num: "bg-red-600" },
-        amber: { border: "border-amber-400", bg: "bg-amber-50", badge: "bg-amber-500", text: "text-amber-700", num: "bg-amber-600" },
+        red:    { border: "border-red-400",    bg: "bg-red-50",    badge: "bg-red-500",    text: "text-red-700",    num: "bg-red-600" },
+        amber:  { border: "border-amber-400",  bg: "bg-amber-50",  badge: "bg-amber-500",  text: "text-amber-700",  num: "bg-amber-600" },
+        purple: { border: "border-purple-400", bg: "bg-purple-50", badge: "bg-purple-500", text: "text-purple-700", num: "bg-purple-600" },
     }[color];
 
     return (
@@ -214,6 +247,107 @@ function DefaulterTable({ rows, emptyMessage }: { rows: DefaulterRow[]; emptyMes
     );
 }
 
+function fmtHoursShort(h: number | null) {
+    if (h === null || h === undefined) return "—";
+    if (h < 1) return `${Math.round(h * 60)} min`;
+    return `${h.toFixed(1)} hrs`;
+}
+
+function LateExitTable({ rows }: { rows: LateExitRow[] }) {
+    if (!rows.length) {
+        return (
+            <div className="flex flex-col items-center justify-center py-12 bg-green-50 border-2 border-green-200 border-dashed rounded-xl">
+                <div className="text-3xl mb-2">✅</div>
+                <div className="font-semibold text-green-700 text-base">No last-minute exits in this period</div>
+                <div className="text-sm text-green-600 mt-1">No blocks were exited within 4 hours of commencement</div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-md">
+            <table className="w-full text-sm min-w-[1000px]">
+                <thead>
+                    <tr className="bg-purple-900 text-white text-xs uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left font-semibold">Division ID</th>
+                        <th className="px-4 py-3 text-left font-semibold">Mission Block</th>
+                        <th className="px-4 py-3 text-left font-semibold">Section / Depot</th>
+                        <th className="px-4 py-3 text-left font-semibold">Work Type</th>
+                        <th className="px-4 py-3 text-left font-semibold">Sanctioned Start</th>
+                        <th className="px-4 py-3 text-left font-semibold">Exited At</th>
+                        <th className="px-4 py-3 text-left font-semibold">Time Before Start</th>
+                        <th className="px-4 py-3 text-left font-semibold">Exit Reason</th>
+                        <th className="px-4 py-3 text-left font-semibold">Applicant</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {rows.map((r, i) => {
+                        const h = r.hoursBeforeCommencement;
+                        const urgency =
+                            h !== null && h < 1
+                                ? "bg-red-100 text-red-800 font-bold"
+                                : h !== null && h < 2
+                                ? "bg-orange-100 text-orange-800 font-semibold"
+                                : "bg-purple-100 text-purple-800 font-semibold";
+                        return (
+                            <tr
+                                key={i}
+                                className={`border-b border-gray-100 transition-colors ${
+                                    i % 2 === 0 ? "bg-white hover:bg-purple-50" : "bg-gray-50 hover:bg-purple-50"
+                                }`}
+                            >
+                                <td className="px-4 py-3">
+                                    <span className="font-mono text-xs font-bold text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded">
+                                        {r.divisionId}
+                                    </span>
+                                </td>
+                                <td className="px-4 py-3 font-medium text-gray-800 whitespace-nowrap max-w-[160px] truncate" title={r.missionBlock}>
+                                    {r.missionBlock || "—"}
+                                </td>
+                                <td className="px-4 py-3">
+                                    <div className="font-medium text-gray-700">{r.section}</div>
+                                    <div className="text-xs text-gray-400 mt-0.5">{r.depot}</div>
+                                </td>
+                                <td className="px-4 py-3">
+                                    <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded">
+                                        {r.workType}
+                                    </span>
+                                </td>
+                                <td className="px-4 py-3">
+                                    <span className="text-xs font-semibold text-gray-800 bg-yellow-50 border border-yellow-300 px-2 py-1 rounded whitespace-nowrap">
+                                        {r.sanctionedTime ?? "—"}
+                                    </span>
+                                </td>
+                                <td className="px-4 py-3 text-xs text-gray-700 whitespace-nowrap font-medium">
+                                    {r.exitedAt ?? "—"}
+                                </td>
+                                <td className="px-4 py-3">
+                                    <span className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full ${urgency}`}>
+                                        ⚠ {fmtHoursShort(h)} before start
+                                    </span>
+                                </td>
+                                <td className="px-4 py-3 text-xs text-gray-600 max-w-[180px]">
+                                    {r.exitReason ? (
+                                        <span className="bg-red-50 border border-red-200 text-red-700 px-2 py-0.5 rounded text-xs">
+                                            {r.exitReason}
+                                        </span>
+                                    ) : (
+                                        <span className="text-gray-400 italic">No reason given</span>
+                                    )}
+                                </td>
+                                <td className="px-4 py-3">
+                                    <div className="font-semibold text-gray-800 text-sm">{r.applicantName}</div>
+                                    <div className="text-xs text-gray-400 mt-0.5">{r.applicantPhone}</div>
+                                </td>
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
+        </div>
+    );
+}
+
 export default function DefaultersPage() {
     const { data: session } = useSession();
     const userDept = (session?.user as { department?: string })?.department ?? "";
@@ -232,7 +366,8 @@ export default function DefaultersPage() {
 
     const notAcknowledged: DefaulterRow[] = data?.data?.notAcknowledged ?? [];
     const notApplied: DefaulterRow[]      = data?.data?.notApplied ?? [];
-    const totalPending = notAcknowledged.length + notApplied.length;
+    const lateExits: LateExitRow[]        = data?.data?.lateExits ?? [];
+    const totalPending = notAcknowledged.length + notApplied.length + lateExits.length;
 
     function applyFilter() {
         setApplied({ startDate, endDate, department: userDept });
@@ -335,6 +470,19 @@ export default function DefaultersPage() {
                                 rows={notApplied}
                                 emptyMessage="All acknowledged blocks have avail applications filed"
                             />
+                        </div>
+
+                        {/* Group 3 */}
+                        <div>
+                            <SectionHeader
+                                number="3"
+                                title="Exited within 4 hours of block commencement"
+                                subtitle="Block was cancelled or exited less than 4 hours before the sanctioned start time — a last-minute withdrawal that disrupts planned operations."
+                                count={lateExits.length}
+                                color="purple"
+                                onDownload={downloadLateExitsExcel.bind(null, lateExits)}
+                            />
+                            <LateExitTable rows={lateExits} />
                         </div>
                     </div>
                 )}
