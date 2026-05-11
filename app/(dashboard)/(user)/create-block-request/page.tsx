@@ -2215,24 +2215,46 @@ const findCutoffThursday = () => {
       }
     });
 
-    // From depot blocks: sanctioned blocks waiting for acceptance OR accepted but not applied within next 3h
     const THREE_HRS = 3 * 60 * 60 * 1000;
+    const myDepot = session?.user?.depot ?? "";
+    const myDept  = (session?.user as any)?.department ?? "";
     const depotBlocks: any[] = depotBlocksData?.data?.blocks ?? [];
+
     depotBlocks.forEach((block: any) => {
-      if (block.overAllStatus === "Sanctioned, Pending with SSE For Acceptance") {
-        result.push({ block, reason: "Sanctioned block — awaiting your acceptance or rejection" });
+      const s = block.overAllStatus ?? "";
+
+      // ── Rule 1: Sanctioned but not yet acknowledged/rejected (MY blocks only) ──
+      if (s === "Sanctioned, Pending with SSE For Acceptance" && block.userId === myUserId) {
+        const toTime  = block.sanctionedTimeTo  ?? block.demandTimeTo;
+        const toMs    = toTime ? new Date(toTime).getTime() : null;
+        const isPast  = toMs !== null && toMs <= nowIST;
+        if (isPast) {
+          result.push({ block, reason: "Block time has fully passed — you can only reject this sanctioned block" });
+        } else {
+          result.push({ block, reason: "Sanctioned block — awaiting your acceptance or rejection" });
+        }
         return;
       }
-      if (block.overAllStatus === "Sanctioned and Accepted by SSE") {
+
+      // ── Rule 2: Accepted but not applied / exited — blocks WHOLE depot+dept ──
+      // Applies to everyone in same depot AND same department.
+      if (
+        s === "Sanctioned and Accepted by SSE" &&
+        block.selectedDepo === myDepot &&
+        block.selectedDepartment === myDept
+      ) {
         const fromTime = block.sanctionedTimeFrom ?? block.demandTimeFrom;
+        const toTime   = block.sanctionedTimeTo   ?? block.demandTimeTo;
         if (!fromTime) return;
         const fromMs = new Date(fromTime).getTime();
-        if (fromMs <= nowIST) {
-          // Block start time has already passed — only exit without availing is possible
-          result.push({ block, reason: "Block time has passed — please exit without availing before raising a new request" });
-        } else if (fromMs <= nowIST + THREE_HRS) {
-          // Block starts within 3 hours — must apply or exit now
-          result.push({ block, reason: "Block starts within 3 hours — apply for availing or exit before raising a new request" });
+        const toMs   = toTime ? new Date(toTime).getTime() : null;
+        const isFullyPast = toMs !== null && toMs <= nowIST;
+        const startsWithin3h = fromMs > nowIST && fromMs <= nowIST + THREE_HRS;
+
+        if (isFullyPast) {
+          result.push({ block, reason: "Your team has a block whose time has fully passed without availing or exit — the whole team is restricted until resolved" });
+        } else if (startsWithin3h) {
+          result.push({ block, reason: "Your team has a block starting within 3 hours with no avail application or exit — the whole team is restricted until resolved" });
         }
       }
     });
@@ -4013,23 +4035,26 @@ useEffect(() => {
                   <span className="text-xl">⚠️</span>
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-gray-800">Pending Actions on Existing Blocks</h2>
-                  <p className="text-xs text-gray-500 mt-0.5">Please take action on these before submitting a new request</p>
+                  <h2 className="text-base font-bold text-gray-800">New Request Blocked</h2>
+                  <p className="text-xs text-gray-500 mt-0.5">Resolve all pending block actions before raising a new request</p>
                 </div>
               </div>
 
               {/* Block list */}
               <div className="overflow-y-auto flex-1 p-4 flex flex-col gap-3">
                 {pendingActionBlocks.map(({ block, reason }, i) => (
-                  <div key={i} className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex flex-col gap-1">
+                  <div key={i} className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex flex-col gap-1.5">
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-sm font-bold text-gray-800">{block.divisionId ?? block.id?.slice(0, 8)}</span>
                       <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-200 text-amber-800 shrink-0">
                         {block.overAllStatus ?? "—"}
                       </span>
                     </div>
+                    {block.appliedByName && (
+                      <span className="text-xs text-gray-500">Block owner: <span className="font-semibold text-gray-700">{block.appliedByName}</span></span>
+                    )}
                     {block.selectedDepo && (
-                      <span className="text-xs text-gray-500">Depot: {block.selectedDepo}</span>
+                      <span className="text-xs text-gray-500">{block.selectedDepartment} — {block.selectedDepo}</span>
                     )}
                     <span className="text-xs font-semibold text-red-600">{reason}</span>
                   </div>
