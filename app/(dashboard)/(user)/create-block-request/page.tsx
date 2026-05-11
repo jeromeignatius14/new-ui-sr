@@ -2224,7 +2224,16 @@ const findCutoffThursday = () => {
         return;
       }
       if (block.overAllStatus === "Sanctioned and Accepted by SSE") {
-        result.push({ block, reason: "Accepted sanction — you must apply for availing or exit before raising a new request" });
+        const fromTime = block.sanctionedTimeFrom ?? block.demandTimeFrom;
+        if (!fromTime) return;
+        const fromMs = new Date(fromTime).getTime();
+        if (fromMs <= nowIST) {
+          // Block start time has already passed — only exit without availing is possible
+          result.push({ block, reason: "Block time has passed — please exit without availing before raising a new request" });
+        } else if (fromMs <= nowIST + THREE_HRS) {
+          // Block starts within 3 hours — must apply or exit now
+          result.push({ block, reason: "Block starts within 3 hours — apply for availing or exit before raising a new request" });
+        }
       }
     });
 
