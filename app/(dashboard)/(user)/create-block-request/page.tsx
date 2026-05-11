@@ -2314,9 +2314,9 @@ const findCutoffThursday = () => {
         const startsWithin3h = fromMs > nowIST && fromMs <= nowIST + THREE_HRS;
 
         if (isFullyPast) {
-          result.push({ block, reason: "Your team has a block whose time has fully passed without availing or exit — the whole team is restricted until resolved" });
+          result.push({ block, reason: "Your team has a block whose time has fully passed without availing or exit — the whole team is restricted until resolved", subType: "past" });
         } else if (startsWithin3h) {
-          result.push({ block, reason: "Your team has a block starting within 3 hours with no avail application or exit — the whole team is restricted until resolved" });
+          result.push({ block, reason: "Your team has a block starting within 3 hours — apply for availing or exit to unblock your team", subType: "within3h" });
         }
       }
     });
@@ -4104,7 +4104,7 @@ useEffect(() => {
 
               {/* Block list */}
               <div className="overflow-y-auto flex-1 p-4 flex flex-col gap-3">
-                {pendingActionBlocks.map(({ block, reason }, i) => {
+                {pendingActionBlocks.map(({ block, reason, subType }, i) => {
                   const blockId = block.id;
                   const actionState = blockActionState[blockId] ?? { mode: "idle", input: "" };
                   const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
@@ -4157,8 +4157,8 @@ useEffect(() => {
                               ✕ Reject
                             </button>
                           )}
-                          {/* Accepted not applied → Exit without availing (any team member) */}
-                          {isAcceptedNotApplied && (
+                          {/* Accepted not applied — past block: exit only */}
+                          {isAcceptedNotApplied && subType === "past" && (
                             <button
                               type="button"
                               disabled={isBusy}
@@ -4167,6 +4167,28 @@ useEffect(() => {
                             >
                               Exit Without Availing
                             </button>
+                          )}
+                          {/* Accepted not applied — within 3h: go apply OR exit */}
+                          {isAcceptedNotApplied && subType === "within3h" && (
+                            <>
+                              <button
+                                type="button"
+                                disabled={isBusy}
+                                onClick={() => { setShowPendingModal(false); window.location.href = "/avail-block"; }}
+                                className="flex-1 py-2 rounded-lg text-white text-xs font-bold disabled:opacity-50 transition"
+                                style={{ backgroundColor: "#13529e" }}
+                              >
+                                Go to Avail Block at Site
+                              </button>
+                              <button
+                                type="button"
+                                disabled={isBusy}
+                                onClick={() => setBlockMode(blockId, "exiting")}
+                                className="flex-1 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold disabled:opacity-50 transition"
+                              >
+                                Exit Without Availing
+                              </button>
+                            </>
                           )}
                         </div>
                       )}
