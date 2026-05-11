@@ -2224,12 +2224,7 @@ const findCutoffThursday = () => {
         return;
       }
       if (block.overAllStatus === "Sanctioned and Accepted by SSE") {
-        const fromTime = block.sanctionedTimeFrom ?? block.demandTimeFrom;
-        if (!fromTime) return;
-        const fromMs = new Date(fromTime).getTime();
-        if (fromMs > nowIST && fromMs <= nowIST + THREE_HRS) {
-          result.push({ block, reason: "Block starts within 3 hours — not yet applied or exited" });
-        }
+        result.push({ block, reason: "Accepted sanction — you must apply for availing or exit before raising a new request" });
       }
     });
 
@@ -4044,10 +4039,10 @@ useEffect(() => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setShowPendingModal(false); setShowReviewModal(true); }}
+                  onClick={() => { setShowPendingModal(false); window.location.href = "/dashboard"; }}
                   className="w-full py-2.5 rounded-xl font-bold text-gray-600 text-sm border-2 border-gray-200 hover:bg-gray-50"
                 >
-                  Proceed Anyway
+                  Back to Dashboard
                 </button>
               </div>
             </div>
