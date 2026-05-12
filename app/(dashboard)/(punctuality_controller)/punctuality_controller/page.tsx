@@ -44,6 +44,11 @@ export default function AdminDashboardPage() {
             GENERATE REPORT
           </button>
         </Link>
+        <Link href="/punctuality_controller/defaulters" className="w-full">
+          <button className="w-full rounded-2xl bg-[#ffd6d6] border-2 border-[#dc2626] py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
+            ⚠️ DEFAULTERS LIST
+          </button>
+        </Link>
       </div>
 
       <button
