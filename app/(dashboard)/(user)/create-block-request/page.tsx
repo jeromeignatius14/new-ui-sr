@@ -2243,11 +2243,6 @@ const findCutoffThursday = () => {
       const mp = (block.availParticipants ?? []).find((p: any) => p.userId === myUserId);
       if (s === "Block Closed" || s === "Availing Cancelled") return;
 
-      // SM approved but I haven't acknowledged
-      if (s === "SM Approved" && mp?.smAckStatus === null) {
-        result.push({ block, reason: "SM has approved — waiting for your acknowledgment" });
-        return;
-      }
       // Availing active but I haven't started
       if (s === "Availing Active" && mp && !mp.availStartedAt) {
         result.push({ block, reason: "Availing is active — you haven't started yet" });
