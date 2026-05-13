@@ -256,7 +256,7 @@ function LateExitTable({ rows }: { rows: LateExitRow[] }) {
             <div className="flex flex-col items-center justify-center py-12 bg-green-50 border-2 border-green-200 border-dashed rounded-xl">
                 <div className="text-3xl mb-2">✅</div>
                 <div className="font-semibold text-green-700 text-base">No last-minute exits in this period</div>
-                <div className="text-sm text-green-600 mt-1">No blocks were exited within 4 hours of commencement</div>
+                <div className="text-sm text-green-600 mt-1">No blocks were exited not before 4 hours of commencement</div>
             </div>
         );
     }
@@ -481,7 +481,7 @@ export default function BoDefaultersPage() {
                         <div>
                             <SectionHeader
                                 number="3"
-                                title="Exited within 4 hours of block commencement"
+                                title="Exited not before 4 hours of block commencement"
                                 subtitle="Block was cancelled or exited less than 4 hours before the sanctioned start time."
                                 count={lateExits.length}
                                 color="purple"

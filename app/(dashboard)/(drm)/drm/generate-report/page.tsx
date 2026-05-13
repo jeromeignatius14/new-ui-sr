@@ -965,7 +965,7 @@ const handleDownloadUpcomingBlocks = () => {
       if (block.overAllStatus === "Sanctioned, Pending with SSE For Acceptance") {
         statusLabel = "Sanctioned, Pending with SSE For Acceptance";
       } else if (block.overAllStatus === "Sanctioned and Accepted by SSE") {
-        statusLabel = "Sanctioned and Accepted by SSE";
+        statusLabel = "Sanctioned and Acknowledged by SSE";
       } else if (block.overAllStatus === "Sanctioned and Rejected by SSE") {
         statusLabel = "Sanctioned and Rejected by SSE";
       } else {
@@ -1061,7 +1061,7 @@ const handleDownloadUpcomingBlocks = () => {
         "Location": "MAS", "Department": "ENGG", "Supporting Department": "-",
         "Total Block Requested": enggTotal,
         "Total Block Sanctioned": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.isSanctioned && b.powerBlockRequired === false && b.sntDisconnectionRequired === false).length,
-        "Total Block Applied": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === false && b.sntDisconnectionRequired === false && b.isApplied === true).length,
+        "Total Availing Applied Blocks": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === false && b.sntDisconnectionRequired === false && b.isApplied === true).length,
         "Total Block Granted": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === false && b.sntDisconnectionRequired === false && b.isGranted === true).length,
         "Total Block Availed": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.AvailedTimeFrom !== null && b.AvailedTimeTo !== null && b.powerBlockRequired === false && b.sntDisconnectionRequired === false).length,
         "Total Block Closed": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === false && b.sntDisconnectionRequired === false && b.overAllStatus === "Block Closed").length,
@@ -1070,7 +1070,7 @@ const handleDownloadUpcomingBlocks = () => {
         "Location": "MAS", "Department": "ENGG", "Supporting Department": "S&T",
         "Total Block Requested": enggWithSnt,
         "Total Block Sanctioned": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.isSanctioned && b.powerBlockRequired === false).length,
-        "Total Block Applied": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.powerBlockRequired === false && b.isApplied === true).length,
+        "Total Availing Applied Blocks": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.powerBlockRequired === false && b.isApplied === true).length,
         "Total Block Granted": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.powerBlockRequired === false && b.isGranted === true).length,
         "Total Block Availed": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.AvailedTimeFrom !== null && b.AvailedTimeTo !== null && b.powerBlockRequired === false).length,
         "Total Block Closed": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.powerBlockRequired === false && b.overAllStatus === "Block Closed").length,
@@ -1079,7 +1079,7 @@ const handleDownloadUpcomingBlocks = () => {
         "Location": "MAS", "Department": "ENGG", "Supporting Department": "TRD",
         "Total Block Requested": enggWithPower,
         "Total Block Sanctioned": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === true && b.sntDisconnectionRequired === false && b.isSanctioned).length,
-        "Total Block Applied": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === true && b.sntDisconnectionRequired === false && b.isApplied === true).length,
+        "Total Availing Applied Blocks": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === true && b.sntDisconnectionRequired === false && b.isApplied === true).length,
         "Total Block Granted": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === true && b.sntDisconnectionRequired === false && b.isGranted === true).length,
         "Total Block Availed": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === true && b.AvailedTimeFrom !== null && b.AvailedTimeTo !== null && b.sntDisconnectionRequired === false).length,
         "Total Block Closed": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === true && b.sntDisconnectionRequired === false && b.overAllStatus === "Block Closed").length,
@@ -1088,7 +1088,7 @@ const handleDownloadUpcomingBlocks = () => {
         "Location": "MAS", "Department": "ENGG", "Supporting Department": "S&T and TRD",
         "Total Block Requested": enggWithSntAndPower,
         "Total Block Sanctioned": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.powerBlockRequired === true && b.isSanctioned).length,
-        "Total Block Applied": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.powerBlockRequired === true && b.isApplied === true).length,
+        "Total Availing Applied Blocks": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.powerBlockRequired === true && b.isApplied === true).length,
         "Total Block Granted": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.powerBlockRequired === true && b.isGranted === true).length,
         "Total Block Availed": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.powerBlockRequired === true && b.AvailedTimeFrom !== null && b.AvailedTimeTo !== null).length,
         "Total Block Closed": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.powerBlockRequired === true && b.overAllStatus === "Block Closed").length,
@@ -1098,7 +1098,7 @@ const handleDownloadUpcomingBlocks = () => {
         "Location": "MAS", "Department": "TRD", "Supporting Department": "-",
         "Total Block Requested": trdTotal,
         "Total Block Sanctioned": detailedData.filter(b => b.selectedDepartment === "TRD" && b.isSanctioned).length,
-        "Total Block Applied": detailedData.filter(b => b.selectedDepartment === "TRD" && b.isApplied === true).length,
+        "Total Availing Applied Blocks": detailedData.filter(b => b.selectedDepartment === "TRD" && b.isApplied === true).length,
         "Total Block Granted": detailedData.filter(b => b.selectedDepartment === "TRD" && b.isGranted === true).length,
         "Total Block Availed": detailedData.filter(b => b.selectedDepartment === "TRD" && b.AvailedTimeFrom !== null && b.AvailedTimeTo !== null).length,
         "Total Block Closed": detailedData.filter(b => b.selectedDepartment === "TRD" && b.overAllStatus === "Block Closed").length,
@@ -1108,7 +1108,7 @@ const handleDownloadUpcomingBlocks = () => {
         "Location": "MAS", "Department": "S&T", "Supporting Department": "-",
         "Total Block Requested": sntTotal,
         "Total Block Sanctioned": detailedData.filter(b => b.selectedDepartment === "S&T" && b.isSanctioned).length,
-        "Total Block Applied": detailedData.filter(b => b.selectedDepartment === "S&T" && b.isApplied === true).length,
+        "Total Availing Applied Blocks": detailedData.filter(b => b.selectedDepartment === "S&T" && b.isApplied === true).length,
         "Total Block Granted": detailedData.filter(b => b.selectedDepartment === "S&T" && b.isGranted === true).length,
         "Total Block Availed": detailedData.filter(b => b.selectedDepartment === "S&T" && b.AvailedTimeFrom !== null && b.AvailedTimeTo !== null).length,
         "Total Block Closed": detailedData.filter(b => b.selectedDepartment === "S&T" && b.overAllStatus === "Block Closed").length,
@@ -1117,7 +1117,7 @@ const handleDownloadUpcomingBlocks = () => {
         "Location": "MAS", "Department": "S&T", "Supporting Department": "ENGG",
         "Total Block Requested": sntWithEngg,
         "Total Block Sanctioned": detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.isSanctioned).length,
-        "Total Block Applied": detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.isApplied === true).length,
+        "Total Availing Applied Blocks": detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.isApplied === true).length,
         "Total Block Granted": detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.isGranted === true).length,
         "Total Block Availed": detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.AvailedTimeFrom !== null && b.AvailedTimeTo !== null).length,
         "Total Block Closed": detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.overAllStatus === "Block Closed").length,
@@ -1126,7 +1126,7 @@ const handleDownloadUpcomingBlocks = () => {
         "Location": "MAS", "Department": "S&T", "Supporting Department": "TRD",
         "Total Block Requested": sntWithPower,
         "Total Block Sanctioned": detailedData.filter(b => b.selectedDepartment === "S&T" && b.powerBlockRequired === true && b.isSanctioned).length,
-        "Total Block Applied": detailedData.filter(b => b.selectedDepartment === "S&T" && b.powerBlockRequired === true && b.isApplied === true).length,
+        "Total Availing Applied Blocks": detailedData.filter(b => b.selectedDepartment === "S&T" && b.powerBlockRequired === true && b.isApplied === true).length,
         "Total Block Granted": detailedData.filter(b => b.selectedDepartment === "S&T" && b.powerBlockRequired === true && b.isGranted === true).length,
         "Total Block Availed": detailedData.filter(b => b.selectedDepartment === "S&T" && b.powerBlockRequired === true && b.AvailedTimeFrom !== null && b.AvailedTimeTo !== null).length,
         "Total Block Closed": detailedData.filter(b => b.selectedDepartment === "S&T" && b.powerBlockRequired === true && b.overAllStatus === "Block Closed").length,
@@ -1135,7 +1135,7 @@ const handleDownloadUpcomingBlocks = () => {
         "Location": "MAS", "Department": "S&T", "Supporting Department": "ENGG and TRD",
         "Total Block Requested": sntWithEnggAndPower,
         "Total Block Sanctioned": detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.powerBlockRequired === true && b.isSanctioned).length,
-        "Total Block Applied": detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.powerBlockRequired === true && b.isApplied === true).length,
+        "Total Availing Applied Blocks": detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.powerBlockRequired === true && b.isApplied === true).length,
         "Total Block Granted": detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.powerBlockRequired === true && b.isGranted === true).length,
         "Total Block Availed": detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.powerBlockRequired === true && b.AvailedTimeFrom !== null && b.AvailedTimeTo !== null).length,
         "Total Block Closed": detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.powerBlockRequired === true && b.overAllStatus === "Block Closed").length,
@@ -1145,7 +1145,7 @@ const handleDownloadUpcomingBlocks = () => {
         "Location": "TOTAL", "Department": "", "Supporting Department": "",
         "Total Block Requested": totalRequested,
         "Total Block Sanctioned": totalSanctioned,
-        "Total Block Applied": totalApplied,
+        "Total Availing Applied Blocks": totalApplied,
         "Total Block Granted": totalGranted,
         "Total Block Availed": totalAvailed,
         "Total Block Closed": totalClosed,
@@ -1657,7 +1657,7 @@ const handleDownloadUpcomingBlocks = () => {
                   <th className="border-2 border-black px-1 md:px-2 py-2">Section</th>
                   {/* <th className="border-2 border-black px-1 md:px-2 py-2">Demanded (Hrs)/Blocks</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Approved (Hrs)/Blocks</th>
-                  <th className="border-2 border-black px-1 md:px-2 py-2">Applied (Hrs)/Blocks</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Availing Applied (Hrs)/Blocks</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Granted (Hrs)/Blocks</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">% Granted</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Availed (Hrs)/Blocks</th>
@@ -1724,7 +1724,7 @@ const handleDownloadUpcomingBlocks = () => {
 
 <th className="border-2 border-black px-1 md:px-2 py-2">
   <div className="flex flex-col items-center justify-center">
-    <div>Applied</div>
+    <div>Availing Applied</div>
     <div className="relative flex items-center justify-center group">
       (Hrs)/Blocks
       <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
@@ -1746,7 +1746,7 @@ const handleDownloadUpcomingBlocks = () => {
         i
       </span>
       <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
-        Applied block Granted  by the SM
+        Availing Applied block Granted  by the SM
       </div>
     </div>
   </div>
@@ -1760,7 +1760,7 @@ const handleDownloadUpcomingBlocks = () => {
         i
       </span>
       <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
-       Total Blocks Granted / Total Blocks Applied
+       Total Blocks Granted / Total Availing Applied Blocks
       </div>
     </div>
   </div>
@@ -1821,7 +1821,7 @@ const handleDownloadUpcomingBlocks = () => {
         i
       </span>
       <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
-    Applied Blocks not granted by the SM
+    Availing Applied Blocks not granted by the SM
       </div>
     </div>
   </div>
@@ -2237,7 +2237,7 @@ const handleDownloadUpcomingBlocks = () => {
         <th className="border-2 border-black px-1 md:px-2 py-2">Supporting Department</th>
         <th className="border-2 border-black px-1 md:px-2 py-2">Total Block Requested</th>
         <th className="border-2 border-black px-1 md:px-2 py-2">Total Block Sanctioned</th>
-        <th className="border-2 border-black px-1 md:px-2 py-2">Total Block Applied</th>
+        <th className="border-2 border-black px-1 md:px-2 py-2">Total Availing Applied Blocks</th>
         <th className="border-2 border-black px-1 md:px-2 py-2">Total Block Granted</th>
         <th className="border-2 border-black px-1 md:px-2 py-2">Total Block Availed</th>
         <th className="border-2 border-black px-1 md:px-2 py-2">Total Block Closed</th>
@@ -3267,7 +3267,7 @@ const handleDownloadUpcomingBlocks = () => {
                       statusLabel = "Sanctioned, Pending with SSE For Acceptance";
                       statusStyle = { background: "#fff86b", color: "#222" };
                     }  else if (block.overAllStatus==="Sanctioned and Accepted by SSE") {
-                      statusLabel = "Sanctioned and Accepted by SSE";
+                      statusLabel = "Sanctioned and Acknowledged by SSE";
                       statusStyle = { background: "#d47ed4", color: "#222" };
                     } else if ( block.overAllStatus==="Sanctioned and Rejected by SSE") {
                       statusLabel = "Sanctioned and Rejected by SSE";

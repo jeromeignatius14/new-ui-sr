@@ -1473,7 +1473,7 @@ const clearGlobalFilters = () => {
 
 <th className="border-2 border-black px-1 md:px-2 py-2">
   <div className="flex flex-col items-center justify-center">
-    <div>Applied</div>
+    <div>Availing Applied</div>
     <div className="relative flex items-center justify-center group">
       (Hrs)/Blocks
       <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
@@ -1495,7 +1495,7 @@ const clearGlobalFilters = () => {
         i
       </span>
       <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
-        Applied block Granted  by the SM
+        Availing Applied block Granted  by the SM
       </div>
     </div>
   </div>
@@ -1509,7 +1509,7 @@ const clearGlobalFilters = () => {
         i
       </span>
       <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
-       Total Blocks Granted / Total Blocks Applied
+       Total Blocks Granted / Total Availing Applied Blocks
       </div>
     </div>
   </div>
@@ -1570,7 +1570,7 @@ const clearGlobalFilters = () => {
         i
       </span>
       <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
-    Applied Blocks not granted by the SM
+    Availing Applied Blocks not granted by the SM
       </div>
     </div>
   </div>
@@ -2947,7 +2947,7 @@ const clearGlobalFilters = () => {
                       statusLabel = "Sanctioned, Pending with SSE For Acceptance";
                       statusStyle = { background: "#fff86b", color: "#222" };
                     }  else if (block.overAllStatus==="Sanctioned and Accepted by SSE") {
-                      statusLabel = "Sanctioned and Accepted by SSE";
+                      statusLabel = "Sanctioned and Acknowledged by SSE";
                       statusStyle = { background: "#d47ed4", color: "#222" };
                     } else if ( block.overAllStatus==="Sanctioned and Rejected by SSE") {
                       statusLabel = "Sanctioned and Rejected by SSE";

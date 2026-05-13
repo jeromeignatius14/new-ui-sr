@@ -37,10 +37,10 @@ const STATUS_LABEL: Record<string, { label: string; severity: "red" | "amber" | 
   "Sanctioned and Rejected by SSE":               { label: "Admin sanctioned, but SSE rejected — block stuck here",        severity: "red"   },
 
   // ── Sanctioned / SSE
-  "Sanctioned, Pending with SSE For Acceptance":  { label: "Sanctioned by admin — SSE hasn't accepted it yet",             severity: "amber" },
+  "Sanctioned, Pending with SSE For Acceptance":  { label: "Sanctioned by admin — SSE hasn't acknowledged it yet",             severity: "amber" },
   "Sanctioned":                                   { label: "Sanctioned — nobody has applied for availing yet",             severity: "amber" },
-  "Sanctioned And Accepted By SSE":               { label: "SSE accepted — but nobody applied for block availing",         severity: "amber" },
-  "Sanctioned and Accepted by SSE":               { label: "SSE accepted — but nobody applied for block availing",         severity: "amber" },
+  "Sanctioned And Accepted By SSE":               { label: "SSE acknowledged — but nobody applied for block availing",         severity: "amber" },
+  "Sanctioned and Accepted by SSE":               { label: "SSE acknowledged — but nobody applied for block availing",         severity: "amber" },
 
   // ── Avail pipeline
   "Pending Concurrences":                         { label: "Waiting for TRD / S&T / ENGG concurrences before SM can act", severity: "amber" },
@@ -428,7 +428,7 @@ export default function AnalystDashboard() {
             />
 
             {/* Stage 3 — SSE Accepted */}
-            <StageCard icon="📡" title="Accepted by SSE" count={f.acceptedBySse} prev={f.sanctioned} color="#f97316">
+            <StageCard icon="📡" title="Acknowledged by SSE" count={f.acceptedBySse} prev={f.sanctioned} color="#f97316">
               {sr?.sseNotAcceptingSanction > 0 && (
                 <Alert severity="red">
                   ⚠ {sr.sseNotAcceptingSanction} blocks sanctioned but SSE hasn&apos;t accepted in over 72 hours — follow up with field staff
@@ -752,7 +752,7 @@ export default function AnalystDashboard() {
                   <li>🔴 <strong>{sr.smNotActing}</strong> avail requests waiting for SM action over 1 hour — Station Masters need to log in and respond.</li>
                 )}
                 {sr?.sseNotAcceptingSanction > 0 && (
-                  <li>🟠 <strong>{sr.sseNotAcceptingSanction}</strong> sanctioned blocks not accepted by SSE in over 72 hours.</li>
+                  <li>🟠 <strong>{sr.sseNotAcceptingSanction}</strong> sanctioned blocks not acknowledged by SSE in over 72 hours.</li>
                 )}
                 {ap?.smApprovalWait?.gt24h > 0 && (
                   <li>🔴 <strong>{ap.smApprovalWait.gt24h}</strong> requests waiting SM approval for over 24 hours — escalate to divisional management.</li>
