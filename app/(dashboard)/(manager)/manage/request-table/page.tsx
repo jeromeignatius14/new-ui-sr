@@ -922,7 +922,7 @@ const handleDownloadExcel = async () => {
 {session?.user?.role === "DEPT_CONTROLLER" && (
 <Link href="/manage/defaulters">
   <button className="w-fit px-16 rounded-full bg-[#ffd6d6] border-2 border-[#dc2626] py-6 text-2xl font-extrabold text-black text-center shadow-lg hover:scale-105 transition min-w-[320px]">
-    ⚠️ DEFAULTERS LIST
+    ⚠️ EXCEPTIONAL LIST
   </button>
 </Link>
 )}

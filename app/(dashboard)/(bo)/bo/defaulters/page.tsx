@@ -385,7 +385,7 @@ export default function BoDefaultersPage() {
                 </button>
                 <div className="h-5 w-px bg-gray-300" />
                 <div>
-                    <h1 className="text-lg font-bold text-gray-900 leading-tight">Defaulters List</h1>
+                    <h1 className="text-lg font-bold text-gray-900 leading-tight">Exceptional List</h1>
                     <p className="text-xs text-gray-500">
                         {userDept ? `${userDept} Department` : "All Departments"} — blocks pending action after sanctioning
                     </p>

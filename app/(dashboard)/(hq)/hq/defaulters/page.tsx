@@ -396,7 +396,7 @@ export default function HqDefaultersPage() {
                 </button>
                 <div className="h-5 w-px bg-gray-300" />
                 <div>
-                    <h1 className="text-lg font-bold text-gray-900 leading-tight">Defaulters List</h1>
+                    <h1 className="text-lg font-bold text-gray-900 leading-tight">Exceptional List</h1>
                     <p className="text-xs text-gray-500">
                         {deptLabel} — blocks pending action after sanctioning
                     </p>

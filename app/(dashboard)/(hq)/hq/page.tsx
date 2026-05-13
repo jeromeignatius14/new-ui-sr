@@ -45,7 +45,7 @@ export default function AdminDashboardPage() {
         </Link>
         <Link href="/hq/defaulters" className="w-full">
           <button className="w-full rounded-2xl bg-[#ffd6d6] border-2 border-[#dc2626] py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
-            ⚠️ DEFAULTERS LIST
+            ⚠️ EXCEPTIONAL LIST
           </button>
         </Link>
         <Link href="/analyst" className="w-full">

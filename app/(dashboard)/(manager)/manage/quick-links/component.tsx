@@ -38,7 +38,7 @@ export default function ManagerQuickLinks() {
                 <a href="/manage/permit-block-at-site" className="w-full rounded-2xl bg-[#fde68a] border-2 border-[#d97706] py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">⚡ PERMIT BLOCK AT SITE</a>
             )}
             {(isDeptController || isBranchOfficer || isSeniorOfficer || isJuniorOfficer) && (
-                <a href="/manage/defaulters" className="w-full rounded-2xl bg-[#ffd6d6] border-2 border-[#dc2626] py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">⚠️ DEFAULTERS LIST</a>
+                <a href="/manage/defaulters" className="w-full rounded-2xl bg-[#ffd6d6] border-2 border-[#dc2626] py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">⚠️ EXCEPTIONAL LIST</a>
             )}
             <a href="/analyst" className="w-full rounded-2xl bg-[#d4edda] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">ANALYSE IN DETAIL</a>
         </div>

@@ -1242,7 +1242,7 @@ if (session?.user?.role === "PUNCTUALITY_CONTROLLER") {
           </Link>
           <Link href="/drm/defaulters" className="w-full">
             <button className="w-full rounded-2xl bg-[#ffd6d6] border-2 border-[#dc2626] py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
-              ⚠️ DEFAULTERS LIST
+              ⚠️ EXCEPTIONAL LIST
             </button>
           </Link>
           <Link href="/analyst" className="w-full">
@@ -1307,7 +1307,7 @@ if (session?.user?.role === "PUNCTUALITY_CONTROLLER") {
           {["BRANCH_OFFICER", "SENIOR_OFFICER", "JUNIOR_OFFICER"].includes(session?.user?.role ?? "") && (
             <Link href="/manage/defaulters" className="w-full">
               <button className="w-full rounded-2xl bg-[#ffd6d6] border-2 border-[#dc2626] py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
-                ⚠️ DEFAULTERS LIST
+                ⚠️ EXCEPTIONAL LIST
               </button>
             </Link>
           )}
