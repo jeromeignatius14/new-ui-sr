@@ -5037,6 +5037,7 @@ const handleDownloadDepartmentCount = () => {
         <th className="border-2 border-black px-1 md:px-2 py-2">Supporting Department</th>
         <th className="border-2 border-black px-1 md:px-2 py-2">Total Block Requested</th>
         <th className="border-2 border-black px-1 md:px-2 py-2">Total Block Sanctioned</th>
+        <th className="border-2 border-black px-1 md:px-2 py-2">Total Block Granted</th>
         <th className="border-2 border-black px-1 md:px-2 py-2">Total Block Availed</th>
       </tr>
     </thead>
@@ -5091,6 +5092,25 @@ const handleDownloadDepartmentCount = () => {
                       (block) =>
                         block.selectedDepartment === "ENGG" &&
                         block.isSanctioned &&
+                        block.powerBlockRequired === false &&
+                        block.sntDisconnectionRequired === false
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setActiveFilter("granted");
+                    setActiveSection(null);
+                    scrollToUpcomingBlocks();
+                    setDepartmentCountFilter(null);
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "ENGG" &&
+                        block.isGranted === true &&
                         block.powerBlockRequired === false &&
                         block.sntDisconnectionRequired === false
                     ).length
@@ -5183,6 +5203,25 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("granted");
+                    setActiveSection(null);
+                    scrollToUpcomingBlocks();
+                    setDepartmentCountFilter(null);
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "ENGG" &&
+                        block.isGranted === true &&
+                        block.sntDisconnectionRequired === true &&
+                        block.powerBlockRequired === false
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
                      setActiveFilter("all");
                      setActiveSection(null);
                      scrollToUpcomingBlocks()
@@ -5261,6 +5300,25 @@ const handleDownloadDepartmentCount = () => {
                         block.selectedDepartment === "ENGG" &&
                         block.powerBlockRequired === true &&block.sntDisconnectionRequired === false&&
                         block.isSanctioned
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setActiveFilter("granted");
+                    setActiveSection(null);
+                    scrollToUpcomingBlocks();
+                    setDepartmentCountFilter(null);
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "ENGG" &&
+                        block.isGranted === true &&
+                        block.powerBlockRequired === true &&
+                        block.sntDisconnectionRequired === false
                     ).length
                   }
                 </td>
@@ -5351,6 +5409,25 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("granted");
+                    setActiveSection(null);
+                    scrollToUpcomingBlocks();
+                    setDepartmentCountFilter(null);
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "ENGG" &&
+                        block.isGranted === true &&
+                        block.sntDisconnectionRequired === true &&
+                        block.powerBlockRequired === true
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
                      setActiveFilter("all");
                      setActiveSection(null);
                      scrollToUpcomingBlocks()
@@ -5422,6 +5499,23 @@ const handleDownloadDepartmentCount = () => {
                     detailedData.filter(
                       (block) =>
                         block.selectedDepartment === "TRD" && block.isSanctioned
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setActiveFilter("granted");
+                    setActiveSection(null);
+                    scrollToUpcomingBlocks();
+                    setDepartmentCountFilter(null);
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "TRD" &&
+                        block.isGranted === true
                     ).length
                   }
                 </td>
@@ -5509,6 +5603,25 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("granted");
+                    setActiveSection(null);
+                    scrollToUpcomingBlocks();
+                    setDepartmentCountFilter(null);
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "S&T" &&
+                        block.isGranted === true &&
+                        block.enggDisconnectionsRequired === false &&
+                        block.powerBlockRequired === false
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
                      setActiveFilter("all");
                      setActiveSection(null);
                      scrollToUpcomingBlocks()
@@ -5583,6 +5696,25 @@ const handleDownloadDepartmentCount = () => {
                         block.selectedDepartment === "S&T" &&
                         block.enggDisconnectionsRequired === true &&
                         block.isSanctioned
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setActiveFilter("granted");
+                    setActiveSection(null);
+                    scrollToUpcomingBlocks();
+                    setDepartmentCountFilter(null);
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "S&T" &&
+                        block.isGranted === true &&
+                        block.enggDisconnectionsRequired === true &&
+                        block.powerBlockRequired === false
                     ).length
                   }
                 </td>
@@ -5664,6 +5796,25 @@ const handleDownloadDepartmentCount = () => {
                         block.selectedDepartment === "S&T" &&
                         block.powerBlockRequired === true &&
                         block.isSanctioned
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
+                    setActiveFilter("granted");
+                    setActiveSection(null);
+                    scrollToUpcomingBlocks();
+                    setDepartmentCountFilter(null);
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "S&T" &&
+                        block.isGranted === true &&
+                        block.powerBlockRequired === true &&
+                        block.enggDisconnectionsRequired === false
                     ).length
                   }
                 </td>
@@ -5752,6 +5903,25 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("granted");
+                    setActiveSection(null);
+                    scrollToUpcomingBlocks();
+                    setDepartmentCountFilter(null);
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "S&T" &&
+                        block.isGranted === true &&
+                        block.enggDisconnectionsRequired === true &&
+                        block.powerBlockRequired === true
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
                      setActiveFilter("all");
                      setActiveSection(null);
                      scrollToUpcomingBlocks()
@@ -5786,6 +5956,9 @@ const handleDownloadDepartmentCount = () => {
     </td>
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
       {totalSanctioned}
+    </td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+      {detailedData.filter(b => b.isGranted === true).length}
     </td>
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
       {totalAvailed}
@@ -5963,6 +6136,7 @@ const handleDownloadDepartmentCount = () => {
                   <th className="border-2 border-black px-1 md:px-2 py-2">Activity</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Demanded time</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Sanctioned time</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Granted time</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Availed time</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Status</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Remarks</th>
@@ -5971,7 +6145,7 @@ const handleDownloadDepartmentCount = () => {
               <tbody>
                 {filteredUpcomingBlocks.length === 0 ? (
                   <tr className="bg-white">
-                    <td colSpan={11} className="text-center py-4 text-black">
+                    <td colSpan={12} className="text-center py-4 text-black">
                       No data found.
                     </td>
                   </tr>
@@ -6046,7 +6220,17 @@ const handleDownloadDepartmentCount = () => {
                                                   ) : (
                                                     "Not Availed Yet"
                                                   )}
-                                                </td> 
+                                                </td>
+                        <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
+                          {block.GrantedTimeFrom && block.GrantedTimeTo ? (
+                            <>
+                              {formatTime(block.GrantedTimeFrom)} to{" "}
+                              {formatTime(block.GrantedTimeTo)}
+                            </>
+                          ) : (
+                            "Not Granted Yet"
+                          )}
+                        </td>
                         <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
                           {block.AvailedTimeFrom && block.AvailedTimeTo ? (
                             <>
