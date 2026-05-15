@@ -926,6 +926,13 @@ const handleDownloadExcel = async () => {
   </button>
 </Link>
 )}
+{session?.user?.role === "DEPT_CONTROLLER" && (
+<Link href="/analyst">
+  <button className="w-fit px-16 rounded-full bg-[#c8f0ff] border-2 border-[#1976d2] py-6 text-2xl font-extrabold text-black text-center shadow-lg hover:scale-105 transition min-w-[320px]">
+    ANALYZE IN DETAIL
+  </button>
+</Link>
+)}
 {session?.user.department==="S&T"&&<Link href="/manage/manage-pc">
   <button className="w-fit px-16 rounded-full bg-[#ffd180] border-2 border-black py-6 text-2xl font-extrabold text-black text-center shadow-lg hover:scale-105 transition min-w-[320px]">
     PC Installed In Stations
