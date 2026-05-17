@@ -4948,7 +4948,10 @@ useEffect(() => {
                         const hourStr = h.toString().padStart(2, "0");
                         if (isShadowBlock && parentTimeConstraint) {
                           // Shadow: only allow hours within parent's window; skip isToday filter
-                          if (h < parentTimeConstraint.fromH || h > parentTimeConstraint.toH) return null;
+                          const { fromH: pfH, toH: ptH } = parentTimeConstraint;
+                          const overnight = pfH > ptH;
+                          const allowed = overnight ? (h >= pfH || h <= ptH) : (h >= pfH && h <= ptH);
+                          if (!allowed) return null;
                         } else if (isToday(formData.date)) {
                           const now = new Date();
                           const currentHour = now.getHours();
@@ -5027,7 +5030,10 @@ useEffect(() => {
                       {[...Array(24).keys()].map((h) => {
                         const hourStr = h.toString().padStart(2, "0");
                         if (isShadowBlock && parentTimeConstraint) {
-                          if (h < parentTimeConstraint.fromH || h > parentTimeConstraint.toH) return null;
+                          const { fromH: pfH, toH: ptH } = parentTimeConstraint;
+                          const overnight = pfH > ptH;
+                          const allowed = overnight ? (h >= pfH || h <= ptH) : (h >= pfH && h <= ptH);
+                          if (!allowed) return null;
                         }
                         return <option key={h} value={hourStr}>{hourStr}</option>;
                       })}
