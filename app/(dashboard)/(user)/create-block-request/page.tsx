@@ -2241,7 +2241,7 @@ const findCutoffThursday = () => {
     participations.forEach((block: any) => {
       const s = block.overAllStatus ?? "";
       const mp = (block.availParticipants ?? []).find((p: any) => p.userId === myUserId);
-      if (s === "Block Closed" || s === "Availing Cancelled") return;
+      if (s === "Block Closed" || s === "Availing Cancelled" || s === "SM Rejected") return;
 
       // Availing active but I haven't started
       if (s === "Availing Active" && mp && !mp.availStartedAt) {
