@@ -2222,10 +2222,20 @@ const findCutoffThursday = () => {
     const toMins   = tH * 60 + (tM || 0);
     const pFromMins = parentTimeConstraint.fromH * 60 + parentTimeConstraint.fromM;
     const pToMins   = parentTimeConstraint.toH   * 60 + parentTimeConstraint.toM;
-    if (fromMins < pFromMins)
-      return `Start time must be at or after ${parentTimeConstraint.fromHHMM} (parent block start)`;
-    if (toMins > pToMins)
-      return `End time must be at or before ${parentTimeConstraint.toHHMM} (parent block end)`;
+    const isOvernight = pFromMins > pToMins;
+    if (isOvernight) {
+      // Normalize times past midnight by adding 1440 so the range is continuous
+      const norm = (m: number) => m >= pFromMins ? m : m + 1440;
+      if (norm(fromMins) < pFromMins)
+        return `Start time must be at or after ${parentTimeConstraint.fromHHMM} (parent block start)`;
+      if (!isNaN(tH) && norm(toMins) > pToMins + 1440)
+        return `End time must be at or before ${parentTimeConstraint.toHHMM} (parent block end)`;
+    } else {
+      if (fromMins < pFromMins)
+        return `Start time must be at or after ${parentTimeConstraint.fromHHMM} (parent block start)`;
+      if (toMins > pToMins)
+        return `End time must be at or before ${parentTimeConstraint.toHHMM} (parent block end)`;
+    }
     return null;
   }, [isShadowBlock, parentTimeConstraint, formData.demandTimeFrom, formData.demandTimeTo]);
 
