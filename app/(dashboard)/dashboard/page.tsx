@@ -73,7 +73,7 @@ const hasInProgressBlock = requestsData?.data?.requests?.find(
           <a href="/create-block-request" className="w-full rounded-full bg-[#eeb8f7] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">ENTER NEW BLOCK REQUEST</a>
           <a href="/edit-request" className="w-full rounded-full bg-[#aee6f7] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">EDIT/CANCEL PREVIOUS BLOCK REQUESTS</a>
           <a href="/request-table" className="w-full rounded-full bg-[#c7c7f7] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">SUMMARY OF MY BLOCK REQUESTS</a>
-          <a href={`https://smr-dashboard.plattorian.tech/?cugNumber=${session?.user?.phone}&token=W1IU66ZFEBFBF6C1dGmouN6PVyHARQJg`} className="w-full rounded-full bg-[#a6f7a6] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">AVAIL BLOCK AT SITE</a>
+          <a href="/avail-block" className="w-full rounded-full bg-[#a6f7a6] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">AVAIL BLOCK AT SITE</a>
 
 {hasInProgressBlock && (
   <a
@@ -193,8 +193,7 @@ if (session?.user?.role === "BOARD_CONTROLLER") {
 }
 
 if (session?.user?.role === "SM") {
-    // window.location.href = "https://smr-dashboard.plattorian.tech/?cugNumber=${session?.user?.phone}&section=MAS-GDR";
-    window.location.href=`https://smr-dashboard.plattorian.tech/?cugNumber=${session?.user?.phone}&stationCode=${session?.user?.depot}&user=SM&token=W1IU66ZFEBFBF6C1dGmouN6PVyHARQJg`
+    window.location.href = "/sm/pending-avails";
 }
   // Custom admin dashboard UI (match manager dashboard style)
   if (session?.user?.role === "ADMIN") {
