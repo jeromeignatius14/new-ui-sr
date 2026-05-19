@@ -4703,3 +4703,15 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
 export const sectionsWithAlphanumericSiteLocation = [
 ""
 ];
+
+export const AVAIL_STATUS = {
+  PENDING_CONCURRENCES:   "Pending Concurrences",
+  PENDING_SM_APPROVAL:    "Pending SM Approval",
+  PENDING_TRD_PERMIT:     "Pending TRD Controller Permit",
+  SM_APPROVED:            "SM Approved",
+  AVAILING_ACTIVE:        "Availing Active",
+  ALL_CLOSURES_SUBMITTED: "All Closures Submitted",
+  BLOCK_CLOSED:           "Block Closed",
+  AVAILING_CANCELLED:     "Availing Cancelled",
+  SM_REJECTED:            "SM Rejected",
+} as const;
