@@ -41,14 +41,14 @@ export default function PendingRequestsPage() {
   }
 `;
     let someId = ""
-    if (session?.user?.id !== "02e51371-5ea6-4d5c-b857-a605ee76f745" && session?.user.department === "ENGG" && session?.user.role === "DEPT_CONTROLLER") {
-        someId = "02e51371-5ea6-4d5c-b857-a605ee76f745"
+    if (session?.user?.id !== "852e95b1-a568-4571-99e4-96bf7e02ba01" && session?.user.department === "ENGG" && session?.user.role === "DEPT_CONTROLLER") {
+        someId = "852e95b1-a568-4571-99e4-96bf7e02ba01"
     }
-    if (session?.user?.id !== "19ee94a1-e3b0-4e24-bfe5-994af3d92ecd" && session?.user.department === "TRD" && session?.user.role === "DEPT_CONTROLLER") {
-        someId = "19ee94a1-e3b0-4e24-bfe5-994af3d92ecd"
+    if (session?.user?.id !== "596aad5b-1e8b-42c1-ad1c-244d8774dedc" && session?.user.department === "TRD" && session?.user.role === "DEPT_CONTROLLER") {
+        someId = "596aad5b-1e8b-42c1-ad1c-244d8774dedc"
     }
-    if (session?.user?.id !== "1dc95756-fe6f-460b-b9b7-2c8905ebf3a8" && session?.user.department === "S&T" && session?.user.role === "DEPT_CONTROLLER") {
-        someId = "1dc95756-fe6f-460b-b9b7-2c8905ebf3a8"
+    if (session?.user?.id !== "78a2a1d7-037a-4948-aa86-a33adf1a6596" && session?.user.department === "S&T" && session?.user.role === "DEPT_CONTROLLER") {
+        someId = "78a2a1d7-037a-4948-aa86-a33adf1a6596"
     }
     // Fetch all requests (same as request-table)
     const { data, isLoading, error } = useQuery({
@@ -244,8 +244,8 @@ const pendingMultiLineRequests = (Array.isArray(data?.data?.requests) ? data.dat
 
             // Block requests within [Saturday ... next Sunday]
             if (requestDate >= blockStart && requestDate <= blockEnd) {
-                alert("You cannot accept requests from tomorrow to next Sunday on Friday after 12 PM.");
-                return;
+              alert("You cannot accept requests from tomorrow to next Sunday on Friday after 12 PM.");
+              return;
             }
         }
 
@@ -650,11 +650,8 @@ useEffect(() => {
         notFound();
     }
 
-    // if (!isLoading && !error && pendingRequests.length === 0) {
-    //     notFound();
-    // }
 
-    if (!isLoading && !error && pendingRequests.length === 0) {
+    if (!isLoading && !error && pendingRequests.length === 0 && rejectedRequest.length === 0) {
         return (
             <div className="min-h-screen text-black bg-white p-3 border border-black flex flex-col items-center justify-center gap-4">
                 <div className="text-center text-xl font-bold">No pending requests found</div>
@@ -747,7 +744,9 @@ useEffect(() => {
             <style jsx global>{flashingRowStyle}</style>
             {/* Top Yellow Bar */}
             <div className="w-full bg-[#FFF86B] py-2 flex flex-col items-center">
-                <span className="text-[9vw] min-[430px]:text-4xl  font-bold text-[#B57CF6] tracking-widest">RBMS-TVC-DIVN</span>
+                <span className="text-[9vw] min-[430px]:text-4xl  font-bold text-[#B57CF6] tracking-widest">
+                    RBMS-{session?.user?.location}-DIVN
+                </span>
             </div>
 
             {/* Main Title on Light Blue */}

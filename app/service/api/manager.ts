@@ -34,9 +34,6 @@ export interface UsersResponse {
 
 export interface UserRequest {
     DisconnAccceptance: string;
-    allEnggAcceptance: string;
-    allSntAcceptance: string;
-    allTrdAcceptance: string;
     Draft: boolean;
     tpcRemarks?: string;
     enggDisconnectionsRequired: boolean | undefined;
@@ -44,10 +41,10 @@ export interface UserRequest {
     disconnectionRequestRejectRemarks: string;
     remarkByManager: string;
     sanctionedRemarks: string;
-    duration: any;
     sntDisconnectionAssignTo: string;
     powerBlockDisconnectionAssignTo: string;
     emergencyBlockRemarks: any;
+    overallStatus: string;
     overAllStatus: string;
     divisionId: string;
     sanctionedTimeTo: any;
@@ -130,6 +127,9 @@ export interface UserRequest {
     managerAcceptance: boolean;
     adminAcceptanceId: string;
     adminAcceptance: boolean;
+    allTrdAcceptance: "ACCEPTED" | "PENDING" | "REJECTED" | null;
+    allSntAcceptance: "ACCEPTED" | "PENDING" | "REJECTED" | null;
+    allEnggAcceptance: "ACCEPTED" | "PENDING" | "REJECTED" | null;
     user: {
         id: string;
         name: string;
@@ -284,17 +284,19 @@ export const managerService = {
         limit: number = 10,
         startDate?: string,
         endDate?: string,
-        status?: string
+        status?: string,
+        id?: string,
+
     ): Promise<UserRequestsResponse> => {
         const params = new URLSearchParams({
             page: page.toString(),
             limit: limit.toString(),
+            id:id||""
         });
 
         if (startDate) params.append('startDate', startDate);
         if (endDate) params.append('endDate', endDate);
         if (status) params.append('status', status);
-
         const response = await axiosInstance.get<UserRequestsResponse>(
             `api/user-request/admin/users-requests?${params.toString()}`
         );

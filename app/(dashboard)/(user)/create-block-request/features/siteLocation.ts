@@ -3,7 +3,7 @@
  * Pattern: xxx/yyy where xxx is numeric (max 3) and yyy is alphanumeric (max 4)
  */
 
-import {  blockSectionDepotAssignment, sectionsWithAlphanumericSiteLocation,  } from '../../../../lib/store';
+import { siteLocationRanges, blockSectionDepotAssignment, sectionsWithAlphanumericSiteLocation, type SiteLocationRanges } from '../../../../lib/store';
 
 export interface SiteLocationValidation {
   isValid: boolean;
@@ -24,7 +24,59 @@ export interface SiteLocationRangeInfo {
  * @param department - The user's department
  * @returns SiteLocationRangeInfo object with min, max, and display text
  */
+export const getSiteLocationRange = (
+  majorSection: string,
+  blockSections: string[],
+  department: string
+): SiteLocationRangeInfo => {
+  if (!majorSection || !blockSections.length || !department) {
+    return {
+      min: 0,
+      max: 999,
+      displayText: "Select section and department to see range"
+    };
+  }
 
+  const majorSectionData = siteLocationRanges[majorSection];
+  if (!majorSectionData) {
+    return {
+      min: 0,
+      max: 999,
+      displayText: "No range data available for this section"
+    };
+  }
+
+  let overallMin = Infinity;
+  let overallMax = -Infinity;
+  let validRangesFound = false;
+
+  // Check each selected block section
+  for (const blockSection of blockSections) {
+    const blockData = majorSectionData[blockSection];
+    if (blockData && blockData[department as keyof typeof blockData]) {
+      const range = blockData[department as keyof typeof blockData];
+      if (range.min !== 0 || range.max !== 0) { // Skip 0,0 ranges (no data)
+        overallMin = Math.min(overallMin, range.min);
+        overallMax = Math.max(overallMax, range.max);
+        validRangesFound = true;
+      }
+    }
+  }
+
+  if (!validRangesFound) {
+    return {
+      min: 0,
+      max: 999,
+      displayText: `No range data available for ${department} in selected sections`
+    };
+  }
+
+  return {
+    min: overallMin,
+    max: overallMax,
+    displayText: `Valid range: ${overallMin} - ${overallMax}`
+  };
+};
 
 /**
  * Validates site location range against department and section constraints
@@ -58,7 +110,19 @@ export const validateSiteLocationRange = (
     return { isValid: true }; // Let basic validation handle invalid format
   }
 
+  const range = getSiteLocationRange(majorSection, blockSections, department);
+  
+  // Skip validation if no valid range data
+  if (range.min === 0 && range.max === 999) {
+    return { isValid: true };
+  }
 
+  if (numericPart < range.min || numericPart > range.max) {
+    return {
+      isValid: false,
+      error: `Not in range`
+    };
+  }
 
   return { isValid: true };
 };

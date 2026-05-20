@@ -85,11 +85,7 @@ export default function ManageUsersTable() {
 
   // Add user handler
   const handleAddUser = async (formData: any) => {
-    await addUserMutation.mutateAsync({
-      ...formData,
-      department: session?.user?.department,
-      division: session?.user?.location,
-    });
+    await addUserMutation.mutateAsync(formData);
     setAddModalOpen(false);
     setRefetchLoading(true);
     await refetch();
@@ -105,10 +101,7 @@ export default function ManageUsersTable() {
   // Edit user handler
   const handleEditUser = async (formData: any) => {
     if (!editUserId) return;
-    await editUserMutation.mutateAsync({
-      userId: editUserId,
-      data: { ...formData, division: session?.user?.location, department: session?.user?.department },
-    });
+    await editUserMutation.mutateAsync({ userId: editUserId, data: formData });
     setEditUserId(null);
     setEditData(null);
     setRefetchLoading(true);
@@ -138,10 +131,7 @@ export default function ManageUsersTable() {
   // Edit JE handler
   const handleEditJE = async (formData: any) => {
     if (!editJEId || !expandedUserId) return;
-    await editJEMutation.mutateAsync({
-      jeId: editJEId,
-      data: { ...formData, division: session?.user?.location, department: session?.user?.department },
-    });
+    await editJEMutation.mutateAsync({ jeId: editJEId, data: formData });
     setEditJEId(null);
     setEditData(null);
     setRefetchLoading(true);
@@ -400,7 +390,7 @@ export default function ManageUsersTable() {
         isOpen={addModalOpen}
         onClose={() => setAddModalOpen(false)}
         onSubmit={handleAddUser}
-        users={users.map((u) => ({ id: u.id, name: u.name, depot: u.depot, phone: u.phone }))}
+        users={users.map((u) => ({ id: u.id, name: u.name, depot: u.depot }))}
         department={session?.user?.department as "TRD" | "S&T" | "ENGG"}
       />
       {/* Edit User Modal */}
@@ -412,7 +402,7 @@ export default function ManageUsersTable() {
             setEditData(null);
           }}
           onSubmit={handleEditUser}
-          users={users.map((u) => ({ id: u.id, name: u.name, depot: u.depot, phone: u.phone }))}
+          users={users.map((u) => ({ id: u.id, name: u.name, depot: u.depot }))}
           initialData={editData}
           department={session?.user?.department as "TRD" | "S&T" | "ENGG"}
         />
@@ -426,7 +416,7 @@ export default function ManageUsersTable() {
             setEditData(null);
           }}
           onSubmit={handleEditJE}
-          users={users.map((u) => ({ id: u.id, name: u.name, depot: u.depot, phone: u.phone }))}
+          users={users.map((u) => ({ id: u.id, name: u.name, depot: u.depot }))}
           initialData={editData}
           isJE={true}
           department={session?.user?.department as "TRD" | "S&T" | "ENGG"}

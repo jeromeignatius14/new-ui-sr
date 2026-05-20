@@ -21,6 +21,7 @@ import { WeeklySwitcher } from "@/app/components/ui/WeeklySwitcher";
 import { useSession } from "next-auth/react";
 import { useRef } from "react";
 import dayjs from "dayjs";
+import { request } from "http";
 
 export default function ManagerRequestTablePage() {
   const router = useRouter();
@@ -90,17 +91,17 @@ export default function ManagerRequestTablePage() {
   const weekEnd = endOfWeek(currentWeekStart, { weekStartsOn: 6 });
   const weekStart = startOfWeek(currentWeekStart, { weekStartsOn: 6 });
 let someId=""
-if(session?.user?.id!=="02e51371-5ea6-4d5c-b857-a605ee76f745"&&session?.user.department==="ENGG"&&session?.user.role==="DEPT_CONTROLLER")
+if(session?.user?.id!=="852e95b1-a568-4571-99e4-96bf7e02ba01"&&session?.user.department==="ENGG"&&session?.user.role==="DEPT_CONTROLLER")
   {
-    someId="02e51371-5ea6-4d5c-b857-a605ee76f745"
+    someId="852e95b1-a568-4571-99e4-96bf7e02ba01"
   }
-  if(session?.user?.id!=="19ee94a1-e3b0-4e24-bfe5-994af3d92ecd"&&session?.user.department==="TRD"&&session?.user.role==="DEPT_CONTROLLER")
+  if(session?.user?.id!=="596aad5b-1e8b-42c1-ad1c-244d8774dedc"&&session?.user.department==="TRD"&&session?.user.role==="DEPT_CONTROLLER")
   {
-    someId="19ee94a1-e3b0-4e24-bfe5-994af3d92ecd"
+    someId="596aad5b-1e8b-42c1-ad1c-244d8774dedc"
   }
-  if(session?.user?.id!=="1dc95756-fe6f-460b-b9b7-2c8905ebf3a8"&&session?.user.department==="S&T"&&session?.user.role==="DEPT_CONTROLLER")
+  if(session?.user?.id!=="78a2a1d7-037a-4948-aa86-a33adf1a6596"&&session?.user.department==="S&T"&&session?.user.role==="DEPT_CONTROLLER")
   {
-    someId="1dc95756-fe6f-460b-b9b7-2c8905ebf3a8"
+    someId="78a2a1d7-037a-4948-aa86-a33adf1a6596"
   }
   // Fetch all requests initially (no date filter)
   const { data, isLoading, error } = useQuery({
@@ -517,7 +518,7 @@ const handleDownloadExcel = async () => {
       {/* Top Yellow Bar */}
       <div className="w-full bg-[#FFF86B] py-2 flex flex-col items-center">
         <span className="text-[9vw] min-[430px]:text-4xl font-bold text-[#B57CF6] tracking-widest">
-          RBMS-TVC-DIVN
+            RBMS-{session?.user?.location}-DIVN
         </span>
       </div>
 
@@ -527,6 +528,7 @@ const handleDownloadExcel = async () => {
           {session?.user?.department || "..."} Controller
         </span>
       </div>
+
 <div className="mx-4">
   
 <div className="flex justify-center mt-8 mb-6">
@@ -793,7 +795,14 @@ const handleDownloadExcel = async () => {
               </tr>
             </thead>
 <tbody>
-  {filteredRequests.filter((request: UserRequest) => request.isSanctioned === true).length > 0 ? (
+  {isLoading ? (
+    <tr>
+      <td colSpan={7} className="text-center py-4 border border-black">
+        Loading approved requests...
+      </td>
+    </tr>
+  ) : (
+    filteredRequests.filter((request: UserRequest) => request.isSanctioned === true).length > 0 ? (
     filteredRequests
       .filter((request: UserRequest) => request.isSanctioned === true)
       .sort((a, b) => new Date(a.sanctionedTimeFrom || a.optimizeTimeFrom || a.demandTimeFrom).getTime() - new Date(b.sanctionedTimeFrom || b.optimizeTimeFrom || b.demandTimeTo).getTime())
@@ -860,6 +869,7 @@ const handleDownloadExcel = async () => {
         </div>
       </td>
     </tr>
+  )
   )}
 </tbody>
           </table>
@@ -899,7 +909,7 @@ const handleDownloadExcel = async () => {
     GENERATE REPORTS
   </button>
 </Link>
-<Link href="/manage/permit-block-at-site">
+<Link href="/avail-block">
   <button className="w-fit px-16 rounded-full bg-[#ffd180] border-2 border-black py-6 text-2xl font-extrabold text-black text-center shadow-lg hover:scale-105 transition min-w-[320px]">
     AVAILED STATUS
   </button>
@@ -909,6 +919,20 @@ const handleDownloadExcel = async () => {
     MANAGE USERS
   </button>
 </Link>
+{session?.user?.role === "DEPT_CONTROLLER" && (
+<Link href="/manage/defaulters">
+  <button className="w-fit px-16 rounded-full bg-[#ffd6d6] border-2 border-[#dc2626] py-6 text-2xl font-extrabold text-black text-center shadow-lg hover:scale-105 transition min-w-[320px]">
+    ⚠️ EXCEPTIONAL LIST
+  </button>
+</Link>
+)}
+{session?.user?.role === "DEPT_CONTROLLER" && (
+<Link href="/analyst">
+  <button className="w-fit px-16 rounded-full bg-[#c8f0ff] border-2 border-[#1976d2] py-6 text-2xl font-extrabold text-black text-center shadow-lg hover:scale-105 transition min-w-[320px]">
+    ANALYZE IN DETAIL
+  </button>
+</Link>
+)}
 {session?.user.department==="S&T"&&<Link href="/manage/manage-pc">
   <button className="w-fit px-16 rounded-full bg-[#ffd180] border-2 border-black py-6 text-2xl font-extrabold text-black text-center shadow-lg hover:scale-105 transition min-w-[320px]">
     PC Installed In Stations
