@@ -77,7 +77,7 @@ const hasInProgressBlock = requestsData?.data?.requests?.find(
 
 {hasInProgressBlock && (
   <a
-    href={`https://mobile-bms.plattrtechstudio.com/?cugNumber=${session?.user?.phone}&section=MAS-GDR&in-progress=true`}
+    href="/avail-block"
     className="w-full rounded-full bg-[#f69697] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition"
   >
     Block under progress

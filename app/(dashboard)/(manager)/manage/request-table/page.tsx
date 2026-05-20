@@ -899,7 +899,7 @@ const handleDownloadExcel = async () => {
     GENERATE REPORTS
   </button>
 </Link>
-<Link href={`https://smr-dashboard.plattorian.tech/?cugNumber=${session?.user?.phone}&division=${session?.user?.location}&token=W1IU66ZFEBFBF6C1dGmouN6PVyHARQJg`}>
+<Link href="/manage/permit-block-at-site">
   <button className="w-fit px-16 rounded-full bg-[#ffd180] border-2 border-black py-6 text-2xl font-extrabold text-black text-center shadow-lg hover:scale-105 transition min-w-[320px]">
     AVAILED STATUS
   </button>
@@ -915,7 +915,7 @@ const handleDownloadExcel = async () => {
   </button>
 </Link>}
 {session?.user.department==="TRD"&&
-<Link href={`https://smr-dashboard.plattorian.tech/?cugNumber=${session?.user?.phone}&trd-division=${session?.user?.location}&user=TRD-SM&token=W1IU66ZFEBFBF6C1dGmouN6PVyHARQJg`}>
+<Link href="/manage/permit-block-at-site">
   <button className="w-fit px-16 rounded-full bg-[#ffd180] border-2 border-black py-6 text-2xl font-extrabold text-black text-center shadow-lg hover:scale-105 transition min-w-[320px]">
     PERMIT BLOCK AT SITE
   </button>
