@@ -55,7 +55,10 @@ export default function PendingRequestsPage() {
         queryKey: ["pendingRequests"],
         queryFn: async () => {
             try {
-                const result = await managerService.getUserRequestsByManager(1, 10000);
+                const result = await managerService.getUserRequestsByManager(1, 10000, undefined,
+                    undefined,
+                    undefined,
+                    someId || undefined);
                 return result;
             } catch (err) {
                 console.error("Error fetching requests:", err);
@@ -239,11 +242,11 @@ const pendingMultiLineRequests = (Array.isArray(data?.data?.requests) ? data.dat
             blockEnd.setDate(blockStart.getDate() + 8); // Sunday next week
             blockEnd.setHours(23, 59, 59, 999);
 
-            // // Block requests within [Saturday ... next Sunday]
-            // if (requestDate >= blockStart && requestDate <= blockEnd) {
-            //   alert("You cannot accept requests from tomorrow to next Sunday on Friday after 12 PM.");
-            //   return;
-            // }
+            // Block requests within [Saturday ... next Sunday]
+            if (requestDate >= blockStart && requestDate <= blockEnd) {
+              alert("You cannot accept requests from tomorrow to next Sunday on Friday after 12 PM.");
+              return;
+            }
         }
 
         if (confirm("Are you sure you want to accept this request?")) {
@@ -565,11 +568,11 @@ useEffect(() => {
                 const requestDate = new Date(request.date);
                 const isUrgent = request.corridorType === "Urgent Block";
 
-                //   // Block non-urgent requests within the weekend period
-                //   if (!isUrgent && requestDate >= blockStart && requestDate <= blockEnd) {
-                //     alert(`You cannot accept request ${request.divisionId || request.id} (${formatDate(request.date)}) because it falls within the weekend period (Saturday to next Sunday) on Friday after 12 PM.`);
-                //     return;
-                //   }
+                // Block non-urgent requests within the weekend period
+                if (!isUrgent && requestDate >= blockStart && requestDate <= blockEnd) {
+                    alert(`You cannot accept request ${request.divisionId || request.id} (${formatDate(request.date)}) because it falls within the weekend period (Saturday to next Sunday) on Friday after 12 PM.`);
+                    return;
+                }
             }
         }
 
@@ -647,11 +650,8 @@ useEffect(() => {
         notFound();
     }
 
-    // if (!isLoading && !error && pendingRequests.length === 0) {
-    //     notFound();
-    // }
 
-    if (!isLoading && !error && pendingRequests.length === 0) {
+    if (!isLoading && !error && pendingRequests.length === 0 && rejectedRequest.length === 0) {
         return (
             <div className="min-h-screen text-black bg-white p-3 border border-black flex flex-col items-center justify-center gap-4">
                 <div className="text-center text-xl font-bold">No pending requests found</div>
