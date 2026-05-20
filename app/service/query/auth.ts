@@ -207,7 +207,7 @@ export const useAuth = () => {
     onSuccess: async (data) => {
       const user = await handleAuthSuccess(data);
       if (user.role === "DEPT_CONTROLLER")  router.push("/manage/request-table");
-      else if (user.role === "SM")          window.location.href = `https://smr-dashboard.plattorian.tech/?cugNumber=${user?.phone}&stationCode=${user?.depot}&user=SM&token=W1IU66ZFEBFBF6C1dGmouN6PVyHARQJg`;
+      else if (user.role === "SM")          window.location.href = "/sm/pending-avails";
       else if (user.role === "BOARD_CONTROLLER") router.push("/tpc");
       else if (user.role === "ADMIN")       router.push("/admin/request-table");
       else                                  router.push("/dashboard");
