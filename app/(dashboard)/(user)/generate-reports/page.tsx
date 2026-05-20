@@ -83,14 +83,14 @@ interface DetailedData {
   userId?: string;
 }
 
-// const locationOptions: OptionType[] = [
-//   { value: {userLocations}, label: {userLocations} },
-//   { value: "SA", label: "SA" },
-//   { value: "MCU", label: "MCU" },
-//   { value: "TPJ", label: "TPJ" },
-//   { value: "PGT", label: "PGT" },
-//   { value: "TVC", label: "TVC" },
-// ];
+const locationOptions: OptionType[] = [
+  { value: "MAS", label: "MAS" },
+  { value: "SA", label: "SA" },
+  { value: "MCU", label: "MCU" },
+  { value: "TPJ", label: "TPJ" },
+  { value: "PGT", label: "PGT" },
+  { value: "TVC", label: "TVC" },
+];
 
 const blockTypeOptions: OptionType[] = [
   { value: "All", label: "All" },
@@ -195,7 +195,7 @@ export default function GenerateReportPage() {
   const [selectedBlockTypes, setSelectedBlockTypes] = useState<string[]>([]);
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
   const [selectedMajorSections, setSelectedMajorSections] = useState<string[]>([
-    "{userLocations}-GDR",
+    "MAS-GDR",
   ]);
   const [majorSectionOptions, setMajorSectionOptions] = useState<OptionType[]>(
     []
@@ -225,8 +225,6 @@ const durationDropdownRef = useRef<HTMLDivElement>(null);
     formState: { errors },
   } = useForm<FormData>();
   const { data: session } = useSession();
-const userLocations = session?.user?.location ;
-
   useEffect(() => {
     if (session?.user?.department) {
       setSelectedDepartments([session.user.department]);
@@ -610,6 +608,9 @@ const clearGlobalFilters = () => {
   const totalAvailed = detailedData.filter(
     (block) => block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null
   ).length;
+  const totalGrantedCount = detailedData.filter(
+    (block) => block.isGranted === true
+  ).length;
 
   const filteredBlocks = filteredUpcomingBlocks.filter((block) => {
     if (activeFilter === "approved" && !block.isSanctioned) return false;
@@ -873,7 +874,7 @@ const clearGlobalFilters = () => {
       const excelData = [
         // ENGG Rows
         {
-          Location: {userLocations},
+          Location: "MAS",
           Department: "ENGG",
           "Supporting Department": "-",
           "Total Block Requested": enggTotal,
@@ -888,7 +889,7 @@ const clearGlobalFilters = () => {
           ).length,
         },
         {
-          Location: {userLocations},
+          Location: "MAS",
           Department: "ENGG",
           "Supporting Department": "S&T",
           "Total Block Requested": enggWithSnt,
@@ -907,7 +908,7 @@ const clearGlobalFilters = () => {
           ),
         },
         {
-          Location: {userLocations},
+          Location: "MAS",
           Department: "ENGG",
           "Supporting Department": "TRD",
           "Total Block Requested": enggWithPower,
@@ -926,7 +927,7 @@ const clearGlobalFilters = () => {
           ),
         },
         {
-          Location: {userLocations},
+          Location: "MAS",
           Department: "ENGG",
           "Supporting Department": "S&T and TRD",
           "Total Block Requested": enggWithSntAndPower,
@@ -949,7 +950,7 @@ const clearGlobalFilters = () => {
 
         // TRD Rows
         {
-          Location: {userLocations},
+          Location: "MAS",
           Department: "TRD",
           "Supporting Department": "-",
           "Total Block Requested": trdTotal,
@@ -966,7 +967,7 @@ const clearGlobalFilters = () => {
 
         // S&T Rows
         {
-          Location: {userLocations},
+          Location: "MAS",
           Department: "S&T",
           "Supporting Department": "-",
           "Total Block Requested": sntTotal,
@@ -981,7 +982,7 @@ const clearGlobalFilters = () => {
           ),
         },
         {
-          Location: {userLocations},
+          Location: "MAS",
           Department: "S&T",
           "Supporting Department": "ENGG",
           "Total Block Requested": sntWithEngg,
@@ -1000,7 +1001,7 @@ const clearGlobalFilters = () => {
           ),
         },
         {
-          Location: {userLocations},
+          Location: "MAS",
           Department: "S&T",
           "Supporting Department": "TRD",
           "Total Block Requested": sntWithPower,
@@ -1019,7 +1020,7 @@ const clearGlobalFilters = () => {
           ),
         },
         {
-          Location: {userLocations},
+          Location: "MAS",
           Department: "S&T",
           "Supporting Department": "ENGG and TRD",
           "Total Block Requested": sntWithEnggAndPower,
@@ -1472,7 +1473,7 @@ const clearGlobalFilters = () => {
 
 <th className="border-2 border-black px-1 md:px-2 py-2">
   <div className="flex flex-col items-center justify-center">
-    <div>Applied</div>
+    <div>Availing Applied</div>
     <div className="relative flex items-center justify-center group">
       (Hrs)/Blocks
       <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
@@ -1494,7 +1495,7 @@ const clearGlobalFilters = () => {
         i
       </span>
       <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
-        Applied block Granted  by the SM
+        Availing Applied block Granted  by the SM
       </div>
     </div>
   </div>
@@ -1508,7 +1509,7 @@ const clearGlobalFilters = () => {
         i
       </span>
       <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
-       Total Blocks Granted / Total Blocks Applied
+       Total Blocks Granted / Total Availing Applied Blocks
       </div>
     </div>
   </div>
@@ -1569,7 +1570,7 @@ const clearGlobalFilters = () => {
         i
       </span>
       <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
-    Applied Blocks not granted by the SM
+    Availing Applied Blocks not granted by the SM
       </div>
     </div>
   </div>
@@ -1996,6 +1997,9 @@ const clearGlobalFilters = () => {
                   Total Block Sanctioned
                 </th>
                 <th className="border-2 border-black px-1 md:px-2 py-2">
+                  Total Block Granted
+                </th>
+                <th className="border-2 border-black px-1 md:px-2 py-2">
                   Total Block Availed
                 </th>
               </tr>
@@ -2004,7 +2008,7 @@ const clearGlobalFilters = () => {
               {/* ENGG Rows */}
               {session?.user?.department === "ENGG" &&( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  {userLocations}
+                  MAS
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -2054,6 +2058,15 @@ const clearGlobalFilters = () => {
                     ).length
                   }
                 </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(
+                    (block) =>
+                      block.selectedDepartment === "ENGG" &&
+                      block.isGranted === true &&
+                      block.powerBlockRequired === false &&
+                      block.sntDisconnectionRequired === false
+                  ).length}
+                </td>
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
@@ -2084,7 +2097,7 @@ const clearGlobalFilters = () => {
              
 {session?.user?.department === "ENGG" && ( <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  {userLocations}
+                  MAS
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -2135,6 +2148,16 @@ const clearGlobalFilters = () => {
                     ).length
                   }
                 </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(
+                    (block) =>
+                      block.selectedDepartment === "ENGG" &&
+                      block.sntDisconnectionRequired === true &&
+                      block.isGranted === true &&
+                      block.powerBlockRequired === false &&
+                      block.enggDisconnectionsRequired === false
+                  ).length}
+                </td>
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
@@ -2167,7 +2190,7 @@ const clearGlobalFilters = () => {
 {session?.user?.department === "ENGG" && (
      <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  {userLocations}
+                  MAS
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -2216,6 +2239,15 @@ const clearGlobalFilters = () => {
                     ).length
                   }
                 </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(
+                    (block) =>
+                      block.selectedDepartment === "ENGG" &&
+                      block.powerBlockRequired === true &&
+                      block.sntDisconnectionRequired === false &&
+                      block.isGranted === true
+                  ).length}
+                </td>
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
@@ -2247,7 +2279,7 @@ const clearGlobalFilters = () => {
 {session?.user?.department === "ENGG" && (
     <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  {userLocations}
+                  MAS
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -2297,6 +2329,15 @@ const clearGlobalFilters = () => {
                     ).length
                   }
                 </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(
+                    (block) =>
+                      block.selectedDepartment === "ENGG" &&
+                      block.sntDisconnectionRequired === true &&
+                      block.powerBlockRequired === true &&
+                      block.isGranted === true
+                  ).length}
+                </td>
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
@@ -2328,7 +2369,7 @@ const clearGlobalFilters = () => {
             {session?.user?.department === "TRD" && (
               <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  {userLocations}
+                  MAS
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   TRD
@@ -2371,6 +2412,12 @@ const clearGlobalFilters = () => {
                     ).length
                   }
                 </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(
+                    (block) =>
+                      block.selectedDepartment === "TRD" && block.isGranted === true
+                  ).length}
+                </td>
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
@@ -2402,7 +2449,7 @@ const clearGlobalFilters = () => {
               {/* S&T Rows */}
               {session?.user?.department === "S&T" && (  <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  {userLocations}
+                  MAS
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -2449,6 +2496,12 @@ const clearGlobalFilters = () => {
                     ).length
                   }
                 </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(
+                    (block) =>
+                      block.selectedDepartment === "S&T" && block.isGranted === true
+                  ).length}
+                </td>
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
@@ -2477,7 +2530,7 @@ const clearGlobalFilters = () => {
             
 {session?.user?.department === "S&T" && ( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  {userLocations}
+                  MAS
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -2526,6 +2579,14 @@ const clearGlobalFilters = () => {
                     ).length
                   }
                 </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(
+                    (block) =>
+                      block.selectedDepartment === "S&T" &&
+                      block.enggDisconnectionsRequired === true &&
+                      block.isGranted === true
+                  ).length}
+                </td>
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
@@ -2555,7 +2616,7 @@ const clearGlobalFilters = () => {
              
 {session?.user?.department === "S&T" && (<tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  {userLocations}
+                  MAS
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -2604,6 +2665,14 @@ const clearGlobalFilters = () => {
                     ).length
                   }
                 </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(
+                    (block) =>
+                      block.selectedDepartment === "S&T" &&
+                      block.powerBlockRequired === true &&
+                      block.isGranted === true
+                  ).length}
+                </td>
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
@@ -2633,7 +2702,7 @@ const clearGlobalFilters = () => {
               
 {session?.user?.department === "S&T" && ( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  {userLocations}
+                  MAS
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -2683,6 +2752,15 @@ const clearGlobalFilters = () => {
                     ).length
                   }
                 </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {detailedData.filter(
+                    (block) =>
+                      block.selectedDepartment === "S&T" &&
+                      block.enggDisconnectionsRequired === true &&
+                      block.powerBlockRequired === true &&
+                      block.isGranted === true
+                  ).length}
+                </td>
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
@@ -2725,6 +2803,9 @@ const clearGlobalFilters = () => {
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   {totalSanctioned}
+                </td>
+                <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+                  {totalGrantedCount}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   {totalAvailed}
@@ -2834,6 +2915,7 @@ const clearGlobalFilters = () => {
                   </th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Demanded time</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Sanctioned time</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Granted time</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">
                     Availed time
                   </th>
@@ -2851,7 +2933,7 @@ const clearGlobalFilters = () => {
               <tbody>
                 {filteredUpcomingBlocks.length === 0 ? (
                   <tr className="bg-white">
-                    <td colSpan={9} className="text-center py-4 text-black">
+                    <td colSpan={14} className="text-center py-4 text-black">
                       No data found.
                     </td>
                   </tr>
@@ -2864,8 +2946,8 @@ const clearGlobalFilters = () => {
                     if (block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance") {
                       statusLabel = "Sanctioned, Pending with SSE For Acceptance";
                       statusStyle = { background: "#fff86b", color: "#222" };
-                    }  else if (block.overAllStatus==="Sanctioned and Rejected by SSE") {
-                      statusLabel = "Sanctioned and Accepted by SSE";
+                    }  else if (block.overAllStatus==="Sanctioned and Accepted by SSE") {
+                      statusLabel = "Sanctioned and Acknowledged by SSE";
                       statusStyle = { background: "#d47ed4", color: "#222" };
                     } else if ( block.overAllStatus==="Sanctioned and Rejected by SSE") {
                       statusLabel = "Sanctioned and Rejected by SSE";
@@ -2931,7 +3013,17 @@ const clearGlobalFilters = () => {
                                                     ) : (
                                                       "Not Availed Yet"
                                                     )}
-                                                  </td> 
+                                                  </td>
+                                                  <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
+                                                    {block.GrantedTimeFrom && block.GrantedTimeTo ? (
+                                                      <>
+                                                        {formatTime(block.GrantedTimeFrom)} to{" "}
+                                                        {formatTime(block.GrantedTimeTo)}
+                                                      </>
+                                                    ) : (
+                                                      "-"
+                                                    )}
+                                                  </td>
                           <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
                             {block.AvailedTimeFrom && block.AvailedTimeTo ? (
                               <>

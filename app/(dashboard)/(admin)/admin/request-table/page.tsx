@@ -9,11 +9,9 @@ import { useSession } from "next-auth/react";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 
-
 export default function AdminRequestTablePage() {
-  const { data: session } = useSession();
   const router = useRouter();
-
+  const { data: session } = useSession();
   const [customDateRange, setCustomDateRange] = useState({
     start: "",
     end: "",
@@ -198,16 +196,35 @@ export default function AdminRequestTablePage() {
   //     return reqDate > today;
   //   }).length;
 
-  // const ENGGRequest = allRequests.filter((r: UserRequest) => {
-  //   if ( r.isSanctioned ) return false;
-  //   if (!r.date) return false;
-  //   if ( r.selectedDepartment !== "ENGG") return false;
-  //   const reqDate = new Date(r.date);
-  //   reqDate.setHours(0, 0, 0, 0);
-  //   return reqDate > today;
-  // }).length;
+  //   const ENGGRequest = allRequests.filter((r: UserRequest) => {
+  //     if ( r.isSanctioned) return false;
+  //     if (!r.date) return false;
+  //     if ( r.selectedDepartment !== "ENGG") return false;
+  //     const reqDate = new Date(r.date);
+  //     reqDate.setHours(0, 0, 0, 0);
+  //     return reqDate > today;
+  //   }).length;
+
+
+  //   const SandTRequest = allRequests.filter((r: UserRequest) => {
+  //     if (r.isSanctioned) return false;
+  //     if (!r.date) return false;
+  //     if ( r.selectedDepartment !== "S&T") return false;
+  //     const reqDate = new Date(r.date);
+  //     reqDate.setHours(0, 0, 0, 0);
+  //     return reqDate > today;
+  //   }).length;
+
+  //   const TRDRequest = allRequests.filter((r: UserRequest) => {
+  //     if (r.isSanctioned) return false;
+  //     if (!r.date) return false;
+  //     if ( r.selectedDepartment !== "TRD") return false;
+  //     const reqDate = new Date(r.date);
+  //     reqDate.setHours(0, 0, 0, 0);
+  //     return reqDate > today;
+  //   }).length;
   const TotalRequests = allRequests.filter((r: UserRequest) => {
-   if (!r.date) return false;
+    if (!r.date) return false;
 
     const reqDate = new Date(r.date);
     reqDate.setHours(0, 0, 0, 0);
@@ -373,6 +390,7 @@ const handlePendingSearchIdChange = (searchId: string) => {
         "SSE Name",
         "Work Location",
         "Remarks",
+        "OverAllStatus"
       ];
 
       // Map data to rows
@@ -412,6 +430,7 @@ const handlePendingSearchIdChange = (searchId: string) => {
           request.user?.name || "N/A",
           request.workLocationFrom,
           request.requestremarks,
+          request.overAllStatus || "N/A"
         ];
       });
 
@@ -421,10 +440,41 @@ const handlePendingSearchIdChange = (searchId: string) => {
 
       // Add worksheet to workbook
       XLSX.utils.book_append_sheet(wb, ws, "Block Requests");
+      const formatDateForFilename = (dateString: string) => {
+        if (!dateString) return "";
+        try {
+          const date = new Date(dateString);
+          const day = String(date.getDate()).padStart(2, '0');
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const year = date.getFullYear();
+          return `${day}-${month}-${year}`;
+        } catch {
+          return "";
+        }
+      };
 
+      // Generate filename based on selected date range
+      let filename;
+      if (activeSummaryFilters.start && activeSummaryFilters.end) {
+        const startDate = formatDateForFilename(activeSummaryFilters.start);
+        const endDate = formatDateForFilename(activeSummaryFilters.end);
+        filename = `block_requests_${startDate}_to_${endDate}.xlsx`;
+      } else if (activeSummaryFilters.start) {
+        filename = `block_requests_${formatDateForFilename(activeSummaryFilters.start)}.xlsx`;
+      } else if (activeSummaryFilters.end) {
+        filename = `block_requests_${formatDateForFilename(activeSummaryFilters.end)}.xlsx`;
+      } else {
+        // Use current date if no range is specified
+        const today = new Date();
+        const day = String(today.getDate()).padStart(2, '0');
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const year = today.getFullYear();
+        filename = `block_requests_${day}-${month}-${year}.xlsx`;
+      }
+      XLSX.writeFile(wb, filename);
       // Generate file and trigger download
-      const date = new Date().toISOString().slice(0, 10);
-      XLSX.writeFile(wb, `block_requests_${date}.xlsx`);
+      // const date = new Date().toISOString().slice(0, 10);
+      // XLSX.writeFile(wb, `block_requests_${date}.xlsx`);
 
     } catch (error) {
       console.error("Download failed:", error);
@@ -502,11 +552,32 @@ const handlePendingSearchIdChange = (searchId: string) => {
   // --- Filtering logic for summary table ---
   let summaryFilteredRequests = data?.data?.requests || [];
   // Date filter
+  // if (activeSummaryFilters.start) {
+  //   summaryFilteredRequests = summaryFilteredRequests.filter((r) => r.date >= activeSummaryFilters.start);
+  // }
+
+
+  // if (activeSummaryFilters.end) {
+  //   summaryFilteredRequests = summaryFilteredRequests.filter((r) => r.date <= activeSummaryFilters.end);
+  // }
+
+
   if (activeSummaryFilters.start) {
-    summaryFilteredRequests = summaryFilteredRequests.filter((r) => r.date >= activeSummaryFilters.start);
+    const startDate = new Date(activeSummaryFilters.start);
+    summaryFilteredRequests = summaryFilteredRequests.filter((r) => {
+      const requestDate = new Date(r.date);
+      return requestDate >= startDate;
+    });
   }
   if (activeSummaryFilters.end) {
-    summaryFilteredRequests = summaryFilteredRequests.filter((r) => r.date <= activeSummaryFilters.end);
+    const endDate = new Date(activeSummaryFilters.end);
+    summaryFilteredRequests = summaryFilteredRequests.filter((r) => {
+      const requestDate = new Date(r.date);
+      // Add one day to include the end date fully
+      const endOfDay = new Date(endDate);
+      endOfDay.setDate(endOfDay.getDate() + 1);
+      return requestDate < endOfDay;
+    });
   }
 
 if (activeSummaryFilters.searchId) {
@@ -596,8 +667,8 @@ if (activeSummaryFilters.searchId) {
             { label: "TRD", value: TRDRequest }].map((item, index) => (
               <div
                 key={index}
-                onClick={() => router.push(`/admin/optimise-table?dept=${encodeURIComponent(item.label)}`)}
                 className="flex items-center justify-between w-fit bg-gradient-to-r from-[#FFB3B3] to-[#FFD5D5] text-[#B22222] font-bold py-2 px-0.5 rounded-xl border-2 border-[#FF6B6B] text-[22px] shadow-md hover:shadow-lg transition-all"
+                onClick={() => router.push(`/admin/optimise-table?dept=${encodeURIComponent(item.label)}`)}
               >
                 <span>{item.label}</span>
                 <span className="bg-white rounded-full w-12 h-12 flex items-center justify-center text-[24px] shadow-inner border-2 border-[#FFB3B3]">
@@ -626,7 +697,8 @@ if (activeSummaryFilters.searchId) {
 
       {/* View Summary of Upcoming Blocks CTA */}
       <div className="flex justify-center mb-8 w-full">
-        <div className="w-full max-w-4xl rounded-2xl border-4 border-[#00B4D8] bg-[#CAF0F8] shadow-lg p-0">
+        {/* <div className="w-full max-w-4xl rounded-2xl border-4 border-[#00B4D8] bg-[#CAF0F8] shadow-lg p-0"> */}
+        <div className="w-full max-w-full rounded-2xl border-4 border-[#00B4D8] bg-[#CAF0F8] shadow-lg p-0">
           <div className="text-[24px] font-bold text-[#0077B6] text-center py-3 tracking-wide">
             View Summary of Sanctioned Blocks
           </div>
@@ -811,7 +883,8 @@ if (activeSummaryFilters.searchId) {
             {/* Table only shows after clicking Click to View */}
             {showTable && (
               <div className="mx-2 overflow-x-auto">
-                <div className="max-h-[1000px] overflow-y-auto border-2 border-[#00B4D8] rounded-lg bg-white">
+                {/* <div className="max-h-[1000px] overflow-y-auto border-2 border-[#00B4D8] rounded-lg bg-white"> */}
+                          <div className="max-h-[1000px] overflow-y-auto border-2 border-[#00B4D8] rounded-lg bg-white w-full">
                   <table className="w-full text-black text-[24px] relative">
                     <thead>
                       <tr className="bg-[#e49edd] text-black">
@@ -833,7 +906,7 @@ if (activeSummaryFilters.searchId) {
                       </tr>
                     </thead>
                     <tbody>
-                      {sanctionedRequests.sort((a: any, b: any) => new Date(a.sanctionedTimeFrom || a.optimizeTimeFrom).getTime() - new Date(b.sanctionedTimeTo || b.optimizeTimeTo).getTime()).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(
+                      {sanctionedRequests.sort((a: any, b: any) => new Date(a.sanctionedTimeFrom || a.optimizeTimeFrom || a.demandTimeFrom).getTime() - new Date(b.sanctionedTimeTo || b.optimizeTimeTo || b.demandTimeTo).getTime()).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(
                         (request: UserRequest, idx: number) => {
                           const status = getStatusDisplay(request);
                           return (

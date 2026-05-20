@@ -452,7 +452,7 @@ export default function PermitBlockAtSitePage() {
             SELECT YOUR TPC BOARD
           </div>
           <div style={{ fontSize: "13px", color: "#92400e", fontWeight: 700, textAlign: "center", marginBottom: "12px" }}>
-            Only blocks from the selected board&apos;s depots will be shown
+            Only blocks from the selected board's depots will be shown
           </div>
           {TPC_BOARDS.map(board => (
             <button
@@ -531,7 +531,7 @@ export default function PermitBlockAtSitePage() {
 
           <div style={{ margin: "12px 0 4px" }}>
             <TimeBlock label="Admin Sanctioned Time" from={activeReq.sanctionedTimeFrom ?? activeReq.demandTimeFrom} to={activeReq.sanctionedTimeTo ?? activeReq.demandTimeTo} accent="#7c3aed" />
-            <TimeBlock label="SSE&apos;s Requested Time" from={activeReq.requestedTimeFrom ?? activeReq.sanctionedTimeFrom} to={activeReq.requestedTimeTo ?? activeReq.sanctionedTimeTo} accent="#0369a1" />
+            <TimeBlock label="SSE's Requested Time" from={activeReq.requestedTimeFrom ?? activeReq.sanctionedTimeFrom} to={activeReq.requestedTimeTo ?? activeReq.sanctionedTimeTo} accent="#0369a1" />
           </div>
 
           <SectionDivider label="Set Permitted Time" />

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useCreateUserRequest } from "@/app/service/mutation/user-request";
 import { useSession, signOut } from "next-auth/react";
 import { ToastContainer, toast } from "react-toastify";
@@ -28,8 +28,11 @@ import { useRouter } from "next/navigation";
 import Papa from "papaparse";
 import { useQuery } from "@tanstack/react-query";
 import { userRequestService } from "@/app/service/api/user-request";
+import { availService } from "@/app/service/api/avail";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useGetMyParticipations, useGetDepotBlocks } from "@/app/service/query/avail";
 import roadData from "../../../../public/roadData.json";
-import { createSiteLocationChangeHandler, getAutoAssignedDepots } from './features/siteLocation';
+import { createSiteLocationChangeHandler, getSiteLocationRange, validateSiteLocationPair, getAllAvailableDepots, getAutoAssignedDepots } from './features/siteLocation';
 
 
 type Department = "TRD" | "S&T" | "ENGG";
@@ -170,8 +173,360 @@ interface ReviewModalProps {
   customActivity: string;
   formSubmitting?: boolean;
   readOnly?: boolean;
-  userDepot?:string;
 }
+
+// function ReviewBlockRequestModal({
+//   isOpen,
+//   onClose,
+//   onConfirm,
+//   formData,
+//   blockSectionValue,
+//   processedLineSections,
+//   selectedActivities,
+//   customActivity,
+//   formSubmitting,
+//   readOnly,
+// }: ReviewModalProps) {
+//   if (!isOpen) return null;
+
+//   // Debug log to see what's being passed
+//   console.log("ReviewModal Safety Info:", formData);
+
+//   // Helper function to render safety information based on department
+//   const renderSafetyInfo = () => {
+//     const department = formData.selectedDepartment;
+
+//     // TRD department: Don't show any safety information
+//     if (department === "TRD") {
+//       return null;
+//     }
+
+//     // Helper function to check if a safety requirement is enabled
+//     const isEnabled = (value: any): boolean => {
+//       return value === true || value === "Y" || value === "true" || value === "yes" || value === "Yes";
+//     };
+
+//     // For other departments (ENGG and S&T)
+//     return (
+//       <div className="space-y-2 mt-5">
+//         <h2 className="font-bold">Safety Information</h2>
+
+//         {/* Fresh Caution - Show for both ENGG and S&T */}
+//         <div className="text-[14px]">
+//           <div className="font-semibold">Fresh Caution Imposed:</div>
+//           <div>{isEnabled(formData.freshCautionRequired) ? "" : "No"}</div>
+
+//           {/* Show fresh caution details only if it's enabled */}
+//           {isEnabled(formData.freshCautionRequired) && (
+//             <div className="ml-4 mt-2 space-y-1 text-sm">
+//               {formData.freshCautions && formData.freshCautions.map((caution: any, index: number) => (
+//                 <div key={index} className="">
+//                   {caution.freshCautionLocationFrom && (
+//                     <div><span className="font-semibold">Location From:</span> {caution.freshCautionLocationFrom}</div>
+//                   )}
+//                   {caution.freshCautionLocationTo && (
+//                     <div><span className="font-semibold">Location To:</span> {caution.freshCautionLocationTo}</div>
+//                   )}
+//                   {caution.freshCautionSpeed && (
+//                     <div><span className="font-semibold">Speed (km/hr):</span> {caution.freshCautionSpeed}</div>
+//                   )}
+//                   {caution.adjacentLinesAffected && (
+//                     <div><span className="font-semibold">Adjacent Lines Affected:</span> {caution.adjacentLinesAffected}</div>
+//                   )}
+//                    {caution.freshCautionFromDate && (
+//                     <div><span className="font-semibold">From Date:</span> {caution.freshCautionFromDate}</div>
+//                   )}
+//                     {caution.freshCautionToDate && (
+//                     <div><span className="font-semibold">To Date:</span> {caution.freshCautionToDate}</div>
+//                   )}
+//  {caution.freshCautionFromTime && (
+//                     <div><span className="font-semibold">From Time:</span> {caution.freshCautionFromTime}</div>
+//                   )}
+                     
+//         {caution.freshCautionToTime && (
+//                     <div><span className="font-semibold">From Time:</span> {caution.freshCautionToTime}</div>
+//                   )}
+//                 </div>
+//               ))}
+//             </div>
+//           )}
+//         </div>
+
+//         {/* Power Block - Show for both ENGG and S&T */}
+//         <div>
+//           <div className="font-semibold text-[14px]">Power Block:</div>
+//           <div>{isEnabled(formData.powerBlockRequired) ? "" : "No"}</div>
+
+//           {/* Show power block details only if it's enabled */}
+//           {isEnabled(formData.powerBlockRequired) && (
+//             <div className="ml-4 mt-2 space-y-1 text-sm">
+//               {formData.elementarySection && (
+//                 <div><span className="font-semibold">Elementary Section:</span> {formData.elementarySection}</div>
+//               )}
+//               {formData.powerBlockKmFrom && (
+//                 <div><span className="font-semibold">KM From:</span> {formData.powerBlockKmFrom}</div>
+//               )}
+//               {formData.powerBlockKmTo && (
+//                 <div><span className="font-semibold">KM To:</span> {formData.powerBlockKmTo}</div>
+//               )}
+//               {formData.powerBlockRoad && (
+//                 <div><span className="font-semibold">Road:</span> {formData.powerBlockRoad}</div>
+//               )}
+//               {formData.powerBlockDisconnectionAssignTo && (
+//                 <div><span className="font-semibold">Assign To:</span> {formData.powerBlockDisconnectionAssignTo}</div>
+//               )}
+//               {formData.powerBlockRequirements && formData.powerBlockRequirements.length > 0 && (
+//                 <div>
+//                   <span className="font-semibold">Requirements:</span>{" "}
+//                   {formData.powerBlockRequirements.join(", ")}
+//                 </div>
+//               )}
+//             </div>
+//           )}
+//         </div>
+
+//         {/* S&T Disconnection - Show only for ENGG */}
+//         {department === "ENGG" && (
+//           <div>
+//             <div className="font-semibold text-[14px]">S&T Disconnection:</div>
+//             <div>{isEnabled(formData.sntDisconnectionRequired) ? "" : "No"}</div>
+
+//             {/* Show S&T disconnection details only if it's enabled */}
+//             {isEnabled(formData.sntDisconnectionRequired) && (
+//               <div className="ml-4 mt-2 space-y-1 text-sm">
+//                 {formData.sntDisconnectionLineFrom && (
+//                   <div><span className="font-semibold">Line From:</span> {formData.sntDisconnectionLineFrom}</div>
+//                 )}
+//                 {formData.sntDisconnectionLineTo && (
+//                   <div><span className="font-semibold">Line To:</span> {formData.sntDisconnectionLineTo}</div>
+//                 )}
+//                 {formData.sntDisconnectionPointNo && (
+//                   <div><span className="font-semibold">Point No:</span> {formData.sntDisconnectionPointNo}</div>
+//                 )}
+//                 {formData.sntDisconnectionSignalNo && (
+//                   <div><span className="font-semibold">Signal No:</span> {formData.sntDisconnectionSignalNo}</div>
+//                 )}
+//                 {formData.sntDisconnectionRequirements && formData.sntDisconnectionRequirements.length > 0 && (
+//                   <div>
+//                     <span className="font-semibold">Requirements:</span>{" "}
+//                     {formData.sntDisconnectionRequirements.join(", ")}
+//                   </div>
+//                 )}
+//                 {formData.sntDisconnectionAssignTo && (
+//                   <div><span className="font-semibold">Assign To:</span> {formData.sntDisconnectionAssignTo}</div>
+//                 )}
+//               </div>
+//             )}
+//           </div>
+//         )}
+//       </div>
+//     );
+//   };
+
+//   return (
+//     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+//       <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full p-6 relative overflow-y-auto max-h-[90vh] text-gray-600">
+//         <h2 className="text-xl font-bold mb-6 text-center">Confirm Your Request</h2>
+
+//         <div className="bg-blue-50 p-4 rounded-lg mb-6">
+//           <p className="mb-2 font-bold">Your request for traffic block in {blockSectionValue.join(", ")} Block Section on {formData.date} from {formData.demandTimeFrom} hrs to {formData.demandTimeTo} hrs and is ready to be submitted.</p>
+//           <p className="text-sm text-gray-600">Please review all details below before final submission.</p>
+//         </div>
+
+//         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+//           <div>
+//             <h3 className="font-bold mb-2">Basic Information</h3>
+//             <div className="grid grid-cols-2 gap-2 text-[14px]">
+//               <div className="text-gray-600 font-bold">Date:</div>
+//               <div>{formData.date}</div>
+
+//               <div className="text-gray-600 font-bold">Department:</div>
+//               <div>{formData.selectedDepartment}</div>
+
+//               <div className="text-gray-600 font-bold">Major Section:</div>
+//               <div>{formData.selectedSection}</div>
+
+//               <div className="text-gray-600 font-bold">Depot/SSE:</div>
+//               <div>{formData.selectedDepo}</div>
+
+//               <div className="text-gray-600 font-bold">Work Type:</div>
+//               <div>{formData.workType}</div>
+
+//               {(formData.activity || customActivity) && (
+//                 <>
+//                   <div className="text-gray-600 font-bold">Work Description:</div>
+//                   <div>{formData.activity || customActivity}</div>
+//                 </>
+//               )}
+
+//               <div className="text-gray-600 font-bold">Demanded Time:</div>
+//               <div>{formData.demandTimeFrom} to {formData.demandTimeTo}</div>
+//             </div>
+
+//             {/* Moved safety info here for ENGG and S&T departments */}
+//             {formData.selectedDepartment !== "TRD" && renderSafetyInfo()}
+
+//             {formData.requestremarks && formData.requestremarks.trim() !== "" && (
+//               <div className="mt-4">
+//                 <h3 className="font-bold">Remarks</h3>
+//                 <div>{formData.requestremarks}</div>
+//               </div>
+//             )}
+//             {formData.remarks && (
+//               <div className="mb-2">
+//                 <b>Remarks:</b> {formData.remarks}
+//               </div>
+//             )}
+//             {/* <div className="mt-4 mb-2 p-3 rounded-xl border-2 border-[#f7d6f7] bg-[#f7d6f7]">
+//               <div className="text-lg font-extrabold text-[#13529e] mb-2">
+//                 Caution Requirements
+//               </div>
+//               <div>
+//                 <b>Fresh Caution Imposed:</b>{" "}
+//                 {formData.freshCautionRequired === "Y" ? "Yes" : "No"}
+//               </div>
+//               {formData.freshCautionRequired === "Y" && (
+//                 <div className="space-y-1 mt-2">
+//                   <div>
+//                     <b>Location From:</b>{" "}
+//                     {formData.freshCautionLocationFrom || "-"}
+//                   </div>
+//                   <div>
+//                     <b>Location To:</b> {formData.freshCautionLocationTo || "-"}
+//                   </div>
+//                   <div>
+//                     <b>Speed (km/hr):</b> {formData.freshCautionSpeed || "-"}
+//                   </div>
+//                   <div>
+//                     <b>Adjacent Lines Affected:</b>{" "}
+//                     {formData.adjacentLinesAffected || "-"}
+//                   </div>
+//                 </div>
+//               )}
+//             </div> */}
+
+//             {/* Always show Other Affected Lines/Roads section */}
+//             <div className="mt-4">
+//               <h3 className="font-bold mb-2">Other Affected Lines/Roads:</h3>
+//               {formData.processedLineSections && formData.processedLineSections.some((s: any) => s.otherLines?.trim() || s.otherRoads?.trim()) ? (
+//                 <div className="">
+//                   {formData.processedLineSections.map((s: any, index: any) => (
+//                     <React.Fragment key={`other-${index}`}>
+//                       {s.otherLines?.trim() && (
+//                         <div className="mb-2">
+//                           <div className="font-medium mb-1">{s.block} - Other Lines:</div>
+//                           <div className="ml-2">
+//                             {s.otherLines.split(',').map((line: string, idx: number) => {
+//                               const trimmedLine = line.trim();
+//                               if (trimmedLine.toLowerCase().includes('up')) {
+//                                 return (
+//                                   <div key={`line-${idx}`} className="flex items-center mb-1">
+//                                     <span className="font-medium bg-green-100 text-green-800 px-2 rounded mr-2">Up {trimmedLine.replace(/up\s*/i, '').trim()}</span>
+//                                   </div>
+//                                 );
+//                               } else if (trimmedLine.toLowerCase().includes('down')) {
+//                                 return (
+//                                   <div key={`line-${idx}`} className="flex items-center mb-1">
+//                                     <span className="font-medium bg-red-100 text-red-800 px-2 rounded mr-2">Down {trimmedLine.replace(/down\s*/i, '').trim()}</span>
+//                                   </div>
+//                                 );
+//                               } else {
+//                                 return (
+//                                   <div key={`line-${idx}`} className="mb-1">
+//                                     {trimmedLine}
+//                                   </div>
+//                                 );
+//                               }
+//                             })}
+//                           </div>
+//                         </div>
+//                       )}
+
+//                       {s.otherRoads?.trim() && (
+//                         <div className="mb-2">
+//                           <div className="font-medium mb-1">{s.block} - Other Roads:</div>
+//                           <div className="ml-2">
+//                             {s.otherRoads.split(',').map((road: string, idx: number) => {
+//                               const trimmedRoad = road.trim();
+//                               const roadMatch = trimmedRoad.match(/rd\s*\d+/i);
+
+//                               if (roadMatch) {
+//                                 return (
+//                                   <div key={`road-${idx}`} className="flex items-center mb-1">
+//                                     <span className="font-medium bg-blue-100 text-blue-800 px-2 rounded mr-2">
+//                                       {roadMatch[0].toUpperCase()}
+//                                     </span>
+//                                     <span>{trimmedRoad.replace(/rd\s*\d+/i, '').trim()}</span>
+//                                   </div>
+//                                 );
+//                               } else {
+//                                 return (
+//                                   <div key={`road-${idx}`} className="mb-1">
+//                                     {trimmedRoad}
+//                                   </div>
+//                                 );
+//                               }
+//                             })}
+//                           </div>
+//                         </div>
+//                       )}
+//                     </React.Fragment>
+//                   ))}
+//                 </div>
+//               ) : (
+//                 <div className="text-[14px] text-gray-600">None</div>
+//               )}
+//             </div>
+
+//             {(formData.workLocationFrom?.trim() || formData.trdWorkLocation?.trim()) && (
+//               <div className="mt-4">
+//                 <h3 className="font-bold">Work Location</h3>
+//                 <div className="text-[14px] text-gray-600">
+//                   {formData.workLocationFrom || formData.trdWorkLocation}
+//                 </div>
+//               </div>
+//             )}
+//           </div>
+//         </div>
+
+//         <div className="text-center mt-4">
+//           <div className="flex justify-center gap-6">
+//             <button
+//               onClick={onClose}
+//               className="px-6 py-2 bg-gray-200 rounded-md text-gray-800 font-medium hover:bg-gray-300"
+//             >
+//               Go Back to Editing
+//             </button>
+
+//             <button
+//               onClick={onConfirm}
+//               className="px-6 py-2 bg-blue-500 text-white font-medium rounded-md hover:bg-blue-600 disabled:opacity-60 disabled:cursor-not-allowed"
+//               disabled={formSubmitting}
+//             >
+//               Submit Request
+//             </button>
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+
+
+// Helper to determine if Type of Block should be locked to Urgent Block
+// export function isUrgentBlockDate(dateString: string): boolean {
+//   if (!dateString) return false;
+//   const today = new Date();
+//   today.setHours(0, 0, 0, 0);
+//   const targetDate = new Date(dateString);
+//   targetDate.setHours(0, 0, 0, 0);
+//   const dayDiff = Math.floor((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+//   return dayDiff === 0 || dayDiff === 1 || dayDiff === 2;
+// }
+
+// Add a new style object for better contrast in 'Other affected Lines/Roads' dropdowns
+
 
 function ReviewBlockRequestModal({
   isOpen,
@@ -184,7 +539,6 @@ function ReviewBlockRequestModal({
   customActivity,
   formSubmitting,
   readOnly,
-  userDepot
 }: ReviewModalProps) {
   if (!isOpen) return null;
 
@@ -320,35 +674,7 @@ function ReviewBlockRequestModal({
       )}
     </div>
   )}
-          {/* ENG Disconnection - Show for both ENGG and S&T */}
-          {department==="S&T"&&(
-               <div>
-          <div className="font-semibold text-[14px]">ENG Disconnection:</div>
-          <div>{isEnabled(formData.enggDisconnectionsRequired) ? "" : "No"}</div>
-
-          {/* Show ENG disconnection details only if it's enabled */}
-          {isEnabled(formData.enggDisconnectionsRequired) && (
-            <div className="ml-4 mt-2 space-y-1 text-sm">
-              {formData.engDisconnectionRemarks && (
-                <div><span className="font-semibold">Remarks:</span> {formData.engDisconnectionRemarks}</div>
-              )}
-              {formData.engDisconnectionAssignTo && (
-                <div><span className="font-semibold">Assign To:</span> {formData.engDisconnectionAssignTo}</div>
-              )}
-              {formData.selectedENGDepots && formData.selectedENGDepots.length > 0 && (
-                <div>
-                  <span className="font-semibold">Assigned Depots:</span>{" "}
-                  {Array.isArray(formData.selectedENGDepots) 
-                    ? formData.selectedENGDepots.join(", ")
-                    : formData.selectedENGDepots}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-          )}
-     
-      </div>
+</div>
     );
   };
 
@@ -377,29 +703,17 @@ function ReviewBlockRequestModal({
               <div>{formData.selectedSection}</div>
 
               <div className="text-gray-600 font-bold">Depot/SSE:</div>
-              <div><div>{userDepot || formData.selectedDepo || "Not assigned"}</div></div>
+              <div>{formData.selectedDepo}</div>
 
               <div className="text-gray-600 font-bold">Work Type:</div>
               <div>{formData.workType}</div>
 
-             <div className="text-gray-600 font-bold">Work Description:</div>
-<div className="max-w-full break-words bg-blue-50 p-2 rounded text-sm max-h-32 overflow-y-auto">
-  {selectedActivities && selectedActivities.length > 0 ? (
-    <div className="flex flex-wrap gap-1">
-      {selectedActivities.map((activity: string, index: number) => (
-        <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-          {activity}
-        </span>
-      ))}
-    </div>
-  ) : customActivity ? (
-    <div className="break-words whitespace-pre-wrap">
-      {customActivity}
-    </div>
-  ) : (
-    <span className="text-gray-400">No activity specified</span>
-  )}
-</div>
+              {(formData.activity || customActivity) && (
+                <>
+                  <div className="text-gray-600 font-bold">Work Description:</div>
+                  <div>{formData.activity || customActivity}</div>
+                </>
+              )}
 
               <div className="text-gray-600 font-bold">Demanded Time:</div>
               <div>{formData.demandTimeFrom} to {formData.demandTimeTo}</div>
@@ -982,7 +1296,6 @@ export default function CreateBlockRequestPage() {
   };
 
   const [formData, setFormData] = useState<FormData>(initialFormData);
-const [userDepots, setUserDepots] = useState<string>("");
 
   // State for multi-select depots
   const [selectedSTDepots, setSelectedSTDepots] = React.useState<string[]>([]);
@@ -1021,10 +1334,28 @@ const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
   const [showPopup, setShowPopup] = useState(false);
   const [popupLink, setPopupLink] = useState("");
   const [proceedAnyway, setProceedAnyway] = useState(false);
+  const [isShadowBlock, setIsShadowBlock] = useState(false);
+  const [shadowParentId, setShadowParentId] = useState<string>("");
+  const [shadowListExpanded, setShadowListExpanded] = useState(true);
+  // When shadow parent changes: auto-set date from parent and clear demand times
+  useEffect(() => {
+    if (isShadowBlock && shadowParentId) {
+      const parent = shadowParentBlocks.find((b: any) => b.id === shadowParentId);
+      // Date stored as IST-in-UTC — toISOString().slice(0,10) gives the IST date correctly
+      const parentDate = parent?.date ? new Date(parent.date).toISOString().slice(0, 10) : "";
+      setFormData(prev => ({
+        ...prev,
+        demandTimeFrom: "",
+        demandTimeTo: "",
+        ...(parentDate ? { date: parentDate } : {}),
+      }));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shadowParentId]);
+
   // Initialize the depot from session when the session loads
   useEffect(() => {
     if (session?.user?.depot) {
-      setUserDepots(session.user.depot || "");
       setFormData(prev => ({
         ...prev,
         selectedDepo: session.user.depot
@@ -1777,6 +2108,230 @@ const findCutoffThursday = () => {
   // Add reviewMode state
   const [reviewMode, setReviewMode] = useState(false);
 
+  // Pending-actions warning before new request submission
+  const [showPendingModal, setShowPendingModal] = useState(false);
+  const [pendingActionBlocks, setPendingActionBlocks] = useState<any[]>([]);
+  // Per-block inline action state: blockId → { mode, input }
+  const [blockActionState, setBlockActionState] = useState<Record<string, { mode: "idle" | "rejecting" | "exiting"; input: string }>>({});
+  const pendingQC = useQueryClient();
+
+  const acceptMutation = useMutation({
+    mutationFn: (id: string) => userRequestService.acceptUserRequestRemark(id),
+    onSuccess: () => {
+      toast.success("Sanction accepted!");
+      pendingQC.invalidateQueries({ queryKey: ["avail-depot-blocks"] });
+      pendingQC.invalidateQueries({ queryKey: ["user-requests"] });
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to accept"),
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: ({ id, remarks }: { id: string; remarks: string }) =>
+      userRequestService.rejectUserRequestRemark(id, remarks),
+    onSuccess: () => {
+      toast.success("Sanction rejected.");
+      pendingQC.invalidateQueries({ queryKey: ["avail-depot-blocks"] });
+      pendingQC.invalidateQueries({ queryKey: ["user-requests"] });
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to reject"),
+  });
+
+  const exitMutation = useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      availService.exitWithoutAvailing(id, reason),
+    onSuccess: () => {
+      toast.success("Block exited without availing.");
+      pendingQC.invalidateQueries({ queryKey: ["avail-depot-blocks"] });
+      pendingQC.invalidateQueries({ queryKey: ["avail-my-participations"] });
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to exit"),
+  });
+
+  function setBlockMode(blockId: string, mode: "idle" | "rejecting" | "exiting", input = "") {
+    setBlockActionState((prev) => ({ ...prev, [blockId]: { mode, input } }));
+  }
+
+  function setBlockInput(blockId: string, input: string) {
+    setBlockActionState((prev) => ({
+      ...prev,
+      [blockId]: { ...prev[blockId], input },
+    }));
+  }
+
+  // Live avail data to detect unresolved blocks
+  const { data: myParticipationsData } = useGetMyParticipations();
+  const { data: depotBlocksData } = useGetDepotBlocks();
+
+  // Recompute and sync pending modal whenever depot blocks or participations refresh
+  useEffect(() => {
+    if (!showPendingModal) return;
+    const stillPending = getPendingActionBlocks();
+    setPendingActionBlocks(stillPending);
+    setBlockActionState({});
+    if (stillPending.length === 0) setShowPendingModal(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [depotBlocksData, myParticipationsData]);
+
+  // Shadow block: eligible parent blocks — same dept+depot, within next 12h or already active
+  const shadowParentBlocks = useMemo(() => {
+    const blocks: any[] = depotBlocksData?.data?.blocks ?? [];
+    const IST_MS = 5.5 * 60 * 60 * 1000;
+    const now = Date.now() + IST_MS;
+    const TWELVE_H = 12 * 60 * 60 * 1000;
+    const EXCLUDED = new Set(["Block Closed", "Availing Cancelled", "SM Rejected"]);
+    return blocks.filter((b: any) => {
+      if (b.isShadowBlock === true) return false;
+      if (EXCLUDED.has(b.overAllStatus ?? "")) return false;
+      const fromMs = b.sanctionedTimeFrom
+        ? new Date(b.sanctionedTimeFrom).getTime()
+        : b.demandTimeFrom ? new Date(b.demandTimeFrom).getTime() : null;
+      const toMs = b.sanctionedTimeTo
+        ? new Date(b.sanctionedTimeTo).getTime()
+        : b.demandTimeTo ? new Date(b.demandTimeTo).getTime() : null;
+      if (!fromMs || !toMs) return false;
+      // starts within next 12h AND hasn't been over for more than 1h
+      return fromMs <= now + TWELVE_H && toMs >= now - 60 * 60 * 1000;
+    });
+  }, [depotBlocksData]);
+
+  // Extract HH:MM bounds from selected parent's sanctioned window
+  const parentTimeConstraint = useMemo(() => {
+    if (!isShadowBlock || !shadowParentId) return null;
+    const parent = shadowParentBlocks.find((b: any) => b.id === shadowParentId);
+    if (!parent) return null;
+    const fromDt = parent.sanctionedTimeFrom ?? parent.demandTimeFrom;
+    const toDt   = parent.sanctionedTimeTo   ?? parent.demandTimeTo;
+    if (!fromDt || !toDt) return null;
+    const f = new Date(fromDt);
+    const t = new Date(toDt);
+    return {
+      fromH: f.getUTCHours(), fromM: f.getUTCMinutes(),
+      toH:   t.getUTCHours(), toM:   t.getUTCMinutes(),
+      fromHHMM: `${String(f.getUTCHours()).padStart(2,"0")}:${String(f.getUTCMinutes()).padStart(2,"0")}`,
+      toHHMM:   `${String(t.getUTCHours()).padStart(2,"0")}:${String(t.getUTCMinutes()).padStart(2,"0")}`,
+    };
+  }, [isShadowBlock, shadowParentId, shadowParentBlocks]);
+
+  // Real-time error when demand times are outside the parent's sanctioned window
+  const shadowTimeError = useMemo(() => {
+    if (!isShadowBlock || !parentTimeConstraint) return null;
+    const [fH, fM] = (formData.demandTimeFrom || "").split(":").map(Number);
+    const [tH, tM] = (formData.demandTimeTo   || "").split(":").map(Number);
+    if (!fH && fH !== 0) return null;
+    const fromMins = fH * 60 + (fM || 0);
+    const toMins   = tH * 60 + (tM || 0);
+    const pFromMins = parentTimeConstraint.fromH * 60 + parentTimeConstraint.fromM;
+    const pToMins   = parentTimeConstraint.toH   * 60 + parentTimeConstraint.toM;
+    const isOvernight = pFromMins > pToMins;
+    if (isOvernight) {
+      // Normalize times past midnight by adding 1440 so the range is continuous
+      const norm = (m: number) => m >= pFromMins ? m : m + 1440;
+      if (norm(fromMins) < pFromMins)
+        return `Start time must be at or after ${parentTimeConstraint.fromHHMM} (parent block start)`;
+      if (!isNaN(tH) && norm(toMins) > pToMins + 1440)
+        return `End time must be at or before ${parentTimeConstraint.toHHMM} (parent block end)`;
+    } else {
+      if (fromMins < pFromMins)
+        return `Start time must be at or after ${parentTimeConstraint.fromHHMM} (parent block start)`;
+      if (toMins > pToMins)
+        return `End time must be at or before ${parentTimeConstraint.toHHMM} (parent block end)`;
+    }
+    return null;
+  }, [isShadowBlock, parentTimeConstraint, formData.demandTimeFrom, formData.demandTimeTo]);
+
+  const getPendingActionBlocks = () => {
+    const result: any[] = [];
+    const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+    const nowIST = Date.now() + IST_OFFSET_MS;
+    const TWENTYFOUR_HRS = 24 * 60 * 60 * 1000;
+    const myUserId = session?.user?.id;
+
+    // From participations: blocks needing immediate action or actively in progress
+    const participations: any[] = myParticipationsData?.data?.blocks ?? [];
+    participations.forEach((block: any) => {
+      const s = block.overAllStatus ?? "";
+      const mp = (block.availParticipants ?? []).find((p: any) => p.userId === myUserId);
+      if (s === "Block Closed" || s === "Availing Cancelled" || s === "SM Rejected") return;
+
+      // Availing active but I haven't started
+      if (s === "Availing Active" && mp && !mp.availStartedAt) {
+        result.push({ block, reason: "Availing is active — you haven't started yet" });
+        return;
+      }
+      // Availing started but closure not submitted
+      if ((s === "Availing Active" || s === "All Closures Submitted") && mp?.availStartedAt && !mp?.closureSubmittedAt) {
+        result.push({ block, reason: "Availing in progress — closure not submitted" });
+        return;
+      }
+      // Block burst — overdue but not closed
+      if (mp?.blockBurst && !mp?.closureSubmittedAt) {
+        result.push({ block, reason: "Block time exceeded — closure pending" });
+        return;
+      }
+      // Past 24h, incomplete
+      const grantedFrom = block.smApprovedTimeFrom ?? block.grantedFromTime;
+      if (grantedFrom) {
+        const fromMs = new Date(grantedFrom).getTime();
+        if (fromMs < nowIST && fromMs > nowIST - TWENTYFOUR_HRS) {
+          result.push({ block, reason: "Recent block not yet closed or exited" });
+        }
+      }
+    });
+
+    const THREE_HRS = 3 * 60 * 60 * 1000;
+    const myDepot = session?.user?.depot ?? "";
+    const myDept  = (session?.user as any)?.department ?? "";
+    const depotBlocks: any[] = depotBlocksData?.data?.blocks ?? [];
+    // Only consider blocks from May 10, 2026 onwards to avoid flooding with historical records
+    const POPUP_CUTOFF_MS = new Date("2026-05-10T00:00:00+05:30").getTime();
+
+    depotBlocks.forEach((block: any) => {
+      const s = block.overAllStatus ?? "";
+
+      // ── Rule 1: Sanctioned but not yet acknowledged/rejected (MY blocks only) ──
+      if (s === "Sanctioned, Pending with SSE For Acceptance" && block.userId === myUserId) {
+        const toTime  = block.sanctionedTimeTo  ?? block.demandTimeTo;
+        const toMs    = toTime ? new Date(toTime).getTime() : null;
+        const isPast  = toMs !== null && toMs <= nowIST;
+        // Skip fully-past blocks that predate the cutoff (historical clutter)
+        if (isPast && toMs !== null && toMs < POPUP_CUTOFF_MS) return;
+        if (isPast) {
+          result.push({ block, reason: "Block time has fully passed — you can only reject this sanctioned block" });
+        } else {
+          result.push({ block, reason: "Sanctioned block — awaiting your acceptance or rejection" });
+        }
+        return;
+      }
+
+      // ── Rule 2: Accepted but not applied / exited — blocks WHOLE depot+dept ──
+      // Applies to everyone in same depot AND same department.
+      if (
+        s === "Sanctioned and Accepted by SSE" &&
+        block.selectedDepo === myDepot &&
+        block.selectedDepartment === myDept
+      ) {
+        const fromTime = block.sanctionedTimeFrom ?? block.demandTimeFrom;
+        const toTime   = block.sanctionedTimeTo   ?? block.demandTimeTo;
+        if (!fromTime) return;
+        const fromMs = new Date(fromTime).getTime();
+        const toMs   = toTime ? new Date(toTime).getTime() : null;
+        const isFullyPast = toMs !== null && toMs <= nowIST;
+        const startsWithin3h = fromMs > nowIST && fromMs <= nowIST + THREE_HRS;
+
+        // Skip fully-past blocks that predate the cutoff (historical clutter)
+        if (isFullyPast && toMs !== null && toMs < POPUP_CUTOFF_MS) return;
+
+        if (isFullyPast) {
+          result.push({ block, reason: "Your team has a block whose time has fully passed without availing or exit — the whole team is restricted until resolved", subType: "past" });
+        } else if (startsWithin3h) {
+          result.push({ block, reason: "Your team has a block starting within 3 hours — apply for availing or exit to unblock your team", subType: "within3h" });
+        }
+      }
+    });
+
+    return result;
+  };
+
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log("level entry");
@@ -1789,7 +2344,13 @@ const findCutoffThursday = () => {
 
     // ─── 1. Review‑mode guard ──────────────────────────────────────────────
     if (!reviewMode) {
-      // Instead of immediately setting reviewMode, show the confirmation modal
+      // Check for pending unresolved blocks first
+      const pending = getPendingActionBlocks();
+      if (pending.length > 0) {
+        setPendingActionBlocks(pending);
+        setShowPendingModal(true);
+        return;
+      }
       setShowReviewModal(true);
       return;
     }
@@ -1953,10 +2514,11 @@ const findCutoffThursday = () => {
         processedLineSections: processedSections,
         adminAcceptance: false,
         selectedDepo: userDepot || "",
-        ...(durationMins <= 45 && !formData.sigActionsNeeded && !formData.trdActionsNeeded && {
-          managerAcceptance: true,
-          isSanctioned: true,
-        }),
+        ...(isShadowBlock
+          ? { isShadowBlock: true, shadowParentId, isSanctioned: true, managerAcceptance: true }
+          : durationMins <= 45 && !formData.sigActionsNeeded && !formData.trdActionsNeeded
+          ? { managerAcceptance: true, isSanctioned: true }
+          : {}),
         // activity: formData.activity === "others" ? customActivity : formData.activity
          activity: selectedActivities.includes("others") 
     ? [...selectedActivities.filter(a => a !== "others"), customActivity].join(",")
@@ -1989,6 +2551,9 @@ const findCutoffThursday = () => {
         setSelectedActivities([]);
         setCustomActivity("");
         setErrors({});
+        setIsShadowBlock(false);
+        setShadowParentId("");
+        setShadowListExpanded(true);
         setShowSuccessPage(true);
         setReviewMode(false);
       }
@@ -2144,6 +2709,8 @@ const findCutoffThursday = () => {
     if (!formData.demandTimeFrom)
       errors.demandTimeFrom = "From time is required";
     if (!formData.demandTimeTo) errors.demandTimeTo = "To time is required";
+    if (isShadowBlock && !shadowParentId)
+      errors.shadowParentId = "Please select a parent block for the shadow block";
     if (!formData.selectedDepartment)
       errors.selectedDepartment = "Department is required";
     if (!formData.selectedSection)
@@ -3528,8 +4095,387 @@ useEffect(() => {
           <span className="text-lg font-bold text-black">Depot/SSE:</span>
           <span className="ml-2 text-lg font-semibold text-gray-700">{formData.selectedDepo || session?.user?.depot || "Not assigned"}</span>
         </div>
+        {/* ── Pending Actions Warning Modal ─────────────────────────────── */}
+        {showPendingModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col max-h-[85vh]">
+              {/* Header */}
+              <div className="flex items-center gap-3 p-5 border-b border-gray-100">
+                <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                  <span className="text-xl">⚠️</span>
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-gray-800">New Request Blocked</h2>
+                  <p className="text-xs text-gray-500 mt-0.5">Resolve all pending block actions before raising a new request</p>
+                </div>
+              </div>
+
+              {/* Block list */}
+              <div className="overflow-y-auto flex-1 p-4 flex flex-col gap-3">
+                {pendingActionBlocks.map(({ block, reason, subType }, i) => {
+                  const blockId = block.id;
+                  const actionState = blockActionState[blockId] ?? { mode: "idle", input: "" };
+                  const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+                  const nowIST = Date.now() + IST_OFFSET_MS;
+                  const toMs = block.sanctionedTimeTo ? new Date(block.sanctionedTimeTo).getTime() : null;
+                  const isPast = toMs !== null && toMs <= nowIST;
+                  const isMine = block.userId === (session?.user as any)?.id;
+                  const isSanctionPending = block.overAllStatus === "Sanctioned, Pending with SSE For Acceptance";
+                  const isAcceptedNotApplied = block.overAllStatus === "Sanctioned and Accepted by SSE";
+                  const isBusy = acceptMutation.isPending || rejectMutation.isPending || exitMutation.isPending;
+
+                  return (
+                    <div key={i} className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex flex-col gap-2">
+                      {/* Block header */}
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm font-bold text-gray-800">{block.divisionId ?? block.id?.slice(0, 8)}</span>
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-200 text-amber-800 shrink-0">
+                          {block.overAllStatus ?? "—"}
+                        </span>
+                      </div>
+                      {block.appliedByName && (
+                        <span className="text-xs text-gray-500">Block owner: <span className="font-semibold text-gray-700">{block.appliedByName}</span></span>
+                      )}
+                      {block.selectedDepo && (
+                        <span className="text-xs text-gray-500">{block.selectedDepartment} — {block.selectedDepo}</span>
+                      )}
+                      <span className="text-xs font-semibold text-red-600">{reason}</span>
+
+                      {/* ── Actions ── */}
+                      {actionState.mode === "idle" && (
+                        <div className="flex gap-2 flex-wrap mt-1">
+                          {/* Sanction pending on MY block → Accept (only if not past) + Reject */}
+                          {isSanctionPending && isMine && !isPast && (
+                            <button
+                              type="button"
+                              disabled={isBusy}
+                              onClick={() => acceptMutation.mutate(blockId)}
+                              className="flex-1 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-xs font-bold disabled:opacity-50 transition"
+                            >
+                              ✓ Accept
+                            </button>
+                          )}
+                          {isSanctionPending && isMine && (
+                            <button
+                              type="button"
+                              disabled={isBusy}
+                              onClick={() => setBlockMode(blockId, "rejecting")}
+                              className="flex-1 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold disabled:opacity-50 transition"
+                            >
+                              ✕ Reject
+                            </button>
+                          )}
+                          {/* Accepted not applied — past block: exit only */}
+                          {isAcceptedNotApplied && subType === "past" && (
+                            <button
+                              type="button"
+                              disabled={isBusy}
+                              onClick={() => setBlockMode(blockId, "exiting")}
+                              className="flex-1 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold disabled:opacity-50 transition"
+                            >
+                              Exit Without Availing
+                            </button>
+                          )}
+                          {/* Accepted not applied — within 3h: go apply OR exit */}
+                          {isAcceptedNotApplied && subType === "within3h" && (
+                            <>
+                              <button
+                                type="button"
+                                disabled={isBusy}
+                                onClick={() => { setShowPendingModal(false); window.location.href = "/avail-block"; }}
+                                className="flex-1 py-2 rounded-lg text-white text-xs font-bold disabled:opacity-50 transition"
+                                style={{ backgroundColor: "#13529e" }}
+                              >
+                                Go to Avail Block at Site
+                              </button>
+                              <button
+                                type="button"
+                                disabled={isBusy}
+                                onClick={() => setBlockMode(blockId, "exiting")}
+                                className="flex-1 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold disabled:opacity-50 transition"
+                              >
+                                Exit Without Availing
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Reject form */}
+                      {actionState.mode === "rejecting" && isSanctionPending && isMine && (
+                        <div className="flex flex-col gap-2 mt-1">
+                          <textarea
+                            rows={2}
+                            placeholder="Reason for rejection (required)"
+                            value={actionState.input}
+                            onChange={(e) => setBlockInput(blockId, e.target.value)}
+                            className="w-full text-xs border border-red-300 rounded-lg px-3 py-2 focus:outline-none focus:border-red-500 resize-none"
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              disabled={!actionState.input.trim() || rejectMutation.isPending}
+                              onClick={() => rejectMutation.mutate({ id: blockId, remarks: actionState.input.trim() })}
+                              className="flex-1 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold disabled:opacity-40 transition"
+                            >
+                              {rejectMutation.isPending ? "Rejecting…" : "Confirm Reject"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setBlockMode(blockId, "idle")}
+                              className="py-2 px-3 rounded-lg border border-gray-300 text-gray-600 text-xs font-medium hover:bg-gray-50 transition"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Exit without availing form */}
+                      {actionState.mode === "exiting" && isAcceptedNotApplied && (
+                        <div className="flex flex-col gap-2 mt-1">
+                          <textarea
+                            rows={2}
+                            placeholder="Reason for exiting without availing (required)"
+                            value={actionState.input}
+                            onChange={(e) => setBlockInput(blockId, e.target.value)}
+                            className="w-full text-xs border border-orange-300 rounded-lg px-3 py-2 focus:outline-none focus:border-orange-500 resize-none"
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              disabled={!actionState.input.trim() || exitMutation.isPending}
+                              onClick={() => exitMutation.mutate({ id: blockId, reason: actionState.input.trim() })}
+                              className="flex-1 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold disabled:opacity-40 transition"
+                            >
+                              {exitMutation.isPending ? "Exiting…" : "Confirm Exit"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setBlockMode(blockId, "idle")}
+                              className="py-2 px-3 rounded-lg border border-gray-300 text-gray-600 text-xs font-medium hover:bg-gray-50 transition"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Actions */}
+              <div className="p-4 border-t border-gray-100 flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setShowPendingModal(false); window.location.href = "/avail-block"; }}
+                  className="w-full py-3 rounded-xl font-bold text-white text-sm"
+                  style={{ backgroundColor: "#13529e" }}
+                >
+                  Go to Avail Block Screen
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setShowPendingModal(false); window.location.href = "/dashboard"; }}
+                  className="w-full py-2.5 rounded-xl font-bold text-gray-600 text-sm border-2 border-gray-200 hover:bg-gray-50"
+                >
+                  Back to Dashboard
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleFormSubmit} className="space-y-10">
           <div className="grid grid-cols-1 gap-y-8 mb-8">
+            {/* Shadow Block Toggle */}
+            <div className="flex flex-col gap-3 w-full">
+              <div className="flex flex-row items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => { setIsShadowBlock(!isShadowBlock); setShadowParentId(""); setShadowListExpanded(true); }}
+                  className={`flex items-center gap-2 px-5 py-3 rounded-xl border-2 font-bold text-[20px] transition-all ${isShadowBlock ? "bg-[#1e40af] border-[#1e40af] text-white" : "bg-white border-[#b6c6e6] text-[#1e40af]"}`}
+                >
+                  <span style={{ fontSize: "20px" }}>{isShadowBlock ? "✅" : "☐"}</span>
+                  Shadow Block
+                </button>
+                {isShadowBlock && (
+                  <span className="text-[18px] text-[#1e40af] font-semibold">
+                    This block auto-sanctions immediately and maps to a parent block.
+                  </span>
+                )}
+              </div>
+              {isShadowBlock && (
+                <div className="flex flex-col gap-3 w-full">
+                  <label className="text-[20px] font-bold text-[#1e40af]">
+                    Select Parent Block <span className="text-red-500">*</span>
+                  </label>
+                  {shadowParentBlocks.length === 0 ? (
+                    <div className="text-[18px] text-gray-500 border-2 border-dashed border-[#b6c6e6] rounded-xl px-5 py-4">
+                      No blocks available within next 12 hours for your depot &amp; department.
+                    </div>
+                  ) : shadowParentId && !shadowListExpanded ? (
+                    /* ── Collapsed: show selected card summary + Change button ── */
+                    (() => {
+                      const sel = shadowParentBlocks.find((b: any) => b.id === shadowParentId);
+                      if (!sel) return null;
+                      const ist = (dt: string | null | undefined) =>
+                        dt ? new Date(dt).toISOString().slice(11, 16) : "--";
+                      const selFromT = ist(sel.sanctionedTimeFrom ?? sel.demandTimeFrom);
+                      const selToT   = ist(sel.sanctionedTimeTo   ?? sel.demandTimeTo);
+                      const statusMeta2: Record<string, { label: string; bg: string; color: string }> = {
+                        "Sanctioned and Accepted by SSE": { label: "Ready to Apply", bg: "#d1fae5", color: "#065f46" },
+                        "Pending Concurrences":           { label: "Pending Concurrence", bg: "#fee2e2", color: "#991b1b" },
+                        "Pending SM Approval":            { label: "Pending SM", bg: "#ede9fe", color: "#5b21b6" },
+                        "SM Approved":                    { label: "SM Approved ✔", bg: "#dcfce7", color: "#14532d" },
+                        "Availing Active":                { label: "Availing Active ▶", bg: "#dbeafe", color: "#1e40af" },
+                        "All Closures Submitted":         { label: "Closures Submitted", bg: "#fef9c3", color: "#713f12" },
+                      };
+                      const sm2 = statusMeta2[sel.overAllStatus ?? ""] ?? { label: sel.overAllStatus ?? "—", bg: "#f3f4f6", color: "#374151" };
+                      return (
+                        <div style={{ border: "2.5px solid #1e40af", borderRadius: "14px", padding: "12px 14px", background: "#eff6ff", display: "flex", flexDirection: "column", gap: "6px" }}>
+                          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px" }}>
+                            <span style={{ fontWeight: 900, fontSize: "15px", color: "#1e40af", background: "#dbeafe", borderRadius: "6px", padding: "2px 8px" }}>
+                              {sel.divisionId ?? sel.id.slice(0, 8)}
+                            </span>
+                            <span style={{ fontWeight: 900, fontSize: "15px", color: "#065f46", background: "#d1fae5", borderRadius: "6px", padding: "2px 10px" }}>
+                              ⏱ {selFromT} – {selToT}
+                            </span>
+                            <span style={{ fontSize: "12px", fontWeight: 800, background: sm2.bg, color: sm2.color, borderRadius: "5px", padding: "1px 8px" }}>{sm2.label}</span>
+                            <button
+                              type="button"
+                              onClick={() => setShadowListExpanded(true)}
+                              style={{ marginLeft: "auto", fontSize: "13px", fontWeight: 800, color: "#1e40af", background: "#dbeafe", border: "1.5px solid #1e40af", borderRadius: "8px", padding: "4px 14px", cursor: "pointer" }}
+                            >
+                              Change
+                            </button>
+                          </div>
+                          {sel.missionBlock && (
+                            <div style={{ fontSize: "13px", fontWeight: 700, color: "#374151" }}>
+                              📍 {sel.selectedSection && `${sel.selectedSection} › `}<span style={{ color: "#7c3aed" }}>{sel.missionBlock}</span>
+                            </div>
+                          )}
+                          {(sel.workLocationFrom || sel.workLocationTo) && (
+                            <div style={{ fontSize: "12px", color: "#374151", fontWeight: 600 }}>
+                              📌 {[sel.workLocationFrom, sel.workLocationTo].filter(Boolean).join(" → ")}
+                            </div>
+                          )}
+                          <div style={{ fontSize: "12px", color: "#1e40af", fontWeight: 700, marginTop: "2px" }}>
+                            ✔ Parent selected — your shadow block times must be within {selFromT} – {selToT}
+                          </div>
+                        </div>
+                      );
+                    })()
+                  ) : (
+                    <div className="flex flex-col gap-3 w-full">
+                      {shadowParentBlocks.map((b: any) => {
+                        const ist = (dt: string | null | undefined) =>
+                          dt ? new Date(dt).toISOString().slice(11, 16) : "--";
+                        const fromT = ist(b.sanctionedTimeFrom ?? b.demandTimeFrom);
+                        const toT   = ist(b.sanctionedTimeTo   ?? b.demandTimeTo);
+                        const dateStr = b.date
+                          ? (() => { const d = new Date(b.date); return `${String(d.getDate()).padStart(2,"0")}-${String(d.getMonth()+1).padStart(2,"0")}-${d.getFullYear()}`; })()
+                          : "--";
+                        // Lines / roads from processedLineSections
+                        const sections: any[] = Array.isArray(b.processedLineSections) ? b.processedLineSections : [];
+                        const linesLabel = sections.length > 0
+                          ? sections.map((s: any) => [s.lineName, s.otherLines, s.road, s.otherRoads].filter(Boolean).join(", ")).filter(Boolean).join(" | ")
+                          : null;
+                        const isSelected = shadowParentId === b.id;
+                        const statusMeta: Record<string, { label: string; bg: string; color: string }> = {
+                          "Sanctioned and Accepted by SSE": { label: "Ready to Apply", bg: "#d1fae5", color: "#065f46" },
+                          "Pending Concurrences":           { label: "Pending Concurrence", bg: "#fee2e2", color: "#991b1b" },
+                          "Pending SM Approval":            { label: "Pending SM", bg: "#ede9fe", color: "#5b21b6" },
+                          "SM Approved":                    { label: "SM Approved ✔", bg: "#dcfce7", color: "#14532d" },
+                          "Availing Active":                { label: "Availing Active ▶", bg: "#dbeafe", color: "#1e40af" },
+                          "All Closures Submitted":         { label: "Closures Submitted", bg: "#fef9c3", color: "#713f12" },
+                        };
+                        const sm = statusMeta[b.overAllStatus ?? ""] ?? { label: b.overAllStatus ?? "—", bg: "#f3f4f6", color: "#374151" };
+                        return (
+                          <div
+                            key={b.id}
+                            onClick={() => { setShadowParentId(b.id); setShadowListExpanded(false); }}
+                            style={{
+                              border: isSelected ? "2.5px solid #1e40af" : "1.5px solid #bfdbfe",
+                              borderRadius: "14px",
+                              padding: "14px 16px",
+                              background: isSelected ? "#eff6ff" : "#fff",
+                              cursor: "pointer",
+                              transition: "border-color 0.15s, background 0.15s",
+                            }}
+                          >
+                            {/* Row 1: ID + date + sanctioned window + status */}
+                            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                              <span style={{ fontWeight: 900, fontSize: "15px", color: "#1e40af", background: "#dbeafe", borderRadius: "6px", padding: "2px 8px" }}>
+                                {b.divisionId ?? b.id.slice(0, 8)}
+                              </span>
+                              <span style={{ fontSize: "13px", color: "#374151", fontWeight: 700 }}>{dateStr}</span>
+                              <span style={{ fontWeight: 900, fontSize: "15px", color: "#065f46", background: "#d1fae5", borderRadius: "6px", padding: "2px 10px", letterSpacing: "0.5px" }}>
+                                ⏱ {fromT} – {toT}
+                              </span>
+                              <span style={{ fontSize: "12px", fontWeight: 800, background: sm.bg, color: sm.color, borderRadius: "5px", padding: "1px 8px" }}>
+                                {sm.label}
+                              </span>
+                              {isSelected && (
+                                <span style={{ marginLeft: "auto", fontWeight: 800, fontSize: "13px", color: "#1e40af" }}>✔ Selected</span>
+                              )}
+                            </div>
+                            {/* Row 2: Section + Mission Block */}
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "4px" }}>
+                              {b.selectedSection && (
+                                <span style={{ fontSize: "13px", fontWeight: 700, color: "#374151" }}>
+                                  📍 {b.selectedSection}
+                                </span>
+                              )}
+                              {b.missionBlock && (
+                                <span style={{ fontSize: "13px", fontWeight: 700, color: "#374151" }}>
+                                  › <span style={{ color: "#7c3aed" }}>{b.missionBlock}</span>
+                                </span>
+                              )}
+                            </div>
+                            {/* Row 3: Work location */}
+                            {(b.workLocationFrom || b.workLocationTo) && (
+                              <div style={{ fontSize: "13px", color: "#374151", fontWeight: 600, marginBottom: "4px" }}>
+                                📌 {[b.workLocationFrom, b.workLocationTo].filter(Boolean).join(" → ")}
+                              </div>
+                            )}
+                            {/* Row 4: Lines / Roads */}
+                            {linesLabel && (
+                              <div style={{ fontSize: "12px", color: "#374151", fontWeight: 600, marginBottom: "4px" }}>
+                                🛤 {linesLabel}
+                              </div>
+                            )}
+                            {/* Row 5: Work type + Activity */}
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "4px" }}>
+                              {b.workType && (
+                                <span style={{ fontSize: "12px", background: "#f3f4f6", borderRadius: "5px", padding: "1px 7px", fontWeight: 700, color: "#1f2937" }}>
+                                  {b.workType}
+                                </span>
+                              )}
+                              {b.activity && (
+                                <span style={{ fontSize: "12px", background: "#fef3c7", borderRadius: "5px", padding: "1px 7px", fontWeight: 700, color: "#92400e" }}>
+                                  {b.activity}
+                                </span>
+                              )}
+                            </div>
+                            {/* Row 6: Remarks */}
+                            {b.requestremarks && (
+                              <div style={{ fontSize: "12px", color: "#6b7280", fontStyle: "italic", marginTop: "2px" }}>
+                                &ldquo;{b.requestremarks}&rdquo;
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {errors.shadowParentId && (
+                    <span className="text-[20px] text-[#e07a5f] font-medium">{errors.shadowParentId}</span>
+                  )}
+                </div>
+              )}
+            </div>
             {/* Date of Block */}
             <div className="flex flex-col md:flex-row md:items-center gap-4 w-full">
               <label
@@ -3545,7 +4491,8 @@ useEffect(() => {
                   name="date"
                   value={formData.date || ""}
                   onChange={handleInputChange}
-                  className="border-2 border-black rounded-xl px-8 py-4 text-[24px] font-bold bg-[#f7f7a1] text-black shadow-md focus:outline-none focus:ring-2 focus:ring-[#b07be0] min-w-[180px] max-w-[240px]"
+                  disabled={isShadowBlock && !!shadowParentId}
+                  className={`border-2 border-black rounded-xl px-8 py-4 text-[24px] font-bold shadow-md focus:outline-none focus:ring-2 focus:ring-[#b07be0] min-w-[180px] max-w-[240px] ${isShadowBlock && shadowParentId ? "bg-[#e5e7eb] text-[#6b7280] cursor-not-allowed" : "bg-[#f7f7a1] text-black"}`}
                   aria-required="true"
                   aria-label="Select date of block"
                   style={{ boxShadow: "2px 2px 6px #bbb" }}
@@ -3563,6 +4510,11 @@ useEffect(() => {
                   placeholder="Select date"
                   required
                 />
+                {isShadowBlock && shadowParentId && formData.date && (
+                  <span style={{ fontSize: "13px", fontWeight: 700, color: "#065f46", background: "#d1fae5", borderRadius: "6px", padding: "2px 8px", whiteSpace: "nowrap" }}>
+                    📅 Auto-set from parent
+                  </span>
+                )}
                 {/* Type of Block - compact, right of date */}
                 {formData.date && (
                   <div className="flex flex-row items-center gap-2 ml-2">
@@ -4004,14 +4956,17 @@ useEffect(() => {
                       <option value="">--</option>
                       {[...Array(24).keys()].map((h) => {
                         const hourStr = h.toString().padStart(2, "0");
-                        if (isToday(formData.date)) {
+                        if (isShadowBlock && parentTimeConstraint) {
+                          // Shadow: only allow hours within parent's window; skip isToday filter
+                          const { fromH: pfH, toH: ptH } = parentTimeConstraint;
+                          const overnight = pfH > ptH;
+                          const allowed = overnight ? (h >= pfH || h <= ptH) : (h >= pfH && h <= ptH);
+                          if (!allowed) return null;
+                        } else if (isToday(formData.date)) {
                           const now = new Date();
                           const currentHour = now.getHours();
-                          if (h < currentHour && h !== 0) {
-                            return null;
-                          }
+                          if (h < currentHour && h !== 0) return null;
                         }
-
                         return (
                           <option key={h} value={hourStr}>
                             {hourStr}
@@ -4043,14 +4998,16 @@ useEffect(() => {
                       required
                     >
                       <option value="">--</option>
-                      {[...Array(12).keys()].map((m) => (
-                        <option
-                          key={m}
-                          value={(m * 5).toString().padStart(2, "0")}
-                        >
-                          {(m * 5).toString().padStart(2, "0")}
-                        </option>
-                      ))}
+                      {[...Array(12).keys()].map((m) => {
+                        const minVal = m * 5;
+                        const minStr = minVal.toString().padStart(2, "0");
+                        if (isShadowBlock && parentTimeConstraint) {
+                          const curH = formData.demandTimeFrom ? parseInt(formData.demandTimeFrom.split(":")[0]) : -1;
+                          if (curH === parentTimeConstraint.fromH && minVal < parentTimeConstraint.fromM) return null;
+                          if (curH === parentTimeConstraint.toH   && minVal > parentTimeConstraint.toM)   return null;
+                        }
+                        return <option key={m} value={minStr}>{minStr}</option>;
+                      })}
                     </select>
                   </div>
                   <span className="text-[#2c3e50] font-bold text-[24px] px-2">
@@ -4082,21 +5039,13 @@ useEffect(() => {
                       <option value="">--</option>
                       {[...Array(24).keys()].map((h) => {
                         const hourStr = h.toString().padStart(2, "0");
-                        // If selected date is today, ensure "To" time is after "From" time
-                        // if (isToday(formData.date)) {
-                        //   const fromHour = formData.demandTimeFrom
-                        //     ? parseInt(formData.demandTimeFrom.split(":")[0])
-                        //     : new Date().getHours() + 1;
-                        //   // Only allow hours that are after the from time
-                        //   if (h <= fromHour) {
-                        //     return null; // Skip rendering this option
-                        //   }
-                        // }
-                        return (
-                          <option key={h} value={hourStr}>
-                            {hourStr}
-                          </option>
-                        );
+                        if (isShadowBlock && parentTimeConstraint) {
+                          const { fromH: pfH, toH: ptH } = parentTimeConstraint;
+                          const overnight = pfH > ptH;
+                          const allowed = overnight ? (h >= pfH || h <= ptH) : (h >= pfH && h <= ptH);
+                          if (!allowed) return null;
+                        }
+                        return <option key={h} value={hourStr}>{hourStr}</option>;
                       })}
                     </select>
                     <span className="text-[#2c3e50] font-bold text-[24px]">:</span>
@@ -4123,17 +5072,29 @@ useEffect(() => {
                       required
                     >
                       <option value="">--</option>
-                      {[...Array(12).keys()].map((m) => (
-                        <option
-                          key={m}
-                          value={(m * 5).toString().padStart(2, "0")}
-                        >
-                          {(m * 5).toString().padStart(2, "0")}
-                        </option>
-                      ))}
+                      {[...Array(12).keys()].map((m) => {
+                        const minVal = m * 5;
+                        const minStr = minVal.toString().padStart(2, "0");
+                        if (isShadowBlock && parentTimeConstraint) {
+                          const curH = formData.demandTimeTo ? parseInt(formData.demandTimeTo.split(":")[0]) : -1;
+                          if (curH === parentTimeConstraint.fromH && minVal < parentTimeConstraint.fromM) return null;
+                          if (curH === parentTimeConstraint.toH   && minVal > parentTimeConstraint.toM)   return null;
+                        }
+                        return <option key={m} value={minStr}>{minStr}</option>;
+                      })}
                     </select>
                   </div>
                 </div>
+                {shadowTimeError && (
+                  <div style={{ fontSize: "14px", fontWeight: 800, color: "#991b1b", background: "#fee2e2", border: "1.5px solid #fca5a5", borderRadius: "8px", padding: "6px 14px", width: "100%", textAlign: "center" }}>
+                    ⚠ {shadowTimeError}
+                  </div>
+                )}
+                {isShadowBlock && parentTimeConstraint && !shadowTimeError && formData.demandTimeFrom && formData.demandTimeTo && (
+                  <div style={{ fontSize: "13px", fontWeight: 700, color: "#065f46", background: "#d1fae5", border: "1px solid #6ee7b7", borderRadius: "8px", padding: "4px 12px", width: "100%", textAlign: "center" }}>
+                    ✔ Times within parent window ({parentTimeConstraint.fromHHMM} – {parentTimeConstraint.toHHMM})
+                  </div>
+                )}
                 <span className="text-[#2c3e50] font-bold text-[24px] mb-1 tracking-wide">
                   Duration
                 </span>
@@ -5156,7 +6117,7 @@ useEffect(() => {
                   <div className="flex flex-col gap-2 mt-2 pb-2">
                     <div className="flex flex-row flex-wrap gap-1">
                       <input
-                        type="text"
+                        type="number"
                         name="powerBlockKmFrom"
                         value={formData.powerBlockKmFrom || ""}
                         onChange={handleInputChange}
@@ -5166,7 +6127,7 @@ useEffect(() => {
                       />
                       <span className="text-black font-bold text-2xl">to</span>
                       <input
-                        type="text"
+                        type="number"
                         name="powerBlockKmTo"
                         value={formData.powerBlockKmTo || ""}
                         onChange={handleInputChange}
@@ -5719,7 +6680,6 @@ useEffect(() => {
               selectedActivities={selectedActivities}
               customActivity={customActivity}
               formSubmitting={formSubmitting}
-              userDepot={userDepots}
             />
             <button
               type="submit"

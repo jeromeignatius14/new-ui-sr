@@ -1,10 +1,10 @@
 import axiosInstance from "@/app/utils/axiosInstance";
 import { UserRequestInput } from "@/app/validation/user-request";
 import { RequestItem } from "../query/user-request";
-import { format } from 'date-fns';
-import axios from 'axios';
+import { format } from "date-fns";
+import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 export interface UserRequestResponse {
   status: boolean;
@@ -103,21 +103,20 @@ export const userRequestService = {
     limit: number = 100,
     startDate?: string,
     endDate?: string,
-    userDepartement?:string
+    userDepartment?: string
   ): Promise<RequestResponse> => {
     const queryParams = new URLSearchParams();
-    queryParams.append('page', page.toString());
-    queryParams.append('limit', limit.toString());
-    if (startDate) queryParams.append('startDate', startDate);
-    if (endDate) queryParams.append('endDate', endDate);
-    if (userDepartement) queryParams.append('userDepartement', userDepartement);
+    queryParams.append("page", page.toString());
+    queryParams.append("limit", limit.toString());
+    if (startDate) queryParams.append("startDate", startDate);
+    if (endDate) queryParams.append("endDate", endDate);
+    if (userDepartment) queryParams.append("userDepartment", userDepartment);
 
     const response = await axiosInstance.get<RequestResponse>(
       `/api/user-request/other/${selectedDepo}?${queryParams.toString()}`
     );
     return response.data;
   },
-
 
   /**
    * Update other request status
@@ -143,42 +142,42 @@ export const userRequestService = {
   //   return response.data;
   // },
 
+  updateOtherRequest: async (
+    id: string,
+    accept: boolean,
+    remarks?: string,
+    userDepartment?: string,
+    depot?: string,
+    mobileView?: string
+  ): Promise<UserRequestResponse> => {
+    const url = `/api/user-request/other/${id}?accept=${accept}`;
 
-updateOtherRequest: async (
-  id: string,
-  accept: boolean,
-  remarks?: string,
-  userDepartement?: string,
-  mobileView?: string
-): Promise<UserRequestResponse> => {
-  const url = `/api/user-request/other/${id}?accept=${accept}`;
-
-  // Prepare request body based on parameters
-  const body: any = {};
-  
-  if (remarks) {
-    // Use different field names based on accept/reject action
-    if (accept) {
-      body.acceptRemarks = remarks;
-    } else {
+    // Prepare request body based on parameters
+    const body: any = {};
+    if (!accept) {
       body.disconnectionRequestRejectRemarks = remarks;
+    } else {
+      body.acceptRemarks = remarks;
     }
-  }
-  
-  if (userDepartement) {
-    body.userDepartement = userDepartement;
-  }
 
-  if (mobileView) {
-    body.mobileView = mobileView;
-  }
+    if (userDepartment) {
+      body.userDepartment = userDepartment;
+    }
 
-  const response = await axiosInstance.put<UserRequestResponse>(
-    url, 
-    Object.keys(body).length > 0 ? body : undefined
-  );
-  return response.data;
-},
+    if (mobileView) {
+      body.mobileView = mobileView;
+    }
+
+    if (depot) {
+      body.depot = depot;
+    }
+
+    const response = await axiosInstance.put<UserRequestResponse>(
+      url,
+      Object.keys(body).length > 0 ? body : undefined
+    );
+    return response.data;
+  },
 
   /**
    * Get user requests with pagination and date filtering
@@ -201,9 +200,9 @@ updateOtherRequest: async (
       limit: limit.toString(),
     });
 
-    if (startDate) params.append('startDate', startDate);
-    if (endDate) params.append('endDate', endDate);
-    if (status) params.append('status', status);
+    if (startDate) params.append("startDate", startDate);
+    if (endDate) params.append("endDate", endDate);
+    if (status) params.append("status", status);
 
     const response = await axiosInstance.get<RequestResponse>(
       `/api/user-request/user?${params.toString()}`
@@ -215,13 +214,12 @@ updateOtherRequest: async (
     const response = await axiosInstance.get(`/api/user-request/download`, {
       params: {
         startDate,
-        endDate
+        endDate,
       },
-      responseType: 'blob'
+      responseType: "blob",
     });
     return response;
   },
-
 
   acceptUserRequestRemark: async (id: string) => {
     const response = await axiosInstance.put(`/api/user-request/accept/${id}`);
@@ -229,7 +227,9 @@ updateOtherRequest: async (
   },
 
   rejectUserRequestRemark: async (id: string, remarks: string) => {
-    const response = await axiosInstance.put(`/api/user-request/reject/${id}`, { remarks });
+    const response = await axiosInstance.put(`/api/user-request/reject/${id}`, {
+      remarks,
+    });
     return response.data;
   },
 
@@ -241,10 +241,10 @@ updateOtherRequest: async (
     endDate?: string
   ): Promise<RequestResponse> => {
     const queryParams = new URLSearchParams();
-    queryParams.append('page', page.toString());
-    queryParams.append('limit', limit.toString());
-    if (startDate) queryParams.append('startDate', startDate);
-    if (endDate) queryParams.append('endDate', endDate);
+    queryParams.append("page", page.toString());
+    queryParams.append("limit", limit.toString());
+    if (startDate) queryParams.append("startDate", startDate);
+    if (endDate) queryParams.append("endDate", endDate);
 
     const response = await axiosInstance.get<RequestResponse>(
       `/api/user-request/summary-requests/${selectedSection}?${queryParams.toString()}`

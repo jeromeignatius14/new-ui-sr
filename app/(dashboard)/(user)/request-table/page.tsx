@@ -384,7 +384,7 @@ export default function RequestTablePage() {
   const [showRejectReasonPopup, setShowRejectReasonPopup] = useState(false);
   const [requestToReject, setRequestToReject] = useState<{
     id: string;
-    userDepartement: string;
+    userDepartment: string;
     mobileView: string;
   } | null>(null);
 
@@ -392,7 +392,7 @@ export default function RequestTablePage() {
   const [showAcceptReasonPopup, setShowAcceptReasonPopup] = useState(false);
   const [requestToAccept, setRequestToAccept] = useState<{
     id: string;
-    userDepartement: string;
+    userDepartment: string;
     mobileView: string;
     requestDateStr: string;
     corridorType: string;
@@ -459,13 +459,13 @@ export default function RequestTablePage() {
     }
   };
 
-  // const handleStatusUpdate = (id: string, accept: boolean,userDepartement:string,mobileView:string) => {
+  // const handleStatusUpdate = (id: string, accept: boolean,userDepartment:string,mobileView:string) => {
   //   if (accept) {
   //     updateOtherRequest(
   //       {
   //         id,
   //         accept,
-  //         userDepartement,
+  //         userDepartment,
   //         mobileView
   //       },
   //       {
@@ -476,7 +476,7 @@ export default function RequestTablePage() {
   //       }
   //     );
   //   } else {
-  //   setRequestToReject({ id, userDepartement, mobileView });
+  //   setRequestToReject({ id, userDepartment, mobileView });
   //   setShowRejectReasonPopup(true);
   //   }
   // };
@@ -485,7 +485,7 @@ export default function RequestTablePage() {
   const handleStatusUpdate = async (
     id: string,
     accept: boolean,
-    userDepartement: string,
+    userDepartment: string,
     mobileView: string,
     requestDateStr: string,
     corridorType: string
@@ -525,7 +525,7 @@ export default function RequestTablePage() {
       //   {
       //     id,
       //     accept,
-      //     userDepartement,
+      //     userDepartment,
       //     mobileView
       //   },
       //   {
@@ -534,11 +534,11 @@ export default function RequestTablePage() {
       //     },
       //   }
       // );
-      setRequestToAccept({ id, userDepartement, mobileView, requestDateStr, corridorType });
+      setRequestToAccept({ id, userDepartment, mobileView, requestDateStr, corridorType });
       setShowAcceptReasonPopup(true);
     } else {
       // For reject actions, just set up the rejection dialog
-      setRequestToReject({ id, userDepartement, mobileView });
+      setRequestToReject({ id, userDepartment, mobileView });
       setShowRejectReasonPopup(true);
     }
   };
@@ -550,7 +550,8 @@ export default function RequestTablePage() {
       {
         id: requestToReject.id,
         accept: false,
-        userDepartement: requestToReject.userDepartement,
+        userDepartment: requestToReject.userDepartment,
+        depot: selectedDepo,
         mobileView: requestToReject.mobileView,
         disconnectionRequestRejectRemarks: rejectReason // Keep using disconnectionRequestRejectRemarks for rejections
       },
@@ -570,14 +571,14 @@ export default function RequestTablePage() {
   };
   const handleConfirmAccept = () => {
     if (!requestToAccept || !acceptReason.trim()) return;
-
     updateOtherRequest(
       {
         id: requestToAccept.id,
         accept: true,
-        userDepartement: requestToAccept.userDepartement,
+        userDepartment: requestToAccept.userDepartment,
+        depot: selectedDepo,
         mobileView: requestToAccept.mobileView,
-        acceptRemarks: acceptReason // Using acceptRemarks for accept actions
+        acceptRemarks: acceptReason // Make sure your API accepts this field
       },
       {
         onSuccess: () => {
@@ -824,14 +825,18 @@ export default function RequestTablePage() {
       const excelData = filteredRequests.map((request: any) => ({
         "Date": formatDate(request.date),
         "Block Section": request.missionBlock || "N/A",
-        "UP/DN/SL/Rpad No.": request.lineDirection || "N/A",
+        "UP/DN/SL/Rpad No.": request.processedLineSections[0].lineName || request.processedLineSections[0].road || "N/A",
         "Activity": request.activity || "N/A",
         "Duration": formatDuration(request.demandTimeFrom, request.demandTimeTo),
         "Status": request.adminRequestStatus === "ACCEPTED" ? "Y" : "N",
         "Sanctioned From": request.sanctionedTimeFrom ? formatTime(request.sanctionedTimeFrom) : "N/A",
         "Sanctioned To": request.sanctionedTimeTo ? formatTime(request.sanctionedTimeTo) : "N/A",
         "Accept/Reject Status": request.userResponse || "Pending",
-        "Requested By": `${request.user?.name || "Unknown"} (${request.user?.role || "N/A"})`
+        "Requested By": `${request.user?.name || "Unknown"} (${request.user?.role || "N/A"})`,
+        "Major section": request.selectedSection || "N/A",
+        "Corridor Type": request.corridorType || "N/A",
+        "DivisionId": request.divisionId || "N/A",
+        "OverAllStatus": request.overAllStatus || "N/A",
       }));
 
       console.log(excelData);
@@ -890,7 +895,9 @@ export default function RequestTablePage() {
       {showRejectReasonPopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md border border-gray-300">
-            <h2 className="text-lg font-bold mb-2 text-black">Reason for Rejection</h2>
+            <h2 className="text-lg font-bold mb-2 text-black">
+              Reason for Rejection
+            </h2>
             <textarea
               className="w-full border border-gray-400 rounded p-2 mb-4 text-black"
               rows={3}
@@ -958,8 +965,12 @@ export default function RequestTablePage() {
       {rejectRemarkPopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md border border-gray-300">
-            <h2 className="text-lg font-bold mb-2 text-black">Reject Request</h2>
-            <p className="mb-2 text-black">Please provide remarks for rejection:</p>
+            <h2 className="text-lg font-bold mb-2 text-black">
+              Reject Request
+            </h2>
+            <p className="mb-2 text-black">
+              Please provide remarks for rejection:
+            </p>
             <textarea
               className="w-full border border-gray-400 rounded p-2 mb-4 text-black"
               rows={3}
@@ -1102,7 +1113,8 @@ export default function RequestTablePage() {
                       {request.isSanctioned === true ? (
                         <>
                           {request.sanctionedTimeFrom === null || request.sanctionedTimeTo === null ? (
-                            <span className="text-gray-500">00:00 - 00:00</span>
+                            <span className="text-gray-500"> {formatTime(request.optimisedTimeFrom)} -{" "}
+                              {formatTime(request.optimisedTimeTo)}</span>
                           ) : (
                             <>
                               {formatTime(request.sanctionedTimeFrom)} -{" "}
@@ -1213,7 +1225,6 @@ export default function RequestTablePage() {
     // }
   })()} */}
                         </>
-
                       )}
                     </td>
                   </tr>
@@ -1224,7 +1235,7 @@ export default function RequestTablePage() {
         </div>
       </div>
 
-      {session?.user?.department !== "ENGG" && (
+     {session?.user?.department !== "ENGG" && (
         <div className="flex justify-center mt-3 mb-6">
           <div className="w-full rounded-2xl border-2 border-[#B5B5B5] bg-[#F5E7B2] shadow p-0">
             <div className="text-[24px] font-bold text-black text-center py-2">
@@ -1249,7 +1260,7 @@ export default function RequestTablePage() {
                       Block Section
                     </th>
                     <th className="border border-black px-2 py-1 whitespace-nowrap w-[15%]">
-                      UP/DN/SL/Rpad
+                      Line/Road
                     </th>
                     <th className="border border-black px-2 py-1 whitespace-nowrap w-[20%]">
                       Activity
@@ -1319,8 +1330,11 @@ export default function RequestTablePage() {
                         <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
                           {request.isSanctioned === true ? (
                             <>
-                              {request.sanctionedTimeFrom === null || request.sanctionedTimeTo === null ? (
-                                <span className="text-gray-500">00:00 - 00:00</span>
+                              {request.sanctionedTimeFrom === null ||
+                                request.sanctionedTimeTo === null ? (
+                                <span className="text-gray-500">
+                                  00:00 - 00:00
+                                </span>
                               ) : (
                                 <>
                                   {formatTime(request.sanctionedTimeFrom)} -{" "}
@@ -1456,14 +1470,16 @@ export default function RequestTablePage() {
               </table>
             </div>
           </div>
-        </div>
-      )
-      }
-{session?.user?.department === "ENGG" && (
+        </div>)}
+      
+
+
+
+ {session?.user?.department === "ENGG" && (
         <div className="flex justify-center mt-3 mb-6">
           <div className="w-full rounded-2xl border-2 border-[#B5B5B5] bg-[#F5E7B2] shadow p-0">
             <div className="text-[24px] font-bold text-black text-center py-2">
-              SUMMARY OF ENGG REQUEST FOR NEXT 10 DAYS
+              SUMMARY OF OTHER REQUEST FOR NEXT 10 DAYS
             </div>
             <div className="italic text-center text-[24px] text-black pb-2">
               (Click ID to see full details or to Edit)
@@ -1613,10 +1629,7 @@ export default function RequestTablePage() {
                                 {request.overAllStatus}
                               </div>
                             ) : (<span className="bg-gray-100 p-2 text-gray-600 rounded">
-                               {request.userResponse !== "ACCEPTED" &&request.userAcceptanceForSanction === false 
-    ? "Sanctioned and Rejected by User"
-    : "Sanctioned and Pending for Acceptance"
-                               }
+                              Sanctioned and Pending for Acceptance
                             </span>)
                           ) : session?.user?.role === "JE" ? (
                             <span className="bg-gray-100 p-2 text-gray-600 rounded">
@@ -1835,7 +1848,9 @@ export default function RequestTablePage() {
       {/* Fixed Bottom Navigation */}
       <div className="bg-[#FFFDF5] pb-2">
         <div className=" text-center">
-          <h3 style={{ background: "#E6E6FA", color: "black", fontSize: "24px" }}>
+          <h3
+            style={{ background: "#E6E6FA", color: "black", fontSize: "24px" }}
+          >
             Customised Summary
           </h3>
         </div>
@@ -1844,8 +1859,9 @@ export default function RequestTablePage() {
         <div className="w-full px-2">
           <div className="flex justify-center items-center gap-4 mb-4  py-3 w-full rounded-lg">
             <div className="flex items-center gap-4 flex-wrap justify-center">
-              <div className="flex items-center gap-1">{" "} {/* Added this container */}
-
+              <div className="flex items-center gap-1">
+                {" "}
+                {/* Added this container */}
                 <div className="flex flex-col">
                   <label className="text-[24px] font-medium mb-1 text-black">
                     From Date
@@ -1858,7 +1874,8 @@ export default function RequestTablePage() {
                       setCustomDateRange((prev) => ({
                         ...prev,
                         startDate: newDate,
-                        endDate: newDate > prev.endDate ? newDate : prev.endDate,
+                        endDate:
+                          newDate > prev.endDate ? newDate : prev.endDate,
                       }));
                     }}
                     className="w-fit bg-[#B2F3F5] border-2 border-red-500 text-black pl-2 -pr-10 py-1 rounded text-2xl"
@@ -1902,7 +1919,9 @@ export default function RequestTablePage() {
                 Download XLSX
               </button> */}
 
-              <div className="flex flex-col items-center gap-1">{" "} {/* Changed to column layout */}
+              <div className="flex flex-col items-center gap-1">
+                {" "}
+                {/* Changed to column layout */}
                 <div className="w-full text-center">
                   <h3 className="bg-[#E6E6FA] text-black text-[18px] font-medium px-3 py-1 rounded mb-1">
                     For printing the summary,
@@ -1931,7 +1950,7 @@ export default function RequestTablePage() {
                Home
             </Link> */}
             <button
-              onClick={() => window.location.href = '/dashboard'}
+              onClick={() => (window.location.href = "/dashboard")}
               className="text-center w-full max-w-60 rounded-[50%] bg-cyan-200 text-black font-bold text-[24px] py-4 tracking-wider border border-[#b7b7d1] hover:bg-[#baffc9] transition"
             >
               Back
@@ -1945,8 +1964,6 @@ export default function RequestTablePage() {
                 await signOut({ redirect: true, callbackUrl: "/auth/login" });
               }}
               className="text-center w-full max-w-60 rounded-[50%] bg-emerald-200 text-black font-bold text-[24px] py-4 tracking-wider border border-[#b7b7d1] hover:bg-[#baffc9] transition"
-
-
             >
               Logout
             </button>
@@ -1965,11 +1982,19 @@ function formatDuration(from: string, to: string) {
   try {
     const fromDate = new Date(from);
     const toDate = new Date(to);
-    const diffInMinutes = Math.round(
-      (toDate.getTime() - fromDate.getTime()) / (1000 * 60)
-    );
+
+    if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) return "N/A";
+
+    let diffInMinutes = Math.round((toDate.getTime() - fromDate.getTime()) / (1000 * 60));
+
+    // Handle crossing midnight (next day)
+    if (diffInMinutes < 0) {
+      diffInMinutes += 24 * 60;
+    }
+
     const hours = Math.floor(diffInMinutes / 60);
     const minutes = diffInMinutes % 60;
+
     return `${hours.toString().padStart(2, "0")}:${minutes
       .toString()
       .padStart(2, "0")}`;
@@ -1977,3 +2002,4 @@ function formatDuration(from: string, to: string) {
     return "N/A";
   }
 }
+
