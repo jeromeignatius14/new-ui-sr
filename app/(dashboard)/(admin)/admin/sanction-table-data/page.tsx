@@ -134,14 +134,14 @@ interface DetailedData {
   Status: string;
 }
 
-// const locationOptions: OptionType[] = [
-//   { value: "{userLocations}", label: "{userLocations}" },
-//   { value: "SA", label: "SA" },
-//   { value: "MCU", label: "MCU" },
-//   { value: "TPJ", label: "TPJ" },
-//   { value: "PGT", label: "PGT" },
-//   { value: "TVC", label: "TVC" },
-// ];
+const locationOptions: OptionType[] = [
+  { value: "MAS", label: "MAS" },
+  { value: "SA", label: "SA" },
+  { value: "MCU", label: "MCU" },
+  { value: "TPJ", label: "TPJ" },
+  { value: "PGT", label: "PGT" },
+  { value: "TVC", label: "TVC" },
+];
 
 const blockTypeOptions: OptionType[] = [
   { value: "All", label: "All" },
@@ -350,8 +350,7 @@ const [departmentCountFilter, setDepartmentCountFilter] = useState<{
   });
 
   const { data: session } = useSession();
-const userLocations = session?.user?.location ;
-  // Parameters for the query
+
   const [queryParams, setQueryParams] = useState({
     startDate: "",
     endDate: "",
@@ -504,18 +503,34 @@ const handleDepartmentFilterClick = (
   }, [selectedDepartments]);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (globalWorkTypeDropdownRef.current && !globalWorkTypeDropdownRef.current.contains(event.target as Node)) {
-        setShowGlobalWorkTypeDropdown(false);
-      }
-      if (globalActivityDropdownRef.current && !globalActivityDropdownRef.current.contains(event.target as Node)) {
-        setShowGlobalActivityDropdown(false);
-      }
-      if (durationDropdownRef.current && !durationDropdownRef.current.contains(event.target as Node)) {
-        setShowDurationDropdown(false);
-      }
-    };
-
+    // const handleClickOutside = (event: MouseEvent) => {
+    //   if (globalWorkTypeDropdownRef.current && !globalWorkTypeDropdownRef.current.contains(event.target as Node)) {
+    //     setShowGlobalWorkTypeDropdown(false);
+    //   }
+    //   if (globalActivityDropdownRef.current && !globalActivityDropdownRef.current.contains(event.target as Node)) {
+    //     setShowGlobalActivityDropdown(false);
+    //   }
+    //   if (durationDropdownRef.current && !durationDropdownRef.current.contains(event.target as Node)) {
+    //     setShowDurationDropdown(false);
+    //   }
+    // };
+const handleClickOutside = (event: MouseEvent) => {
+  if (globalWorkTypeDropdownRef.current && !globalWorkTypeDropdownRef.current.contains(event.target as Node)) {
+    setShowGlobalWorkTypeDropdown(false);
+  }
+  if (globalActivityDropdownRef.current && !globalActivityDropdownRef.current.contains(event.target as Node)) {
+    setShowGlobalActivityDropdown(false);
+  }
+  if (durationDropdownRef.current && !durationDropdownRef.current.contains(event.target as Node)) {
+    setShowDurationDropdown(false);
+  }
+  if (sseDropdownRef.current && !sseDropdownRef.current.contains(event.target as Node)) {
+    setSseDropdownOpen(false);
+  }
+  if (sectionDropdownRefB.current && !sectionDropdownRefB.current.contains(event.target as Node)) {
+    setSectionDropdownOpenB(false);
+  }
+};
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
@@ -1056,7 +1071,7 @@ const handleDownloadUpcomingBlocks = () => {
     const excelData = [
       // ENGG Rows
       {
-        "Location": {userLocations},
+        "Location": "MAS",
         "Department": "ENGG",
         "Supporting Department": "-",
         "Total Block Requested": enggTotal,
@@ -1064,7 +1079,7 @@ const handleDownloadUpcomingBlocks = () => {
         "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
       },
       {
-        "Location": {userLocations},
+        "Location": "MAS",
         "Department": "ENGG",
         "Supporting Department": "S&T",
         "Total Block Requested": enggWithSnt,
@@ -1072,7 +1087,7 @@ const handleDownloadUpcomingBlocks = () => {
         "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
       },
       {
-        "Location": {userLocations},
+        "Location": "MAS",
         "Department": "ENGG",
         "Supporting Department": "TRD",
         "Total Block Requested": enggWithPower,
@@ -1080,7 +1095,7 @@ const handleDownloadUpcomingBlocks = () => {
         "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
       },
       {
-        "Location": {userLocations},
+        "Location": "MAS",
         "Department": "ENGG",
         "Supporting Department": "S&T and TRD",
         "Total Block Requested": enggWithSntAndPower,
@@ -1090,7 +1105,7 @@ const handleDownloadUpcomingBlocks = () => {
       
       // TRD Rows
       {
-        "Location": {userLocations},
+        "Location": "MAS",
         "Department": "TRD",
         "Supporting Department": "-",
         "Total Block Requested": trdTotal,
@@ -1100,7 +1115,7 @@ const handleDownloadUpcomingBlocks = () => {
       
       // S&T Rows
       {
-        "Location": {userLocations},
+        "Location": "MAS",
         "Department": "S&T",
         "Supporting Department": "-",
         "Total Block Requested": sntTotal,
@@ -1108,7 +1123,7 @@ const handleDownloadUpcomingBlocks = () => {
         "Total Block Availed":detailedData.filter(block => block.selectedDepartment === "S&T" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
       },
       {
-        "Location": {userLocations},
+        "Location": "MAS",
         "Department": "S&T",
         "Supporting Department": "ENGG",
         "Total Block Requested": sntWithEngg,
@@ -1116,7 +1131,7 @@ const handleDownloadUpcomingBlocks = () => {
         "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
       },
       {
-        "Location": {userLocations},
+        "Location": "MAS",
         "Department": "S&T",
         "Supporting Department": "TRD",
         "Total Block Requested": sntWithPower,
@@ -1124,7 +1139,7 @@ const handleDownloadUpcomingBlocks = () => {
         "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
       },
       {
-        "Location": {userLocations},
+        "Location": "MAS",
         "Department": "S&T",
         "Supporting Department": "ENGG and TRD",
         "Total Block Requested": sntWithEnggAndPower,
@@ -2234,7 +2249,7 @@ const handleDownloadUpcomingBlocks = () => {
   {/* ENGG Rows */}
               {(session?.user?.role==="ADMIN") &&( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  {userLocations}
+                  MAS
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -2317,7 +2332,7 @@ const handleDownloadUpcomingBlocks = () => {
              
 {(session?.user?.role==="ADMIN") && ( <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  {userLocations}
+                  MAS
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -2403,7 +2418,7 @@ const handleDownloadUpcomingBlocks = () => {
 {(session?.user?.role==="ADMIN") && (
      <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  {userLocations}
+                  MAS
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -2486,7 +2501,7 @@ const handleDownloadUpcomingBlocks = () => {
 {(session?.user?.role==="ADMIN") && (
     <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  {userLocations}
+                  MAS
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -2570,7 +2585,7 @@ const handleDownloadUpcomingBlocks = () => {
             {session?.user?.role==="ADMIN" && (
               <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  {userLocations}
+                  MAS
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   TRD
@@ -2647,7 +2662,7 @@ const handleDownloadUpcomingBlocks = () => {
               {/* S&T Rows */}
               {session?.user?.role==="ADMIN" && (  <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  {userLocations}
+                  MAS
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -2725,7 +2740,7 @@ const handleDownloadUpcomingBlocks = () => {
             
 {session?.user?.role==="ADMIN" && ( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  {userLocations}
+                  MAS
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -2806,7 +2821,7 @@ const handleDownloadUpcomingBlocks = () => {
              
 {session?.user?.role==="ADMIN" && (<tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  {userLocations}
+                  MAS
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -2887,7 +2902,7 @@ const handleDownloadUpcomingBlocks = () => {
               
 {session?.user?.role==="ADMIN" && ( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  {userLocations}
+                  MAS
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -3051,10 +3066,14 @@ const handleDownloadUpcomingBlocks = () => {
             </div>
           </div>
 
-          <div className="flex flex-col md:flex-row w-full items-center gap-2">
+          {/* <div className="flex flex-col md:flex-row w-full items-center gap-2">
             <div className="bg-[#f1a983] text-[16px] md:text-[24px] font-bold border-2 border-black px-2 py-1 text-center w-full md:w-auto">
               (B) Summary of Blocks
-            </div>
+            </div> */}
+            <div className="flex flex-col md:flex-row w-full items-center gap-2" style={{overflow: 'visible', position: 'relative', zIndex: 50}}>
+  <div className="bg-[#f1a983] text-[16px] md:text-[24px] font-bold border-2 border-black px-2 py-1 text-center w-full md:w-auto">
+    (B) Summary of Blocks
+  </div>
             <div className="flex items-center gap-2">
               <div className="relative inline-block" ref={sectionDropdownRefB}>
                 <button
@@ -3101,8 +3120,10 @@ const handleDownloadUpcomingBlocks = () => {
         {sseFilter === "All" ? "All SSE" : sseFilter}
         <span className="ml-1">▼</span>
       </button>
-      {sseDropdownOpen && (
-        <div className="absolute z-10 mt-2 w-32 md:w-40 bg-white border-2 border-black rounded shadow-lg max-h-60 overflow-y-auto">
+      {/* {sseDropdownOpen && (
+        <div className="absolute z-10 mt-2 w-32 md:w-40 bg-white border-2 border-black rounded shadow-lg max-h-60 overflow-y-auto"> */}
+        {sseDropdownOpen && (
+  <div className="absolute z-10 mt-2 w-40 md:w-48 bg-white border-2 border-black rounded shadow-lg max-h-60 overflow-y-auto right-0">
           <div
             className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-[12px] md:text-base"
             onClick={() => {
@@ -3130,9 +3151,12 @@ const handleDownloadUpcomingBlocks = () => {
 </div>
           </div>
 
-          <div className="w-full mt-4 overflow-x-auto" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+          {/* <div className="w-full mt-4 overflow-x-auto" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
             <table className="w-full border-2 border-black min-w-[900px] text-[12px] md:text-[20px]">
-              <thead className="sticky top-0 z-10">
+              <thead className="sticky top-0 z-10"> */}
+              <div className="w-full mt-4" style={{ maxHeight: '70vh', overflowY: 'auto', overflowX: 'auto' }}>
+  <table className="w-full border-2 border-black min-w-[900px] text-[12px] md:text-[20px]">
+    <thead className="sticky top-0 z-10">
                 <tr className="bg-[#e49edd] text-black text-[12px] md:text-[20px] font-bold">
                   <th className="border-2 border-black px-1 md:px-2 py-2">S.No</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">RequestId</th>
@@ -3164,7 +3188,7 @@ const handleDownloadUpcomingBlocks = () => {
                     if (block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance") {
                       statusLabel = "Sanctioned, Pending with SSE For Acceptance";
                       statusStyle = { background: "#fff86b", color: "#222" };
-                    }  else if (block.overAllStatus==="Sanctioned and Rejected by SSE") {
+                    }  else if (block.overAllStatus==="Sanctioned and Accepted by SSE") {
                       statusLabel = "Sanctioned and Accepted by SSE";
                       statusStyle = { background: "#d47ed4", color: "#222" };
                     } else if ( block.overAllStatus==="Sanctioned and Rejected by SSE") {

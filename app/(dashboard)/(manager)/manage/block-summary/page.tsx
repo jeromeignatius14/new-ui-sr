@@ -74,7 +74,7 @@
 // }
 
 // const locationOptions: OptionType[] = [
-//   { value: "{userLocations}", label: "{userLocations}" },
+//   { value: "MAS", label: "MAS" },
 //   { value: "SA", label: "SA" },
 //   { value: "MCU", label: "MCU" },
 //   { value: "TPJ", label: "TPJ" },
@@ -813,7 +813,7 @@
 //     const excelData = [
 //       // ENGG Rows
 //       {
-//         "Location": "{userLocations}",
+//         "Location": "MAS",
 //         "Department": "ENGG",
 //         "Supporting Department": "-",
 //         "Total Block Requested": enggTotal,
@@ -821,7 +821,7 @@
 //         "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null).length
 //       },
 //       {
-//         "Location": "{userLocations}",
+//         "Location": "MAS",
 //         "Department": "ENGG",
 //         "Supporting Department": "S&T",
 //         "Total Block Requested": enggWithSnt,
@@ -829,7 +829,7 @@
 //         "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.sntDisconnectionRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
 //       },
 //       {
-//         "Location": "{userLocations}",
+//         "Location": "MAS",
 //         "Department": "ENGG",
 //         "Supporting Department": "TRD",
 //         "Total Block Requested": enggWithPower,
@@ -837,7 +837,7 @@
 //         "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "ENGG" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
 //       },
 //       {
-//         "Location": "{userLocations}",
+//         "Location": "MAS",
 //         "Department": "ENGG",
 //         "Supporting Department": "S&T and TRD",
 //         "Total Block Requested": enggWithSntAndPower,
@@ -847,7 +847,7 @@
       
 //       // TRD Rows
 //       {
-//         "Location": "{userLocations}",
+//         "Location": "MAS",
 //         "Department": "TRD",
 //         "Supporting Department": "-",
 //         "Total Block Requested": trdTotal,
@@ -857,7 +857,7 @@
       
 //       // S&T Rows
 //       {
-//         "Location": "{userLocations}",
+//         "Location": "MAS",
 //         "Department": "S&T",
 //         "Supporting Department": "-",
 //         "Total Block Requested": sntTotal,
@@ -865,7 +865,7 @@
 //         "Total Block Availed":detailedData.filter(block => block.selectedDepartment === "S&T" && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
 //       },
 //       {
-//         "Location": "{userLocations}",
+//         "Location": "MAS",
 //         "Department": "S&T",
 //         "Supporting Department": "ENGG",
 //         "Total Block Requested": sntWithEngg,
@@ -873,7 +873,7 @@
 //         "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.enggDisconnectionsRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
 //       },
 //       {
-//         "Location": "{userLocations}",
+//         "Location": "MAS",
 //         "Department": "S&T",
 //         "Supporting Department": "TRD",
 //         "Total Block Requested": sntWithPower,
@@ -881,7 +881,7 @@
 //         "Total Block Availed": detailedData.filter(block => block.selectedDepartment === "S&T" && block.powerBlockRequired === true && block.AvailedTimeFrom !== null && block.AvailedTimeTo !== null)
 //       },
 //       {
-//         "Location": "{userLocations}",
+//         "Location": "MAS",
 //         "Department": "S&T",
 //         "Supporting Department": "ENGG and TRD",
 //         "Total Block Requested": sntWithEnggAndPower,
@@ -1361,7 +1361,7 @@
 //                   <th className="border-2 border-black px-1 md:px-2 py-2">Section</th>
 //                   <th className="border-2 border-black px-1 md:px-2 py-2">Demanded (Hrs)/Blocks</th>
 //                   <th className="border-2 border-black px-1 md:px-2 py-2">Approved (Hrs)/Blocks</th>
-//                   <th className="border-2 border-black px-1 md:px-2 py-2">Applied (Hrs)/Blocks</th>
+//                   <th className="border-2 border-black px-1 md:px-2 py-2">Availing Applied (Hrs)/Blocks</th>
 //                   <th className="border-2 border-black px-1 md:px-2 py-2">Granted (Hrs)/Blocks</th>
 //                   <th className="border-2 border-black px-1 md:px-2 py-2">% Granted</th>
 //                   <th className="border-2 border-black px-1 md:px-2 py-2">Availed (Hrs)/Blocks</th>
@@ -1633,7 +1633,7 @@
 // <tbody>
 //   {/* ENGG Rows */}
 //   <tr className="bg-white font-bold">
-//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
+//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">-</td>
 //     <td 
@@ -1678,7 +1678,7 @@
 //   </tr>
   
 //   <tr className="bg-[#f4dcf1] font-bold">
-//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
+//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
 //     <td 
@@ -1723,7 +1723,7 @@
 //   </tr>
   
 //   <tr className="bg-white font-bold">
-//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
+//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">TRD</td>
 //     <td 
@@ -1768,7 +1768,7 @@
 //   </tr>
   
 //   <tr className="bg-[#f4dcf1] font-bold">
-//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
+//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T and TRD</td>
 //     <td 
@@ -1814,7 +1814,7 @@
 
 //   {/* TRD Rows */}
 //   <tr className="bg-white font-bold">
-//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
+//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">TRD</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">-</td>
 //     <td 
@@ -1860,7 +1860,7 @@
 
 //   {/* S&T Rows */}
 //   <tr className="bg-[#f4dcf1] font-bold">
-//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
+//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">-</td>
 //     <td 
@@ -1905,7 +1905,7 @@
 //   </tr>
   
 //   <tr className="bg-white font-bold">
-//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
+//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG</td>
 //     <td 
@@ -1950,7 +1950,7 @@
 //   </tr>
   
 //   <tr className="bg-[#f4dcf1] font-bold">
-//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
+//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">TRD</td>
 //     <td 
@@ -1995,7 +1995,7 @@
 //   </tr>
   
 //   <tr className="bg-white font-bold">
-//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">{userLocations}</td>
+//     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">MAS</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">S&T</td>
 //     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">ENGG and TRD</td>
 //     <td 
@@ -2233,7 +2233,7 @@
 //                       statusLabel = "Sanctioned, Pending with SSE For Acceptance";
 //                       statusStyle = { background: "#fff86b", color: "#222" };
 //                     }  else if (block.overAllStatus==="Sanctioned and Rejected by SSE") {
-//                       statusLabel = "Sanctioned and Accepted by SSE";
+//                       statusLabel = "Sanctioned and Acknowledged by SSE";
 //                       statusStyle = { background: "#d47ed4", color: "#222" };
 //                     } else if ( block.overAllStatus==="Sanctioned and Rejected by SSE") {
 //                       statusLabel = "Sanctioned and Rejected by SSE";
@@ -2433,14 +2433,14 @@ interface DetailedData {
   Status: string;
 }
 
-// const locationOptions: OptionType[] = [
-//   { value: {userLocations}, label: {userLocations} },
-//   { value: "SA", label: "SA" },
-//   { value: "MCU", label: "MCU" },
-//   { value: "TPJ", label: "TPJ" },
-//   { value: "PGT", label: "PGT" },
-//   { value: "TVC", label: "TVC" },
-// ];
+const locationOptions: OptionType[] = [
+  { value: "MAS", label: "MAS" },
+  { value: "SA", label: "SA" },
+  { value: "MCU", label: "MCU" },
+  { value: "TPJ", label: "TPJ" },
+  { value: "PGT", label: "PGT" },
+  { value: "TVC", label: "TVC" },
+];
 
 const blockTypeOptions: OptionType[] = [
   { value: "All", label: "All" },
@@ -2661,7 +2661,6 @@ export default function GenerateReportPage() {
   });
   
   const { data: session } = useSession();
-const userLocations = session?.user?.location ;
 
   // Parameters for the query
   const [queryParams, setQueryParams] = useState({
@@ -2811,18 +2810,34 @@ useEffect(() => {
   // Add after your existing useEffects
 // Close dropdowns when clicking outside
 useEffect(() => {
-  const handleClickOutside = (event: MouseEvent) => {
-    if (globalWorkTypeDropdownRef.current && !globalWorkTypeDropdownRef.current.contains(event.target as Node)) {
-      setShowGlobalWorkTypeDropdown(false);
-    }
-    if (globalActivityDropdownRef.current && !globalActivityDropdownRef.current.contains(event.target as Node)) {
-      setShowGlobalActivityDropdown(false);
-    }
-    if (durationDropdownRef.current && !durationDropdownRef.current.contains(event.target as Node)) {
-      setShowDurationDropdown(false);
-    }
-  };
-
+  // const handleClickOutside = (event: MouseEvent) => {
+  //   if (globalWorkTypeDropdownRef.current && !globalWorkTypeDropdownRef.current.contains(event.target as Node)) {
+  //     setShowGlobalWorkTypeDropdown(false);
+  //   }
+  //   if (globalActivityDropdownRef.current && !globalActivityDropdownRef.current.contains(event.target as Node)) {
+  //     setShowGlobalActivityDropdown(false);
+  //   }
+  //   if (durationDropdownRef.current && !durationDropdownRef.current.contains(event.target as Node)) {
+  //     setShowDurationDropdown(false);
+  //   }
+  // };
+const handleClickOutside = (event: MouseEvent) => {
+  if (globalWorkTypeDropdownRef.current && !globalWorkTypeDropdownRef.current.contains(event.target as Node)) {
+    setShowGlobalWorkTypeDropdown(false);
+  }
+  if (globalActivityDropdownRef.current && !globalActivityDropdownRef.current.contains(event.target as Node)) {
+    setShowGlobalActivityDropdown(false);
+  }
+  if (durationDropdownRef.current && !durationDropdownRef.current.contains(event.target as Node)) {
+    setShowDurationDropdown(false);
+  }
+  if (sseDropdownRef.current && !sseDropdownRef.current.contains(event.target as Node)) {
+    setSseDropdownOpen(false);
+  }
+  if (sectionDropdownRefB.current && !sectionDropdownRefB.current.contains(event.target as Node)) {
+    setSectionDropdownOpenB(false);
+  }
+};
   document.addEventListener('mousedown', handleClickOutside);
   return () => document.removeEventListener('mousedown', handleClickOutside);
 }, []);
@@ -3414,7 +3429,7 @@ const handleDownloadUpcomingBlocks = () => {
       if (block.overAllStatus === "Sanctioned, Pending with SSE For Acceptance") {
         statusLabel = "Sanctioned, Pending with SSE For Acceptance";
       } else if (block.overAllStatus === "Sanctioned and Accepted by SSE") {
-        statusLabel = "Sanctioned and Accepted by SSE";
+        statusLabel = "Sanctioned and Acknowledged by SSE";
       } else if (block.overAllStatus === "Sanctioned and Rejected by SSE") {
         statusLabel = "Sanctioned and Rejected by SSE";
       } else {
@@ -3509,7 +3524,7 @@ const handleDownloadDepartmentCount = () => {
       // ENGG Rows (only show if user's department is ENGG)
       ...(session?.user?.department === "ENGG" ? [
         {
-          "Location": userLocations,
+          "Location": "MAS",
           "Department": "ENGG",
           "Supporting Department": "-",
           "Total Block Requested": enggTotal,
@@ -3528,7 +3543,7 @@ const handleDownloadDepartmentCount = () => {
           )
         },
         {
-          "Location": userLocations,
+          "Location": "MAS",
           "Department": "ENGG",
           "Supporting Department": "S&T",
           "Total Block Requested": enggWithSnt,
@@ -3547,7 +3562,7 @@ const handleDownloadDepartmentCount = () => {
           )
         },
         {
-          "Location": userLocations,
+          "Location": "MAS",
           "Department": "ENGG",
           "Supporting Department": "TRD",
           "Total Block Requested": enggWithPower,
@@ -3566,7 +3581,7 @@ const handleDownloadDepartmentCount = () => {
           )
         },
         {
-          "Location": userLocations,
+          "Location": "MAS",
           "Department": "ENGG",
           "Supporting Department": "S&T and TRD",
           "Total Block Requested": enggWithSntAndPower,
@@ -3589,7 +3604,7 @@ const handleDownloadDepartmentCount = () => {
       // TRD Rows (only show if user's department is TRD)
       ...(session?.user?.department === "TRD" ? [
         {
-          "Location": userLocations,
+          "Location": "MAS",
           "Department": "TRD",
           "Supporting Department": "-",
           "Total Block Requested": trdTotal,
@@ -3608,7 +3623,7 @@ const handleDownloadDepartmentCount = () => {
       // S&T Rows (only show if user's department is S&T)
       ...(session?.user?.department === "S&T" ? [
         {
-          "Location": userLocations,
+          "Location": "MAS",
           "Department": "S&T",
           "Supporting Department": "-",
           "Total Block Requested": sntTotal,
@@ -3623,7 +3638,7 @@ const handleDownloadDepartmentCount = () => {
           )
         },
         {
-          "Location": userLocations,
+          "Location": "MAS",
           "Department": "S&T",
           "Supporting Department": "ENGG",
           "Total Block Requested": sntWithEngg,
@@ -3640,7 +3655,7 @@ const handleDownloadDepartmentCount = () => {
           )
         },
         {
-          "Location": userLocations,
+          "Location": "MAS",
           "Department": "S&T",
           "Supporting Department": "TRD",
           "Total Block Requested": sntWithPower,
@@ -3657,7 +3672,7 @@ const handleDownloadDepartmentCount = () => {
           )
         },
         {
-          "Location": userLocations,
+          "Location": "MAS",
           "Department": "S&T",
           "Supporting Department": "ENGG and TRD",
           "Total Block Requested": sntWithEnggAndPower,
@@ -3725,7 +3740,7 @@ const handleDownloadDepartmentCount = () => {
     
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `department_count_${userLocations}_${session?.user?.department}_${format(
+    link.download = `department_count_${"MAS"}_${session?.user?.department}_${format(
       new Date(),
       "dd-MM-yyyy"
     )}.xlsx`;
@@ -4199,7 +4214,7 @@ const handleDownloadDepartmentCount = () => {
                   <th className="border-2 border-black px-1 md:px-2 py-2">Section</th>
                   {/* <th className="border-2 border-black px-1 md:px-2 py-2">Demanded (Hrs)/Blocks</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Approved (Hrs)/Blocks</th>
-                  <th className="border-2 border-black px-1 md:px-2 py-2">Applied (Hrs)/Blocks</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Availing Applied (Hrs)/Blocks</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Granted (Hrs)/Blocks</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">% Granted</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Availed (Hrs)/Blocks</th>
@@ -4266,7 +4281,7 @@ const handleDownloadDepartmentCount = () => {
 
 <th className="border-2 border-black px-1 md:px-2 py-2">
   <div className="flex flex-col items-center justify-center">
-    <div>Applied</div>
+    <div>Availing Applied</div>
     <div className="relative flex items-center justify-center group">
       (Hrs)/Blocks
       <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
@@ -4288,7 +4303,7 @@ const handleDownloadDepartmentCount = () => {
         i
       </span>
       <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
-        Applied block Granted  by the SM
+        Availing Applied block Granted  by the SM
       </div>
     </div>
   </div>
@@ -4302,7 +4317,7 @@ const handleDownloadDepartmentCount = () => {
         i
       </span>
       <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
-       Total Blocks Granted / Total Blocks Applied
+       Total Blocks Granted / Total Availing Applied Blocks
       </div>
     </div>
   </div>
@@ -4363,7 +4378,7 @@ const handleDownloadDepartmentCount = () => {
         i
       </span>
       <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
-    Applied Blocks not granted by the SM
+    Availing Applied Blocks not granted by the SM
       </div>
     </div>
   </div>
@@ -5022,6 +5037,7 @@ const handleDownloadDepartmentCount = () => {
         <th className="border-2 border-black px-1 md:px-2 py-2">Supporting Department</th>
         <th className="border-2 border-black px-1 md:px-2 py-2">Total Block Requested</th>
         <th className="border-2 border-black px-1 md:px-2 py-2">Total Block Sanctioned</th>
+        <th className="border-2 border-black px-1 md:px-2 py-2">Total Block Granted</th>
         <th className="border-2 border-black px-1 md:px-2 py-2">Total Block Availed</th>
       </tr>
     </thead>
@@ -5029,7 +5045,7 @@ const handleDownloadDepartmentCount = () => {
   {/* ENGG Rows */}
               {session?.user?.department === "ENGG" &&( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  {userLocations}
+                  MAS
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -5084,6 +5100,25 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("granted");
+                    setActiveSection(null);
+                    scrollToUpcomingBlocks();
+                    setDepartmentCountFilter(null);
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "ENGG" &&
+                        block.isGranted === true &&
+                        block.powerBlockRequired === false &&
+                        block.sntDisconnectionRequired === false
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
                      setActiveFilter("all");
                      setActiveSection(null);
                      scrollToUpcomingBlocks()
@@ -5112,7 +5147,7 @@ const handleDownloadDepartmentCount = () => {
              
 {session?.user?.department === "ENGG" && ( <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  {userLocations}
+                  MAS
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -5168,6 +5203,25 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("granted");
+                    setActiveSection(null);
+                    scrollToUpcomingBlocks();
+                    setDepartmentCountFilter(null);
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "ENGG" &&
+                        block.isGranted === true &&
+                        block.sntDisconnectionRequired === true &&
+                        block.powerBlockRequired === false
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
                      setActiveFilter("all");
                      setActiveSection(null);
                      scrollToUpcomingBlocks()
@@ -5198,7 +5252,7 @@ const handleDownloadDepartmentCount = () => {
 {session?.user?.department === "ENGG" && (
      <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  {userLocations}
+                  MAS
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -5252,6 +5306,25 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("granted");
+                    setActiveSection(null);
+                    scrollToUpcomingBlocks();
+                    setDepartmentCountFilter(null);
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "ENGG" &&
+                        block.isGranted === true &&
+                        block.powerBlockRequired === true &&
+                        block.sntDisconnectionRequired === false
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
                      setActiveFilter("all");
                      setActiveSection(null);
                      scrollToUpcomingBlocks()
@@ -5281,7 +5354,7 @@ const handleDownloadDepartmentCount = () => {
 {session?.user?.department === "ENGG" && (
     <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  {userLocations}
+                  MAS
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -5336,6 +5409,25 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("granted");
+                    setActiveSection(null);
+                    scrollToUpcomingBlocks();
+                    setDepartmentCountFilter(null);
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "ENGG" &&
+                        block.isGranted === true &&
+                        block.sntDisconnectionRequired === true &&
+                        block.powerBlockRequired === true
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
                      setActiveFilter("all");
                      setActiveSection(null);
                      scrollToUpcomingBlocks()
@@ -5365,7 +5457,7 @@ const handleDownloadDepartmentCount = () => {
             {session?.user?.department === "TRD" && (
               <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  {userLocations}
+                  MAS
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   TRD
@@ -5413,6 +5505,23 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("granted");
+                    setActiveSection(null);
+                    scrollToUpcomingBlocks();
+                    setDepartmentCountFilter(null);
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "TRD" &&
+                        block.isGranted === true
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
                      setActiveFilter("all");
                      setActiveSection(null);
                      scrollToUpcomingBlocks()
@@ -5442,7 +5551,7 @@ const handleDownloadDepartmentCount = () => {
               {/* S&T Rows */}
               {session?.user?.department === "S&T" && (  <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  {userLocations}
+                  MAS
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -5494,6 +5603,25 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("granted");
+                    setActiveSection(null);
+                    scrollToUpcomingBlocks();
+                    setDepartmentCountFilter(null);
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "S&T" &&
+                        block.isGranted === true &&
+                        block.enggDisconnectionsRequired === false &&
+                        block.powerBlockRequired === false
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
                      setActiveFilter("all");
                      setActiveSection(null);
                      scrollToUpcomingBlocks()
@@ -5520,7 +5648,7 @@ const handleDownloadDepartmentCount = () => {
             
 {session?.user?.department === "S&T" && ( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  {userLocations}
+                  MAS
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -5574,6 +5702,25 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("granted");
+                    setActiveSection(null);
+                    scrollToUpcomingBlocks();
+                    setDepartmentCountFilter(null);
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "S&T" &&
+                        block.isGranted === true &&
+                        block.enggDisconnectionsRequired === true &&
+                        block.powerBlockRequired === false
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
                      setActiveFilter("all");
                      setActiveSection(null);
                      scrollToUpcomingBlocks()
@@ -5601,7 +5748,7 @@ const handleDownloadDepartmentCount = () => {
              
 {session?.user?.department === "S&T" && (<tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  {userLocations}
+                  MAS
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -5655,6 +5802,25 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("granted");
+                    setActiveSection(null);
+                    scrollToUpcomingBlocks();
+                    setDepartmentCountFilter(null);
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "S&T" &&
+                        block.isGranted === true &&
+                        block.powerBlockRequired === true &&
+                        block.enggDisconnectionsRequired === false
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
                      setActiveFilter("all");
                      setActiveSection(null);
                      scrollToUpcomingBlocks()
@@ -5682,7 +5848,7 @@ const handleDownloadDepartmentCount = () => {
               
 {session?.user?.department === "S&T" && ( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  {userLocations}
+                  MAS
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -5737,6 +5903,25 @@ const handleDownloadDepartmentCount = () => {
                 <td
                   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
                   onClick={() => {
+                    setActiveFilter("granted");
+                    setActiveSection(null);
+                    scrollToUpcomingBlocks();
+                    setDepartmentCountFilter(null);
+                  }}
+                >
+                  {
+                    detailedData.filter(
+                      (block) =>
+                        block.selectedDepartment === "S&T" &&
+                        block.isGranted === true &&
+                        block.enggDisconnectionsRequired === true &&
+                        block.powerBlockRequired === true
+                    ).length
+                  }
+                </td>
+                <td
+                  className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px] hover:bg-blue-50"
+                  onClick={() => {
                      setActiveFilter("all");
                      setActiveSection(null);
                      scrollToUpcomingBlocks()
@@ -5771,6 +5956,9 @@ const handleDownloadDepartmentCount = () => {
     </td>
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
       {totalSanctioned}
+    </td>
+    <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
+      {detailedData.filter(b => b.isGranted === true).length}
     </td>
     <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
       {totalAvailed}
@@ -5846,10 +6034,14 @@ const handleDownloadDepartmentCount = () => {
             </div>
           </div>
 
-          <div className="flex flex-col md:flex-row w-full items-center gap-2">
+          {/* <div className="flex flex-col md:flex-row w-full items-center gap-2">
             <div className="bg-[#f1a983] text-[16px] md:text-[24px] font-bold border-2 border-black px-2 py-1 text-center w-full md:w-auto">
               (B) Summary of Blocks
-            </div>
+            </div> */}
+                        <div className="flex flex-col md:flex-row w-full items-center gap-2" style={{overflow: 'visible', position: 'relative', zIndex: 50}}>
+  <div className="bg-[#f1a983] text-[16px] md:text-[24px] font-bold border-2 border-black px-2 py-1 text-center w-full md:w-auto">
+    (B) Summary of Blocks
+  </div>
             <div className="flex items-center gap-2">
               <div className="relative inline-block" ref={sectionDropdownRefB}>
                 <button
@@ -5896,8 +6088,10 @@ const handleDownloadDepartmentCount = () => {
         {sseFilter === "All" ? "All SSE" : sseFilter}
         <span className="ml-1">▼</span>
       </button>
-      {sseDropdownOpen && (
-        <div className="absolute z-10 mt-2 w-32 md:w-40 bg-white border-2 border-black rounded shadow-lg max-h-60 overflow-y-auto">
+      {/* {sseDropdownOpen && (
+        <div className="absolute z-10 mt-2 w-32 md:w-40 bg-white border-2 border-black rounded shadow-lg max-h-60 overflow-y-auto"> */}
+              {sseDropdownOpen && (
+  <div className="absolute z-10 mt-2 w-40 md:w-48 bg-white border-2 border-black rounded shadow-lg max-h-60 overflow-y-auto right-0">
           <div
             className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-[12px] md:text-base"
             onClick={() => {
@@ -5925,9 +6119,12 @@ const handleDownloadDepartmentCount = () => {
 </div>
           </div>
 
-          <div className="w-full mt-4 overflow-x-auto" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+          {/* <div className="w-full mt-4 overflow-x-auto" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
             <table className="w-full border-2 border-black min-w-[900px] text-[12px] md:text-[20px]">
-              <thead className="sticky top-0 z-10">
+              <thead className="sticky top-0 z-10"> */}
+                           <div className="w-full mt-4" style={{ maxHeight: '70vh', overflowY: 'auto', overflowX: 'auto' }}>
+  <table className="w-full border-2 border-black min-w-[900px] text-[12px] md:text-[20px]">
+    <thead className="sticky top-0 z-10">
                    <tr className="bg-[#e49edd] text-black text-[12px] md:text-[20px] font-bold">
                   <th className="border-2 border-black px-1 md:px-2 py-2">S.No</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">RequestId</th>
@@ -5939,6 +6136,7 @@ const handleDownloadDepartmentCount = () => {
                   <th className="border-2 border-black px-1 md:px-2 py-2">Activity</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Demanded time</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Sanctioned time</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Granted time</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Availed time</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Status</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Remarks</th>
@@ -5947,7 +6145,7 @@ const handleDownloadDepartmentCount = () => {
               <tbody>
                 {filteredUpcomingBlocks.length === 0 ? (
                   <tr className="bg-white">
-                    <td colSpan={11} className="text-center py-4 text-black">
+                    <td colSpan={12} className="text-center py-4 text-black">
                       No data found.
                     </td>
                   </tr>
@@ -5958,8 +6156,8 @@ const handleDownloadDepartmentCount = () => {
                     if (block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance") {
                       statusLabel = "Sanctioned, Pending with SSE For Acceptance";
                       statusStyle = { background: "#fff86b", color: "#222" };
-                    }  else if (block.overAllStatus==="Sanctioned and Rejected by SSE") {
-                      statusLabel = "Sanctioned and Accepted by SSE";
+                    }  else if (block.overAllStatus==="Sanctioned and Accepted by SSE") {
+                      statusLabel = "Sanctioned and Acknowledged by SSE";
                       statusStyle = { background: "#d47ed4", color: "#222" };
                     } else if ( block.overAllStatus==="Sanctioned and Rejected by SSE") {
                       statusLabel = "Sanctioned and Rejected by SSE";
@@ -6022,7 +6220,17 @@ const handleDownloadDepartmentCount = () => {
                                                   ) : (
                                                     "Not Availed Yet"
                                                   )}
-                                                </td> 
+                                                </td>
+                        <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
+                          {block.GrantedTimeFrom && block.GrantedTimeTo ? (
+                            <>
+                              {formatTime(block.GrantedTimeFrom)} to{" "}
+                              {formatTime(block.GrantedTimeTo)}
+                            </>
+                          ) : (
+                            "Not Granted Yet"
+                          )}
+                        </td>
                         <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
                           {block.AvailedTimeFrom && block.AvailedTimeTo ? (
                             <>

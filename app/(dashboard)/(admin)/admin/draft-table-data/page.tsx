@@ -1015,7 +1015,7 @@ useEffect(() => {
             id: request.id,
             optimizeTimeFrom: request.optimizeTimeFrom,
             optimizeTimeTo: request.optimizeTimeTo,
-            sanctionedRemark: remark||request.sanctionedRemarks,
+            sanctionedRemark: remark,
           })) || [];
 
       if (UrgentRequestsData.length === 0) {
@@ -1058,7 +1058,7 @@ useEffect(() => {
             id: request.id,
             optimizeTimeFrom: request.optimizeTimeFrom,
             optimizeTimeTo: request.optimizeTimeTo,
-            sanctionedRemark: remark||request.sanctionedRemarks,
+            sanctionedRemark: remark,
           })) || [];
 
       if (nonUrgentRequestsData.length === 0) {

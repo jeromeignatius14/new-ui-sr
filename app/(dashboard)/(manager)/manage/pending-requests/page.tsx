@@ -55,7 +55,10 @@ export default function PendingRequestsPage() {
         queryKey: ["pendingRequests"],
         queryFn: async () => {
             try {
-                const result = await managerService.getUserRequestsByManager(1, 10000);
+                const result = await managerService.getUserRequestsByManager(1, 10000, undefined,
+                    undefined,
+                    undefined,
+                    someId || undefined);
                 return result;
             } catch (err) {
                 console.error("Error fetching requests:", err);
@@ -241,8 +244,8 @@ const pendingMultiLineRequests = (Array.isArray(data?.data?.requests) ? data.dat
 
             // Block requests within [Saturday ... next Sunday]
             if (requestDate >= blockStart && requestDate <= blockEnd) {
-                alert("You cannot accept requests from tomorrow to next Sunday on Friday after 12 PM.");
-                return;
+              alert("You cannot accept requests from tomorrow to next Sunday on Friday after 12 PM.");
+              return;
             }
         }
 
@@ -778,6 +781,13 @@ useEffect(() => {
                             >
                                 {bulkAcceptRequests.isPending ? "Processing..." : `Forward (${selectedRequests.size})`}
                             </button>
+                            {/* <button
+                            onClick={handleBulkReject}
+                            disabled={bulkRejectRequests.isPending}
+                            className="px-4 py-2 text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+                        >
+                            {bulkRejectRequests.isPending ? "Processing..." : `Return (${selectedRequests.size})`}
+                        </button> */}
                         </div>
                     )}
                 </div>
@@ -1497,6 +1507,19 @@ useEffect(() => {
                 </div>
             )}
 
+            {/* {showSuccessModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-xs w-full flex flex-col items-center">
+                        <div className="text-lg font-bold mb-4 text-center">{showSuccessModal}</div>
+                        <button
+                            onClick={() => setShowSuccessModal(null)}
+                            className="px-6 py-2 text-base bg-green-600 text-white rounded hover:bg-green-700 mt-2 font-bold"
+                        >
+                            OK
+                        </button>
+                    </div>
+                </div>
+            )} */}
             {showSuccessModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-lg p-6 max-w-xs w-full flex flex-col items-center">

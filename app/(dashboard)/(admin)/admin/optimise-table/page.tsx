@@ -486,7 +486,7 @@ const finalWeekEnd = isUrgentMode ? currentWeekStart : weekEnd;
 
   const UrgentRequests =
     data?.data?.requests?.filter((request: UserRequest) => {
-      return request.corridorType === "Urgent Block" && request.overAllStatus === "with optg.";
+      return request.corridorType === "Urgent Block";
     }) || [];
 
   const isValidDate = (date: unknown): date is Date => {
