@@ -2282,19 +2282,23 @@ const findCutoffThursday = () => {
     const myDepot = session?.user?.depot ?? "";
     const myDept  = (session?.user as any)?.department ?? "";
     const depotBlocks: any[] = depotBlocksData?.data?.blocks ?? [];
-    // Only consider blocks from May 10, 2026 onwards to avoid flooding with historical records
-    const POPUP_CUTOFF_MS = new Date("2026-05-10T00:00:00+05:30").getTime();
+    // Only show popup for blocks sanctioned on or after 21st May 2026
+    const POPUP_CUTOFF_MS = new Date("2026-05-21T00:00:00+05:30").getTime();
 
     depotBlocks.forEach((block: any) => {
       const s = block.overAllStatus ?? "";
+
+      // Skip any block sanctioned before 21st May 2026
+      const sanctionedAtMs = block.sanctionedAt
+        ? new Date(block.sanctionedAt).getTime()
+        : (block.sanctionedTimeFrom ? new Date(block.sanctionedTimeFrom).getTime() : 0);
+      if (sanctionedAtMs < POPUP_CUTOFF_MS) return;
 
       // ── Rule 1: Sanctioned but not yet acknowledged/rejected (MY blocks only) ──
       if (s === "Sanctioned, Pending with SSE For Acceptance" && block.userId === myUserId) {
         const toTime  = block.sanctionedTimeTo  ?? block.demandTimeTo;
         const toMs    = toTime ? new Date(toTime).getTime() : null;
         const isPast  = toMs !== null && toMs <= nowIST;
-        // Skip fully-past blocks that predate the cutoff (historical clutter)
-        if (isPast && toMs !== null && toMs < POPUP_CUTOFF_MS) return;
         if (isPast) {
           result.push({ block, reason: "Block time has fully passed — you can only reject this sanctioned block" });
         } else {
@@ -2317,9 +2321,6 @@ const findCutoffThursday = () => {
         const toMs   = toTime ? new Date(toTime).getTime() : null;
         const isFullyPast = toMs !== null && toMs <= nowIST;
         const startsWithin3h = fromMs > nowIST && fromMs <= nowIST + THREE_HRS;
-
-        // Skip fully-past blocks that predate the cutoff (historical clutter)
-        if (isFullyPast && toMs !== null && toMs < POPUP_CUTOFF_MS) return;
 
         if (isFullyPast) {
           result.push({ block, reason: "Your team has a block whose time has fully passed without availing or exit — the whole team is restricted until resolved", subType: "past" });
