@@ -2172,21 +2172,25 @@ const findCutoffThursday = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [depotBlocksData, myParticipationsData]);
 
-  // Shadow block: eligible parent blocks — same dept+depot, not yet expired
+  // Shadow block: eligible parent blocks — same dept+depot, within next 12h or already active
   const shadowParentBlocks = useMemo(() => {
     const blocks: any[] = depotBlocksData?.data?.blocks ?? [];
     const IST_MS = 5.5 * 60 * 60 * 1000;
     const now = Date.now() + IST_MS;
+    const TWELVE_H = 12 * 60 * 60 * 1000;
     const EXCLUDED = new Set(["Block Closed", "Availing Cancelled", "SM Rejected"]);
     return blocks.filter((b: any) => {
       if (b.isShadowBlock === true) return false;
       if (EXCLUDED.has(b.overAllStatus ?? "")) return false;
+      const fromMs = b.sanctionedTimeFrom
+        ? new Date(b.sanctionedTimeFrom).getTime()
+        : b.demandTimeFrom ? new Date(b.demandTimeFrom).getTime() : null;
       const toMs = b.sanctionedTimeTo
         ? new Date(b.sanctionedTimeTo).getTime()
         : b.demandTimeTo ? new Date(b.demandTimeTo).getTime() : null;
-      if (!toMs) return false;
-      // Include all future blocks + blocks that ended within the last 1h
-      return toMs >= now - 60 * 60 * 1000;
+      if (!fromMs || !toMs) return false;
+      // starts within next 12h AND hasn't been over for more than 1h
+      return fromMs <= now + TWELVE_H && toMs >= now - 60 * 60 * 1000;
     });
   }, [depotBlocksData]);
 
