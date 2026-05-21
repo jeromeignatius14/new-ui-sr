@@ -452,7 +452,7 @@ export default function PermitBlockAtSitePage() {
             SELECT YOUR TPC BOARD
           </div>
           <div style={{ fontSize: "13px", color: "#92400e", fontWeight: 700, textAlign: "center", marginBottom: "12px" }}>
-            Only blocks from the selected board's depots will be shown
+            Only blocks from the selected board&apos;s depots will be shown
           </div>
           {TPC_BOARDS.map(board => (
             <button
