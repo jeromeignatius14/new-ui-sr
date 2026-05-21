@@ -32,7 +32,7 @@ import { availService } from "@/app/service/api/avail";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useGetMyParticipations, useGetDepotBlocks } from "@/app/service/query/avail";
 import roadData from "../../../../public/roadData.json";
-import { createSiteLocationChangeHandler, getSiteLocationRange, validateSiteLocationPair, getAllAvailableDepots, getAutoAssignedDepots } from './features/siteLocation';
+import { createSiteLocationChangeHandler, validateSiteLocationPair, getAllAvailableDepots, getAutoAssignedDepots } from './features/siteLocation';
 
 
 type Department = "TRD" | "S&T" | "ENGG";
