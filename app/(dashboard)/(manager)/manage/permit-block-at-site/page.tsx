@@ -234,13 +234,40 @@ function Modal({ title, accent, children, onClose }: { title: string; accent?: s
   );
 }
 
-// ── TPC Board → Depot mapping ─────────────────────────────────────────────────
-const TPC_BOARDS: { name: string; depots: string[] }[] = [
-  { name: "TPC-GDR BOARD", depots: ["GDR", "SPE", "PON", "TVT", "BBQ", "MS"] },
-  { name: "TPC-RU BOARD",  depots: ["BBQ", "AVD", "TRL", "AJJ", "CGL", "PUT"] },
-  { name: "TPC-VM BOARD",  depots: ["MS", "BBQ", "TBM", "CGL", "AJJ","ACK","VM"] },
-  { name: "TPC-JTJ BOARD", depots: ["AJJ", "WJR", "KPD", "AB", "JTJ"] },
-];
+// ── TPC Board → Depot mapping (per division) ─────────────────────────────────
+const TPC_BOARDS_BY_DIVISION: Record<string, { name: string; depots: string[] }[]> = {
+  MAS: [
+    { name: "TPC-GDR BOARD", depots: ["GDR", "SPE", "PON", "TVT", "BBQ", "MS"] },
+    { name: "TPC-RU BOARD",  depots: ["BBQ", "AVD", "TRL", "AJJ", "CGL", "PUT"] },
+    { name: "TPC-VM BOARD",  depots: ["MS", "BBQ", "TBM", "CGL", "AJJ", "ACK", "VM"] },
+    { name: "TPC-JTJ BOARD", depots: ["AJJ", "WJR", "KPD", "AB", "JTJ"] },
+  ],
+  MDU: [
+    { name: "TPC 1 (TPJ-MDU, DG-POY & MDU-BDNK)", depots: ["MPA", "DG", "MDU", "UDT", "PLNI", "TENI"] },
+    { name: "TPC 2 (MDU-TEN, TEN-TN & TEN-TCN)",   depots: ["VPT", "CVP", "TEN", "TN"] },
+    { name: "TPC 3 (VPT-SCT, VPT-MNM, MDU-RMM, TEN-TSI, SCT-QLN, TPJ-KKDI & MNM-VPT)", depots: ["KKDI", "MNM", "PDKT", "RMD", "RJPM", "SCT", "PUU", "ASD", "NZT"] },
+  ],
+  PGT: [
+    { name: "TPC (PTJ-CLT)",      depots: ["PGT", "POY", "SRR", "NIL", "TIR"] },
+    { name: "TPC (MAQ-MAQ/MAJN)", depots: ["QLD", "CS", "CHV", "ULL"] },
+  ],
+  SA: [
+    { name: "TPC-SA BOARD (TPT-MAP-TNT-MVPM, SA-SAMT, MGSJ-MTDM)", depots: ["SLY", "BQI", "SA", "MTDM"] },
+    { name: "TPC-CBE BOARD (MVPM-IGR-SUU-PTJ, MGSJ-MTDM)",          depots: ["ED", "TUP", "PTJ"] },
+    { name: "TPC-KRR BOARD (KRR-DG, KRR-MONR, KRR-VRQ, ED-MPLM, SA-MONR, KRR-TP & SAMT-VRI)", depots: ["KRR", "KMD", "NMKL", "PLI", "CHSM"] },
+  ],
+  TPJ: [
+    { name: "TPC-CHORD LINE (TPJ-VM)",                                                                    depots: ["TPJ", "ALU", "VRI", "VM"] },
+    { name: "TPC-KPD LINE (VM-KPD, VM-PDY, VM-CUPJ, CUPJ-VRI)",                                          depots: ["TNM", "ARV", "VM", "CUPJ", "VRI"] },
+    { name: "TPC-MAIN LINE (CUPJ-TPJ, TPJ-TPGY-TP)",                                                     depots: ["TPJ", "TJ", "MV", "CUPJ"] },
+    { name: "TPC-BRANCH LINE (MV-TVR, TVR-KKDI, PEM-KIK, KIK-TJ, TTP-AGX, NGT-VLNK, NMJ-MQ & KIK-KIKP)", depots: ["MV", "TVR", "KIK"] },
+  ],
+  TVC: [
+    { name: "TPC (SRR-VARD-STRL)",    depots: ["TCR", "CKI"] },
+    { name: "TPC (STRL-VARD-PVU/SP)", depots: ["KTYM", "ALLP", "KYJ", "QLN"] },
+    { name: "TPC (PVU/SP-MP/SP)",     depots: ["KZK", "NCJ", "NNN"] },
+  ],
+};
 
 function filterByBoard(arr: any[], boardDepots: string[]): any[] {
   return arr.filter((r: any) => {
@@ -256,6 +283,9 @@ export default function PermitBlockAtSitePage() {
   const { data, isLoading, isError, refetch } = useGetTrdPending();
   const [syncing, setSyncing] = useState(false);
   const [selectedBoard, setSelectedBoard] = useState<{ name: string; depots: string[] } | null>(null);
+
+  const division = (session?.user?.location ?? "MAS").toUpperCase();
+  const TPC_BOARDS = TPC_BOARDS_BY_DIVISION[division] ?? TPC_BOARDS_BY_DIVISION["MAS"];
 
   const permitMutation    = useTrdPermitAvail();
   const extensionMutation = useTrdApproveExtension();
