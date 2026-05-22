@@ -7,6 +7,7 @@ const baseURL = process.env.NEXT_PUBLIC_BACKEND_URL;
 // Axios instance WITH token (for authenticated APIs)
 const axiosInstance = axios.create({
   baseURL,
+  timeout: 120000,
   headers: {
     'Content-Type': 'application/json',
   },
