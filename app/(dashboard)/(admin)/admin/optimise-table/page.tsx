@@ -1829,21 +1829,11 @@ const handleOptimize = async () => {
         return isSameDay(requestDate, selectedDate)&&(request.Draft === false);
       }).map((request: UserRequest) => {
           const getDepartmentColor = (request: UserRequest) => {
-                         const {
-                           selectedDepartment,
-                         } = request;
-                         if (selectedDepartment === "ENGG"&&(request.sntDisconnectionRequired|| request.powerBlockRequired || request.enggDisconnectionsRequired)) {
-                             return "bg-gray-200"; // Pure ENGG         
-                         }
-                         // TRD Department
-                         else if (selectedDepartment === "TRD"&&(request.sntDisconnectionRequired|| request.powerBlockRequired || request.enggDisconnectionsRequired)) {
-                           return "bg-gray-200"; // Pure TRD
-                         }
-                         // S&T Department with combinations
-                         else if (selectedDepartment === "S&T"&&(request.sntDisconnectionRequired|| request.powerBlockRequired || request.enggDisconnectionsRequired)) { 
-                             return "bg-gray-200"; // Pure S&T        
-                         }
-                         return "bg-white-200";
+                         const { selectedDepartment } = request;
+                         if (selectedDepartment === "ENGG") return "bg-red-100";
+                         if (selectedDepartment === "TRD") return "bg-blue-100";
+                         if (selectedDepartment === "S&T") return "bg-green-100";
+                         return "bg-white";
                        };
      
                        const rowColor = getDepartmentColor(request);
@@ -2195,22 +2185,13 @@ const handleOptimize = async () => {
                   <tr
  key={`request-${request.id}-${request.date}`}
 className={`transition-colors ${
-  request.selectedDepartment === "ENGG" &&
-  (request.sntDisconnectionRequired ||
-    request.powerBlockRequired ||
-    request.enggDisconnectionsRequired)
-    ? "bg-gray-200"
-    : request.selectedDepartment === "S&T" &&
-      (request.sntDisconnectionRequired ||
-        request.powerBlockRequired ||
-        request.enggDisconnectionsRequired)
-    ? "bg-gray-200"
-    : request.selectedDepartment === "TRD" &&
-      (request.sntDisconnectionRequired ||
-        request.powerBlockRequired ||
-        request.enggDisconnectionsRequired)
-    ? "bg-gray-200"
-    : "bg-white-200"
+  request.selectedDepartment === "ENGG"
+    ? "bg-red-100"
+    : request.selectedDepartment === "S&T"
+    ? "bg-green-100"
+    : request.selectedDepartment === "TRD"
+    ? "bg-blue-100"
+    : "bg-white"
 }`}
                   >
                        <td className="border border-black p-2 text-[24px]">
@@ -2605,22 +2586,13 @@ className={`transition-colors ${
                   <tr
    key={`request-${request.id}-${request.date}`}
 className={`transition-colors ${
-  request.selectedDepartment === "ENGG" &&
-  (request.sntDisconnectionRequired ||
-    request.powerBlockRequired ||
-    request.enggDisconnectionsRequired)
-    ? "bg-gray-200"
-    : request.selectedDepartment === "S&T" &&
-      (request.sntDisconnectionRequired ||
-        request.powerBlockRequired ||
-        request.enggDisconnectionsRequired)
-    ? "bg-gray-200"
-    : request.selectedDepartment === "TRD" &&
-      (request.sntDisconnectionRequired ||
-        request.powerBlockRequired ||
-        request.enggDisconnectionsRequired)
-    ? "bg-gray-200"
-    : "bg-white-200"
+  request.selectedDepartment === "ENGG"
+    ? "bg-red-100"
+    : request.selectedDepartment === "S&T"
+    ? "bg-green-100"
+    : request.selectedDepartment === "TRD"
+    ? "bg-blue-100"
+    : "bg-white"
 }`}
                   >
                     {/* <td className="border border-black p-2 text-[24px]">
@@ -2945,22 +2917,13 @@ className={`transition-colors ${
                   <tr
   key={`request-${request.id}-${request.date}`}
 className={`transition-colors ${
-  request.selectedDepartment === "ENGG" &&
-  (request.sntDisconnectionRequired ||
-    request.powerBlockRequired ||
-    request.enggDisconnectionsRequired)
-    ? "bg-gray-200"
-    : request.selectedDepartment === "S&T" &&
-      (request.sntDisconnectionRequired ||
-        request.powerBlockRequired ||
-        request.enggDisconnectionsRequired)
-    ? "bg-gray-200"
-    : request.selectedDepartment === "TRD" &&
-      (request.sntDisconnectionRequired ||
-        request.powerBlockRequired ||
-        request.enggDisconnectionsRequired)
-    ? "bg-gray-200"
-    : "bg-white-200"
+  request.selectedDepartment === "ENGG"
+    ? "bg-red-100"
+    : request.selectedDepartment === "S&T"
+    ? "bg-green-100"
+    : request.selectedDepartment === "TRD"
+    ? "bg-blue-100"
+    : "bg-white"
 }`}
                   >
                     {/* <td className="border border-black p-2 text-[24px]">
