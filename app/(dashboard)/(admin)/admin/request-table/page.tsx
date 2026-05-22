@@ -12,8 +12,9 @@ import { useRouter } from "next/navigation";
 export default function AdminRequestTablePage() {
   const router = useRouter();
   const { data: session } = useSession();
+  const todayStr = new Date().toISOString().split("T")[0];
   const [customDateRange, setCustomDateRange] = useState({
-    start: "",
+    start: todayStr,
     end: "",
   });
   const [sectionDropdownOpen, setSectionDropdownOpen] = useState(false);
