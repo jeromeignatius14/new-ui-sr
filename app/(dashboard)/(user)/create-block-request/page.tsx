@@ -32,7 +32,7 @@ import { availService } from "@/app/service/api/avail";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useGetMyParticipations, useGetDepotBlocks } from "@/app/service/query/avail";
 import roadData from "../../../../public/roadData.json";
-import { createSiteLocationChangeHandler, getSiteLocationRange, validateSiteLocationPair, getAllAvailableDepots, getAutoAssignedDepots } from './features/siteLocation';
+import { createSiteLocationChangeHandler, validateSiteLocationPair, getAllAvailableDepots, getAutoAssignedDepots } from './features/siteLocation';
 
 
 type Department = "TRD" | "S&T" | "ENGG";
@@ -2243,88 +2243,63 @@ const findCutoffThursday = () => {
     const result: any[] = [];
     const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
     const nowIST = Date.now() + IST_OFFSET_MS;
-    const TWENTYFOUR_HRS = 24 * 60 * 60 * 1000;
+    const THREE_HRS  = 3  * 60 * 60 * 1000;
+    const TWELVE_HRS = 12 * 60 * 60 * 1000;
     const myUserId = session?.user?.id;
+    const myDepot  = session?.user?.depot ?? "";
+    const myDept   = (session?.user as any)?.department ?? "";
 
-    // From participations: blocks needing immediate action or actively in progress
-    const participations: any[] = myParticipationsData?.data?.blocks ?? [];
-    participations.forEach((block: any) => {
-      const s = block.overAllStatus ?? "";
-      const mp = (block.availParticipants ?? []).find((p: any) => p.userId === myUserId);
-      if (s === "Block Closed" || s === "Availing Cancelled" || s === "SM Rejected") return;
+    // Only show popup for blocks sanctioned on or after 21st May 2026
+    const POPUP_CUTOFF_MS = new Date("2026-05-21T00:00:00+05:30").getTime();
 
-      // Availing active but I haven't started
-      if (s === "Availing Active" && mp && !mp.availStartedAt) {
-        result.push({ block, reason: "Availing is active — you haven't started yet" });
-        return;
-      }
-      // Availing started but closure not submitted
-      if ((s === "Availing Active" || s === "All Closures Submitted") && mp?.availStartedAt && !mp?.closureSubmittedAt) {
-        result.push({ block, reason: "Availing in progress — closure not submitted" });
-        return;
-      }
-      // Block burst — overdue but not closed
-      if (mp?.blockBurst && !mp?.closureSubmittedAt) {
-        result.push({ block, reason: "Block time exceeded — closure pending" });
-        return;
-      }
-      // Past 24h, incomplete
-      const grantedFrom = block.smApprovedTimeFrom ?? block.grantedFromTime;
-      if (grantedFrom) {
-        const fromMs = new Date(grantedFrom).getTime();
-        if (fromMs < nowIST && fromMs > nowIST - TWENTYFOUR_HRS) {
-          result.push({ block, reason: "Recent block not yet closed or exited" });
-        }
-      }
-    });
-
-    const THREE_HRS = 3 * 60 * 60 * 1000;
-    const myDepot = session?.user?.depot ?? "";
-    const myDept  = (session?.user as any)?.department ?? "";
     const depotBlocks: any[] = depotBlocksData?.data?.blocks ?? [];
-    // Only consider blocks from May 10, 2026 onwards to avoid flooding with historical records
-    const POPUP_CUTOFF_MS = new Date("2026-05-10T00:00:00+05:30").getTime();
 
     depotBlocks.forEach((block: any) => {
       const s = block.overAllStatus ?? "";
 
-      // ── Rule 1: Sanctioned but not yet acknowledged/rejected (MY blocks only) ──
+      // Skip blocks before the cutoff date
+      const sanctionedAtMs = block.sanctionedAt
+        ? new Date(block.sanctionedAt).getTime()
+        : (block.sanctionedTimeFrom ? new Date(block.sanctionedTimeFrom).getTime() : 0);
+      if (sanctionedAtMs < POPUP_CUTOFF_MS) return;
+
+      // ── CONDITION 1: Sanctioned but SSE has not yet accepted/acknowledged ──
+      // Only show for the block owner (my block, pending my acceptance)
       if (s === "Sanctioned, Pending with SSE For Acceptance" && block.userId === myUserId) {
-        const toTime  = block.sanctionedTimeTo  ?? block.demandTimeTo;
-        const toMs    = toTime ? new Date(toTime).getTime() : null;
-        const isPast  = toMs !== null && toMs <= nowIST;
-        // Skip fully-past blocks that predate the cutoff (historical clutter)
-        if (isPast && toMs !== null && toMs < POPUP_CUTOFF_MS) return;
-        if (isPast) {
-          result.push({ block, reason: "Block time has fully passed — you can only reject this sanctioned block" });
+        const toMs = block.sanctionedTimeTo ? new Date(block.sanctionedTimeTo).getTime() : null;
+        if (toMs !== null && toMs <= nowIST) {
+          result.push({ block, reason: "Block time has passed — accept or reject this sanctioned block", subType: "past" });
         } else {
-          result.push({ block, reason: "Sanctioned block — awaiting your acceptance or rejection" });
+          result.push({ block, reason: "Sanctioned — awaiting your acceptance or rejection", subType: "pending_acceptance" });
         }
         return;
       }
 
-      // ── Rule 2: Accepted but not applied / exited — blocks WHOLE depot+dept ──
-      // Applies to everyone in same depot AND same department.
+      // ── CONDITION 2: Accepted but not yet applied for availing / not exited ──
+      // Applies to everyone in the same depot + department as the block
       if (
         s === "Sanctioned and Accepted by SSE" &&
         block.selectedDepo === myDepot &&
         block.selectedDepartment === myDept
       ) {
-        const fromTime = block.sanctionedTimeFrom ?? block.demandTimeFrom;
-        const toTime   = block.sanctionedTimeTo   ?? block.demandTimeTo;
-        if (!fromTime) return;
-        const fromMs = new Date(fromTime).getTime();
-        const toMs   = toTime ? new Date(toTime).getTime() : null;
-        const isFullyPast = toMs !== null && toMs <= nowIST;
+        const fromMs = block.sanctionedTimeFrom ? new Date(block.sanctionedTimeFrom).getTime() : null;
+        const toMs   = block.sanctionedTimeTo   ? new Date(block.sanctionedTimeTo).getTime()   : null;
+        if (fromMs === null) return;
+
+        const toHasPassed    = toMs !== null && toMs <= nowIST;
+        const moreThan12hOld = toMs !== null && nowIST - toMs > TWELVE_HRS;
         const startsWithin3h = fromMs > nowIST && fromMs <= nowIST + THREE_HRS;
+        const fromHasPassed  = fromMs <= nowIST;
 
-        // Skip fully-past blocks that predate the cutoff (historical clutter)
-        if (isFullyPast && toMs !== null && toMs < POPUP_CUTOFF_MS) return;
-
-        if (isFullyPast) {
-          result.push({ block, reason: "Your team has a block whose time has fully passed without availing or exit — the whole team is restricted until resolved", subType: "past" });
+        if (moreThan12hOld) {
+          // After 12h past the to-time: only "exit without availing" option
+          result.push({ block, reason: "Block time passed over 12 hours ago — exit without availing", subType: "exit_only" });
+        } else if (toHasPassed || fromHasPassed) {
+          // From-time has passed but within 12h of to-time: can still apply or exit
+          result.push({ block, reason: "Block time has started — apply for availing or exit without availing", subType: "apply_or_exit" });
         } else if (startsWithin3h) {
-          result.push({ block, reason: "Your team has a block starting within 3 hours — apply for availing or exit to unblock your team", subType: "within3h" });
+          // Starts within 3 hours: prompt to apply or exit
+          result.push({ block, reason: "Block starts within 3 hours — apply for availing or exit to release your team", subType: "within3h" });
         }
       }
     });
@@ -4165,8 +4140,8 @@ useEffect(() => {
                               ✕ Reject
                             </button>
                           )}
-                          {/* Accepted not applied — past block: exit only */}
-                          {isAcceptedNotApplied && subType === "past" && (
+                          {/* Accepted — 12h+ past: exit only */}
+                          {isAcceptedNotApplied && subType === "exit_only" && (
                             <button
                               type="button"
                               disabled={isBusy}
@@ -4176,7 +4151,29 @@ useEffect(() => {
                               Exit Without Availing
                             </button>
                           )}
-                          {/* Accepted not applied — within 3h: go apply OR exit */}
+                          {/* Accepted — time started: apply or exit */}
+                          {isAcceptedNotApplied && subType === "apply_or_exit" && (
+                            <>
+                              <button
+                                type="button"
+                                disabled={isBusy}
+                                onClick={() => { setShowPendingModal(false); window.location.href = "/avail-block"; }}
+                                className="flex-1 py-2 rounded-lg text-white text-xs font-bold disabled:opacity-50 transition"
+                                style={{ backgroundColor: "#13529e" }}
+                              >
+                                Go to Avail Block at Site
+                              </button>
+                              <button
+                                type="button"
+                                disabled={isBusy}
+                                onClick={() => setBlockMode(blockId, "exiting")}
+                                className="flex-1 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold disabled:opacity-50 transition"
+                              >
+                                Exit Without Availing
+                              </button>
+                            </>
+                          )}
+                          {/* Accepted — within 3h: go apply OR exit */}
                           {isAcceptedNotApplied && subType === "within3h" && (
                             <>
                               <button
