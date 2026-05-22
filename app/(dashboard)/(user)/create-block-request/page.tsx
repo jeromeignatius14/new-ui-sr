@@ -4140,8 +4140,8 @@ useEffect(() => {
                               ✕ Reject
                             </button>
                           )}
-                          {/* Accepted not applied — past block: exit only */}
-                          {isAcceptedNotApplied && subType === "past" && (
+                          {/* Accepted — 12h+ past: exit only */}
+                          {isAcceptedNotApplied && subType === "exit_only" && (
                             <button
                               type="button"
                               disabled={isBusy}
@@ -4151,7 +4151,29 @@ useEffect(() => {
                               Exit Without Availing
                             </button>
                           )}
-                          {/* Accepted not applied — within 3h: go apply OR exit */}
+                          {/* Accepted — time started: apply or exit */}
+                          {isAcceptedNotApplied && subType === "apply_or_exit" && (
+                            <>
+                              <button
+                                type="button"
+                                disabled={isBusy}
+                                onClick={() => { setShowPendingModal(false); window.location.href = "/avail-block"; }}
+                                className="flex-1 py-2 rounded-lg text-white text-xs font-bold disabled:opacity-50 transition"
+                                style={{ backgroundColor: "#13529e" }}
+                              >
+                                Go to Avail Block at Site
+                              </button>
+                              <button
+                                type="button"
+                                disabled={isBusy}
+                                onClick={() => setBlockMode(blockId, "exiting")}
+                                className="flex-1 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold disabled:opacity-50 transition"
+                              >
+                                Exit Without Availing
+                              </button>
+                            </>
+                          )}
+                          {/* Accepted — within 3h: go apply OR exit */}
                           {isAcceptedNotApplied && subType === "within3h" && (
                             <>
                               <button
@@ -4241,15 +4263,7 @@ useEffect(() => {
               </div>
 
               {/* Actions */}
-              <div className="p-4 border-t border-gray-100 flex flex-col gap-2">
-                <button
-                  type="button"
-                  onClick={() => { setShowPendingModal(false); window.location.href = "/avail-block"; }}
-                  className="w-full py-3 rounded-xl font-bold text-white text-sm"
-                  style={{ backgroundColor: "#13529e" }}
-                >
-                  Go to Avail Block Screen
-                </button>
+              <div className="p-4 border-t border-gray-100">
                 <button
                   type="button"
                   onClick={() => { setShowPendingModal(false); window.location.href = "/dashboard"; }}
