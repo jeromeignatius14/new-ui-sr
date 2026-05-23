@@ -272,12 +272,15 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
   // ── Apply modal auto-fill flag ───────────────────────────────────────────
   const [applyFromAutoFilled, setApplyFromAutoFilled] = useState(false);
 
-  // ── 1-second ticker drives auto-start re-evaluation each second
+  // ── 1-second ticker — only runs when SM has approved and block hasn't started
   const [startTimeTick, setStartTimeTick] = useState(0);
+  const blockStatus = data?.data?.overAllStatus ?? "";
+  const needsTick = blockStatus === "SM Approved" || blockStatus === "Availing Active";
   useEffect(() => {
+    if (!needsTick) return;
     const id = setInterval(() => setStartTimeTick(t => t + 1), 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [needsTick]);
 
   // ── Auto-acknowledge + auto-start refs ───────────────────────────────────
   const autoAckedRef  = useRef(false);
@@ -296,16 +299,7 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
     autoStartedRef.current = false;
   }, [id]);
 
-  // ── Periodic refetch when SM Approved / about to auto-start ─────────────
-  // Ensures multi-participant blocks update when others ack and status flips.
-  useEffect(() => {
-    if (!block) return;
-    const s = block.overAllStatus ?? "";
-    if (s !== "SM Approved" && !(s === "Availing Active")) return;
-    const interval = setInterval(() => refetch(), 8000);
-    return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [block?.overAllStatus]);
+  // React Query's refetchInterval handles background polling — no extra interval needed.
 
   // ── Auto-acknowledge + auto-start at granted from time ───────────────────
   // Fires every second (via startTimeTick). At the granted time, silently
