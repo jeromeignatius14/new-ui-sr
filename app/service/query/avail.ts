@@ -13,9 +13,9 @@ export function useGetDepotBlocks() {
     queryKey: ["avail-depot-blocks", depot],
     queryFn: () => availService.getDepotBlocks(depot!),
     enabled: !!depot,
-    staleTime: 0,
-    refetchInterval: 8_000,
-    refetchOnWindowFocus: true,
+    staleTime: 15_000,
+    refetchInterval: 20_000,
+    refetchOnWindowFocus: false,
     placeholderData: keep,
   });
 }
@@ -28,9 +28,9 @@ export function useGetMyParticipations() {
     queryKey: ["avail-my-participations", userId],
     queryFn: () => availService.getMyParticipations(),
     enabled: !!userId,
-    staleTime: 0,
-    refetchInterval: 8_000,
-    refetchOnWindowFocus: true,
+    staleTime: 15_000,
+    refetchInterval: 20_000,
+    refetchOnWindowFocus: false,
     placeholderData: keep,
   });
 }
@@ -45,14 +45,14 @@ export function useGetPendingAvailConcurrences() {
     queryKey: ["avail-concurrences", depot, userDepartment],
     queryFn: () => availService.getPendingConcurrences(depot!, userDepartment!),
     enabled: !!depot && !!userDepartment && (role === "USER" || role === "JE"),
-    staleTime: 0,
-    refetchInterval: 8_000,
-    refetchOnWindowFocus: true,
+    staleTime: 15_000,
+    refetchInterval: 20_000,
+    refetchOnWindowFocus: false,
     placeholderData: keep,
   });
 }
 
-// GET: SM pending dashboard — needs the tightest polling (live operations)
+// GET: SM pending dashboard — live operations, needs tighter polling
 export function useGetSmPending() {
   const { data: session } = useSession();
   const stationCode = session?.user?.depot;
@@ -60,22 +60,22 @@ export function useGetSmPending() {
     queryKey: ["sm-pending", stationCode],
     queryFn: () => availService.getSmPending(stationCode!),
     enabled: !!stationCode && session?.user?.role === "SM",
-    staleTime: 0,
-    refetchInterval: 6_000,
-    refetchOnWindowFocus: true,
+    staleTime: 10_000,
+    refetchInterval: 15_000,
+    refetchOnWindowFocus: false,
     placeholderData: keep,
   });
 }
 
-// GET: Single avail request detail — tightest polling (field worker watching status)
+// GET: Single avail request detail — field worker watching live status
 export function useGetAvailRequestById(requestId: string) {
   return useQuery({
     queryKey: ["avail-request", requestId],
     queryFn: () => availService.getAvailRequestById(requestId),
     enabled: !!requestId,
-    staleTime: 0,
-    refetchInterval: 6_000,
-    refetchOnWindowFocus: true,
+    staleTime: 10_000,
+    refetchInterval: 15_000,
+    refetchOnWindowFocus: false,
     placeholderData: keep,
   });
 }
@@ -88,14 +88,14 @@ export function useGetMyAvailBlocks() {
     queryKey: ["avail-my-blocks", userId],
     queryFn: () => availService.getMyParticipations(),
     enabled: !!userId,
-    staleTime: 0,
-    refetchInterval: 8_000,
-    refetchOnWindowFocus: true,
+    staleTime: 15_000,
+    refetchInterval: 20_000,
+    refetchOnWindowFocus: false,
     placeholderData: keep,
   });
 }
 
-// GET: SM station codes — static-ish, no need for aggressive polling
+// GET: SM station codes — static, no polling needed
 export function useGetSmStations() {
   return useQuery({
     queryKey: ["sm-stations"],
@@ -111,9 +111,9 @@ export function useGetTrdPending() {
     queryKey: ["trd-pending"],
     queryFn: () => availService.getTrdPending(),
     enabled: session?.user?.role === "DEPT_CONTROLLER" && session?.user?.department === "TRD",
-    staleTime: 0,
-    refetchInterval: 6_000,
-    refetchOnWindowFocus: true,
+    staleTime: 10_000,
+    refetchInterval: 15_000,
+    refetchOnWindowFocus: false,
     placeholderData: keep,
   });
 }
