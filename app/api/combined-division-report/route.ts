@@ -3,8 +3,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/auth";
 
 // Server-side env vars (no NEXT_PUBLIC prefix needed here)
-const OTHER_BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL;   // non-MAS (sr-five-divisions.vercel.app)
-const MAS_BACKEND   = process.env.MAS_BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL; // MAS backend
+const OTHER_BACKEND    = process.env.NEXT_PUBLIC_BACKEND_URL;  // non-MAS (sr-five-divisions.vercel.app)
+const MAS_BACKEND      = process.env.MAS_BACKEND_URL;          // MAS backend (sr-backend-mas.vercel.app)
+const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY;         // shared key for server-to-server MAS calls
 
 // Build query string, excluding undefined/null values
 function qs(params: Record<string, string | undefined | null>): string {
@@ -66,7 +67,7 @@ export async function GET(req: NextRequest) {
     }
 
     // ── Query MAS backend for MAS division ────────────────────────────────────
-    if (masDivisions.length > 0) {
+    if (masDivisions.length > 0 && MAS_BACKEND) {
         try {
             const q = qs({
                 startDate, endDate,
@@ -78,7 +79,14 @@ export async function GET(req: NextRequest) {
                 durationOperator,
                 durationValue,
             });
-            const res = await fetch(`${MAS_BACKEND}/api/hq/generate-report?${q}`, { headers });
+            // Use internal-key route so CTE/CEDE/CSE tokens (from non-MAS backend) are accepted
+            const masHeaders: Record<string, string> = INTERNAL_API_KEY
+                ? { "x-internal-key": INTERNAL_API_KEY }
+                : headers;
+            const endpoint = INTERNAL_API_KEY
+                ? `${MAS_BACKEND}/api/hq/internal-generate-report`
+                : `${MAS_BACKEND}/api/hq/generate-report`;
+            const res = await fetch(`${endpoint}?${q}`, { headers: masHeaders });
             if (res.ok) {
                 const json = await res.json();
                 const sections: any[] = json?.data?.pastBlockSummary ?? [];
