@@ -291,6 +291,11 @@ if (session?.user?.role === "SM") {
               BLOCK SUMMARY REPORT
             </button>
           </Link>
+          <Link href="/analyst" className="w-full">
+            <button className="w-full rounded-2xl bg-[#a6f7a6] border border-black py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
+              ANALYSE IN DETAIL
+            </button>
+          </Link>
         </div>
 
         <button
@@ -343,6 +348,11 @@ if (session?.user?.role === "SM") {
           <Link href="/bo/generate-report" className="w-full">
             <button className="w-full rounded-2xl bg-[#c7c7f7] border border-black py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
               BLOCK SUMMARY REPORT
+            </button>
+          </Link>
+          <Link href="/analyst" className="w-full">
+            <button className="w-full rounded-2xl bg-[#a6f7a6] border border-black py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
+              ANALYSE IN DETAIL
             </button>
           </Link>
         </div>
