@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useAnalyticsSummary } from "@/app/service/query/analytics";
 import { analyticsService, AnalyticsFilters } from "@/app/service/api/analytics";
@@ -248,6 +248,9 @@ export default function AnalystDashboard() {
   const getAppStart = (loc: string) =>
     (loc === "" || loc.toUpperCase() === "MAS") ? "2026-04-01" : "2026-05-21";
 
+  // Roles that should be locked to their own division (no dropdown)
+  const DIVISION_LOCKED_ROLES = ["DEPT_CONTROLLER", "BRANCH_OFFICER", "SENIOR_OFFICER", "JUNIOR_OFFICER", "DRM"];
+
   const [filters, setFilters] = useState({
     startDate: getAppStart(""),
     endDate:   today.toISOString().split("T")[0],
@@ -256,6 +259,18 @@ export default function AnalystDashboard() {
   const [draft,        setDraft]        = useState({ ...filters });
   const [activeGap,    setActiveGap]    = useState<string | null>(null);
   const [dateWarning,  setDateWarning]  = useState(false);
+
+  // Auto-lock location to user's own division once session loads
+  useEffect(() => {
+    const role = session?.user?.role ?? "";
+    const loc  = session?.user?.location ?? "";
+    if (loc && DIVISION_LOCKED_ROLES.includes(role)) {
+      const start = getAppStart(loc);
+      setFilters({ startDate: start, endDate: today.toISOString().split("T")[0], department: "", location: loc });
+      setDraft(  { startDate: start, endDate: today.toISOString().split("T")[0], department: "", location: loc });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.role, session?.user?.location]);
 
   const { data: raw, isLoading, isError, refetch } = useAnalyticsSummary(filters);
   const d = raw?.data;
@@ -269,7 +284,9 @@ export default function AnalystDashboard() {
     setActiveGap(null);
   };
   const resetFilters = () => {
-    const r = { startDate: getAppStart(""), endDate: today.toISOString().split("T")[0], department: "", location: "" };
+    const role = session?.user?.role ?? "";
+    const loc  = DIVISION_LOCKED_ROLES.includes(role) ? (session?.user?.location ?? "") : "";
+    const r = { startDate: getAppStart(loc), endDate: today.toISOString().split("T")[0], department: "", location: loc };
     setDraft(r); setFilters(r); setActiveGap(null); setDateWarning(false);
   };
 
@@ -300,7 +317,7 @@ export default function AnalystDashboard() {
               const role = session?.user?.role;
               const back = role === "DRM" ? "/drm/generate-report"
                 : role === "HQ"  ? "/hq/generate-report"
-                : role === "PUNCTUALITY_CONTROLLER" ? "/dashboard"
+                : ["CTE","CEDE","CSE"].includes(role ?? "") ? "/cte/generate-report"
                 : "/dashboard";
               window.location.href = back;
             }}
@@ -339,6 +356,7 @@ export default function AnalystDashboard() {
             </div>
           )}
           <div className="flex flex-wrap gap-3 items-end">
+            {!DIVISION_LOCKED_ROLES.includes(session?.user?.role ?? "") && (
             <div className="flex flex-col gap-1">
               <label className="text-xs text-gray-500 font-semibold">Division</label>
               <select value={draft.location}
@@ -358,6 +376,7 @@ export default function AnalystDashboard() {
                 <option value="TVC">TVC — Trivandrum</option>
               </select>
             </div>
+            )}
             <div className="flex flex-col gap-1">
               <label className="text-xs text-gray-500 font-semibold">From</label>
               <input type="date" value={draft.startDate} min={appStart}
