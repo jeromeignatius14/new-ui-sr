@@ -28,7 +28,9 @@ export async function GET(req: NextRequest) {
     const startDate       = url.get("startDate") ?? undefined;
     const endDate         = url.get("endDate") ?? undefined;
     const divisionsStr    = url.get("divisions") ?? "MAS,MDU,SA,PGT,TPJ,TVC";
-    const department      = url.get("department") ?? undefined;
+    const deptRaw         = url.get("department") ?? "";
+    // "All" or empty string → no department filter (CTPM sees all departments)
+    const department      = (deptRaw === "" || deptRaw === "All") ? undefined : deptRaw;
     const blockType       = url.get("blockType") ?? undefined;
     const globalWorkType  = url.get("globalWorkType") ?? "ALL";
     const globalActivity  = url.get("globalActivity") ?? "ALL";

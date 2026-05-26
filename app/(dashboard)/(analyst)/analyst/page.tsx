@@ -317,7 +317,7 @@ export default function AnalystDashboard() {
               const role = session?.user?.role;
               const back = role === "DRM" ? "/drm/generate-report"
                 : role === "HQ"  ? "/hq/generate-report"
-                : ["CTE","CEDE","CSE"].includes(role ?? "") ? "/cte/generate-report"
+                : ["CTE","CEDE","CSE","CTPM"].includes(role ?? "") ? "/cte/generate-report"
                 : "/dashboard";
               window.location.href = back;
             }}

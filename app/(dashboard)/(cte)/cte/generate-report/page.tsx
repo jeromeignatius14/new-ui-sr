@@ -7,7 +7,7 @@ import * as XLSX from "xlsx";
 import { Loader } from "@/app/components/ui/Loader";
 import Link from "next/link";
 
-// ── Role → fixed department mapping ──────────────────────────────────────────
+// ── Role → fixed department mapping (CTPM has no fixed dept — uses selector) ──
 const ROLE_DEPT: Record<string, string> = {
   CTE:  "ENGG",
   CEDE: "TRD",
@@ -18,6 +18,7 @@ const ROLE_LABEL: Record<string, string> = {
   CTE:  "CTE — Engineering",
   CEDE: "CEDE — TRD",
   CSE:  "CSE — S&T",
+  CTPM: "CTPM — All Departments",
 };
 
 const ALL_DIVISIONS = ["MAS", "MDU", "SA", "PGT", "TPJ", "TVC"];
@@ -85,7 +86,10 @@ export default function CteGenerateReportPage() {
   });
 
   const role = session?.user?.role ?? "";
-  const dept = ROLE_DEPT[role] ?? "ENGG";
+  const isCtpm = role === "CTPM";
+  const fixedDept = ROLE_DEPT[role] ?? "";  // empty for CTPM
+  const [ctpmDept, setCtpmDept] = useState("All");
+  const dept = isCtpm ? ctpmDept : fixedDept;
 
   const today = new Date();
   const todayStr = today.toISOString().split("T")[0];
@@ -115,8 +119,8 @@ export default function CteGenerateReportPage() {
       const params = new URLSearchParams({
         startDate, endDate,
         divisions: selectedDivisions.join(","),
-        department: dept,
         blockType,
+        ...(dept && dept !== "All" ? { department: dept } : {}),
       });
       const res  = await fetch(`/api/combined-division-report?${params.toString()}`);
       const json = await res.json();
@@ -216,8 +220,18 @@ export default function CteGenerateReportPage() {
           </div>
 
           <div className="mb-4">
-            <label className="text-xs text-gray-600 font-semibold block mb-1">Department (fixed)</label>
-            <div className="inline-block border-2 border-indigo-400 rounded-lg px-4 py-2 text-sm font-extrabold text-indigo-700 bg-indigo-50">{dept}</div>
+            <label className="text-xs text-gray-600 font-semibold block mb-1">Department</label>
+            {isCtpm ? (
+              <select value={ctpmDept} onChange={(e) => setCtpmDept(e.target.value)}
+                className="border-2 border-indigo-400 rounded-lg px-4 py-2 text-sm font-extrabold text-indigo-700 bg-indigo-50">
+                <option value="All">All Departments</option>
+                <option value="ENGG">ENGG — Engineering</option>
+                <option value="TRD">TRD — Traction</option>
+                <option value="S&T">S&T — Signal &amp; Telecom</option>
+              </select>
+            ) : (
+              <div className="inline-block border-2 border-indigo-400 rounded-lg px-4 py-2 text-sm font-extrabold text-indigo-700 bg-indigo-50">{dept}</div>
+            )}
           </div>
 
           <div className="mb-4">

@@ -7,7 +7,7 @@ import { Loader } from "@/app/components/ui/Loader";
 export default function CteLayout({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const allowed = ["CTE", "CEDE", "CSE", "SUPER_ADMIN", "HQ"];
+  const allowed = ["CTE", "CEDE", "CSE", "CTPM", "SUPER_ADMIN", "HQ"];
 
   useEffect(() => {
     if (status === "authenticated" && !allowed.includes(session?.user?.role ?? "")) {

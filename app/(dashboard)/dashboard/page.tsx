@@ -252,6 +252,55 @@ if (session?.user?.role === "SM") {
 
 
 
+  // CTPM — all-department cross-division head
+  if (session?.user?.role === "CTPM") {
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center bg-[#fffbe9]">
+        <div className="w-full border border-black bg-yellow-200 flex items-center justify-center relative p-2" style={{ minHeight: 60 }}>
+          <span className="absolute left-4 top-1/2 -translate-y-1/2">
+            <FaHome className="w-9 h-9 text-black" />
+          </span>
+          <span className="text-2xl font-bold text-black">Home</span>
+        </div>
+        <div className="w-full flex justify-center mt-4">
+          <div className="bg-green-200 rounded-2xl px-8 py-2">
+            <span className="text-4xl font-extrabold text-[#b07be0] tracking-wide">
+              RBMS — ALL DIVISIONS
+            </span>
+          </div>
+        </div>
+        <div className="w-full flex justify-center mt-4">
+          <div className="bg-[#ffeaea] rounded-full px-6 py-2 border border-black flex flex-col items-center" style={{ maxWidth: "90vw" }}>
+            <span className="text-lg font-bold text-black tracking-wide">
+              CTPM — ALL DEPARTMENTS
+            </span>
+          </div>
+        </div>
+        <div className="w-full flex flex-col items-center gap-8 mt-10 px-2 max-w-md mb-2">
+          <Link href="/cte/generate-report" className="w-full">
+            <button className="w-full rounded-2xl bg-[#c7c7f7] border border-black py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
+              GENERATE REPORTS
+            </button>
+          </Link>
+          <Link href="/analyst" className="w-full">
+            <button className="w-full rounded-2xl bg-[#a6f7a6] border border-black py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
+              ANALYSE IN DETAIL
+            </button>
+          </Link>
+        </div>
+        <button
+          onClick={async () => {
+            const { signOut } = await import("next-auth/react");
+            await signOut({ redirect: true, callbackUrl: "/auth/login" });
+          }}
+          className="bg-[#FFB74D] border border-black px-6 py-1.5 rounded text-lg font-bold text-black mt-4"
+        >
+          Logout
+        </button>
+      </div>
+    );
+  }
+
   // CTE / CEDE / CSE — cross-division heads
   if (["CTE", "CEDE", "CSE"].includes(session?.user?.role ?? "")) {
     const roleDept: Record<string, string> = { CTE: "ENGG", CEDE: "TRD", CSE: "S&T" };
