@@ -13,9 +13,9 @@ export function useGetDepotBlocks() {
     queryKey: ["avail-depot-blocks", depot],
     queryFn: () => availService.getDepotBlocks(depot!),
     enabled: !!depot,
-    staleTime: 15_000,
-    refetchInterval: 20_000,
-    refetchOnWindowFocus: false,
+    staleTime: 10_000,
+    refetchInterval: 15_000,
+    refetchOnWindowFocus: true,
     placeholderData: keep,
   });
 }
@@ -28,9 +28,9 @@ export function useGetMyParticipations() {
     queryKey: ["avail-my-participations", userId],
     queryFn: () => availService.getMyParticipations(),
     enabled: !!userId,
-    staleTime: 15_000,
-    refetchInterval: 20_000,
-    refetchOnWindowFocus: false,
+    staleTime: 10_000,
+    refetchInterval: 15_000,
+    refetchOnWindowFocus: true,
     placeholderData: keep,
   });
 }
@@ -45,9 +45,9 @@ export function useGetPendingAvailConcurrences() {
     queryKey: ["avail-concurrences", depot, userDepartment],
     queryFn: () => availService.getPendingConcurrences(depot!, userDepartment!),
     enabled: !!depot && !!userDepartment && (role === "USER" || role === "JE"),
-    staleTime: 15_000,
-    refetchInterval: 20_000,
-    refetchOnWindowFocus: false,
+    staleTime: 10_000,
+    refetchInterval: 15_000,
+    refetchOnWindowFocus: true,
     placeholderData: keep,
   });
 }
@@ -60,9 +60,9 @@ export function useGetSmPending() {
     queryKey: ["sm-pending", stationCode],
     queryFn: () => availService.getSmPending(stationCode!),
     enabled: !!stationCode && session?.user?.role === "SM",
-    staleTime: 10_000,
-    refetchInterval: 15_000,
-    refetchOnWindowFocus: false,
+    staleTime: 8_000,
+    refetchInterval: 10_000,
+    refetchOnWindowFocus: true,
     placeholderData: keep,
   });
 }
@@ -73,9 +73,9 @@ export function useGetAvailRequestById(requestId: string) {
     queryKey: ["avail-request", requestId],
     queryFn: () => availService.getAvailRequestById(requestId),
     enabled: !!requestId,
-    staleTime: 10_000,
-    refetchInterval: 15_000,
-    refetchOnWindowFocus: false,
+    staleTime: 8_000,
+    refetchInterval: 10_000,
+    refetchOnWindowFocus: true,
     placeholderData: keep,
   });
 }
@@ -88,9 +88,9 @@ export function useGetMyAvailBlocks() {
     queryKey: ["avail-my-blocks", userId],
     queryFn: () => availService.getMyParticipations(),
     enabled: !!userId,
-    staleTime: 15_000,
-    refetchInterval: 20_000,
-    refetchOnWindowFocus: false,
+    staleTime: 10_000,
+    refetchInterval: 15_000,
+    refetchOnWindowFocus: true,
     placeholderData: keep,
   });
 }
@@ -111,9 +111,9 @@ export function useGetTrdPending() {
     queryKey: ["trd-pending"],
     queryFn: () => availService.getTrdPending(),
     enabled: session?.user?.role === "DEPT_CONTROLLER" && session?.user?.department === "TRD",
-    staleTime: 10_000,
-    refetchInterval: 15_000,
-    refetchOnWindowFocus: false,
+    staleTime: 8_000,
+    refetchInterval: 10_000,
+    refetchOnWindowFocus: true,
     placeholderData: keep,
   });
 }

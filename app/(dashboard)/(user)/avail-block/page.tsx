@@ -302,6 +302,7 @@ export default function AvailBlockPage() {
     qc.invalidateQueries({ queryKey: ["avail-depot-blocks"] });
     qc.invalidateQueries({ queryKey: ["avail-my-participations"] });
     qc.invalidateQueries({ queryKey: ["avail-concurrences"] });
+    qc.invalidateQueries({ queryKey: ["avail-my-blocks"] });
   };
 
   const navigateToBlock = (id: string) => router.push(`/avail-block/${id}`);
