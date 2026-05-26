@@ -6,7 +6,24 @@ function invalidateAll(qc: ReturnType<typeof useQueryClient>) {
   qc.invalidateQueries({ queryKey: ["avail-depot-blocks"] });
   qc.invalidateQueries({ queryKey: ["avail-my-participations"] });
   qc.invalidateQueries({ queryKey: ["avail-concurrences"] });
-  qc.invalidateQueries({ queryKey: ["avail-request"] });
+  qc.invalidateQueries({ queryKey: ["sm-pending"] });
+  qc.invalidateQueries({ queryKey: ["trd-pending"] });
+}
+
+// Immediately update the detail-page cache with the fresh data the mutation just returned.
+// This closes the gap where the backend saved successfully but the UI still showed stale state
+// because the background re-fetch hadn't completed yet.
+function patchRequestCache(
+  qc: ReturnType<typeof useQueryClient>,
+  requestId: string,
+  response: any,
+) {
+  if (response) {
+    qc.setQueryData(["avail-request", requestId], response);
+  }
+  invalidateAll(qc);
+  // Also re-fetch the specific request and the lists immediately
+  qc.invalidateQueries({ queryKey: ["avail-request", requestId] });
 }
 
 export function useApplyForAvailing() {
@@ -20,7 +37,10 @@ export function useApplyForAvailing() {
       oheMasFrom?: string;
       oheMasTo?: string;
     }) => availService.applyForAvailing(p),
-    onSuccess: () => { invalidateAll(qc); toast.success("Availing application submitted"); },
+    onSuccess: (response, v) => {
+      patchRequestCache(qc, v.requestId, response);
+      toast.success("Availing application submitted");
+    },
     onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to apply for availing"),
   });
 }
@@ -30,7 +50,10 @@ export function useSubmitConcurrence() {
   return useMutation({
     mutationFn: (p: { requestId: string; accept: boolean; remarks?: string; userDepartment?: string }) =>
       availService.submitConcurrence(p.requestId, p.accept, p.remarks, p.userDepartment),
-    onSuccess: (_, v) => { invalidateAll(qc); toast.success(v.accept ? "Concurrence accepted" : "Concurrence rejected"); },
+    onSuccess: (response, v) => {
+      patchRequestCache(qc, v.requestId, response);
+      toast.success(v.accept ? "Concurrence accepted" : "Concurrence rejected");
+    },
     onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to submit concurrence"),
   });
 }
@@ -40,7 +63,10 @@ export function useAcknowledgeSmGrant() {
   return useMutation({
     mutationFn: (p: { requestId: string; accept: boolean; remarks?: string; lat?: number; lng?: number; geoOverride?: boolean }) =>
       availService.acknowledgeSmGrant(p.requestId, p.accept, p.remarks, p.lat, p.lng, p.geoOverride),
-    onSuccess: (_, v) => { invalidateAll(qc); toast.success(v.accept ? "Grant accepted — availing will begin soon" : "Grant rejected"); },
+    onSuccess: (response, v) => {
+      patchRequestCache(qc, v.requestId, response);
+      toast.success(v.accept ? "Grant accepted — availing will begin soon" : "Grant rejected");
+    },
     onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to acknowledge"),
   });
 }
@@ -50,7 +76,10 @@ export function useStartAvailing() {
   return useMutation({
     mutationFn: (p: { requestId: string; lat?: number; lng?: number; geoOverride?: boolean }) =>
       availService.startAvailing(p.requestId, p.lat, p.lng, p.geoOverride),
-    onSuccess: () => { invalidateAll(qc); toast.success("Availing started"); },
+    onSuccess: (response, v) => {
+      patchRequestCache(qc, v.requestId, response);
+      toast.success("Availing started");
+    },
     onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to start availing"),
   });
 }
@@ -70,7 +99,10 @@ export function useCloseBlock() {
       geoOverride?: boolean;
       closureAckSmStation?: string;
     }) => availService.closeBlock(p.requestId, p.closureRemarks, p.closureImage, p.closureReconnectedSignal, p.closureCautionKmph, p.closureOheMadeFit, p.lat, p.lng, p.geoOverride, p.closureAckSmStation),
-    onSuccess: () => { invalidateAll(qc); toast.success("Closure submitted — awaiting SM acknowledgement"); },
+    onSuccess: (response, v) => {
+      patchRequestCache(qc, v.requestId, response);
+      toast.success("Closure submitted — awaiting SM acknowledgement");
+    },
     onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to submit closure"),
   });
 }
@@ -80,7 +112,10 @@ export function useRequestExtension() {
   return useMutation({
     mutationFn: (p: { requestId: string; newEndTime: string; remarks?: string; isEmergency?: boolean; emergencyReason?: string; lat?: number; lng?: number; geoOverride?: boolean }) =>
       availService.requestExtension(p.requestId, p.newEndTime, p.remarks, p.isEmergency, p.emergencyReason, p.lat, p.lng, p.geoOverride),
-    onSuccess: () => { invalidateAll(qc); toast.success("Extension requested — awaiting SM"); },
+    onSuccess: (response, v) => {
+      patchRequestCache(qc, v.requestId, response);
+      toast.success("Extension requested — awaiting SM");
+    },
     onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to request extension"),
   });
 }
@@ -96,7 +131,10 @@ export function useSmApproveAvail() {
   return useMutation({
     mutationFn: (p: { requestId: string; action: "APPROVE" | "APPROVE_WITH_MODIFICATION" | "REJECT"; smApprovedTimeFrom?: string; smApprovedTimeTo?: string; smRemarks?: string }) =>
       availService.smApproveAvail(p.requestId, p.action, { smApprovedTimeFrom: p.smApprovedTimeFrom, smApprovedTimeTo: p.smApprovedTimeTo, smRemarks: p.smRemarks }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["sm-pending"] }); toast.success("Action completed"); },
+    onSuccess: (response, v) => {
+      patchRequestCache(qc, v.requestId, response);
+      toast.success("Action completed");
+    },
     onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to process request"),
   });
 }
@@ -106,7 +144,10 @@ export function useSmApproveExtension() {
   return useMutation({
     mutationFn: (p: { requestId: string; participantId?: string; action: "APPROVE" | "REJECT"; smRemarks?: string }) =>
       availService.smApproveExtension(p.requestId, p.participantId ?? "", p.action, p.smRemarks),
-    onSuccess: (_, v) => { qc.invalidateQueries({ queryKey: ["sm-pending"] }); toast.success(v.action === "APPROVE" ? "Extension approved" : "Extension rejected"); },
+    onSuccess: (response, v) => {
+      patchRequestCache(qc, v.requestId, response);
+      toast.success(v.action === "APPROVE" ? "Extension approved" : "Extension rejected");
+    },
     onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed"),
   });
 }
@@ -116,7 +157,10 @@ export function useSmAcknowledgeClosure() {
   return useMutation({
     mutationFn: (p: { requestId: string; smClosureRemarks: string }) =>
       availService.smAcknowledgeClosure(p.requestId, p.smClosureRemarks),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["sm-pending"] }); toast.success("Block closed ✓"); },
+    onSuccess: (response, v) => {
+      patchRequestCache(qc, v.requestId, response);
+      toast.success("Block closed ✓");
+    },
     onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed"),
   });
 }
@@ -126,7 +170,10 @@ export function useTrdPermitAvail() {
   return useMutation({
     mutationFn: (p: { requestId: string; action: "APPROVE" | "APPROVE_WITH_MODIFICATION" | "REJECT"; smApprovedTimeFrom?: string; smApprovedTimeTo?: string; smRemarks?: string }) =>
       availService.trdPermitAvail(p.requestId, p.action, { smApprovedTimeFrom: p.smApprovedTimeFrom, smApprovedTimeTo: p.smApprovedTimeTo, smRemarks: p.smRemarks }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["trd-pending"] }); toast.success("Action completed"); },
+    onSuccess: (response, v) => {
+      patchRequestCache(qc, v.requestId, response);
+      toast.success("Action completed");
+    },
     onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed"),
   });
 }
@@ -136,7 +183,10 @@ export function useTrdApproveExtension() {
   return useMutation({
     mutationFn: (p: { requestId: string; participantId: string; action: "APPROVE" | "REJECT"; smRemarks?: string }) =>
       availService.trdApproveExtension(p.requestId, p.participantId, p.action, p.smRemarks),
-    onSuccess: (_, v) => { qc.invalidateQueries({ queryKey: ["trd-pending"] }); toast.success(v.action === "APPROVE" ? "Extension approved" : "Extension rejected"); },
+    onSuccess: (response, v) => {
+      patchRequestCache(qc, v.requestId, response);
+      toast.success(v.action === "APPROVE" ? "Extension approved" : "Extension rejected");
+    },
     onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed"),
   });
 }
@@ -146,7 +196,10 @@ export function useTrdAcknowledgeClosure() {
   return useMutation({
     mutationFn: (p: { requestId: string; smClosureRemarks: string }) =>
       availService.trdAcknowledgeClosure(p.requestId, p.smClosureRemarks),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["trd-pending"] }); toast.success("Block closed ✓"); },
+    onSuccess: (response, v) => {
+      patchRequestCache(qc, v.requestId, response);
+      toast.success("Block closed ✓");
+    },
     onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed"),
   });
 }
@@ -156,9 +209,8 @@ export function useExitWithoutAvailing() {
   return useMutation({
     mutationFn: (p: { requestId: string; reason: string }) =>
       availService.exitWithoutAvailing(p.requestId, p.reason),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["avail-depot-blocks"] });
-      qc.invalidateQueries({ queryKey: ["avail-my-participations"] });
+    onSuccess: (response, v) => {
+      patchRequestCache(qc, v.requestId, response);
       toast.success("Block exited without availing");
     },
     onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to exit"),
