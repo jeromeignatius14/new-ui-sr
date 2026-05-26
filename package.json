@@ -1,10 +1,6 @@
 {
   "name": "client",
-<<<<<<< HEAD
-  "version": "1.1.30",
-=======
-  "version": "1.1.32",
->>>>>>> 1e64390c (feat: add ANALYSE IN DETAIL button for DRM and BO/SSE/JE roles)
+  "version": "1.1.31",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
