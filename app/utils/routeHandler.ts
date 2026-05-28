@@ -21,6 +21,8 @@ export const handleUserRedirect = (user: User | undefined) => {
   }
   else if (user.role === "ADMIN") {
     window.location.href = "/admin/request-table";
+  } else if (user.role === "CTPM" || user.role === "CTE" || user.role === "CEDE" || user.role === "CSE") {
+    window.location.href = "/hq/generate-report";
   } else {
     window.location.href = "/dashboard";
   }
