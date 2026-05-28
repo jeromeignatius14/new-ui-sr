@@ -74,23 +74,24 @@ const handleTimeChange = (field: 'demandTimeFrom' | 'demandTimeTo', type: 'hour'
 // Calculate duration between two times
 const getDuration = (fromTime: string, toTime: string): string => {
   if (!fromTime || !toTime) return "--";
-  
+
   try {
     const [fromHours, fromMinutes] = fromTime.split(":").map(Number);
     const [toHours, toMinutes] = toTime.split(":").map(Number);
-    
+
     const fromTotalMinutes = fromHours * 60 + fromMinutes;
-    const toTotalMinutes = toHours * 60 + toMinutes;
-    
-    if (toTotalMinutes <= fromTotalMinutes) return "Invalid";
-    
+    let toTotalMinutes = toHours * 60 + toMinutes;
+
+    // Overnight block: add 24h to the end time
+    if (toTotalMinutes <= fromTotalMinutes) toTotalMinutes += 24 * 60;
+
     const durationMinutes = toTotalMinutes - fromTotalMinutes;
     const hours = Math.floor(durationMinutes / 60);
     const minutes = durationMinutes % 60;
-    
+
     return `${hours}h ${minutes}m`;
   } catch {
-    return "Invalid";
+    return "--";
   }
 };
 // Open edit modal and populate data - ADD THIS FUNCTION
@@ -152,18 +153,7 @@ const handleSaveEdit = async () => {
   if (!data?.data) return;
 
   // Validate time range
-  if (editFormData.demandTimeFrom && editFormData.demandTimeTo) {
-    const [fromHours, fromMinutes] = editFormData.demandTimeFrom.split(":").map(Number);
-    const [toHours, toMinutes] = editFormData.demandTimeTo.split(":").map(Number);
-
-    const fromTotal = fromHours * 60 + fromMinutes;
-    const toTotal = toHours * 60 + toMinutes;
-
-    if (toTotal <= fromTotal) {
-      alert("End time must be after start time");
-      return;
-    }
-  }
+  // No validation needed — overnight blocks (e.g. 23:00 → 02:00) are valid
 
   setIsEditing(true);
   try {
@@ -287,14 +277,17 @@ const handleSaveEdit = async () => {
     
     const calculateDuration = (fromTime: string, toTime: string): number => {
   if (!fromTime || !toTime) return 0;
-  
+
   try {
     const [fromHours, fromMinutes] = fromTime.split(':').map(Number);
     const [toHours, toMinutes] = toTime.split(':').map(Number);
-    
+
     const fromTotalMinutes = fromHours * 60 + (fromMinutes || 0);
-    const toTotalMinutes = toHours * 60 + (toMinutes || 0);
-    
+    let toTotalMinutes = toHours * 60 + (toMinutes || 0);
+
+    // Overnight block: to is on the next day
+    if (toTotalMinutes <= fromTotalMinutes) toTotalMinutes += 24 * 60;
+
     return toTotalMinutes - fromTotalMinutes;
   } catch {
     return 0;
