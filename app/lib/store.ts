@@ -4703,3 +4703,32 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
 export const sectionsWithAlphanumericSiteLocation = [
 ""
 ];
+
+// ── Added for compatibility with MAS-based code ──────────────────────────────
+
+export type KMRange = {
+  min: number;
+  max: number;
+};
+
+export type SiteLocationRanges = {
+  [majorSection: string]: {
+    [blockSection: string]: {
+      [department in 'TRD' | 'S&T' | 'ENGG']: KMRange;
+    };
+  };
+};
+
+// KM ranges not yet defined for this division — empty means no range validation applied
+export const siteLocationRanges: SiteLocationRanges = {};
+
+export const AVAIL_STATUS = {
+  PENDING_CONCURRENCES:   "Pending Concurrences",
+  PENDING_SM_APPROVAL:    "Pending SM Approval",
+  PENDING_TRD_PERMIT:     "Pending TRD Controller Permit",
+  SM_APPROVED:            "SM Approved",
+  AVAILING_ACTIVE:        "Availing Active",
+  ALL_CLOSURES_SUBMITTED: "All Closures Submitted",
+  BLOCK_CLOSED:           "Block Closed",
+  AVAILING_CANCELLED:     "Availing Cancelled",
+} as const;
