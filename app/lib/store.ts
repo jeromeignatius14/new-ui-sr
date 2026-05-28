@@ -15,10 +15,7 @@ export const BoardControllerDepotMap: { [key: string]: string[] } = {
 };
 
 export let MajorSection = {
-  "MAS": ["MAS-GDR", "MAS-AJJ", "AJJ-KPD", "KPD-JTJ", "AJJ-RU", "AJJ-CGL", "MSB-VM", "MSB-VLCY"],
-  "TPJ": ["TPJ-VM", "VM-MV", "TPJ-MV", "TJ-KIK", "MV-TVR", "NMJ- MQ", "VM-PDY", "KPD-VM", "CUPJ-VRI", "TPJ-TP", "NGT-VLNK", "TVR- KKDI", "TTP-AGX"],
-  "SA": ["JTJ-ED", "ED-PTJ", "ED-TPJ", "KRR-DG", "SA-VRI", "SA-MTDM", "SA-KRR", "CBE-MTP", "MTP-UAM", "PTJ-CNV"],
-  "TVC": ["SRR-CHTS", "TCR-GUV", "ERS-KTYM-KYJ", "ERS-ALLP-KYJ", "KYJ-QLN", "QLN-TVC", "TVC-NCJ", "NCJ-TEN", "NCJ-CAPE"]
+  "MDU": ["TPJ-DG", "DG-MDU", "DG-PLNI-POY", "MDU-VPT", "VPT-MEJ", "MEJ-TN", "MEJ-TEN", "MDU-MNM", "TPJ-KKDI-MNM", "MNM-RMM", "MNM-VPT", "VPT-SCT", "TEN-SCT", "SCT-PUU", "PUU-QLN", "TEN-TCN", "MDU-BDNK"],
 };
 
 export const sectionsWithAlphanumericSiteLocation = [
@@ -4228,11 +4225,8 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
 };
 
 // export let MajorSection = {
-//   MAS: ["MAS-GDR", "MAS-AJJ", "AJJ-KPD", "KPD-JTJ", "AJJ-RU", "AJJ-CGL", "MSB-VM", "MSB-VLCY"],
-//   TPJ: ["TPJ-VM", "VM-MV", "TPJ-MV", "TJ-KIK", "MV-TVR", "NMJ-MQ", "VM-PDY", "KPD-VM", "CUPJ-VRI", "TPJ-TP", "NGT-VLNK", "TVR-KKDI", "TTP-AGX"],
-//   SA: ["JTJ-ED", "ED-PTJ", "ED-TP", "KRR-DG", "SA-VRI", "SA-MTDM", "SA-KRR", "CBE-MTP", "MTP-UAM", "PTJ-CNV"],
-//   PGT: ["PTJ-SRR", "SRR-CLT", "CLT-CAN", "CAN-MAQ-MAJN", "MAQ-MAJN-PADIL-TOK", "SRR-NIL", "PGT-PGTN-POY", "POY-CNV"]
-// };
+  "MDU": ["TPJ-DG", "DG-MDU", "DG-PLNI-POY", "MDU-VPT", "VPT-MEJ", "MEJ-TN", "MEJ-TEN", "MDU-MNM", "TPJ-KKDI-MNM", "MNM-RMM", "MNM-VPT", "VPT-SCT", "TEN-SCT", "SCT-PUU", "PUU-QLN", "TEN-TCN", "MDU-BDNK"],
+};
 
 // // export let blockSection = {
 // //   'TPJ-VM': [
@@ -7224,10 +7218,8 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
 
 
 // export let MajorSection = {
-//  " MAS": ["MAS-GDR","MAS-AJJ","AJJ-KPD", "KPD-JTJ", "AJJ-RU","AJJ-CGL","MSB-VM","MSB-VLCY"],
-// "TPJ": ["TPJ-VM", "VM-MV", "TPJ-MV","TJ-KIK","MV-TVR","NMJ- MQ","VM-PDY","KPD-VM","CUPJ-VRI","TPJ-TP","NGT-VLNK","TVR- KKDI","TTP-AGX"],
-// "SA":["JTJ-ED","ED-PTJ","ED-TPJ","KRR-DG","SA-VRI","SA-MTDM","SA-KRR","CBE-MTP","MTP-UAM","PTJ-CNV"]
-// };
+  "MDU": ["TPJ-DG", "DG-MDU", "DG-PLNI-POY", "MDU-VPT", "VPT-MEJ", "MEJ-TN", "MEJ-TEN", "MDU-MNM", "TPJ-KKDI-MNM", "MNM-RMM", "MNM-VPT", "VPT-SCT", "TEN-SCT", "SCT-PUU", "PUU-QLN", "TEN-TCN", "MDU-BDNK"],
+};
 
 
 // export let blockSection = {

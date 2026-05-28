@@ -9,7 +9,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useGenerateReport } from "@/app/service/query/drm";
 import { useSession } from "next-auth/react";
-import formatTime from "@/app/utils/formatTime";
 
 interface OptionType {
   value: string;
@@ -50,28 +49,12 @@ interface PastBlockSummary {
   MissionBlockCount?: number;
 }
 
-interface UpcomingBlock {
-  Department?: string;
-  overAllStatus?: string;
-  selectedDepo?: string;
-  id?: any;
-  Activity?: string;
-  DivisionId?: string;
+interface DetailedData {
   Date: string;
   Section: string;
   Duration: number;
   Type: string;
   Status: string;
-  DemandedTimeFrom?: any;
-  DemandedTimeTo?: any;
-}
-
-interface DetailedData extends UpcomingBlock {
-  selectedDepartment: string;
-  AvailedTimeFrom: string;
-  AvailedTimeTo: any;
-  SanctionedTimeFrom: string;
-  SanctionedTimeTo: any;
 }
 
 const locationOptions: OptionType[] = [
@@ -111,8 +94,6 @@ export default function GenerateReportPage() {
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([
     "Engineering",
   ]);
-  const [displayStartDate, setDisplayStartDate] = useState<string>("");
-const [displayEndDate, setDisplayEndDate] = useState<string>("");
   const router = useRouter();
   const {
     register,
@@ -158,7 +139,7 @@ const [displayEndDate, setDisplayEndDate] = useState<string>("");
       console.log("Set pastBlockSummary to:", pastData);
 
       // Set the detailed data directly
-      const detailedData = (reportData.data.detailedData || []) as DetailedData[];
+      const detailedData = reportData.data.detailedData || [];
       setUpcomingBlocks(detailedData);
       console.log("Set upcomingBlocks to:", detailedData);
 
@@ -226,7 +207,7 @@ const [displayEndDate, setDisplayEndDate] = useState<string>("");
 
       const formattedStartDate = format(startDate, "dd/MM/yy");
       const formattedEndDate = format(endDate, "dd/MM/yy");
-      
+
       // Update query parameters
       setQueryParams({
         startDate: formattedStartDate,
@@ -235,9 +216,7 @@ const [displayEndDate, setDisplayEndDate] = useState<string>("");
         department: selectedDepartments,
         blockType: selectedBlockTypes,
       });
-          // Set display dates for showing in tables
-setDisplayStartDate(formattedStartDate);
-setDisplayEndDate(formattedEndDate);
+
       // Trigger the query - react-query will handle the loading state
       await refetch();
     } catch (error) {
@@ -255,8 +234,7 @@ setDisplayEndDate(formattedEndDate);
   };
 
   return (
-    // <div className="max-w-7xl mx-auto bg-white">
-    <div className="w-full min-h-screen bg-white">
+    <div className="max-w-7xl mx-auto bg-white">
       <div className="bg-yellow-100 text-center pt-3 rounded-t-md">
         <h1 className="text-3xl font-bold text-purple-600">
 
@@ -500,9 +478,9 @@ setDisplayEndDate(formattedEndDate);
                 type="button"
                 className={`px-3 py-1.5 text-sm rounded-full text-black ${
                   selectedDepartments.includes("Engineering")
-                  ? "bg-[#e49edd] border-[#b07be0] text-black"
-                    : "bg-[#f3e6f7] border-[#b07be0] text-black"
-                } border border-black-400`}
+                    ? "bg-green-300"
+                    : "bg-green-100"
+                } border border-green-400`}
                 onClick={() => toggleDepartment("Engineering")}
               >
                 {selectedDepartments.includes("Engineering") && (
@@ -514,9 +492,9 @@ setDisplayEndDate(formattedEndDate);
                 type="button"
                 className={`px-3 py-1.5 text-sm rounded-full text-black ${
                   selectedDepartments.includes("ST")
-                    ? "bg-[#fff35c] border-[#e0e0e0] text-black"
-                      : "bg-[#fffbe9] border-[#e0e0e0] text-black"
-                } border border-yellow-400`}
+                    ? "bg-blue-300"
+                    : "bg-blue-100"
+                } border border-blue-400`}
                 onClick={() => toggleDepartment("ST")}
               >
                 {selectedDepartments.includes("ST") && (
@@ -528,9 +506,9 @@ setDisplayEndDate(formattedEndDate);
                 type="button"
                 className={`px-3 py-1.5 text-sm rounded-full text-black ${
                   selectedDepartments.includes("TRD")
-                      ? "bg-[#c7f7c7] border-[#7be09b] text-black"
-                      : "bg-[#e0fff0] border-[#7be09b] text-black"
-                } border border-black-400`}
+                    ? "bg-yellow-300"
+                    : "bg-yellow-100"
+                } border border-yellow-400`}
                 onClick={() => toggleDepartment("TRD")}
               >
                 {selectedDepartments.includes("TRD") && (
@@ -581,14 +559,14 @@ setDisplayEndDate(formattedEndDate);
 
       {/* Past Block Summary Table */}
       <div className="mb-6">
-        <div className="bg-[#f1a983] p-2 font-semibold text-black">
-         (A) Past Block Summary: {displayStartDate} to {displayEndDate} Division
-Department: {selectedDepartments.join(", ")}
+        <div className="bg-[#ff914d] p-2 font-semibold text-black">
+          (A)Past Block Summary:....... to .......Division
+          Department:.............(In Hrs)
         </div>
         <div className="overflow-x-auto border border-gray-200 rounded-b">
           <table className="min-w-full bg-white">
             <thead>
-              <tr className="bg-[#e49edd]">
+              <tr className="bg-[#f7c7ac]">
                 <th className="border px-4 py-2 text-left text-black">
                   Section
                 </th>
@@ -647,7 +625,7 @@ Department: {selectedDepartments.join(", ")}
 
                 <th className="border px-4 py-2 text-center text-black">
                     <div className="flex flex-col items-center justify-center">
-    <div>Availing Applied</div>
+    <div>Applied</div>
     <div className="relative flex items-center justify-center group">
       (Hrs)/Blocks
       <span className="inline-flex items-center justify-center ml-1 mt-1 w-4 h-4 text-xs bg-blue-100 text-blue-600 rounded-full cursor-help">
@@ -668,7 +646,7 @@ Department: {selectedDepartments.join(", ")}
         i
       </span>
       <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
-        Availing Applied block Granted  by the SM
+        Applied block Granted  by the SM
       </div>
     </div>
   </div>
@@ -681,7 +659,7 @@ Department: {selectedDepartments.join(", ")}
         i
       </span>
       <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
-       Total Blocks Granted / Total Availing Applied Blocks
+       Total Blocks Granted / Total Blocks Applied
       </div>
     </div>
   </div>
@@ -734,7 +712,7 @@ Department: {selectedDepartments.join(", ")}
         i
       </span>
       <div className="absolute left-1/2 top-full mt-1 -translate-x-1/2 px-3 py-2 text-sm bg-gray-900 text-white rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
-    Availing Applied Blocks not granted by the SM
+    Applied Blocks not granted by the SM
       </div>
     </div>
   </div>
@@ -763,7 +741,7 @@ Department: {selectedDepartments.join(", ")}
                       index % 2 === 0 ? "bg-[#f4dcf1]" : "bg-white"
                     } hover:bg-gray-50 transition-colors text-black`}
                   >
-                    {/* <td
+                    <td
                       className="border px-4 py-2 cursor-pointer hover:bg-purple-100"
                       onClick={() => handleSectionClick(item.Section)}
                     >
@@ -771,11 +749,6 @@ Department: {selectedDepartments.join(", ")}
                         {item.Department && item.Department} -{" "}
                         {item.corridorType && item.corridorType}
                       </span>
-                    </td> */}
-                    <td
-                     className="border px-4 py-2 text-center text-black" 
-                    >
-                      {item.Department}
                     </td>
                     <td className="border px-4 py-2 text-center text-black">
                        {item.Demanded.toFixed(2)} / {item.DemandsCount}
@@ -957,50 +930,24 @@ Department: {selectedDepartments.join(", ")}
 
       {/* Upcoming Blocks Table */}
       <div className="mb-6">
-        <div className=" bg-[#f1a983] p-2 font-semibold text-black">
-          (B) Upcoming Blocks (Summary): {displayStartDate} to {displayEndDate} Division {selectedDepartments.join(", ")} Department
+        <div className="bg-[#ffc000] p-2 font-semibold text-black">
+          (B) Upcoming Blocks (Summary):...... Division ...... Department.......
         </div>
         <div className="overflow-x-auto border border-gray-200 rounded-b">
           <table className="min-w-full bg-white">
             <thead>
-              <tr className="bg-[#e49edd]">
-
-
-    <th className="border px-4 py-2 text-center text-black">
-                  RequestId
-                </th>
-
-
-
+              <tr className="bg-[#f7c7ac]">
                 <th className="border px-4 py-2 text-center text-black">
                   Date
                 </th>
-
-
-                    <th className="border px-4 py-2 text-center text-black">
-                  Department
-                </th>
-
                 <th className="border px-4 py-2 text-left text-black">
-                  Block Section
+                  Section
                 </th>
-                <th className="border px-4 py-2 text-left text-black">
-                  Depot
+                <th className="border px-4 py-2 text-center text-black">
+                  Duration (Hours)
                 </th>
-                  <th className="border px-4 py-2 text-center text-black">
+                <th className="border px-4 py-2 text-center text-black">
                   Type
-                </th>
-                <th className="border px-4 py-2 text-center text-black">
-                  Activity
-                </th>
-                <th className="border px-4 py-2 text-center text-black">
-                  Demanded time
-                </th>
-               <th className="border px-4 py-2 text-center text-black">
-                  Sanctioned time
-                </th>
-                 <th className="border px-4 py-2 text-center text-black">
-                  Availed time
                 </th>
                 <th className="border px-4 py-2 text-center text-black">
                   Status
@@ -1016,73 +963,22 @@ Department: {selectedDepartments.join(", ")}
                       index % 2 === 0 ? "bg-[#f4dcf1]" : "bg-white"
                     } hover:bg-gray-50 transition-colors text-black `}
                   >
-
-                         {/* <td className="border px-4 py-2 text-center text-black">
-                       <Link
-                            href={`/hq/view-request/${block.id}?from=generate-report`}
-                            className="block w-full h-full text-blue-600 font-medium underline"
-                          >
-                            {block.DivisionId}
-                          </Link>
-                    </td> */}
-                        <td className="border px-4 py-2 text-center text-black">
-                      {block.DivisionId}
-                    </td>
                     <td className="border px-4 py-2 text-center text-black">
                       {block.Date}
                     </td>
-
-                      <td className="border px-4 py-2 text-center text-black">
-                      {block.selectedDepartment}
-                    </td>
                     <td
-                      className="border px-4 py-2 text-center text-black"
+                      className="border px-4 py-2 cursor-pointer hover:bg-purple-100"
+                      onClick={() => handleSectionClick(block.Section)}
                     >
+                      <span className="text-blue-600 font-medium underline">
                         {block.Section}
+                      </span>
                     </td>
-                         <td className="border px-4 py-2 text-center text-black">
-                    
-                      {block.selectedDepo}
-                     
+                    <td className="border px-4 py-2 text-center text-black">
+                      {block.Duration}
                     </td>
-                 <td className="border px-4 py-2 text-center text-black">
+                    <td className="border px-4 py-2 text-center text-black">
                       {block.Type}
-                    </td>
-                    <td className="border px-4 py-2 text-center text-black">
-                      {block.Activity}
-                    </td>
-                    <td className="border px-4 py-2 text-center text-black">
-  {block.DemandedTimeFrom && block.DemandedTimeTo ? (
-                            <>
-                              {formatTime(block.DemandedTimeFrom)} to{" "}
-                              {formatTime(block.DemandedTimeTo)}
-                            </>
-                          ) : (
-                            "Not Availed Yet"
-                          )}
-
-                    </td>
-                                     <td className="border px-4 py-2 text-center text-black">
-   {block.SanctionedTimeFrom && block.SanctionedTimeTo ? (
-                            <>
-                              {formatTime(block.SanctionedTimeFrom)} to{" "}
-                              {formatTime(block.SanctionedTimeTo)}
-                            </>
-                          ) : (
-                            "Not Availed Yet"
-                          )}
-
-                    </td>
-                                       <td className="border px-4 py-2 text-center text-black">
-   {block.AvailedTimeFrom && block.AvailedTimeTo ? (
-                            <>
-                              {formatTime(block.AvailedTimeFrom)} to{" "}
-                              {formatTime(block.AvailedTimeTo)}
-                            </>
-                          ) : (
-                            "Not Availed Yet"
-                          )}
-
                     </td>
                     <td
                       className={`border px-4 py-2 text-center ${
@@ -1098,7 +994,7 @@ Department: {selectedDepartments.join(", ")}
                       <span
                         className={`px-3 py-1 rounded-full text-sm font-medium `}
                       >
-                        {block.overAllStatus}
+                        {block.Status}
                       </span>
                     </td>
                   </tr>
@@ -1114,7 +1010,7 @@ Department: {selectedDepartments.join(", ")}
       </div>
 
       {/* Click SectionBlock ID Info Section */}
-      {/* <div className="mt-6 mb-4 p-4 bg-blue-100 rounded-md flex items-center justify-center">
+      <div className="mt-6 mb-4 p-4 bg-blue-100 rounded-md flex items-center justify-center">
         <div className="bg-[#cfd4ff] px-6 py-3 rounded-md border border-blue-300 shadow-sm text-center">
           <span className="font-bold text-black">Click</span>
           <span className="mx-1 px-4 py-1 bg-[#0da84a] rounded-md font-bold text-black">
@@ -1124,7 +1020,7 @@ Department: {selectedDepartments.join(", ")}
             to see further details of datewise details of blocks in the division
           </span>
         </div>
-      </div> */}
+      </div>
 
       <div className="mt-4 bg-white p-4 rounded flex justify-center items-center gap-6 border-2 border-gray-300">
         <button
@@ -1133,16 +1029,11 @@ Department: {selectedDepartments.join(", ")}
         >
           Back
         </button>
-      
-          <button className="bg-[#a0d815] text-black px-8 py-2 rounded-md hover:bg-gray-300 shadow-md transition-all border border-gray-400"
-           onClick={async () => {
-            const { signOut } = await import("next-auth/react");
-            await signOut({ redirect: true, callbackUrl: "/auth/login" });
-          }}
-          >
-            Logout
+        <Link href="/drm">
+          <button className="bg-[#a0d815] text-black px-8 py-2 rounded-md hover:bg-gray-300 shadow-md transition-all border border-gray-400">
+            Home
           </button>
-        
+        </Link>
       </div>
     </div>
   );

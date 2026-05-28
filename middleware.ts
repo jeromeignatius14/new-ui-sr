@@ -48,8 +48,6 @@ export const config = {
   matcher: [
     // Protected routes that require authentication
     '/dashboard/:path*',
-    '/sm/:path*',
-    '/avail-block/:path*',
     // Auth pages
     '/auth/login',
   ],

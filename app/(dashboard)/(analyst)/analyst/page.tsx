@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useAnalyticsSummary } from "@/app/service/query/analytics";
 import { analyticsService, AnalyticsFilters } from "@/app/service/api/analytics";
@@ -244,10 +244,15 @@ export default function AnalystDashboard() {
   const { data: session } = useSession({ required: true, onUnauthenticated() { window.location.href = "/auth/login"; } });
 
   const today    = new Date();
-  const APP_START = "2026-04-01"; // authorisation app went live on this date
+  // MAS (Chennai) went live 1 Apr 2026; all other divisions went live 21 May 2026.
+  const getAppStart = (loc: string) =>
+    (loc === "" || loc.toUpperCase() === "MAS") ? "2026-04-01" : "2026-05-21";
+
+  // Roles that should be locked to their own division (no dropdown)
+  const DIVISION_LOCKED_ROLES = ["DEPT_CONTROLLER", "BRANCH_OFFICER", "SENIOR_OFFICER", "JUNIOR_OFFICER", "DRM"];
 
   const [filters, setFilters] = useState({
-    startDate: APP_START,
+    startDate: getAppStart(""),
     endDate:   today.toISOString().split("T")[0],
     department: "", location: "",
   });
@@ -255,17 +260,33 @@ export default function AnalystDashboard() {
   const [activeGap,    setActiveGap]    = useState<string | null>(null);
   const [dateWarning,  setDateWarning]  = useState(false);
 
+  // Auto-lock location to user's own division once session loads
+  useEffect(() => {
+    const role = session?.user?.role ?? "";
+    const loc  = session?.user?.location ?? "";
+    if (loc && DIVISION_LOCKED_ROLES.includes(role)) {
+      const start = getAppStart(loc);
+      setFilters({ startDate: start, endDate: today.toISOString().split("T")[0], department: "", location: loc });
+      setDraft(  { startDate: start, endDate: today.toISOString().split("T")[0], department: "", location: loc });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.role, session?.user?.location]);
+
   const { data: raw, isLoading, isError, refetch } = useAnalyticsSummary(filters);
   const d = raw?.data;
 
+  const appStart = getAppStart(draft.location);
+
   const applyFilters = () => {
-    if (draft.startDate < APP_START) { setDateWarning(true); return; }
+    if (draft.startDate < appStart) { setDateWarning(true); return; }
     setDateWarning(false);
     setFilters({ ...draft });
     setActiveGap(null);
   };
   const resetFilters = () => {
-    const r = { startDate: APP_START, endDate: today.toISOString().split("T")[0], department: "", location: "" };
+    const role = session?.user?.role ?? "";
+    const loc  = DIVISION_LOCKED_ROLES.includes(role) ? (session?.user?.location ?? "") : "";
+    const r = { startDate: getAppStart(loc), endDate: today.toISOString().split("T")[0], department: "", location: loc };
     setDraft(r); setFilters(r); setActiveGap(null); setDateWarning(false);
   };
 
@@ -296,7 +317,7 @@ export default function AnalystDashboard() {
               const role = session?.user?.role;
               const back = role === "DRM" ? "/drm/generate-report"
                 : role === "HQ"  ? "/hq/generate-report"
-                : role === "PUNCTUALITY_CONTROLLER" ? "/dashboard"
+                : ["CTE","CEDE","CSE","CTPM"].includes(role ?? "") ? "/cte/generate-report"
                 : "/dashboard";
               window.location.href = back;
             }}
@@ -319,21 +340,48 @@ export default function AnalystDashboard() {
             <div className="mb-3 flex items-start gap-2.5 bg-amber-50 border border-amber-300 rounded-xl px-4 py-3">
               <span className="text-amber-500 text-lg shrink-0">⚠</span>
               <div>
-                <div className="text-sm font-bold text-amber-800">No data before 1 April 2026</div>
-                <div className="text-xs text-amber-700 mt-0.5">The ADRIG authorisation app was implemented on <strong>1 Apr 2026</strong>. There are no block requests before this date. Please set the &quot;From&quot; date to 1 Apr 2026 or later.</div>
+                <div className="text-sm font-bold text-amber-800">
+                  No data before {appStart === "2026-04-01" ? "1 April 2026" : "21 May 2026"}
+                </div>
+                <div className="text-xs text-amber-700 mt-0.5">
+                  {appStart === "2026-04-01"
+                    ? <>MAS (Chennai) went live on <strong>1 Apr 2026</strong>. Please set the &quot;From&quot; date to 1 Apr 2026 or later.</>
+                    : <>This division went live on <strong>21 May 2026</strong>. Please set the &quot;From&quot; date to 21 May 2026 or later.</>}
+                </div>
               </div>
-              <button onClick={() => { setDraft(p => ({ ...p, startDate: APP_START })); setDateWarning(false); }}
+              <button onClick={() => { setDraft(p => ({ ...p, startDate: appStart })); setDateWarning(false); }}
                 className="ml-auto shrink-0 text-xs font-bold text-amber-700 hover:text-amber-900 border border-amber-300 rounded-lg px-2.5 py-1 bg-white">
-                Reset to 1 Apr
+                Reset date
               </button>
             </div>
           )}
           <div className="flex flex-wrap gap-3 items-end">
+            {!DIVISION_LOCKED_ROLES.includes(session?.user?.role ?? "") && (
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-500 font-semibold">Division</label>
+              <select value={draft.location}
+                onChange={(e) => {
+                  const loc = e.target.value;
+                  const newStart = getAppStart(loc);
+                  setDraft((p) => ({ ...p, location: loc, startDate: newStart }));
+                  setDateWarning(false);
+                }}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                <option value="">All Divisions</option>
+                <option value="MAS">MAS — Chennai</option>
+                <option value="MDU">MDU — Madurai</option>
+                <option value="PGT">PGT — Palakkad</option>
+                <option value="SA">SA — Salem</option>
+                <option value="TPJ">TPJ — Tiruchirapalli</option>
+                <option value="TVC">TVC — Trivandrum</option>
+              </select>
+            </div>
+            )}
             <div className="flex flex-col gap-1">
               <label className="text-xs text-gray-500 font-semibold">From</label>
-              <input type="date" value={draft.startDate} min={APP_START}
+              <input type="date" value={draft.startDate} min={appStart}
                 onChange={(e) => { setDraft((p) => ({ ...p, startDate: e.target.value })); setDateWarning(false); }}
-                className={`border rounded-lg px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-300 ${draft.startDate < APP_START ? "border-amber-400 bg-amber-50" : "border-gray-200"}`} />
+                className={`border rounded-lg px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-300 ${draft.startDate < appStart ? "border-amber-400 bg-amber-50" : "border-gray-200"}`} />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs text-gray-500 font-semibold">To</label>
@@ -350,12 +398,6 @@ export default function AnalystDashboard() {
                 <option value="S&T">S&T</option>
                 <option value="ENGG">ENGG</option>
               </select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500 font-semibold">Depot</label>
-              <input type="text" placeholder="e.g. TVC" value={draft.location}
-                onChange={(e) => setDraft((p) => ({ ...p, location: e.target.value }))}
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-300 w-28" />
             </div>
             <button onClick={applyFilters}
               className="px-5 py-2 rounded-lg bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-700 transition-colors">Apply</button>

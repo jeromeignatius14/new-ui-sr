@@ -4,11 +4,10 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Loader } from "@/app/components/ui/Loader";
 
-export default function AnalystLayout({ children }: { children: React.ReactNode }) {
+export default function CteLayout({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   const router = useRouter();
-
-  const allowed = ["ANALYST", "DRM", "HQ", "BRANCH_OFFICER", "SENIOR_OFFICER", "JUNIOR_OFFICER", "SUPER_ADMIN", "PUNCTUALITY_CONTROLLER", "DEPT_CONTROLLER", "CTE", "CEDE", "CSE", "CTPM"];
+  const allowed = ["CTE", "CEDE", "CSE", "CTPM", "SUPER_ADMIN", "HQ"];
 
   useEffect(() => {
     if (status === "authenticated" && !allowed.includes(session?.user?.role ?? "")) {

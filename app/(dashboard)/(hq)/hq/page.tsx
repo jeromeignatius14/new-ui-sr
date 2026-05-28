@@ -32,7 +32,7 @@ export default function AdminDashboardPage() {
           style={{ maxWidth: "90vw" }}
         >
           <span className="text-lg font-bold text-black tracking-wide">
-            {session?.user?.name}
+            HQ
           </span>
         </div>
       </div>
@@ -41,16 +41,6 @@ export default function AdminDashboardPage() {
         <Link href="/hq/generate-report" className="w-full">
           <button className="w-full rounded-2xl bg-[#c7c7f7] border border-black py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
             BLOCK SUMMARY REPORT
-          </button>
-        </Link>
-        <Link href="/hq/defaulters" className="w-full">
-          <button className="w-full rounded-2xl bg-[#ffd6d6] border-2 border-[#dc2626] py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
-            ⚠️ EXCEPTIONAL LIST
-          </button>
-        </Link>
-        <Link href="/analyst" className="w-full">
-          <button className="w-full rounded-2xl bg-[#d4edda] border border-black py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
-            ANALYSE IN DETAIL
           </button>
         </Link>
       </div>
