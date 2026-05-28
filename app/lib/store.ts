@@ -4225,8 +4225,8 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
 };
 
 // export let MajorSection = {
-  "PGT": ["SRR-CHTS", "SRR-CLT", "SRR-NIL", "PTJ-SRR", "CLT-CAN", "CAN-MAQ-MAJN", "MAQ-MAJN-PADIL-TOK", "POY-CNV", "PGT-PGTN-POY"],
-};
+// "PGT": ["SRR-CHTS", "SRR-CLT", "SRR-NIL", "PTJ-SRR", "CLT-CAN", "CAN-MAQ-MAJN", "MAQ-MAJN-PADIL-TOK", "POY-CNV", "PGT-PGTN-POY"],
+// };
 
 // // export let blockSection = {
 // //   'TPJ-VM': [
@@ -7218,8 +7218,8 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
 
 
 // export let MajorSection = {
-  "PGT": ["SRR-CHTS", "SRR-CLT", "SRR-NIL", "PTJ-SRR", "CLT-CAN", "CAN-MAQ-MAJN", "MAQ-MAJN-PADIL-TOK", "POY-CNV", "PGT-PGTN-POY"],
-};
+// "PGT": ["SRR-CHTS", "SRR-CLT", "SRR-NIL", "PTJ-SRR", "CLT-CAN", "CAN-MAQ-MAJN", "MAQ-MAJN-PADIL-TOK", "POY-CNV", "PGT-PGTN-POY"],
+// };
 
 
 // export let blockSection = {
