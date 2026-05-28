@@ -236,10 +236,8 @@ function Modal({ title, accent, children, onClose }: { title: string; accent?: s
 
 // ── TPC Board → Depot mapping ─────────────────────────────────────────────────
 const TPC_BOARDS: { name: string; depots: string[] }[] = [
-  { name: "TPC-GDR BOARD", depots: ["GDR", "SPE", "PON", "TVT", "BBQ", "MS"] },
-  { name: "TPC-RU BOARD",  depots: ["BBQ", "AVD", "TRL", "AJJ", "CGL", "PUT"] },
-  { name: "TPC-VM BOARD",  depots: ["MS", "BBQ", "TBM", "CGL", "AJJ","ACK","VM"] },
-  { name: "TPC-JTJ BOARD", depots: ["AJJ", "WJR", "KPD", "AB", "JTJ"] },
+  { name: "TPC (PTJ-CLT)",       depots: ["PGT", "POY", "SRR", "NIL", "TIR"] },
+  { name: "TPC (MAQ-MAQ/MAJN)",  depots: ["QLD", "CS", "CHV", "ULL"] },
 ];
 
 function filterByBoard(arr: any[], boardDepots: string[]): any[] {
