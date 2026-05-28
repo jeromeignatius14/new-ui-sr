@@ -11,7 +11,7 @@ export default function UserLayout({
 }) {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const allowedRoles = ["HQ"];
+  const allowedRoles = ["HQ", "CTPM", "CTE", "CEDE", "CSE"];
 
   useEffect(() => {
     if (
