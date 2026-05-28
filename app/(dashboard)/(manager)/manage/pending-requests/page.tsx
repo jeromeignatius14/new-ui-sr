@@ -69,7 +69,7 @@ export default function PendingRequestsPage() {
 
     // Defensive: get requests array safely and filter for 'Pending with me'
     const pendingRequests = (Array.isArray(data?.data?.requests) ? data.data.requests : [])
-        .filter((r: UserRequest) => r.status === 'PENDING' && r.managerAcceptance === false)
+        .filter((r: UserRequest) => r.status === 'PENDING' && !r.managerAcceptance)
         .sort((a: UserRequest, b: UserRequest) => {
             // Priority sort: urgent blocks first
             const urgentA = a.corridorType === 'Urgent Block' ? 0 : 1;
@@ -82,9 +82,9 @@ export default function PendingRequestsPage() {
             return dateA - dateB;
         })
         const pendingCorridorRequests = (Array.isArray(data?.data?.requests) ? data.data.requests : [])
-    .filter((r: UserRequest) => 
-        r.status === 'PENDING' && 
-        r.managerAcceptance === false && 
+    .filter((r: UserRequest) =>
+        r.status === 'PENDING' &&
+        !r.managerAcceptance &&
         r.corridorType === "Corridor"
     )
     .sort((a: UserRequest, b: UserRequest) => {
@@ -94,9 +94,9 @@ export default function PendingRequestsPage() {
         return dateA - dateB;
     });
           const pendingNonCorridorRequests = (Array.isArray(data?.data?.requests) ? data.data.requests : [])
-    .filter((r: UserRequest) => 
-        r.status === 'PENDING' && 
-        r.managerAcceptance === false && 
+    .filter((r: UserRequest) =>
+        r.status === 'PENDING' &&
+        !r.managerAcceptance &&
         r.corridorType === "Outside Corridor"
     )
     .sort((a: UserRequest, b: UserRequest) => {
@@ -146,10 +146,10 @@ const pendingDisconnectionRequests =
       return new Date(a.date).getTime() - new Date(b.date).getTime();
     });
 const pendingMultiLineRequests = (Array.isArray(data?.data?.requests) ? data.data.requests : [])
-  .filter((r: UserRequest) => 
-    r.status === 'PENDING' && 
-    r.managerAcceptance === false &&
-    r.corridorType !== 'Urgent Block' && 
+  .filter((r: UserRequest) =>
+    r.status === 'PENDING' &&
+    !r.managerAcceptance &&
+    r.corridorType !== 'Urgent Block' &&
     r.processedLineSections?.some((section: any) => 
       section.otherLines && section.otherLines.trim() !== ''
     )
@@ -611,7 +611,7 @@ useEffect(() => {
 
     // Status mapping function for pending requests (same as main table)
     function getPendingDisplayStatus(request: UserRequest) {
-        if (request.status === 'PENDING' && request.managerAcceptance === false) {
+        if (request.status === 'PENDING' && !request.managerAcceptance) {
             return { label: 'Pending with me', style: { background: '#d47ed4', color: '#222' } };
         }
         // Fallback
