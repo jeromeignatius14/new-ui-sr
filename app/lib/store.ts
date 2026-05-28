@@ -4225,8 +4225,8 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
 };
 
 // export let MajorSection = {
-  "MDU": ["TPJ-DG", "DG-MDU", "DG-PLNI-POY", "MDU-VPT", "VPT-MEJ", "MEJ-TN", "MEJ-TEN", "MDU-MNM", "TPJ-KKDI-MNM", "MNM-RMM", "MNM-VPT", "VPT-SCT", "TEN-SCT", "SCT-PUU", "PUU-QLN", "TEN-TCN", "MDU-BDNK"],
-};
+//   "MDU": ["TPJ-DG", "DG-MDU", "DG-PLNI-POY", "MDU-VPT", "VPT-MEJ", "MEJ-TN", "MEJ-TEN", "MDU-MNM", "TPJ-KKDI-MNM", "MNM-RMM", "MNM-VPT", "VPT-SCT", "TEN-SCT", "SCT-PUU", "PUU-QLN", "TEN-TCN", "MDU-BDNK"],
+// };
 
 // // export let blockSection = {
 // //   'TPJ-VM': [
@@ -7218,8 +7218,8 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
 
 
 // export let MajorSection = {
-  "MDU": ["TPJ-DG", "DG-MDU", "DG-PLNI-POY", "MDU-VPT", "VPT-MEJ", "MEJ-TN", "MEJ-TEN", "MDU-MNM", "TPJ-KKDI-MNM", "MNM-RMM", "MNM-VPT", "VPT-SCT", "TEN-SCT", "SCT-PUU", "PUU-QLN", "TEN-TCN", "MDU-BDNK"],
-};
+//   "MDU": ["TPJ-DG", "DG-MDU", "DG-PLNI-POY", "MDU-VPT", "VPT-MEJ", "MEJ-TN", "MEJ-TEN", "MDU-MNM", "TPJ-KKDI-MNM", "MNM-RMM", "MNM-VPT", "VPT-SCT", "TEN-SCT", "SCT-PUU", "PUU-QLN", "TEN-TCN", "MDU-BDNK"],
+// };
 
 
 // export let blockSection = {
