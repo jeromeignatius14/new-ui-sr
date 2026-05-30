@@ -4,10 +4,17 @@ const withPWA = require("next-pwa")({
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === "development",
-  // Never cache Railway backend API calls — always fetch fresh from network
-  // This prevents stale cached responses causing "Network Error" on API calls
+  // Never cache any API calls — always fetch fresh from network
+  // Caching API responses causes stale data, SM auto-logout (cached valid:false),
+  // and silent failures when session state is checked against a 24h-old cache hit.
   buildExcludes: [/middleware-manifest\.json$/],
   runtimeCaching: [
+    // Same-origin API routes — NetworkOnly (no cache)
+    {
+      urlPattern: /\/api\//,
+      handler: "NetworkOnly",
+    },
+    // Railway backend URLs — NetworkOnly (no cache)
     {
       urlPattern: /^https:\/\/backend-production.*\.up\.railway\.app\/.*/i,
       handler: "NetworkOnly",
