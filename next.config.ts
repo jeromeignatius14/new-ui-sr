@@ -7,6 +7,10 @@ const withPWA = require("next-pwa")({
   buildExcludes: [/middleware-manifest\.json$/],
   runtimeCaching: [
     {
+      urlPattern: /\/api\//,
+      handler: "NetworkOnly",
+    },
+    {
       urlPattern: /^https:\/\/backend-production.*\.up\.railway\.app\/.*/i,
       handler: "NetworkOnly",
     },
