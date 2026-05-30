@@ -22,7 +22,7 @@ export default function AdminDashboardPage() {
       <div className="w-full flex justify-center mt-4">
         <div className="bg-green-200 rounded-2xl px-8 py-2">
           <span className="text-4xl font-extrabold text-[#b07be0] tracking-wide">
-        RBMS-{session?.user?.location}-DIVN
+        RBMS-HQ
           </span>
         </div>
       </div>
