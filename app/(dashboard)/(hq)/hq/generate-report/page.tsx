@@ -5,7 +5,6 @@ import { useForm, Controller } from "react-hook-form";
 import Select, { MultiValue } from "react-select";
 import { toast } from "react-hot-toast";
 import { format } from "date-fns";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useGenerateReport } from "@/app/service/query/drm";
 import { useSession } from "next-auth/react";
@@ -50,11 +49,14 @@ interface PastBlockSummary {
 }
 
 interface DetailedData {
+  division?: string;
   Date: string;
   Section: string;
   Duration: number;
   Type: string;
   Status: string;
+  overAllStatus?: string;
+  selectedDepartment?: string;
 }
 
 const locationOptions: OptionType[] = [
@@ -94,6 +96,7 @@ export default function GenerateReportPage() {
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([
     "Engineering",
   ]);
+  const [activeTab, setActiveTab] = useState<"summary" | "upcoming">("summary");
   const router = useRouter();
   const {
     register,
@@ -234,7 +237,7 @@ export default function GenerateReportPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto bg-white">
+    <div className="w-full bg-white px-2">
       <div className="bg-yellow-100 text-center pt-3 rounded-t-md">
         <h1 className="text-3xl font-bold text-purple-600">
 
@@ -557,11 +560,34 @@ export default function GenerateReportPage() {
         </form>
       </div>
 
+      {/* Tab switcher */}
+      <div className="flex border-b-2 border-gray-300 mb-0 mt-2">
+        <button
+          onClick={() => setActiveTab("summary")}
+          className={`px-6 py-2 font-semibold text-sm transition-colors ${
+            activeTab === "summary"
+              ? "bg-[#ff914d] text-black border-b-2 border-[#ff914d]"
+              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+          }`}
+        >
+          (A) Past Block Summary
+        </button>
+        <button
+          onClick={() => setActiveTab("upcoming")}
+          className={`px-6 py-2 font-semibold text-sm transition-colors ${
+            activeTab === "upcoming"
+              ? "bg-[#ffc000] text-black border-b-2 border-[#ffc000]"
+              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+          }`}
+        >
+          (B) Upcoming Blocks
+        </button>
+      </div>
+
       {/* Past Block Summary Table */}
-      <div className="mb-6">
+      <div className={`mb-6 ${activeTab !== "summary" ? "hidden" : ""}`}>
         <div className="bg-[#ff914d] p-2 font-semibold text-black">
-          (A)Past Block Summary:....... to .......Division
-          Department:.............(In Hrs)
+          (A) Past Block Summary — All Divisions (In Hrs)
         </div>
         <div className="overflow-x-auto border border-gray-200 rounded-b">
           <table className="min-w-full bg-white">
@@ -929,72 +955,82 @@ export default function GenerateReportPage() {
       </div>
 
       {/* Upcoming Blocks Table */}
-      <div className="mb-6">
+      <div className={`mb-6 ${activeTab !== "upcoming" ? "hidden" : ""}`}>
         <div className="bg-[#ffc000] p-2 font-semibold text-black">
-          (B) Upcoming Blocks (Summary):...... Division ...... Department.......
+          (B) Upcoming Blocks — All Divisions
         </div>
         <div className="overflow-x-auto border border-gray-200 rounded-b">
           <table className="min-w-full bg-white">
             <thead>
               <tr className="bg-[#f7c7ac]">
-                <th className="border px-4 py-2 text-center text-black">
+                <th className="border px-4 py-2 text-center text-black whitespace-nowrap">
+                  Division
+                </th>
+                <th className="border px-4 py-2 text-center text-black whitespace-nowrap">
                   Date
                 </th>
-                <th className="border px-4 py-2 text-left text-black">
+                <th className="border px-4 py-2 text-left text-black whitespace-nowrap">
                   Section
                 </th>
-                <th className="border px-4 py-2 text-center text-black">
-                  Duration (Hours)
+                <th className="border px-4 py-2 text-center text-black whitespace-nowrap">
+                  Dept
                 </th>
-                <th className="border px-4 py-2 text-center text-black">
+                <th className="border px-4 py-2 text-center text-black whitespace-nowrap">
+                  Duration (Hrs)
+                </th>
+                <th className="border px-4 py-2 text-center text-black whitespace-nowrap">
                   Type
                 </th>
-                <th className="border px-4 py-2 text-center text-black">
+                <th className="border px-4 py-2 text-center text-black whitespace-nowrap">
                   Status
                 </th>
               </tr>
             </thead>
-            <tbody className="overflow-y-auto">
+            <tbody>
               {upcomingBlocks.length > 0 &&
                 upcomingBlocks.map((block, index) => (
                   <tr
                     key={index}
                     className={`${
                       index % 2 === 0 ? "bg-[#f4dcf1]" : "bg-white"
-                    } hover:bg-gray-50 transition-colors text-black `}
+                    } hover:bg-gray-50 transition-colors text-black`}
                   >
-                    <td className="border px-4 py-2 text-center text-black">
+                    <td className="border px-3 py-1 text-center text-black font-semibold whitespace-nowrap">
+                      {block.division || "—"}
+                    </td>
+                    <td className="border px-3 py-1 text-center text-black whitespace-nowrap">
                       {block.Date}
                     </td>
-                    <td
-                      className="border px-4 py-2 cursor-pointer hover:bg-purple-100"
-                      onClick={() => handleSectionClick(block.Section)}
-                    >
-                      <span className="text-blue-600 font-medium underline">
+                    <td className="border px-3 py-1 cursor-pointer hover:bg-purple-100">
+                      <span
+                        className="text-blue-600 font-medium underline"
+                        onClick={() => handleSectionClick(block.Section)}
+                      >
                         {block.Section}
                       </span>
                     </td>
-                    <td className="border px-4 py-2 text-center text-black">
+                    <td className="border px-3 py-1 text-center text-black whitespace-nowrap">
+                      {block.selectedDepartment || "—"}
+                    </td>
+                    <td className="border px-3 py-1 text-center text-black whitespace-nowrap">
                       {block.Duration}
                     </td>
-                    <td className="border px-4 py-2 text-center text-black">
+                    <td className="border px-3 py-1 text-center text-black whitespace-nowrap">
                       {block.Type}
                     </td>
-                    <td
-                      className={`border px-4 py-2 text-center ${
-                        block.Status === "Pending"
-                          ? "bg-yellow-100 text-black"
-                          : block.Status === "Sanctioned"
-                          ? "bg-green-100 text-black"
-                          : block.Status === "Rejected"
-                          ? "bg-red-100 text-black"
-                          : ""
-                      }`}
-                    >
+                    <td className="border px-3 py-1 text-center whitespace-nowrap">
                       <span
-                        className={`px-3 py-1 rounded-full text-sm font-medium `}
+                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                          block.Status === "APPROVED"
+                            ? "bg-green-100 text-green-800"
+                            : block.Status === "PENDING"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : block.Status === "REJECTED"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-gray-100 text-gray-700"
+                        }`}
                       >
-                        {block.Status}
+                        {block.overAllStatus || block.Status}
                       </span>
                     </td>
                   </tr>
@@ -1002,38 +1038,11 @@ export default function GenerateReportPage() {
             </tbody>
           </table>
           {upcomingBlocks.length === 0 && (
-            <div className="bg-white hover:bg-gray-50 text-black border border-black w-full py-2 text-center">
-              No data available
+            <div className="text-black border border-black w-full py-4 text-center">
+              {reportGenerated ? "No upcoming blocks found for selected filters." : "Generate a report to see upcoming blocks."}
             </div>
           )}
         </div>
-      </div>
-
-      {/* Click SectionBlock ID Info Section */}
-      <div className="mt-6 mb-4 p-4 bg-blue-100 rounded-md flex items-center justify-center">
-        <div className="bg-[#cfd4ff] px-6 py-3 rounded-md border border-blue-300 shadow-sm text-center">
-          <span className="font-bold text-black">Click</span>
-          <span className="mx-1 px-4 py-1 bg-[#0da84a] rounded-md font-bold text-black">
-            SectionBlock ID
-          </span>
-          <span className="text-black">
-            to see further details of datewise details of blocks in the division
-          </span>
-        </div>
-      </div>
-
-      <div className="mt-4 bg-white p-4 rounded flex justify-center items-center gap-6 border-2 border-gray-300">
-        <button
-          onClick={() => router.back()}
-          className="bg-[#cfd4ff] text-black px-8 py-2 rounded-md hover:bg-gray-300 shadow-md transition-all border border-gray-400"
-        >
-          Back
-        </button>
-        <Link href="/drm">
-          <button className="bg-[#a0d815] text-black px-8 py-2 rounded-md hover:bg-gray-300 shadow-md transition-all border border-gray-400">
-            Home
-          </button>
-        </Link>
       </div>
     </div>
   );
