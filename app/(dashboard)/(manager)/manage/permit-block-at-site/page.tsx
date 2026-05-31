@@ -222,8 +222,8 @@ function SectionDivider({ label }: { label: string }) {
 
 function Modal({ title, accent, children, onClose }: { title: string; accent?: string; children: React.ReactNode; onClose: () => void }) {
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: "12px" }}>
-      <div style={{ background: "#fff", borderRadius: "14px", width: "100%", maxWidth: "500px", boxShadow: "0 24px 64px rgba(0,0,0,0.35)", overflow: "hidden", maxHeight: "92vh", display: "flex", flexDirection: "column" }}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 50, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "12px", paddingTop: "max(12px, 4vh)", overflowY: "auto" }}>
+      <div style={{ background: "#fff", borderRadius: "14px", width: "100%", maxWidth: "500px", boxShadow: "0 24px 64px rgba(0,0,0,0.35)", overflow: "hidden", maxHeight: "calc(100dvh - 24px)", display: "flex", flexDirection: "column" }}>
         <div style={{ background: accent ?? "#1f2937", padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
           <h3 style={{ color: "#fff", fontWeight: 800, fontSize: "16px", margin: 0 }}>{title}</h3>
           <button onClick={onClose} style={{ background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", cursor: "pointer", fontSize: "18px", lineHeight: 1, borderRadius: "6px", padding: "2px 8px" }}>×</button>
