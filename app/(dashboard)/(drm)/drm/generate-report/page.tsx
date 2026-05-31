@@ -135,8 +135,10 @@ interface DetailedData {
   Status: string;
 }
 
+const DIVISION_CODE = process.env.NEXT_PUBLIC_DIVISION_CODE ?? "MAS";
+
 const locationOptions: OptionType[] = [
-  { value: "MAS", label: "MAS" },
+  { value: DIVISION_CODE, label: DIVISION_CODE },
   { value: "SA", label: "SA" },
   { value: "MCU", label: "MCU" },
   { value: "TPJ", label: "TPJ" },
@@ -1058,7 +1060,7 @@ const handleDownloadUpcomingBlocks = () => {
     const excelData = [
       // ENGG Rows
       {
-        "Location": "MAS", "Department": "ENGG", "Supporting Department": "-",
+        "Location": DIVISION_CODE, "Department": "ENGG", "Supporting Department": "-",
         "Total Block Requested": enggTotal,
         "Total Block Sanctioned": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.isSanctioned && b.powerBlockRequired === false && b.sntDisconnectionRequired === false).length,
         "Total Availing Applied Blocks": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === false && b.sntDisconnectionRequired === false && b.isApplied === true).length,
@@ -1067,7 +1069,7 @@ const handleDownloadUpcomingBlocks = () => {
         "Total Block Closed": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === false && b.sntDisconnectionRequired === false && b.overAllStatus === "Block Closed").length,
       },
       {
-        "Location": "MAS", "Department": "ENGG", "Supporting Department": "S&T",
+        "Location": DIVISION_CODE, "Department": "ENGG", "Supporting Department": "S&T",
         "Total Block Requested": enggWithSnt,
         "Total Block Sanctioned": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.isSanctioned && b.powerBlockRequired === false).length,
         "Total Availing Applied Blocks": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.powerBlockRequired === false && b.isApplied === true).length,
@@ -1076,7 +1078,7 @@ const handleDownloadUpcomingBlocks = () => {
         "Total Block Closed": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.powerBlockRequired === false && b.overAllStatus === "Block Closed").length,
       },
       {
-        "Location": "MAS", "Department": "ENGG", "Supporting Department": "TRD",
+        "Location": DIVISION_CODE, "Department": "ENGG", "Supporting Department": "TRD",
         "Total Block Requested": enggWithPower,
         "Total Block Sanctioned": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === true && b.sntDisconnectionRequired === false && b.isSanctioned).length,
         "Total Availing Applied Blocks": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === true && b.sntDisconnectionRequired === false && b.isApplied === true).length,
@@ -1085,7 +1087,7 @@ const handleDownloadUpcomingBlocks = () => {
         "Total Block Closed": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.powerBlockRequired === true && b.sntDisconnectionRequired === false && b.overAllStatus === "Block Closed").length,
       },
       {
-        "Location": "MAS", "Department": "ENGG", "Supporting Department": "S&T and TRD",
+        "Location": DIVISION_CODE, "Department": "ENGG", "Supporting Department": "S&T and TRD",
         "Total Block Requested": enggWithSntAndPower,
         "Total Block Sanctioned": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.powerBlockRequired === true && b.isSanctioned).length,
         "Total Availing Applied Blocks": detailedData.filter(b => b.selectedDepartment === "ENGG" && b.sntDisconnectionRequired === true && b.powerBlockRequired === true && b.isApplied === true).length,
@@ -1095,7 +1097,7 @@ const handleDownloadUpcomingBlocks = () => {
       },
       // TRD Rows
       {
-        "Location": "MAS", "Department": "TRD", "Supporting Department": "-",
+        "Location": DIVISION_CODE, "Department": "TRD", "Supporting Department": "-",
         "Total Block Requested": trdTotal,
         "Total Block Sanctioned": detailedData.filter(b => b.selectedDepartment === "TRD" && b.isSanctioned).length,
         "Total Availing Applied Blocks": detailedData.filter(b => b.selectedDepartment === "TRD" && b.isApplied === true).length,
@@ -1105,7 +1107,7 @@ const handleDownloadUpcomingBlocks = () => {
       },
       // S&T Rows
       {
-        "Location": "MAS", "Department": "S&T", "Supporting Department": "-",
+        "Location": DIVISION_CODE, "Department": "S&T", "Supporting Department": "-",
         "Total Block Requested": sntTotal,
         "Total Block Sanctioned": detailedData.filter(b => b.selectedDepartment === "S&T" && b.isSanctioned).length,
         "Total Availing Applied Blocks": detailedData.filter(b => b.selectedDepartment === "S&T" && b.isApplied === true).length,
@@ -1114,7 +1116,7 @@ const handleDownloadUpcomingBlocks = () => {
         "Total Block Closed": detailedData.filter(b => b.selectedDepartment === "S&T" && b.overAllStatus === "Block Closed").length,
       },
       {
-        "Location": "MAS", "Department": "S&T", "Supporting Department": "ENGG",
+        "Location": DIVISION_CODE, "Department": "S&T", "Supporting Department": "ENGG",
         "Total Block Requested": sntWithEngg,
         "Total Block Sanctioned": detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.isSanctioned).length,
         "Total Availing Applied Blocks": detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.isApplied === true).length,
@@ -1123,7 +1125,7 @@ const handleDownloadUpcomingBlocks = () => {
         "Total Block Closed": detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.overAllStatus === "Block Closed").length,
       },
       {
-        "Location": "MAS", "Department": "S&T", "Supporting Department": "TRD",
+        "Location": DIVISION_CODE, "Department": "S&T", "Supporting Department": "TRD",
         "Total Block Requested": sntWithPower,
         "Total Block Sanctioned": detailedData.filter(b => b.selectedDepartment === "S&T" && b.powerBlockRequired === true && b.isSanctioned).length,
         "Total Availing Applied Blocks": detailedData.filter(b => b.selectedDepartment === "S&T" && b.powerBlockRequired === true && b.isApplied === true).length,
@@ -1132,7 +1134,7 @@ const handleDownloadUpcomingBlocks = () => {
         "Total Block Closed": detailedData.filter(b => b.selectedDepartment === "S&T" && b.powerBlockRequired === true && b.overAllStatus === "Block Closed").length,
       },
       {
-        "Location": "MAS", "Department": "S&T", "Supporting Department": "ENGG and TRD",
+        "Location": DIVISION_CODE, "Department": "S&T", "Supporting Department": "ENGG and TRD",
         "Total Block Requested": sntWithEnggAndPower,
         "Total Block Sanctioned": detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.powerBlockRequired === true && b.isSanctioned).length,
         "Total Availing Applied Blocks": detailedData.filter(b => b.selectedDepartment === "S&T" && b.enggDisconnectionsRequired === true && b.powerBlockRequired === true && b.isApplied === true).length,
@@ -2247,7 +2249,7 @@ const handleDownloadUpcomingBlocks = () => {
   {/* ENGG Rows */}
               {(session?.user?.role==="DRM") &&( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {DIVISION_CODE}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -2339,7 +2341,7 @@ const handleDownloadUpcomingBlocks = () => {
              
 {(session?.user?.role==="DRM") && ( <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {DIVISION_CODE}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -2434,7 +2436,7 @@ const handleDownloadUpcomingBlocks = () => {
 {(session?.user?.role==="DRM") && (
      <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {DIVISION_CODE}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -2526,7 +2528,7 @@ const handleDownloadUpcomingBlocks = () => {
 {(session?.user?.role==="DRM") && (
     <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {DIVISION_CODE}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -2619,7 +2621,7 @@ const handleDownloadUpcomingBlocks = () => {
             {session?.user?.role==="DRM" && (
               <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {DIVISION_CODE}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   TRD
@@ -2705,7 +2707,7 @@ const handleDownloadUpcomingBlocks = () => {
               {/* S&T Rows */}
               {session?.user?.role==="DRM" && (  <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {DIVISION_CODE}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -2792,7 +2794,7 @@ const handleDownloadUpcomingBlocks = () => {
             
 {session?.user?.role==="DRM" && ( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {DIVISION_CODE}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -2882,7 +2884,7 @@ const handleDownloadUpcomingBlocks = () => {
              
 {session?.user?.role==="DRM" && (<tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {DIVISION_CODE}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -2972,7 +2974,7 @@ const handleDownloadUpcomingBlocks = () => {
               
 {session?.user?.role==="DRM" && ( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {DIVISION_CODE}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
