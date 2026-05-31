@@ -124,7 +124,7 @@ function CountdownBadge({ block }: { block: any }) {
 // ── Modal ─────────────────────────────────────────────────────────────────────
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 1000, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "16px", paddingTop: "max(16px, 5vh)", overflowY: "auto" }}>
       <div style={{ background: "#fff", borderRadius: "16px", padding: "28px 24px", width: "100%", maxWidth: "460px", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
         <h3 style={{ marginBottom: "20px", fontWeight: 700, fontSize: "17px", color: "#111827", borderBottom: "2px solid #fbbf24", paddingBottom: "10px" }}>{title}</h3>
         {children}
@@ -526,8 +526,8 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
 
       {/* ── Geo-fence override warning dialog ── */}
       {geoWarn && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ background: "#fff", borderRadius: "12px", padding: "24px 20px", maxWidth: "320px", width: "90%", textAlign: "center", boxShadow: "0 8px 32px rgba(0,0,0,0.25)" }}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 9999, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "16px", paddingTop: "max(16px, 10vh)", overflowY: "auto" }}>
+          <div style={{ background: "#fff", borderRadius: "12px", padding: "24px 20px", maxWidth: "320px", width: "100%", textAlign: "center", boxShadow: "0 8px 32px rgba(0,0,0,0.25)" }}>
             <div style={{ fontSize: "32px", marginBottom: "8px" }}>⚠️</div>
             <div style={{ fontWeight: 700, fontSize: "16px", color: "#92400e", marginBottom: "8px" }}>Outside Work Location</div>
             <div style={{ fontSize: "14px", color: "#374151", marginBottom: "20px" }}>
