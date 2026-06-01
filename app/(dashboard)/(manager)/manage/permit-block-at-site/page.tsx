@@ -236,9 +236,10 @@ function Modal({ title, accent, children, onClose }: { title: string; accent?: s
 
 // ── TPC Board → Depot mapping ─────────────────────────────────────────────────
 const TPC_BOARDS: { name: string; depots: string[] }[] = [
-  { name: "TPC 1 (TPJ-MDU, DG-POY & MDU-BDNK)", depots: ["MPA", "DG", "MDU", "UDT", "PLNI", "TENI"] },
-  { name: "TPC 2 (MDU-TEN, TEN-TN & TEN-TCN)",  depots: ["VPT", "CVP", "TEN", "TN"] },
-  { name: "TPC 3 (VPT-SCT, VPT-MNM, MDU-RMM, TEN-TSI, SCT-QLN, TPJ-KKDI & MNM-VPT)", depots: ["KKDI", "MNM", "PDKT", "RMD", "RJPM", "SCT", "PUU", "ASD", "NZT"] },
+  { name: "TPC-CHORD LINE (TPJ-VM)", depots: ["TPJ", "ALU", "VRI", "VM"] },
+  { name: "TPC-KPD LINE (VM-KPD, VM-PDY, VM-CUPJ, CUPJ-VRI)", depots: ["TNM", "ARV", "VM", "CUPJ", "VRI"] },
+  { name: "TPC-MAIN LINE (CUPJ-TPJ, TPJ-TPGY-TP)", depots: ["TPJ", "TJ", "MV", "CUPJ"] },
+  { name: "TPC-BRANCH LINE (MV-TVR, TVR-KKDI, PEM-KIK, KIK-TJ, TTP-AGX, NGT-VLNK, NMJ-MQ & KIK-KIKP)", depots: ["MV", "TVR", "KIK"] },
 ];
 
 function filterByBoard(arr: any[], boardDepots: string[]): any[] {
