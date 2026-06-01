@@ -8,6 +8,7 @@ import { WeeklySwitcher } from "@/app/components/ui/WeeklySwitcher";
 import { useUrgentMode } from "@/app/context/UrgentModeContext";
 import { managerService } from "@/app/service/api/manager";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 // Header icons for tables
 const HeaderIcon = ({ type }: { type: string }) => {
@@ -88,6 +89,7 @@ export default function OptimiseTablePage() {
       const router = useRouter();
   
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
   const { isUrgentMode } = useUrgentMode();
   const [page, setPage] = useState(1);
   const [currentWeekStart, setCurrentWeekStart] = useState(() => {
@@ -201,10 +203,14 @@ export default function OptimiseTablePage() {
   const sanctionedOptimizedRequests = data?.data.requests?.filter(
     (request: any) => {
       const isSanctioned = request.isSanctioned;
+      // For DEPT_CONTROLLER: only show their own department's blocks
+      if (session?.user?.role === "DEPT_CONTROLLER" && session?.user?.department) {
+        if (request.selectedDepartment !== session.user.department) return false;
+      }
       if (isUrgentMode) {
-        return isSanctioned; // Show all sanctioned requests in urgent mode
+        return isSanctioned;
       } else {
-        return isSanctioned && request.corridorType !== "Urgent Block"; // Exclude urgent requests in normal mode
+        return isSanctioned && request.corridorType !== "Urgent Block";
       }
     }
   );
