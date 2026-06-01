@@ -24,6 +24,8 @@ import formatTime from "@/app/utils/formatTime";
 import * as XLSX from "xlsx";
 import dayjs from "dayjs";
 
+const DIVISION_CODE = process.env.NEXT_PUBLIC_DIVISION_CODE || "MDU";
+
 interface OptionType {
   value: string;
   label: string;
@@ -84,7 +86,7 @@ interface DetailedData {
 }
 
 const locationOptions: OptionType[] = [
-  { value: "MAS", label: "MAS" },
+  { value: DIVISION_CODE, label: DIVISION_CODE },
   { value: "SA", label: "SA" },
   { value: "MCU", label: "MCU" },
   { value: "TPJ", label: "TPJ" },
@@ -874,7 +876,7 @@ const clearGlobalFilters = () => {
       const excelData = [
         // ENGG Rows
         {
-          Location: "MAS",
+          Location: DIVISION_CODE,
           Department: "ENGG",
           "Supporting Department": "-",
           "Total Block Requested": enggTotal,
@@ -889,7 +891,7 @@ const clearGlobalFilters = () => {
           ).length,
         },
         {
-          Location: "MAS",
+          Location: DIVISION_CODE,
           Department: "ENGG",
           "Supporting Department": "S&T",
           "Total Block Requested": enggWithSnt,
@@ -908,7 +910,7 @@ const clearGlobalFilters = () => {
           ),
         },
         {
-          Location: "MAS",
+          Location: DIVISION_CODE,
           Department: "ENGG",
           "Supporting Department": "TRD",
           "Total Block Requested": enggWithPower,
@@ -927,7 +929,7 @@ const clearGlobalFilters = () => {
           ),
         },
         {
-          Location: "MAS",
+          Location: DIVISION_CODE,
           Department: "ENGG",
           "Supporting Department": "S&T and TRD",
           "Total Block Requested": enggWithSntAndPower,
@@ -950,7 +952,7 @@ const clearGlobalFilters = () => {
 
         // TRD Rows
         {
-          Location: "MAS",
+          Location: DIVISION_CODE,
           Department: "TRD",
           "Supporting Department": "-",
           "Total Block Requested": trdTotal,
@@ -967,7 +969,7 @@ const clearGlobalFilters = () => {
 
         // S&T Rows
         {
-          Location: "MAS",
+          Location: DIVISION_CODE,
           Department: "S&T",
           "Supporting Department": "-",
           "Total Block Requested": sntTotal,
@@ -982,7 +984,7 @@ const clearGlobalFilters = () => {
           ),
         },
         {
-          Location: "MAS",
+          Location: DIVISION_CODE,
           Department: "S&T",
           "Supporting Department": "ENGG",
           "Total Block Requested": sntWithEngg,
@@ -1001,7 +1003,7 @@ const clearGlobalFilters = () => {
           ),
         },
         {
-          Location: "MAS",
+          Location: DIVISION_CODE,
           Department: "S&T",
           "Supporting Department": "TRD",
           "Total Block Requested": sntWithPower,
@@ -1020,7 +1022,7 @@ const clearGlobalFilters = () => {
           ),
         },
         {
-          Location: "MAS",
+          Location: DIVISION_CODE,
           Department: "S&T",
           "Supporting Department": "ENGG and TRD",
           "Total Block Requested": sntWithEnggAndPower,
@@ -2008,7 +2010,7 @@ const clearGlobalFilters = () => {
               {/* ENGG Rows */}
               {session?.user?.department === "ENGG" &&( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {DIVISION_CODE}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -2097,7 +2099,7 @@ const clearGlobalFilters = () => {
              
 {session?.user?.department === "ENGG" && ( <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {DIVISION_CODE}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -2190,7 +2192,7 @@ const clearGlobalFilters = () => {
 {session?.user?.department === "ENGG" && (
      <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {DIVISION_CODE}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -2279,7 +2281,7 @@ const clearGlobalFilters = () => {
 {session?.user?.department === "ENGG" && (
     <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {DIVISION_CODE}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -2369,7 +2371,7 @@ const clearGlobalFilters = () => {
             {session?.user?.department === "TRD" && (
               <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {DIVISION_CODE}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   TRD
@@ -2449,7 +2451,7 @@ const clearGlobalFilters = () => {
               {/* S&T Rows */}
               {session?.user?.department === "S&T" && (  <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {DIVISION_CODE}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -2530,7 +2532,7 @@ const clearGlobalFilters = () => {
             
 {session?.user?.department === "S&T" && ( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {DIVISION_CODE}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -2616,7 +2618,7 @@ const clearGlobalFilters = () => {
              
 {session?.user?.department === "S&T" && (<tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {DIVISION_CODE}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -2702,7 +2704,7 @@ const clearGlobalFilters = () => {
               
 {session?.user?.department === "S&T" && ( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {DIVISION_CODE}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
