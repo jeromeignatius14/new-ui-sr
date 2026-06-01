@@ -259,8 +259,13 @@ const updateQueryParams = (updates: Record<string, string | string[] | null>) =>
   }
 
   // Filter requests based on selected filters
-  let filteredRequests = data?.data?.requests || [];
-  let filteredRequestsNoChange = data?.data?.requests || [];
+  let allRequests = data?.data?.requests || [];
+  // For DEPT_CONTROLLER: pre-filter to only their department's requests
+  if (session?.user?.role === "DEPT_CONTROLLER" && session?.user?.department) {
+    allRequests = allRequests.filter((r: any) => r.selectedDepartment === session.user.department);
+  }
+  let filteredRequests = allRequests;
+  let filteredRequestsNoChange = allRequests;
 
   if (selectedSections.length > 0) {
     filteredRequests = filteredRequests.filter((r) =>
