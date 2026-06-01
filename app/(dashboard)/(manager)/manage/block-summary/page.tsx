@@ -2346,6 +2346,8 @@ import dayjs from "dayjs";
 import formatTime from "@/app/utils/formatTime";
 import * as XLSX from "xlsx";
 
+const DIVISION_CODE = process.env.NEXT_PUBLIC_DIVISION_CODE || "MDU";
+
 // === LOCALSTORAGE HELPERS ===
 const STORAGE_KEY = 'report-data';
 
@@ -2434,7 +2436,7 @@ interface DetailedData {
 }
 
 const locationOptions: OptionType[] = [
-  { value: "MAS", label: "MAS" },
+  { value: DIVISION_CODE, label: DIVISION_CODE },
   { value: "SA", label: "SA" },
   { value: "MCU", label: "MCU" },
   { value: "TPJ", label: "TPJ" },
@@ -3524,7 +3526,7 @@ const handleDownloadDepartmentCount = () => {
       // ENGG Rows (only show if user's department is ENGG)
       ...(session?.user?.department === "ENGG" ? [
         {
-          "Location": "MAS",
+          "Location": DIVISION_CODE,
           "Department": "ENGG",
           "Supporting Department": "-",
           "Total Block Requested": enggTotal,
@@ -3543,7 +3545,7 @@ const handleDownloadDepartmentCount = () => {
           )
         },
         {
-          "Location": "MAS",
+          "Location": DIVISION_CODE,
           "Department": "ENGG",
           "Supporting Department": "S&T",
           "Total Block Requested": enggWithSnt,
@@ -3562,7 +3564,7 @@ const handleDownloadDepartmentCount = () => {
           )
         },
         {
-          "Location": "MAS",
+          "Location": DIVISION_CODE,
           "Department": "ENGG",
           "Supporting Department": "TRD",
           "Total Block Requested": enggWithPower,
@@ -3581,7 +3583,7 @@ const handleDownloadDepartmentCount = () => {
           )
         },
         {
-          "Location": "MAS",
+          "Location": DIVISION_CODE,
           "Department": "ENGG",
           "Supporting Department": "S&T and TRD",
           "Total Block Requested": enggWithSntAndPower,
@@ -3604,7 +3606,7 @@ const handleDownloadDepartmentCount = () => {
       // TRD Rows (only show if user's department is TRD)
       ...(session?.user?.department === "TRD" ? [
         {
-          "Location": "MAS",
+          "Location": DIVISION_CODE,
           "Department": "TRD",
           "Supporting Department": "-",
           "Total Block Requested": trdTotal,
@@ -3623,7 +3625,7 @@ const handleDownloadDepartmentCount = () => {
       // S&T Rows (only show if user's department is S&T)
       ...(session?.user?.department === "S&T" ? [
         {
-          "Location": "MAS",
+          "Location": DIVISION_CODE,
           "Department": "S&T",
           "Supporting Department": "-",
           "Total Block Requested": sntTotal,
@@ -3638,7 +3640,7 @@ const handleDownloadDepartmentCount = () => {
           )
         },
         {
-          "Location": "MAS",
+          "Location": DIVISION_CODE,
           "Department": "S&T",
           "Supporting Department": "ENGG",
           "Total Block Requested": sntWithEngg,
@@ -3655,7 +3657,7 @@ const handleDownloadDepartmentCount = () => {
           )
         },
         {
-          "Location": "MAS",
+          "Location": DIVISION_CODE,
           "Department": "S&T",
           "Supporting Department": "TRD",
           "Total Block Requested": sntWithPower,
@@ -3672,7 +3674,7 @@ const handleDownloadDepartmentCount = () => {
           )
         },
         {
-          "Location": "MAS",
+          "Location": DIVISION_CODE,
           "Department": "S&T",
           "Supporting Department": "ENGG and TRD",
           "Total Block Requested": sntWithEnggAndPower,
@@ -3740,7 +3742,7 @@ const handleDownloadDepartmentCount = () => {
     
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `department_count_${"MAS"}_${session?.user?.department}_${format(
+    link.download = `department_count_${DIVISION_CODE}_${session?.user?.department}_${format(
       new Date(),
       "dd-MM-yyyy"
     )}.xlsx`;
@@ -5045,7 +5047,7 @@ const handleDownloadDepartmentCount = () => {
   {/* ENGG Rows */}
               {session?.user?.department === "ENGG" &&( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {DIVISION_CODE}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -5147,7 +5149,7 @@ const handleDownloadDepartmentCount = () => {
              
 {session?.user?.department === "ENGG" && ( <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {DIVISION_CODE}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -5252,7 +5254,7 @@ const handleDownloadDepartmentCount = () => {
 {session?.user?.department === "ENGG" && (
      <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {DIVISION_CODE}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -5354,7 +5356,7 @@ const handleDownloadDepartmentCount = () => {
 {session?.user?.department === "ENGG" && (
     <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {DIVISION_CODE}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   ENGG
@@ -5457,7 +5459,7 @@ const handleDownloadDepartmentCount = () => {
             {session?.user?.department === "TRD" && (
               <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {DIVISION_CODE}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   TRD
@@ -5551,7 +5553,7 @@ const handleDownloadDepartmentCount = () => {
               {/* S&T Rows */}
               {session?.user?.department === "S&T" && (  <tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {DIVISION_CODE}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -5648,7 +5650,7 @@ const handleDownloadDepartmentCount = () => {
             
 {session?.user?.department === "S&T" && ( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {DIVISION_CODE}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -5748,7 +5750,7 @@ const handleDownloadDepartmentCount = () => {
              
 {session?.user?.department === "S&T" && (<tr className="bg-[#f4dcf1] font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {DIVISION_CODE}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
@@ -5848,7 +5850,7 @@ const handleDownloadDepartmentCount = () => {
               
 {session?.user?.department === "S&T" && ( <tr className="bg-white font-bold">
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                  MAS
+                  {DIVISION_CODE}
                 </td>
                 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                   S&T
