@@ -135,7 +135,7 @@ interface DetailedData {
   Status: string;
 }
 
-const DIVISION_CODE = "TPJ";
+const DIVISION_CODE = process.env.NEXT_PUBLIC_DIVISION_CODE || "TPJ";
 
 const locationOptions: OptionType[] = [
   { value: DIVISION_CODE, label: DIVISION_CODE },
