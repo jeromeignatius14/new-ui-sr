@@ -90,30 +90,17 @@ export default function ManagerRequestTablePage() {
   // Calculate week range
   const weekEnd = endOfWeek(currentWeekStart, { weekStartsOn: 6 });
   const weekStart = startOfWeek(currentWeekStart, { weekStartsOn: 6 });
-let someId=""
-if(session?.user?.id!=="852e95b1-a568-4571-99e4-96bf7e02ba01"&&session?.user.department==="ENGG"&&session?.user.role==="DEPT_CONTROLLER")
-  {
-    someId="852e95b1-a568-4571-99e4-96bf7e02ba01"
-  }
-  if(session?.user?.id!=="596aad5b-1e8b-42c1-ad1c-244d8774dedc"&&session?.user.department==="TRD"&&session?.user.role==="DEPT_CONTROLLER")
-  {
-    someId="596aad5b-1e8b-42c1-ad1c-244d8774dedc"
-  }
-  if(session?.user?.id!=="78a2a1d7-037a-4948-aa86-a33adf1a6596"&&session?.user.department==="S&T"&&session?.user.role==="DEPT_CONTROLLER")
-  {
-    someId="78a2a1d7-037a-4948-aa86-a33adf1a6596"
-  }
   // Fetch all requests initially (no date filter)
   const { data, isLoading, error } = useQuery({
     queryKey: ["requests", customDateRange],
     queryFn: () =>
       managerService.getUserRequestsByManager(
         1,
-        10000, 
+        10000,
         customDateRange.start || undefined,
         customDateRange.end || undefined,
-        undefined,      
-        someId || undefined
+        undefined,
+        undefined
       ),
   });
 
