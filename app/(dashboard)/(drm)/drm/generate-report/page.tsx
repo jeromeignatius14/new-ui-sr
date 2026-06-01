@@ -135,7 +135,7 @@ interface DetailedData {
   Status: string;
 }
 
-const DIVISION_CODE = "PGT";
+const DIVISION_CODE = process.env.NEXT_PUBLIC_DIVISION_CODE || "PGT";
 
 const locationOptions: OptionType[] = [
   { value: DIVISION_CODE, label: DIVISION_CODE },
