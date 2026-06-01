@@ -147,7 +147,7 @@ const HQ_ALL_DIVISIONS_URL = "api/hq/all-divisions-report";
 
 // The division code for this deployment — set via NEXT_PUBLIC_DIVISION_CODE env var
 // Falls back to "MAS" for the Chennai/HQ deployment
-const DIVISION_CODE = process.env.NEXT_PUBLIC_DIVISION_CODE ?? "MAS";
+const DIVISION_CODE = "PGT";
 
 export const drmService = {
   generateReport: async (params: GenerateReportParams): Promise<GenerateReportResponse> => {
