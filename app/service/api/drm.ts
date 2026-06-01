@@ -145,23 +145,28 @@ export interface GenerateReportResponse {
 const BASE_URL = "api/drm";
 const HQ_ALL_DIVISIONS_URL = "api/hq/all-divisions-report";
 
+// The division code for this deployment — set via NEXT_PUBLIC_DIVISION_CODE env var
+// Falls back to "MAS" for the Chennai/HQ deployment
+const DIVISION_CODE = process.env.NEXT_PUBLIC_DIVISION_CODE ?? "MAS";
+
 export const drmService = {
   generateReport: async (params: GenerateReportParams): Promise<GenerateReportResponse> => {
     const departments = params.department.join(",");
     const blockTypes = params.blockType.join(",");
     const locations = params.location.filter((l) => l !== "All").join(",");
 
-    const isSingleMAS = params.location.length === 1 && params.location[0] === "MAS";
+    // Single-division selection matching this deployment's division code
+    // → use the local /api/drm/generate-report which queries DATABASE_URL directly
+    const isSingleDivision = params.location.length === 1 && params.location[0] === DIVISION_CODE;
 
-    if (isSingleMAS) {
-      // MAS-only: use the existing local DRM endpoint (queries MAS db via DATABASE_URL)
-      const url = `${BASE_URL}/generate-report?startDate=${params.startDate}&endDate=${params.endDate}&location=MAS&department=${departments}&blockType=${blockTypes}`;
+    if (isSingleDivision) {
+      const url = `${BASE_URL}/generate-report?startDate=${params.startDate}&endDate=${params.endDate}&location=${DIVISION_CODE}&department=${departments}&blockType=${blockTypes}`;
       const response = await axiosInstance.get<GenerateReportResponse>(url);
       return response.data;
     }
 
-    // All divisions or specific non-MAS selection:
-    // Use the backend's all-divisions-report which queries each division DB directly via HQ_DB_* env vars
+    // Multi-division or "All" selection:
+    // Use the HQ all-divisions-report (only MDU/HQ backend has HQ_DB_* env vars for this)
     const locationParam = locations || "";
     const url =
       `${HQ_ALL_DIVISIONS_URL}?startDate=${params.startDate}&endDate=${params.endDate}` +
