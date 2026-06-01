@@ -287,6 +287,13 @@ export default function PermitBlockAtSitePage() {
   const rawAlreadyAvailed:       any[] = data?.data?.alreadyAvailed       ?? [];
   const rawUpcomingSanctioned:   any[] = data?.data?.upcomingSanctioned   ?? [];
 
+  // Only keep blocks whose date is today or in the future
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const rawUpcomingSanctionedFiltered = rawUpcomingSanctioned.filter(
+    (r: any) => new Date(r.date) >= todayStart
+  );
+
   const applyFilter = <T,>(arr: T[]) => selectedBoard ? filterByBoard(arr as any[], selectedBoard.depots) as T[] : arr;
 
   const pendingPermits      = applyFilter(rawPendingPermits);
@@ -295,7 +302,7 @@ export default function PermitBlockAtSitePage() {
   const inProgress          = applyFilter(rawInProgress);
   const trdApproved         = applyFilter(rawTrdApproved);
   const alreadyAvailed      = applyFilter(rawAlreadyAvailed);
-  const upcomingSanctioned  = applyFilter(rawUpcomingSanctioned);
+  const upcomingSanctioned  = applyFilter(rawUpcomingSanctionedFiltered);
 
   const pendingAction = [...pendingPermits, ...pendingExtensions, ...pendingClosures];
   const underProgress = [...inProgress, ...trdApproved];
