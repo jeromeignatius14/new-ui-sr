@@ -108,6 +108,17 @@ const tdSt: React.CSSProperties = {
   verticalAlign: "middle", color: "#000",
 };
 
+function getLineLabel(req: any): string {
+  const sections = req.processedLineSections;
+  if (Array.isArray(sections) && sections.length > 0) {
+    const labels = [...new Set(
+      sections.map((s: any) => s.lineName || s.road).filter(Boolean)
+    )] as string[];
+    if (labels.length > 0) return labels.join(" / ");
+  }
+  return req.corridorType ?? "—";
+}
+
 function BlinkingRow({ req, onClickId }: { req: any; onClickId: (r: any) => void }) {
   const [on, setOn] = useState(true);
   useEffect(() => { const id = setInterval(() => setOn(v => !v), 600); return () => clearInterval(id); }, []);
@@ -122,7 +133,7 @@ function BlinkingRow({ req, onClickId }: { req: any; onClickId: (r: any) => void
         </span>
       </td>
       <td style={tdSt}>{req.missionBlock ?? req.selectedSection ?? "—"}</td>
-      <td style={tdSt}>{req.corridorType ?? "—"}</td>
+      <td style={tdSt}>{getLineLabel(req)}</td>
       <td style={tdSt}>{req.workLocationFrom ?? "—"}</td>
       <td style={tdSt}>{req.workLocationTo ?? "—"}</td>
       <td style={{ ...tdSt, whiteSpace: "pre-line" }}>{fmtShort(timeFrom)}</td>
@@ -146,7 +157,7 @@ function NormalRow({ req, onClickId, idx }: { req: any; onClickId: (r: any) => v
         </span>
       </td>
       <td style={tdSt}>{req.missionBlock ?? req.selectedSection ?? "—"}</td>
-      <td style={tdSt}>{req.corridorType ?? "—"}</td>
+      <td style={tdSt}>{getLineLabel(req)}</td>
       <td style={tdSt}>{req.workLocationFrom ?? "—"}</td>
       <td style={tdSt}>{req.workLocationTo ?? "—"}</td>
       <td style={{ ...tdSt, whiteSpace: "pre-line" }}>{fmtShort(timeFrom)}</td>
