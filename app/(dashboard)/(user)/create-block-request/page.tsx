@@ -4099,6 +4099,24 @@ useEffect(() => {
                   const isAcceptedNotApplied = block.overAllStatus === "Sanctioned and Accepted by SSE";
                   const isBusy = acceptMutation.isPending || rejectMutation.isPending || exitMutation.isPending;
 
+                  const corridorLabel: Record<string, string> = {
+                    "Corridor": "Corridor",
+                    "Outside corridor": "Non-Corridor",
+                    "Non-corridor": "Non-Corridor",
+                    "Urgent Block": "Urgent",
+                    "MEGA_BLOCK": "Mega Block",
+                    "Mega Block": "Mega Block",
+                  };
+                  const ctLabel = corridorLabel[block.corridorType] ?? block.corridorType ?? "";
+                  const sanctionDate = block.sanctionedTimeFrom
+                    ? new Date(block.sanctionedTimeFrom).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })
+                    : block.date
+                    ? new Date(block.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })
+                    : null;
+                  const fmtT = (d?: string | null) => d ? new Date(d).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false }) : null;
+                  const timeFrom = fmtT(block.sanctionedTimeFrom ?? block.demandTimeFrom);
+                  const timeTo   = fmtT(block.sanctionedTimeTo   ?? block.demandTimeTo);
+
                   return (
                     <div key={i} className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex flex-col gap-2">
                       {/* Block header */}
@@ -4108,11 +4126,22 @@ useEffect(() => {
                           {block.overAllStatus ?? "—"}
                         </span>
                       </div>
+
+                      {/* Section / mission block / type / date */}
+                      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+                        <span className="text-xs font-bold text-gray-800">
+                          {block.missionBlock || block.selectedSection || "—"}
+                        </span>
+                        {ctLabel && (
+                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">{ctLabel}</span>
+                        )}
+                        {sanctionDate && timeFrom && timeTo && (
+                          <span className="text-[10px] text-gray-500">{sanctionDate} · {timeFrom}–{timeTo}</span>
+                        )}
+                      </div>
+
                       {block.appliedByName && (
-                        <span className="text-xs text-gray-500">Block owner: <span className="font-semibold text-gray-700">{block.appliedByName}</span></span>
-                      )}
-                      {block.selectedDepo && (
-                        <span className="text-xs text-gray-500">{block.selectedDepartment} — {block.selectedDepo}</span>
+                        <span className="text-xs text-gray-500">Owner: <span className="font-semibold text-gray-700">{block.appliedByName}</span></span>
                       )}
                       <span className="text-xs font-semibold text-red-600">{reason}</span>
 
