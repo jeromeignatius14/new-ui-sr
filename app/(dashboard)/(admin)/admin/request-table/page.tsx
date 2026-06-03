@@ -187,12 +187,15 @@ export default function AdminRequestTablePage() {
   const allRequests = data?.data?.requests || [];
 
   // Compute the earliest pending date (for all or per dept) to pass to optimise-table
+  // Floor: never go before 1st June 2026
+  const PENDING_FLOOR = new Date("2026-06-01T00:00:00.000Z");
   const getMinPendingDate = (dept?: string): string => {
     const pending = allRequests.filter((r: UserRequest) => {
       if (!r.date) return false;
       if (r.isSanctioned || r.Draft) return false;
       if (r.overAllStatus !== "with optg." && r.overAllStatus !== "with optg") return false;
       if (dept && r.selectedDepartment !== dept) return false;
+      if (new Date(r.date) < PENDING_FLOOR) return false;
       return true;
     });
     if (!pending.length) return "";
