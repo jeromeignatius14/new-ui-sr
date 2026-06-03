@@ -545,12 +545,15 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
   });
 
   // Auto-jump to earliest pending date when data loads and no ?date= param given
+  // Floor: never go before 1st June 2026
+  const PENDING_FLOOR = new Date("2026-06-01T00:00:00.000Z");
   useEffect(() => {
-    if (searchParams.get("date")) return; // URL already specifies the date
+    if (searchParams.get("date")) return;
     if (!pendingRequests.length) return;
-    const filtered = deptFilter !== "ALL"
+    const filtered = (deptFilter !== "ALL"
       ? pendingRequests.filter((r: UserRequest) => r.selectedDepartment === deptFilter)
-      : pendingRequests;
+      : pendingRequests
+    ).filter((r: UserRequest) => new Date(r.date) >= PENDING_FLOOR);
     if (!filtered.length) return;
     const minDate = filtered.reduce((min: Date, r: UserRequest) => {
       const d = new Date(r.date);
@@ -559,7 +562,6 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
     }, (() => { const d = new Date(filtered[0].date); d.setHours(0, 0, 0, 0); return d; })());
     if (isSameDay(selectedDate, minDate)) return;
     setSelectedDate(minDate);
-    // Urgent mode: currentWeekStart = exact day. Week mode: use the exact date too (week derives from it).
     setCurrentWeekStart(minDate);
   }, [data, deptFilter, searchParams]);
 
