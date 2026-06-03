@@ -280,27 +280,24 @@ const [currentWeekStart, setCurrentWeekStart] = useState(() => {
   const dateParam = searchParams.get("date");
   if (dateParam) {
     const parsedDate = new Date(dateParam);
-    if (!isNaN(parsedDate.getTime())) {
-      return startOfWeek(parsedDate, { weekStartsOn: 1 });
-    }
+    if (!isNaN(parsedDate.getTime())) return parsedDate; // exact date, not startOfWeek
   }
-  // Always return the current week's Monday
   return startOfWeek(new Date(), { weekStartsOn: 1 });
 });
 
-// Add this effect to synchronize week start properly
+// Sync currentWeekStart and selectedDate from URL ?date= param
 useEffect(() => {
   const dateParam = searchParams.get("date");
-  if (!dateParam) {
-    // If no date parameter, ensure we're using current week
-    const currentWeekMonday = startOfWeek(new Date(), { weekStartsOn: 1 });
-    setCurrentWeekStart(currentWeekMonday);
-  } else {
-    // If date parameter exists, ensure it's properly set as week start
+  if (dateParam) {
     const parsedDate = new Date(dateParam);
     if (!isNaN(parsedDate.getTime())) {
-      setCurrentWeekStart(startOfWeek(parsedDate, { weekStartsOn: 1 }));
+      parsedDate.setHours(0, 0, 0, 0);
+      setCurrentWeekStart(parsedDate);  // exact date — week view derives start, urgent mode uses it as the day
+      setSelectedDate(parsedDate);
     }
+  } else {
+    const monday = startOfWeek(new Date(), { weekStartsOn: 1 });
+    setCurrentWeekStart(monday);
   }
 }, [searchParams]);
 // useEffect(() => {
@@ -547,8 +544,9 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
     return true;
   });
 
-  // Auto-jump to the earliest pending date when data loads or dept changes
+  // Auto-jump to earliest pending date when data loads and no ?date= param given
   useEffect(() => {
+    if (searchParams.get("date")) return; // URL already specifies the date
     if (!pendingRequests.length) return;
     const filtered = deptFilter !== "ALL"
       ? pendingRequests.filter((r: UserRequest) => r.selectedDepartment === deptFilter)
@@ -559,11 +557,11 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
       d.setHours(0, 0, 0, 0);
       return d < min ? d : min;
     }, (() => { const d = new Date(filtered[0].date); d.setHours(0, 0, 0, 0); return d; })());
-    // Skip if already showing the correct date (prevents re-render loop)
     if (isSameDay(selectedDate, minDate)) return;
     setSelectedDate(minDate);
-    setCurrentWeekStart(startOfWeek(minDate, { weekStartsOn: 1 }));
-  }, [data, deptFilter]);
+    // Urgent mode: currentWeekStart = exact day. Week mode: use the exact date too (week derives from it).
+    setCurrentWeekStart(minDate);
+  }, [data, deptFilter, searchParams]);
 
 
 
