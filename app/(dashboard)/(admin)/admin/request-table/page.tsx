@@ -185,6 +185,22 @@ export default function AdminRequestTablePage() {
   const today = new Date();
   today.setHours(0, 0, 0, 0); // ignore time
   const allRequests = data?.data?.requests || [];
+
+  // Compute the earliest pending date (for all or per dept) to pass to optimise-table
+  const getMinPendingDate = (dept?: string): string => {
+    const pending = allRequests.filter((r: UserRequest) => {
+      if (!r.date) return false;
+      if (r.isSanctioned || r.Draft) return false;
+      if (r.overAllStatus !== "with optg." && r.overAllStatus !== "with optg") return false;
+      if (dept && r.selectedDepartment !== dept) return false;
+      return true;
+    });
+    if (!pending.length) return "";
+    const min = pending.reduce((m: UserRequest, r: UserRequest) =>
+      new Date(r.date) < new Date(m.date) ? r : m
+    );
+    return min.date ? new Date(min.date).toISOString().split("T")[0] : "";
+  };
   // console.log(allRequests);
 
   // const TotalRequests = allRequests.filter((r: UserRequest) => {
@@ -668,7 +684,11 @@ if (activeSummaryFilters.searchId) {
               <div
                 key={index}
                 className="flex items-center justify-between w-fit bg-gradient-to-r from-[#FFB3B3] to-[#FFD5D5] text-[#B22222] font-bold py-2 px-0.5 rounded-xl border-2 border-[#FF6B6B] text-[22px] shadow-md hover:shadow-lg transition-all"
-                onClick={() => router.push(`/admin/optimise-table?dept=${encodeURIComponent(item.label)}`)}
+                onClick={() => {
+                  const minDate = getMinPendingDate(item.label);
+                  const dateParam = minDate ? `&date=${minDate}` : "";
+                  router.push(`/admin/optimise-table?dept=${encodeURIComponent(item.label)}${dateParam}`);
+                }}
               >
                 <span>{item.label}</span>
                 <span className="bg-white rounded-full w-12 h-12 flex items-center justify-center text-[24px] shadow-inner border-2 border-[#FFB3B3]">
@@ -678,12 +698,16 @@ if (activeSummaryFilters.searchId) {
             ))}
           </div>
 
-          <Link
-            href="/admin/optimise-table"
+          <button
+            onClick={() => {
+              const minDate = getMinPendingDate();
+              const dateParam = minDate ? `?date=${minDate}` : "";
+              router.push(`/admin/optimise-table${dateParam}`);
+            }}
             className="mx-auto w-fit flex items-center gap-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF8989] text-white font-bold px-8 py-3 mb-6 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-[22px]"
           >
             Click To View
-          </Link>
+          </button>
         </div>
       </div>
 
