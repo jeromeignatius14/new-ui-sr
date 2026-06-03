@@ -547,7 +547,7 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
     return true;
   });
 
-  // Auto-jump to the earliest pending date when data loads
+  // Auto-jump to the earliest pending date when data loads or dept changes
   useEffect(() => {
     if (!pendingRequests.length) return;
     const filtered = deptFilter !== "ALL"
@@ -556,10 +556,13 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
     if (!filtered.length) return;
     const minDate = filtered.reduce((min: Date, r: UserRequest) => {
       const d = new Date(r.date);
+      d.setHours(0, 0, 0, 0);
       return d < min ? d : min;
-    }, new Date(filtered[0].date));
-    minDate.setHours(0, 0, 0, 0);
+    }, (() => { const d = new Date(filtered[0].date); d.setHours(0, 0, 0, 0); return d; })());
+    // Skip if already showing the correct date (prevents re-render loop)
+    if (isSameDay(selectedDate, minDate)) return;
     setSelectedDate(minDate);
+    setCurrentWeekStart(startOfWeek(minDate, { weekStartsOn: 1 }));
   }, [data, deptFilter]);
 
 
@@ -1839,8 +1842,8 @@ const handleOptimize = async () => {
         return isSameDay(requestDate, selectedDate)&&(request.Draft === false);
       }).map((request: UserRequest) => {
           const getDepartmentColor = (request: UserRequest) => {
-                         if (request.selectedDepartment === "ENGG") return "bg-blue-50";
-                         if (request.selectedDepartment === "TRD") return "bg-orange-50";
+                         if (request.selectedDepartment === "ENGG") return "bg-red-50";
+                         if (request.selectedDepartment === "TRD") return "bg-blue-50";
                          if (request.selectedDepartment === "S&T") return "bg-green-50";
                          return "bg-white";
                        };
@@ -2194,8 +2197,8 @@ const handleOptimize = async () => {
                   <tr
  key={`request-${request.id}-${request.date}`}
 className={`transition-colors ${
-  request.selectedDepartment === "ENGG" ? "bg-blue-50"
-  : request.selectedDepartment === "TRD" ? "bg-orange-50"
+  request.selectedDepartment === "ENGG" ? "bg-red-50"
+  : request.selectedDepartment === "TRD" ? "bg-blue-50"
   : request.selectedDepartment === "S&T" ? "bg-green-50"
   : "bg-white"
 }`}
@@ -2592,8 +2595,8 @@ className={`transition-colors ${
                   <tr
    key={`request-${request.id}-${request.date}`}
 className={`transition-colors ${
-  request.selectedDepartment === "ENGG" ? "bg-blue-50"
-  : request.selectedDepartment === "TRD" ? "bg-orange-50"
+  request.selectedDepartment === "ENGG" ? "bg-red-50"
+  : request.selectedDepartment === "TRD" ? "bg-blue-50"
   : request.selectedDepartment === "S&T" ? "bg-green-50"
   : "bg-white"
 }`}
@@ -2920,8 +2923,8 @@ className={`transition-colors ${
                   <tr
   key={`request-${request.id}-${request.date}`}
 className={`transition-colors ${
-  request.selectedDepartment === "ENGG" ? "bg-blue-50"
-  : request.selectedDepartment === "TRD" ? "bg-orange-50"
+  request.selectedDepartment === "ENGG" ? "bg-red-50"
+  : request.selectedDepartment === "TRD" ? "bg-blue-50"
   : request.selectedDepartment === "S&T" ? "bg-green-50"
   : "bg-white"
 }`}
