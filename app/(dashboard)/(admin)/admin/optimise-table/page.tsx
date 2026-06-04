@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminService } from "@/app/service/api/admin";
 import { useAcceptUserRequest } from "@/app/service/mutation/admin";
@@ -275,6 +275,12 @@ export default function OptimiseTablePage() {
   const { isUrgentMode } = useUrgentMode();
   const queryClient = useQueryClient();
 
+  // Guard: date init from URL happens once on mount only.
+  // Prevents dept-dropdown router.push from resetting the user's current date.
+  const didInitializeDateRef = useRef(false);
+  // Guard: auto-jump happens once per dept-filter change, not on every data refetch.
+  const didAutoJumpRef = useRef(false);
+
 // Initialize currentWeekStart from URL parameter or default to current date
 const [currentWeekStart, setCurrentWeekStart] = useState(() => {
   const dateParam = searchParams.get("date");
@@ -285,19 +291,21 @@ const [currentWeekStart, setCurrentWeekStart] = useState(() => {
   return startOfWeek(new Date(), { weekStartsOn: 1 });
 });
 
-// Sync currentWeekStart and selectedDate from URL ?date= param
+// Sync dates from URL ?date= param — ONCE on mount only.
+// Do NOT re-run on every searchParams change (dept dropdown push would reset user's position).
 useEffect(() => {
+  if (didInitializeDateRef.current) return;
+  didInitializeDateRef.current = true;
   const dateParam = searchParams.get("date");
   if (dateParam) {
     const parsedDate = new Date(dateParam);
     if (!isNaN(parsedDate.getTime())) {
       parsedDate.setHours(0, 0, 0, 0);
-      setCurrentWeekStart(parsedDate);  // exact date — week view derives start, urgent mode uses it as the day
+      setCurrentWeekStart(parsedDate);
       setSelectedDate(parsedDate);
     }
   } else {
-    const monday = startOfWeek(new Date(), { weekStartsOn: 1 });
-    setCurrentWeekStart(monday);
+    setCurrentWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }));
   }
 }, [searchParams]);
 // useEffect(() => {
@@ -544,11 +552,20 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
     return true;
   });
 
-  // Auto-jump to earliest pending date when data loads and no ?date= param given
+  // Reset auto-jump guard when dept filter changes so it re-jumps to that dept's earliest date
+  useEffect(() => {
+    didAutoJumpRef.current = false;
+  }, [deptFilter]);
+
+  // Auto-jump to earliest pending date — only once per dept change, not on every data refetch.
   // Floor: never go before 1st June 2026
   const PENDING_FLOOR = new Date("2026-06-01T00:00:00.000Z");
   useEffect(() => {
-    if (searchParams.get("date")) return;
+    if (didAutoJumpRef.current) return;         // already jumped for this dept
+    if (searchParams.get("date")) {             // URL already specifies exact date
+      didAutoJumpRef.current = true;
+      return;
+    }
     if (!pendingRequests.length) return;
     const filtered = (deptFilter !== "ALL"
       ? pendingRequests.filter((r: UserRequest) => r.selectedDepartment === deptFilter)
@@ -556,14 +573,14 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
     ).filter((r: UserRequest) => new Date(r.date) >= PENDING_FLOOR);
     if (!filtered.length) return;
     const minDate = filtered.reduce((min: Date, r: UserRequest) => {
-      const d = new Date(r.date);
-      d.setHours(0, 0, 0, 0);
+      const d = new Date(r.date); d.setHours(0, 0, 0, 0);
       return d < min ? d : min;
     }, (() => { const d = new Date(filtered[0].date); d.setHours(0, 0, 0, 0); return d; })());
+    didAutoJumpRef.current = true;
     if (isSameDay(selectedDate, minDate)) return;
     setSelectedDate(minDate);
     setCurrentWeekStart(minDate);
-  }, [data, deptFilter, searchParams]);
+  }, [data, deptFilter]);
 
 
 
@@ -843,11 +860,17 @@ Please ensure all selected requests are scheduled for the current week (${format
       optimizeTimeTo: string;
     }) => adminService.updateRequest(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["approved-requests", currentWeekStart],
-      });
+      // Use refetch instead of invalidateQueries to avoid triggering the auto-jump useEffect
+      queryClient.setQueryData(
+        ["approved-requests", currentWeekStart, isUrgentMode],
+        (old: any) => old  // keep current data; next background refetch will update
+      );
+      queryClient.invalidateQueries({ queryKey: ["approved-requests", currentWeekStart, isUrgentMode], refetchType: "none" });
       setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
+      setTimeout(() => {
+        setShowSuccess(false);
+        queryClient.refetchQueries({ queryKey: ["approved-requests"] });
+      }, 2000);
       setEditingId(null);
     },
     onError: (error) => {
