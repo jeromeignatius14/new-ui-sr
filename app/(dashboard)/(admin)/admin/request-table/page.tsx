@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { managerService, UserRequest } from "@/app/service/api/manager";
 import { format, parseISO } from "date-fns";
 import Link from "next/link";
@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 
 export default function AdminRequestTablePage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { data: session } = useSession();
   const [customDateRange, setCustomDateRange] = useState({
     start: "",
@@ -689,6 +690,11 @@ if (activeSummaryFilters.searchId) {
                 className="flex items-center justify-between w-fit bg-gradient-to-r from-[#FFB3B3] to-[#FFD5D5] text-[#B22222] font-bold py-2 px-0.5 rounded-xl border-2 border-[#FF6B6B] text-[22px] shadow-md hover:shadow-lg transition-all"
                 onClick={() => {
                   const minDate = getMinPendingDate(item.label);
+                  // Pre-populate optimise-table's cache so it doesn't double-fetch
+                  if (minDate) {
+                    const cacheDate = new Date(minDate + "T00:00:00.000Z");
+                    queryClient.setQueryData(["approved-requests", cacheDate, false], { data: { requests: allRequests } });
+                  }
                   const dateParam = minDate ? `&date=${minDate}` : "";
                   router.push(`/admin/optimise-table?dept=${encodeURIComponent(item.label)}${dateParam}`);
                 }}
@@ -704,6 +710,10 @@ if (activeSummaryFilters.searchId) {
           <button
             onClick={() => {
               const minDate = getMinPendingDate();
+              if (minDate) {
+                const cacheDate = new Date(minDate + "T00:00:00.000Z");
+                queryClient.setQueryData(["approved-requests", cacheDate, false], { data: { requests: allRequests } });
+              }
               const dateParam = minDate ? `?date=${minDate}` : "";
               router.push(`/admin/optimise-table${dateParam}`);
             }}
