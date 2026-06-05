@@ -454,6 +454,7 @@ const finalWeekEnd = isUrgentMode ? currentWeekStart : weekEnd;
         format(finalWeekEnd, "yyyy-MM-dd"),
         5000
       ),
+    staleTime: 60 * 1000,
   });
 
   const handleRejectClick = (requestId: string) => {
@@ -987,10 +988,11 @@ Please ensure all selected requests are scheduled for the current week (${format
       );
       if (response.success) {
         alert("Optimization status updated successfully!");
-        refetch();
-           setIsSanctionModalOpen(false);
-      setSanctionRemark("");
-      setSelectedRequestsForSanction([]);
+        setIsSanctionModalOpen(false);
+        setSanctionRemark("");
+        setSelectedRequestsForSanction([]);
+        queryClient.invalidateQueries({ queryKey: ["approved-requests", currentWeekStart, isUrgentMode], refetchType: "none" });
+        setTimeout(() => { queryClient.refetchQueries({ queryKey: ["approved-requests"] }); }, 500);
       } else {
         alert("Failed to update optimization status");
       }
@@ -1024,9 +1026,10 @@ const handleSendNonUrgentRequests = async (requests: UserRequest[], remark: stri
     
     if (response.success) {
       alert("Requests moved to draft successfully!");
-      refetch();
       setIsDraftModalOpen(false);
       setDraftRemark("");
+      queryClient.invalidateQueries({ queryKey: ["approved-requests", currentWeekStart, isUrgentMode], refetchType: "none" });
+      setTimeout(() => { queryClient.refetchQueries({ queryKey: ["approved-requests"] }); }, 500);
     } else {
       alert("Failed to update draft status");
     }
@@ -1283,8 +1286,8 @@ const handleOptimize = async () => {
       
       // Clear selection after optimization
       setSelectedRequestsForOptimization(new Set());
-      
-      await refetch();
+      queryClient.invalidateQueries({ queryKey: ["approved-requests", currentWeekStart, isUrgentMode], refetchType: "none" });
+      setTimeout(() => { queryClient.refetchQueries({ queryKey: ["approved-requests"] }); }, 500);
     } else {
       alert("Failed to optimize requests");
     }
