@@ -901,11 +901,6 @@ const handleDownloadExcel = async () => {
     GENERATE REPORTS
   </button>
 </Link>
-<Link href="/avail-block">
-  <button className="w-fit px-16 rounded-full bg-[#ffd180] border-2 border-black py-6 text-2xl font-extrabold text-black text-center shadow-lg hover:scale-105 transition min-w-[320px]">
-    AVAILED STATUS
-  </button>
-</Link>
 <Link href="/manage/manage-users">
   <button className="w-fit px-16 rounded-full bg-[#ffd180] border-2 border-black py-6 text-2xl font-extrabold text-black text-center shadow-lg hover:scale-105 transition min-w-[320px]">
     MANAGE USERS
