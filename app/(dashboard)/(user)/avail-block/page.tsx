@@ -101,14 +101,19 @@ function playBeep(freq = 880) {
   } catch { /* ignore */ }
 }
 
+// ── TRD blocks use "TPC" everywhere instead of "SM" ──────────────────────────
+function smLabel(block: any, sm: string, tpc: string): string {
+  return block.selectedDepartment === "TRD" ? tpc : sm;
+}
+
 // ── Status helpers ─────────────────────────────────────────────────────────────
 function shortStatus(block: any, myParticipant?: any): { text: string; color: string } {
   const s = block.overAllStatus ?? "";
   if (s === "Sanctioned and Accepted by SSE") return { text: "Ready to Apply", color: "#16a34a" };
   if (s === "Pending Concurrences") return { text: "Pending Concurrence", color: "#c2410c" };
-  if (s === "Pending SM Approval") return { text: "Pending SM Approval", color: "#9333ea" };
-  if (s === "SM Approved") return { text: "SM Approved ✔ — Auto-starting", color: "#047857" };
-  if (s === "SM Rejected") return { text: "SM Rejected ✗ — No Work Today", color: "#dc2626" };
+  if (s === "Pending SM Approval") return { text: smLabel(block, "Pending SM Approval", "Pending TPC Approval"), color: "#9333ea" };
+  if (s === "SM Approved") return { text: smLabel(block, "SM Approved ✔ — Auto-starting", "TPC Approved ✔ — Auto-starting"), color: "#047857" };
+  if (s === "SM Rejected") return { text: smLabel(block, "SM Rejected ✗ — No Work Today", "TPC Rejected ✗ — No Work Today"), color: "#dc2626" };
   if (s === "Availing Active") {
     if (myParticipant?.availStartedAt && !myParticipant?.closureSubmittedAt)
       return { text: "In Progress ▶", color: "#2563eb" };
@@ -116,7 +121,7 @@ function shortStatus(block: any, myParticipant?: any): { text: string; color: st
       return { text: "Closed ✓ (awaiting others)", color: "#0d9488" };
     return { text: "Active — Auto-Starting", color: "#16a34a" };
   }
-  if (s === "All Closures Submitted") return { text: "Awaiting SM Closure Ack", color: "#0369a1" };
+  if (s === "All Closures Submitted") return { text: smLabel(block, "Awaiting SM Closure Ack", "Awaiting TPC Closure Ack"), color: "#0369a1" };
   if (s === "Block Closed") return { text: "Block Closed ✓", color: "#1d4ed8" };
   if (s === "Availing Cancelled") return { text: "Cancelled", color: "#dc2626" };
   if (myParticipant?.blockBurst) return { text: "⚠ BLOCK BURST", color: "#dc2626" };
@@ -128,6 +133,7 @@ function detailedStatus(block: any): string {
     ? `${block.appliedByName}${block.appliedByPhone ? ` (${block.appliedByPhone})` : ""} applied.`
     : "";
   const s = block.overAllStatus ?? "";
+  const isTrd = block.selectedDepartment === "TRD";
 
   if (s === "Pending Concurrences") {
     const pending: string[] = [];
@@ -139,13 +145,19 @@ function detailedStatus(block: any): string {
       .forEach((c: any) => pending.push(`ENGG/${c.depot}${c.submittedByPhone ? ` - ${c.submittedByPhone}` : ""}`));
     return `${appliedBy} Pending concurrence from: ${pending.join(", ") || "—"}`;
   }
-  if (s === "Pending SM Approval") return `${appliedBy} Pending with SM at station ${block.smStation ?? "—"}`;
+  if (s === "Pending SM Approval") return isTrd
+    ? `${appliedBy} Pending with TPC Controller at station ${block.smStation ?? "—"}`
+    : `${appliedBy} Pending with SM at station ${block.smStation ?? "—"}`;
   if (s === "SM Approved") {
     const startAt = block.smApprovedTimeFrom ?? block.grantedFromTime;
-    return `${appliedBy} SM granted. Block auto-starts at ${fmtTime(startAt)}. Please be at the work site.`;
+    return isTrd
+      ? `${appliedBy} TPC granted. Block auto-starts at ${fmtTime(startAt)}. Please be at the work site.`
+      : `${appliedBy} SM granted. Block auto-starts at ${fmtTime(startAt)}. Please be at the work site.`;
   }
   if (s === "SM Rejected") {
-    return `${appliedBy} SM rejected availing${block.smRemarks ? ` — "${block.smRemarks}"` : ""}. No work today.`;
+    return isTrd
+      ? `${appliedBy} TPC Controller rejected availing${block.smRemarks ? ` — "${block.smRemarks}"` : ""}. No work today.`
+      : `${appliedBy} SM rejected availing${block.smRemarks ? ` — "${block.smRemarks}"` : ""}. No work today.`;
   }
   if (s === "Availing Active") {
     const parts = (block.availParticipants ?? []).map((p: any) => {
