@@ -348,6 +348,12 @@ export default function SmPendingAvailsPage() {
   function submitApprove() {
     if (!activeReq) return;
     if (!smTimeFrom || !smTimeTo) { toast.error("Enter both times"); return; }
+    // from must not be in the past
+    const nowIST = Date.now() + 5.5 * 60 * 60 * 1000;
+    const fromMs = new Date(smTimeFrom + ":00.000Z").getTime();
+    if (fromMs < nowIST - 60_000) { toast.error("From time cannot be in the past"); return; }
+    // to must be after from
+    if (smTimeTo <= smTimeFrom) { toast.error("To time must be later than From time"); return; }
     setSyncing(true);
     setModalType(null);
     approveMutation.mutate({
@@ -592,12 +598,26 @@ export default function SmPendingAvailsPage() {
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                   <div>
-                    <label style={{ ...fldLabel, color: "#92400e", fontSize: "11px" }}>FROM *</label>
-                    <input type="datetime-local" style={{ ...fldInput, border: "2px solid #f59e0b", fontSize: "14px" }} value={smTimeFrom} onChange={e => setSmTimeFrom(e.target.value)} />
+                    <label style={{ ...fldLabel, color: "#92400e", fontSize: "11px" }}>FROM * (24h)</label>
+                    <input
+                      type="datetime-local"
+                      lang="en-GB"
+                      min={nowISTDatetimeLocal()}
+                      style={{ ...fldInput, border: "2px solid #f59e0b", fontSize: "14px" }}
+                      value={smTimeFrom}
+                      onChange={e => setSmTimeFrom(e.target.value)}
+                    />
                   </div>
                   <div>
-                    <label style={{ ...fldLabel, color: "#92400e", fontSize: "11px" }}>TO *</label>
-                    <input type="datetime-local" style={{ ...fldInput, border: "2px solid #f59e0b", fontSize: "14px" }} value={smTimeTo} onChange={e => setSmTimeTo(e.target.value)} />
+                    <label style={{ ...fldLabel, color: "#92400e", fontSize: "11px" }}>TO * (24h — after From)</label>
+                    <input
+                      type="datetime-local"
+                      lang="en-GB"
+                      min={smTimeFrom || nowISTDatetimeLocal()}
+                      style={{ ...fldInput, border: "2px solid #f59e0b", fontSize: "14px" }}
+                      value={smTimeTo}
+                      onChange={e => setSmTimeTo(e.target.value)}
+                    />
                   </div>
                 </div>
                 {smTimeFrom && smTimeTo && (
