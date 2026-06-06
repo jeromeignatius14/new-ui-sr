@@ -378,6 +378,16 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
   const handleApply = () => {
     const station = manualStation.trim() || selectedStation;
     if (!station) { toast.error("Select or enter a station code"); return; }
+    // from must not be in the past
+    if (applyTimeFrom) {
+      const fromMs = new Date(applyTimeFrom + ":00.000Z").getTime();
+      const nowMs  = Date.now() + IST_OFFSET_MS;
+      if (fromMs < nowMs - 60_000) { toast.error("From time cannot be in the past"); return; }
+    }
+    // to must be after from (when both are entered)
+    if (applyTimeFrom && applyTimeTo) {
+      if (applyTimeTo <= applyTimeFrom) { toast.error("To time must be later than From time"); return; }
+    }
     setSyncing(true);
     applyMut.mutate({
       requestId: id,
@@ -953,16 +963,20 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
               <p style={{ fontSize: "13px", fontWeight: 700, color: "#0369a1", margin: "0 0 10px" }}>
                 ✏️ Edit requested times (optional — leave blank to use sanctioned times)
               </p>
-              <label style={fieldLabel}>Requested Time From</label>
+              <label style={fieldLabel}>Requested Time From (24h)</label>
               <input
                 type="datetime-local"
+                lang="en-GB"
+                min={new Date(Date.now() + IST_OFFSET_MS).toISOString().slice(0, 16)}
                 style={fieldInput}
                 value={applyTimeFrom}
                 onChange={(e) => setApplyTimeFrom(e.target.value)}
               />
-              <label style={fieldLabel}>Requested Time To</label>
+              <label style={fieldLabel}>Requested Time To (24h — must be after From)</label>
               <input
                 type="datetime-local"
+                lang="en-GB"
+                min={applyTimeFrom || new Date(Date.now() + IST_OFFSET_MS).toISOString().slice(0, 16)}
                 style={{ ...fieldInput, marginBottom: 0 }}
                 value={applyTimeTo}
                 onChange={(e) => setApplyTimeTo(e.target.value)}
