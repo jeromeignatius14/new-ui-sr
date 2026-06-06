@@ -43,15 +43,15 @@ const STATUS_LABEL: Record<string, { label: string; severity: "red" | "amber" | 
   "Sanctioned and Accepted by SSE":               { label: "SSE acknowledged — but nobody applied for block availing",         severity: "amber" },
 
   // ── Avail pipeline
-  "Pending Concurrences":                         { label: "Waiting for TRD / S&T / ENGG concurrences before SM can act", severity: "amber" },
-  "Pending SM Approval":                          { label: "Waiting for Station Master to approve the avail request",      severity: "amber" },
-  "Pending TRD Controller Permit":                { label: "Waiting for TRD Controller to issue the permit",               severity: "amber" },
-  "SM Approved":                                  { label: "SM approved — SSE hasn't acknowledged to start availing",      severity: "amber" },
-  "Availing Active":                              { label: "Block being availed — participants haven't filed closure yet",  severity: "amber" },
-  "All Closures Submitted":                       { label: "All participants closed — SM hasn't acknowledged yet",         severity: "amber" },
-  "Block Closed":                                 { label: "Successfully closed ✓",                                        severity: "green" },
-  "Availing Cancelled":                           { label: "Exited without availing the block",                                                                 severity: "red"   },
-  "SM Rejected":                                  { label: "Station Master rejected the avail request — block not granted",                                      severity: "red"   },
+  "Pending Concurrences":                         { label: "Waiting for TRD / S&T / ENGG concurrences before SM/TPC can act", severity: "amber" },
+  "Pending SM Approval":                          { label: "Waiting for SM / TPC Controller to approve the avail request",     severity: "amber" },
+  "Pending TRD Controller Permit":                { label: "Waiting for TPC Controller to issue the permit",                   severity: "amber" },
+  "SM Approved":                                  { label: "SM / TPC approved — SSE hasn't acknowledged to start availing",    severity: "amber" },
+  "Availing Active":                              { label: "Block being availed — participants haven't filed closure yet",      severity: "amber" },
+  "All Closures Submitted":                       { label: "All participants closed — SM / TPC hasn't acknowledged yet",        severity: "amber" },
+  "Block Closed":                                 { label: "Successfully closed ✓",                                            severity: "green" },
+  "Availing Cancelled":                           { label: "Exited without availing the block",                                severity: "red"   },
+  "SM Rejected":                                  { label: "SM / TPC Controller rejected the avail request — block not granted", severity: "red"   },
 };
 
 function explainStatus(raw: string): { label: string; severity: "red" | "amber" | "blue" | "green" } {
@@ -454,7 +454,7 @@ export default function AnalystDashboard() {
                   {/* Live snapshot — 4 buckets, plain labels */}
                   <div className="grid grid-cols-2 gap-2">
                     {[
-                      { label: "Waiting for SM to approve",       v: ap.stageCounts.pendingSmApproval,   color: AMBER, warn: sr?.smNotActing > 0 },
+                      { label: "Waiting for SM / TPC to approve", v: ap.stageCounts.pendingSmApproval,   color: AMBER, warn: sr?.smNotActing > 0 },
                       { label: "Waiting for dept concurrences",   v: ap.stageCounts.pendingConcurrences,  color: BLUE  },
                       { label: "Waiting for TRD permit",          v: ap.stageCounts.pendingTrdPermit,     color: "#8b5cf6" },
                       { label: "Block currently being availed",   v: ap.stageCounts.availingActive,       color: GREEN },
@@ -515,8 +515,8 @@ export default function AnalystDashboard() {
               filters={filters}
             />
 
-            {/* Stage 5 — SM Approved */}
-            <StageCard icon="👮" title="SM Approved" count={f.smApproved} prev={f.availApplied} color="#ec4899">
+            {/* Stage 5 — SM / TPC Approved */}
+            <StageCard icon="👮" title="SM / TPC Approved" count={f.smApproved} prev={f.availApplied} color="#ec4899">
               {ap?.stageCounts.smApprovedAckPending > 0 && (
                 <div className="bg-pink-50 border border-pink-200 rounded-lg px-3 py-2">
                   <div className="text-xs font-bold text-pink-800 mb-1.5">
@@ -755,7 +755,7 @@ export default function AnalystDashboard() {
                   <li>🟠 <strong>{sr.sseNotAcceptingSanction}</strong> sanctioned blocks not acknowledged by SSE in over 72 hours.</li>
                 )}
                 {ap?.smApprovalWait?.gt24h > 0 && (
-                  <li>🔴 <strong>{ap.smApprovalWait.gt24h}</strong> requests waiting SM approval for over 24 hours — escalate to divisional management.</li>
+                  <li>🔴 <strong>{ap.smApprovalWait.gt24h}</strong> requests waiting SM / TPC approval for over 24 hours — escalate to divisional management.</li>
                 )}
                 {sr?.activeNotClosed > 0 && (
                   <li>🟡 <strong>{sr.activeNotClosed}</strong> active blocks with no closure filed — field staff must submit closures on the app.</li>
