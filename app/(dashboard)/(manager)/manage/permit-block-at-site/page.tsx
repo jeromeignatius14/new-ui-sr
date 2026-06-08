@@ -275,10 +275,11 @@ export default function PermitBlockAtSitePage() {
   const [modalType,  setModalType]  = useState<"permit" | "extension" | "closure" | "view" | null>(null);
 
   // Permit form
-  const [modifyTime, setModifyTime] = useState(false);
-  const [trdTimeFrom, setTrdTimeFrom] = useState("");
-  const [trdTimeTo,   setTrdTimeTo]   = useState("");
-  const [trdRemarks,  setTrdRemarks]  = useState("");
+  const [modifyTime,   setModifyTime]   = useState(false);
+  const [trdTimeFrom,  setTrdTimeFrom]  = useState("");
+  const [trdTimeTo,    setTrdTimeTo]    = useState("");
+  const [trdRemarks,   setTrdRemarks]   = useState("");
+  const [powerNumber,  setPowerNumber]  = useState("");
 
   // Reject form
   const [rejectMode, setRejectMode] = useState(false);
@@ -336,7 +337,7 @@ export default function PermitBlockAtSitePage() {
     setModifyTime(true);
     setTrdTimeFrom(toDatetimeLocal(req.requestedTimeFrom ?? req.grantedFromTime ?? req.sanctionedTimeFrom));
     setTrdTimeTo(toDatetimeLocal(req.requestedTimeTo ?? req.grantedToTime ?? req.sanctionedTimeTo));
-    setTrdRemarks("");
+    setTrdRemarks(""); setPowerNumber("");
     setRejectRmk(""); setClosureRmk(""); setExtRemarks(""); setExtAction("APPROVE");
 
     if (pendingPermits.some((r: any) => r.id === req.id)) {
@@ -360,6 +361,7 @@ export default function PermitBlockAtSitePage() {
       smApprovedTimeFrom: toUTCSlot(trdTimeFrom),
       smApprovedTimeTo:   toUTCSlot(trdTimeTo),
       smRemarks: trdRemarks || undefined,
+      powerNumber: powerNumber.trim() || undefined,
     }, {
       onSuccess: async () => { toast.success("Permitted"); await refetch(); setSyncing(false); },
       onError: (e: any) => { setSyncing(false); toast.error(e?.response?.data?.message ?? "Failed"); },
@@ -575,6 +577,14 @@ export default function PermitBlockAtSitePage() {
                   </div>
                 )}
               </div>
+              <label style={fldLabel}>Power Number (optional)</label>
+              <input
+                type="text"
+                style={{ ...fldInput, marginBottom: "14px" }}
+                placeholder="Enter power block number…"
+                value={powerNumber}
+                onChange={e => setPowerNumber(e.target.value)}
+              />
               <label style={fldLabel}>Controller Remarks (optional)</label>
               <textarea style={{ ...fldInput, height: "70px", resize: "vertical", marginBottom: "14px" }} placeholder="Enter remarks…" value={trdRemarks} onChange={e => setTrdRemarks(e.target.value)} />
               <div style={{ display: "flex", gap: "8px" }}>
