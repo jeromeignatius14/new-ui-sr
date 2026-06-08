@@ -94,8 +94,8 @@ export const useSubmitAvailConcurrence = useSubmitConcurrence;
 export function useSmApproveAvail() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (p: { requestId: string; action: "APPROVE" | "APPROVE_WITH_MODIFICATION" | "REJECT"; smApprovedTimeFrom?: string; smApprovedTimeTo?: string; smRemarks?: string }) =>
-      availService.smApproveAvail(p.requestId, p.action, { smApprovedTimeFrom: p.smApprovedTimeFrom, smApprovedTimeTo: p.smApprovedTimeTo, smRemarks: p.smRemarks }),
+    mutationFn: (p: { requestId: string; action: "APPROVE" | "APPROVE_WITH_MODIFICATION" | "REJECT"; smApprovedTimeFrom?: string; smApprovedTimeTo?: string; smRemarks?: string; powerNumber?: string }) =>
+      availService.smApproveAvail(p.requestId, p.action, { smApprovedTimeFrom: p.smApprovedTimeFrom, smApprovedTimeTo: p.smApprovedTimeTo, smRemarks: p.smRemarks, powerNumber: p.powerNumber }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["sm-pending"] }); toast.success("Action completed"); },
     onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed to process request"),
   });
@@ -124,8 +124,8 @@ export function useSmAcknowledgeClosure() {
 export function useTrdPermitAvail() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (p: { requestId: string; action: "APPROVE" | "APPROVE_WITH_MODIFICATION" | "REJECT"; smApprovedTimeFrom?: string; smApprovedTimeTo?: string; smRemarks?: string }) =>
-      availService.trdPermitAvail(p.requestId, p.action, { smApprovedTimeFrom: p.smApprovedTimeFrom, smApprovedTimeTo: p.smApprovedTimeTo, smRemarks: p.smRemarks }),
+    mutationFn: (p: { requestId: string; action: "APPROVE" | "APPROVE_WITH_MODIFICATION" | "REJECT"; smApprovedTimeFrom?: string; smApprovedTimeTo?: string; smRemarks?: string; powerNumber?: string }) =>
+      availService.trdPermitAvail(p.requestId, p.action, { smApprovedTimeFrom: p.smApprovedTimeFrom, smApprovedTimeTo: p.smApprovedTimeTo, smRemarks: p.smRemarks, powerNumber: p.powerNumber }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["trd-pending"] }); toast.success("Action completed"); },
     onError: (e: any) => toast.error(e?.response?.data?.message ?? "Failed"),
   });

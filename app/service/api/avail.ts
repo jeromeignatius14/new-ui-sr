@@ -143,7 +143,7 @@ export const availService = {
   smApproveAvail: async (
     requestId: string,
     action: "APPROVE" | "APPROVE_WITH_MODIFICATION" | "REJECT",
-    payload: { smApprovedTimeFrom?: string; smApprovedTimeTo?: string; smRemarks?: string }
+    payload: { smApprovedTimeFrom?: string; smApprovedTimeTo?: string; smRemarks?: string; powerNumber?: string }
   ) => {
     const response = await axiosInstance.put(`/api/avail/sm/approve/${requestId}`, {
       action, ...payload, mobileView: true,
@@ -184,7 +184,7 @@ export const availService = {
   trdPermitAvail: async (
     requestId: string,
     action: "APPROVE" | "APPROVE_WITH_MODIFICATION" | "REJECT",
-    payload: { smApprovedTimeFrom?: string; smApprovedTimeTo?: string; smRemarks?: string }
+    payload: { smApprovedTimeFrom?: string; smApprovedTimeTo?: string; smRemarks?: string; powerNumber?: string }
   ) => {
     const response = await axiosInstance.put(`/api/avail/trd/permit/${requestId}`, {
       action, ...payload, mobileView: true,
