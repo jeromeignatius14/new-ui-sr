@@ -536,39 +536,28 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
             Select which SM station should acknowledge this closure. Defaults to the granting SM ({block?.smStation ?? "—"}).
             Change this only if manpower/machines are being cleared at a different station.
           </div>
-          {smStations.length === 0 ? (
-            <input
-              type="text"
-              value={closureAckSmStation}
-              onChange={(e) => setClosureAckSmStation(e.target.value.toUpperCase())}
-              placeholder="Type SM station code..."
-              style={{
-                width: "100%", padding: "12px 14px", border: "2px solid #f59e0b",
-                borderRadius: "10px", fontSize: "15px", fontWeight: 600,
-                background: "#fffbeb", color: "#1a1a2e", outline: "none",
-                boxSizing: "border-box",
-              }}
-            />
-          ) : (
-            <select
-              value={closureAckSmStation}
-              onChange={(e) => setClosureAckSmStation(e.target.value)}
-              style={{
-                width: "100%", padding: "12px 14px", border: "2px solid #f59e0b",
-                borderRadius: "10px", fontSize: "15px", fontWeight: 600,
-                background: "#fffbeb", color: "#1a1a2e", outline: "none",
-                boxSizing: "border-box",
-              }}
-            >
-              <option value="">-- Select SM Station --</option>
-              {smStations.map((s) => (
-                <option key={s.code} value={s.code}>
-                  {s.code}{s.smName ? ` (${s.smName})` : ""}
-                  {s.code === block?.smStation ? " ★ Granting SM" : ""}
-                </option>
-              ))}
-            </select>
-          )}
+          <input
+            type="text"
+            list="closure-sm-station-options"
+            value={closureAckSmStation}
+            onChange={(e) => setClosureAckSmStation(e.target.value.toUpperCase())}
+            placeholder="Type to search SM station…"
+            autoComplete="off"
+            style={{
+              width: "100%", padding: "12px 14px", border: "2px solid #f59e0b",
+              borderRadius: "10px", fontSize: "15px", fontWeight: 600,
+              background: "#fffbeb", color: "#1a1a2e", outline: "none",
+              boxSizing: "border-box",
+            }}
+          />
+          <datalist id="closure-sm-station-options">
+            {smStations.map((s) => (
+              <option key={s.code} value={s.code}>
+                {s.smName ? `${s.code} — ${s.smName}` : s.code}
+                {s.code === block?.smStation ? " ★ Granting SM" : ""}
+              </option>
+            ))}
+          </datalist>
           {closureAckSmStation && closureAckSmStation !== block?.smStation && (
             <div style={{ marginTop: "8px", fontSize: "12px", color: "#b45309", fontWeight: 700 }}>
               ⚠ Closure ack routed to {closureAckSmStation} — the granting SM ({block?.smStation}) will see this as view-only.

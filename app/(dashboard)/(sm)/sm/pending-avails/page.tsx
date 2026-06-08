@@ -268,10 +268,11 @@ export default function SmPendingAvailsPage() {
   const [modalType,   setModalType]   = useState<"approval" | "extension" | "closure" | "view" | null>(null);
 
   // Approve form
-  const [modifyTime,  setModifyTime]  = useState(false);
-  const [smTimeFrom,  setSmTimeFrom]  = useState("");
-  const [smTimeTo,    setSmTimeTo]    = useState("");
-  const [smRemarks,   setSmRemarks]   = useState("");
+  const [modifyTime,   setModifyTime]   = useState(false);
+  const [smTimeFrom,   setSmTimeFrom]   = useState("");
+  const [smTimeTo,     setSmTimeTo]     = useState("");
+  const [smRemarks,    setSmRemarks]    = useState("");
+  const [powerNumber,  setPowerNumber]  = useState("");
   const [smFromAutoFilled, setSmFromAutoFilled] = useState(false);
 
   // Reject form (inside approval modal)
@@ -317,7 +318,7 @@ export default function SmPendingAvailsPage() {
     setActiveReq(req);
     setRejectMode(false);
     setModifyTime(true);
-    setSmRemarks("");
+    setSmRemarks(""); setPowerNumber("");
     setRejectRmk(""); setClosureRmk(""); setExtRemarks(""); setExtAction("APPROVE");
 
     // If the requested from time has already passed, pre-fill with current IST time
@@ -362,6 +363,7 @@ export default function SmPendingAvailsPage() {
       smApprovedTimeFrom: toUTCSlot(smTimeFrom),
       smApprovedTimeTo: toUTCSlot(smTimeTo),
       smRemarks: smRemarks || undefined,
+      powerNumber: powerNumber.trim() || undefined,
     }, {
       onSuccess: async () => { toast.success("Approved"); await refetch(); setSyncing(false); },
       onError: (e: any) => { setSyncing(false); toast.error(e?.response?.data?.message ?? "Failed"); },
@@ -626,6 +628,14 @@ export default function SmPendingAvailsPage() {
                   </div>
                 )}
               </div>
+              <label style={fldLabel}>Power Number (optional)</label>
+              <input
+                type="text"
+                style={{ ...fldInput, marginBottom: "14px" }}
+                placeholder="Enter power block number…"
+                value={powerNumber}
+                onChange={e => setPowerNumber(e.target.value)}
+              />
               <label style={fldLabel}>SM Remarks (optional)</label>
               <textarea style={{ ...fldInput, height: "70px", resize: "vertical", marginBottom: "14px" }} placeholder="Enter remarks…" value={smRemarks} onChange={e => setSmRemarks(e.target.value)} />
               <div style={{ display: "flex", gap: "8px" }}>

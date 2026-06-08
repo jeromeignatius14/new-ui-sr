@@ -3,7 +3,7 @@
 import { use, useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useGetAvailRequestById } from "@/app/service/query/avail";
+import { useGetAvailRequestById, useGetSmStations } from "@/app/service/query/avail";
 import {
   useApplyForAvailing,
   useSubmitAvailConcurrence,
@@ -157,7 +157,7 @@ function AuditTrail({ block, myParticipant }: { block: any; myParticipant?: any 
       icon: wasCancelled && !block.sseAcceptedSmModification ? "❌" : wasModified ? "✏️" : "✅",
       label,
       at: block.smApprovedAt,
-      sub: block.smRemarks ?? undefined,
+      sub: [block.powerNumber ? `Power No: ${block.powerNumber}` : null, block.smRemarks ?? null].filter(Boolean).join(" · ") || undefined,
       color: wasCancelled && !block.sseAcceptedSmModification ? "#dc2626" : "#047857",
     });
   }
@@ -255,6 +255,8 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
 
   const { data, isLoading, refetch } = useGetAvailRequestById(id);
   const block = data?.data ?? null;
+  const { data: smStationsData } = useGetSmStations();
+  const smStations: { code: string; smName: string }[] = Array.isArray(smStationsData?.data) ? smStationsData.data : [];
 
   const [syncing, setSyncing] = useState(false);
   const [modal, setModal] = useState<"apply" | "concurrence" | "extend" | "exit" | null>(null);
@@ -655,6 +657,9 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
                   <span>From: {fmtDt(block.smApprovedTimeFrom)}</span>
                   <span>To: {fmtDt(block.smApprovedTimeTo)}</span>
                 </div>
+                {block.powerNumber && (
+                  <p style={{ fontSize: "13px", color: "#1d4ed8", margin: "6px 0 0", fontWeight: 800 }}>⚡ Power No: <strong>{block.powerNumber}</strong></p>
+                )}
                 {block.smRemarks && (
                   <p style={{ fontSize: "13px", color: "#374151", margin: "6px 0 0" }}>Remarks: <strong>{block.smRemarks}</strong></p>
                 )}
@@ -934,19 +939,23 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
               </>}
             
               <div style={{ marginBottom: "16px" }}>
-                {/* <label style={fieldLabel}>Or enter depot / station code manually</label> */}
                 <label style={fieldLabel}>
-  {isTrdBlock 
-    ? "Enter Depot name where work is to be done" 
-    : "Or enter station code manually"}
-</label>
+                  {isTrdBlock ? "Depot / Station (type to search)" : "Station code (type to search or select above)"}
+                </label>
                 <input
                   type="text"
-                  placeholder="e.g. VM"
+                  list="sm-station-options"
+                  placeholder={isTrdBlock ? "e.g. MDU, DG, POY…" : "e.g. VRI, MNM, TPJ…"}
                   value={manualStation}
                   onChange={(e) => { setManualStation(e.target.value.toUpperCase()); setSelectedStation(""); }}
                   style={fieldInput}
+                  autoComplete="off"
                 />
+                <datalist id="sm-station-options">
+                  {smStations.map((s) => (
+                    <option key={s.code} value={s.code}>{s.smName ? `${s.code} — ${s.smName}` : s.code}</option>
+                  ))}
+                </datalist>
               </div>
             </>
 
