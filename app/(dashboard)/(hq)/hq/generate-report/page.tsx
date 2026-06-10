@@ -50,6 +50,8 @@ interface PastBlockSummary {
 
 interface DetailedData {
   division?: string;
+  id?: any;
+  DivisionId?: string;
   Date: string;
   Section: string;
   Duration: number;
@@ -57,6 +59,12 @@ interface DetailedData {
   Status: string;
   overAllStatus?: string;
   selectedDepartment?: string;
+  isSanctioned?: boolean;
+  isGranted?: boolean;
+  isApplied?: boolean;
+  userAcceptanceForSanction?: boolean;
+  AvailedTimeFrom?: any;
+  DemandedTimeFrom?: any;
 }
 
 const locationOptions: OptionType[] = [
@@ -97,6 +105,8 @@ export default function GenerateReportPage() {
     "Engineering",
   ]);
   const [activeTab, setActiveTab] = useState<"summary" | "upcoming">("summary");
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<string | null>(null);
   const router = useRouter();
   const {
     register,
@@ -160,11 +170,31 @@ export default function GenerateReportPage() {
     }
   }, [error]);
 
-  // Function to handle row click for section details
-  const handleSectionClick = (section: string) => {
-    toast.success(`Viewing details for section: ${section}`);
-    // In a real implementation, this would navigate to a detail view
-    // router.push(`/dashboard/drm/drm/section-details/${section}`);
+  const filteredBlocks = upcomingBlocks.filter((block) => {
+    if (activeFilter === "approved" && !block.isSanctioned) return false;
+    if (activeFilter === "granted" && !block.isGranted) return false;
+    if (activeFilter === "applied") {
+      if (!(block.isApplied === true && block.isSanctioned === true && block.userAcceptanceForSanction === true)) return false;
+    }
+    if (activeFilter === "availed" && !block.AvailedTimeFrom) return false;
+    if (activeFilter === "demanded" && !block.DemandedTimeFrom) return false;
+    if (activeFilter === "notSanctioned" && block.isSanctioned !== false) return false;
+    if (activeFilter === "notGranted" && !(block.isGranted === false && block.isApplied === true && block.isSanctioned === true)) return false;
+    if (activeFilter === "notAvailed") {
+      const isNotAvailed =
+        (block.isSanctioned && !block.userAcceptanceForSanction) ||
+        (block.isSanctioned && block.userAcceptanceForSanction && (!block.isApplied || block.isApplied === null)) ||
+        (block.isSanctioned && block.isApplied && block.isGranted && block.userAcceptanceForSanction && (!block.AvailedTimeFrom || block.AvailedTimeFrom == null));
+      if (!isNotAvailed) return false;
+    }
+    if (activeSection && block.selectedDepartment !== activeSection) return false;
+    return true;
+  });
+
+  const handleFilterClick = (filter: string, dept: string | null) => {
+    setActiveFilter(filter);
+    setActiveSection(dept);
+    setActiveTab("upcoming");
   };
 
   // Toggle selection for buttons
@@ -776,10 +806,10 @@ export default function GenerateReportPage() {
                         {item.corridorType && item.corridorType}
                       </span>
                     </td>
-                    <td className="border px-4 py-2 text-center text-black">
+                    <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => handleFilterClick("demanded", item.Department as string)}>
                        {item.Demanded.toFixed(2)} / {item.DemandsCount}
                     </td>
-                    <td className="border px-4 py-2 text-center text-black">
+                    <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => handleFilterClick("approved", item.Department as string)}>
                         {item.Approved.toFixed(2)} / {item.ApprovedCount}
                     </td>
                     <td className="border px-4 py-2 text-center text-black">
@@ -787,10 +817,10 @@ export default function GenerateReportPage() {
                           ? item.PercentSanctioned.toFixed(2) + "%"
                           : ""}
                     </td>
-                    <td className="border px-4 py-2 text-center text-black">
+                    <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => handleFilterClick("applied", item.Department as string)}>
                         {item.Applied} /{item.AppliedCount}
                     </td>
-                    <td className="border px-4 py-2 text-center text-black">
+                    <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => handleFilterClick("granted", item.Department as string)}>
                           {item.Granted.toFixed(2)} /{item.GrantedCount}
                     </td>
                     <td className="border px-4 py-2 text-center text-black">
@@ -798,21 +828,21 @@ export default function GenerateReportPage() {
                           ? item.PercentGranted.toFixed(2) + "%"
                           : ""}
                     </td>
-                       <td className="border px-4 py-2 text-center text-black">
+                    <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => handleFilterClick("availed", item.Department as string)}>
                       {item.Availed.toFixed(2)} / {item.AvailedCount}
                     </td>
-                      <td className="border px-4 py-2 text-center text-black">
+                    <td className="border px-4 py-2 text-center text-black">
                       {item.PercentAvailed !== undefined
                           ? item.PercentAvailed.toFixed(2) + "%"
                           : ""}
                     </td>
-                         <td className="border px-4 py-2 text-center text-black">
+                    <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => handleFilterClick("notSanctioned", item.Department as string)}>
                          {item.NotSanctionedCount}
                     </td>
-                             <td className="border px-4 py-2 text-center text-black">
+                    <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => handleFilterClick("notGranted", item.Department as string)}>
                                        {item.NotGrantedCount}
                     </td>
-                           <td className="border px-4 py-2 text-center text-black">
+                    <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => handleFilterClick("notAvailed", item.Department as string)}>
                                                   {item.NotAvailedCount}
                     </td>
                   </tr>
@@ -823,7 +853,7 @@ export default function GenerateReportPage() {
                   <td className="border px-4 py-2 text-center text-black">
                     Total
                   </td>
-                  <td className="border px-4 py-2 text-center text-black">
+                  <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => handleFilterClick("demanded", null)}>
                                  {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Demanded || 0), 0)
                         .toFixed(2)}{" "}
@@ -833,7 +863,7 @@ export default function GenerateReportPage() {
                         0
                       )}
                   </td>
-                  <td className="border px-4 py-2 text-center text-black">
+                  <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => handleFilterClick("approved", null)}>
                        {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Approved || 0), 0)
                         .toFixed(2)}{" "}
@@ -858,7 +888,7 @@ export default function GenerateReportPage() {
       : "0.00";
   })()}%
                   </td>
-                  <td className="border px-4 py-2 text-center text-black">
+                  <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => handleFilterClick("applied", null)}>
                      {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Applied || 0), 0)
                         .toFixed(2)}{" "}
@@ -868,7 +898,7 @@ export default function GenerateReportPage() {
                         0
                       )}
                   </td>
-                  <td className="border px-4 py-2 text-center text-black">
+                  <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => handleFilterClick("granted", null)}>
                       {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Granted || 0), 0)
                         .toFixed(2)}{" "}
@@ -895,7 +925,7 @@ export default function GenerateReportPage() {
                   </td>
 
 
-                                    <td className="border px-4 py-2 text-center text-black">
+                                    <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => handleFilterClick("availed", null)}>
      {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Availed || 0), 0)
                         .toFixed(2)}{" "}
@@ -922,20 +952,20 @@ export default function GenerateReportPage() {
       : "0.00";
   })()}%
                   </td>
-                                                                  <td className="border px-4 py-2 text-center text-black">
+                                                                  <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => handleFilterClick("notSanctioned", null)}>
     {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.NotSanctionedCount || 0),
                         0
                       )}
                   </td>
 
-                                                                                    <td className="border px-4 py-2 text-center text-black">
+                                                                                    <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => handleFilterClick("notGranted", null)}>
    {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.NotGrantedCount || 0),
                         0
                       )}
                   </td>
-                                                                                                      <td className="border px-4 py-2 text-center text-black">
+                                                                                                      <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => handleFilterClick("notAvailed", null)}>
   {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.NotAvailedCount || 0),
                         0
@@ -956,8 +986,16 @@ export default function GenerateReportPage() {
 
       {/* Upcoming Blocks Table */}
       <div className={`mb-6 ${activeTab !== "upcoming" ? "hidden" : ""}`}>
-        <div className="bg-[#ffc000] p-2 font-semibold text-black">
-          (B) Upcoming Blocks — All Divisions
+        <div className="bg-[#ffc000] p-2 font-semibold text-black flex items-center justify-between flex-wrap gap-2">
+          <span>(B) Block Requests — All Divisions{activeFilter && activeSection ? ` · ${activeSection} (${activeFilter})` : activeFilter ? ` · All Depts (${activeFilter})` : ""} [{filteredBlocks.length} records]</span>
+          {activeFilter && (
+            <button
+              onClick={() => { setActiveFilter(null); setActiveSection(null); }}
+              className="bg-white text-black text-sm px-3 py-1 rounded border border-gray-600 hover:bg-gray-100"
+            >
+              Clear Filter
+            </button>
+          )}
         </div>
         <div className="overflow-x-auto border border-gray-200 rounded-b">
           <table className="min-w-full bg-white">
@@ -987,8 +1025,8 @@ export default function GenerateReportPage() {
               </tr>
             </thead>
             <tbody>
-              {upcomingBlocks.length > 0 &&
-                upcomingBlocks.map((block, index) => (
+              {filteredBlocks.length > 0 &&
+                filteredBlocks.map((block, index) => (
                   <tr
                     key={index}
                     className={`${
@@ -1037,9 +1075,9 @@ export default function GenerateReportPage() {
                 ))}
             </tbody>
           </table>
-          {upcomingBlocks.length === 0 && (
+          {filteredBlocks.length === 0 && (
             <div className="text-black border border-black w-full py-4 text-center">
-              {reportGenerated ? "No upcoming blocks found for selected filters." : "Generate a report to see upcoming blocks."}
+              {activeFilter ? "No records match the selected filter." : reportGenerated ? "No blocks found for selected filters." : "Generate a report to see blocks."}
             </div>
           )}
         </div>
