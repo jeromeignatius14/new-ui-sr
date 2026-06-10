@@ -797,14 +797,8 @@ export default function GenerateReportPage() {
                       index % 2 === 0 ? "bg-[#f4dcf1]" : "bg-white"
                     } hover:bg-gray-50 transition-colors text-black`}
                   >
-                    <td
-                      className="border px-4 py-2 cursor-pointer hover:bg-purple-100"
-                      onClick={() => handleSectionClick(item.Section)}
-                    >
-                      <span className="text-blue-600 font-medium underline">
-                        {item.Department && item.Department} -{" "}
-                        {item.corridorType && item.corridorType}
-                      </span>
+                    <td className="border px-4 py-2 text-center text-black">
+                      {item.Department && item.Department}{item.corridorType ? ` - ${item.corridorType}` : ""}
                     </td>
                     <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => handleFilterClick("demanded", item.Department as string)}>
                        {item.Demanded.toFixed(2)} / {item.DemandsCount}
@@ -1039,13 +1033,8 @@ export default function GenerateReportPage() {
                     <td className="border px-3 py-1 text-center text-black whitespace-nowrap">
                       {block.Date}
                     </td>
-                    <td className="border px-3 py-1 cursor-pointer hover:bg-purple-100">
-                      <span
-                        className="text-blue-600 font-medium underline"
-                        onClick={() => handleSectionClick(block.Section)}
-                      >
-                        {block.Section}
-                      </span>
+                    <td className="border px-3 py-1 text-center text-black whitespace-nowrap">
+                      {block.Section}
                     </td>
                     <td className="border px-3 py-1 text-center text-black whitespace-nowrap">
                       {block.selectedDepartment || "—"}
