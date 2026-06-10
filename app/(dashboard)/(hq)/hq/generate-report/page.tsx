@@ -104,7 +104,6 @@ export default function GenerateReportPage() {
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([
     "Engineering",
   ]);
-  const [activeTab, setActiveTab] = useState<"summary" | "upcoming">("summary");
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const router = useRouter();
@@ -187,14 +186,13 @@ export default function GenerateReportPage() {
         (block.isSanctioned && block.isApplied && block.isGranted && block.userAcceptanceForSanction && (!block.AvailedTimeFrom || block.AvailedTimeFrom == null));
       if (!isNotAvailed) return false;
     }
-    if (activeSection && block.selectedDepartment !== activeSection) return false;
+    if (activeSection && block.division !== activeSection) return false;
     return true;
   });
 
-  const handleFilterClick = (filter: string, dept: string | null) => {
+  const handleFilterClick = (filter: string, division: string | null) => {
     setActiveFilter(filter);
-    setActiveSection(dept);
-    setActiveTab("upcoming");
+    setActiveSection(division);
   };
 
   // Toggle selection for buttons
@@ -590,32 +588,8 @@ export default function GenerateReportPage() {
         </form>
       </div>
 
-      {/* Tab switcher */}
-      <div className="flex border-b-2 border-gray-300 mb-0 mt-2">
-        <button
-          onClick={() => setActiveTab("summary")}
-          className={`px-6 py-2 font-semibold text-sm transition-colors ${
-            activeTab === "summary"
-              ? "bg-[#ff914d] text-black border-b-2 border-[#ff914d]"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-          }`}
-        >
-          (A) Past Block Summary
-        </button>
-        <button
-          onClick={() => setActiveTab("upcoming")}
-          className={`px-6 py-2 font-semibold text-sm transition-colors ${
-            activeTab === "upcoming"
-              ? "bg-[#ffc000] text-black border-b-2 border-[#ffc000]"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-          }`}
-        >
-          (B) Upcoming Blocks
-        </button>
-      </div>
-
       {/* Past Block Summary Table */}
-      <div className={`mb-6 ${activeTab !== "summary" ? "hidden" : ""}`}>
+      <div className="mb-6">
         <div className="bg-[#ff914d] p-2 font-semibold text-black">
           (A) Past Block Summary — All Divisions (In Hrs)
         </div>
@@ -978,99 +952,90 @@ export default function GenerateReportPage() {
         </div>
       </div>
 
-      {/* Upcoming Blocks Table */}
-      <div className={`mb-6 ${activeTab !== "upcoming" ? "hidden" : ""}`}>
-        <div className="bg-[#ffc000] p-2 font-semibold text-black flex items-center justify-between flex-wrap gap-2">
-          <span>(B) Block Requests — All Divisions{activeFilter && activeSection ? ` · ${activeSection} (${activeFilter})` : activeFilter ? ` · All Depts (${activeFilter})` : ""} [{filteredBlocks.length} records]</span>
-          {activeFilter && (
+      {/* Detailed Block Requests — shown inline below Table A when a filter is active */}
+      {activeFilter && (
+        <div className="mb-6">
+          <div className="bg-[#ffc000] p-2 font-semibold text-black flex items-center justify-between flex-wrap gap-2">
+            <span>
+              Detailed Block Requests
+              {activeSection ? ` — ${activeSection}` : " — All Divisions"}
+              {" · "}{activeFilter.replace(/([A-Z])/g, " $1").toLowerCase()}
+              {" "}[{filteredBlocks.length} records]
+            </span>
             <button
               onClick={() => { setActiveFilter(null); setActiveSection(null); }}
               className="bg-white text-black text-sm px-3 py-1 rounded border border-gray-600 hover:bg-gray-100"
             >
-              Clear Filter
+              Close ✕
             </button>
-          )}
-        </div>
-        <div className="overflow-x-auto border border-gray-200 rounded-b">
-          <table className="min-w-full bg-white">
-            <thead>
-              <tr className="bg-[#f7c7ac]">
-                <th className="border px-4 py-2 text-center text-black whitespace-nowrap">
-                  Division
-                </th>
-                <th className="border px-4 py-2 text-center text-black whitespace-nowrap">
-                  Date
-                </th>
-                <th className="border px-4 py-2 text-left text-black whitespace-nowrap">
-                  Section
-                </th>
-                <th className="border px-4 py-2 text-center text-black whitespace-nowrap">
-                  Dept
-                </th>
-                <th className="border px-4 py-2 text-center text-black whitespace-nowrap">
-                  Duration (Hrs)
-                </th>
-                <th className="border px-4 py-2 text-center text-black whitespace-nowrap">
-                  Type
-                </th>
-                <th className="border px-4 py-2 text-center text-black whitespace-nowrap">
-                  Status
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredBlocks.length > 0 &&
-                filteredBlocks.map((block, index) => (
-                  <tr
-                    key={index}
-                    className={`${
-                      index % 2 === 0 ? "bg-[#f4dcf1]" : "bg-white"
-                    } hover:bg-gray-50 transition-colors text-black`}
-                  >
-                    <td className="border px-3 py-1 text-center text-black font-semibold whitespace-nowrap">
-                      {block.division || "—"}
-                    </td>
-                    <td className="border px-3 py-1 text-center text-black whitespace-nowrap">
-                      {block.Date}
-                    </td>
-                    <td className="border px-3 py-1 text-center text-black whitespace-nowrap">
-                      {block.Section}
-                    </td>
-                    <td className="border px-3 py-1 text-center text-black whitespace-nowrap">
-                      {block.selectedDepartment || "—"}
-                    </td>
-                    <td className="border px-3 py-1 text-center text-black whitespace-nowrap">
-                      {block.Duration}
-                    </td>
-                    <td className="border px-3 py-1 text-center text-black whitespace-nowrap">
-                      {block.Type}
-                    </td>
-                    <td className="border px-3 py-1 text-center whitespace-nowrap">
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                          block.Status === "APPROVED"
-                            ? "bg-green-100 text-green-800"
-                            : block.Status === "PENDING"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : block.Status === "REJECTED"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-gray-100 text-gray-700"
-                        }`}
-                      >
-                        {block.overAllStatus || block.Status}
-                      </span>
+          </div>
+          <div className="overflow-x-auto border border-gray-200 rounded-b">
+            <table className="min-w-full bg-white">
+              <thead>
+                <tr className="bg-[#f7c7ac]">
+                  <th className="border px-4 py-2 text-center text-black whitespace-nowrap">Division</th>
+                  <th className="border px-4 py-2 text-center text-black whitespace-nowrap">Date</th>
+                  <th className="border px-4 py-2 text-center text-black whitespace-nowrap">Section</th>
+                  <th className="border px-4 py-2 text-center text-black whitespace-nowrap">Dept</th>
+                  <th className="border px-4 py-2 text-center text-black whitespace-nowrap">Duration (Hrs)</th>
+                  <th className="border px-4 py-2 text-center text-black whitespace-nowrap">Type</th>
+                  <th className="border px-4 py-2 text-center text-black whitespace-nowrap">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredBlocks.length > 0 ? (
+                  filteredBlocks.map((block, index) => (
+                    <tr
+                      key={index}
+                      className={`${index % 2 === 0 ? "bg-[#f4dcf1]" : "bg-white"} hover:bg-gray-50 transition-colors text-black`}
+                    >
+                      <td className="border px-3 py-1 text-center text-black font-semibold whitespace-nowrap">
+                        {block.division || "—"}
+                      </td>
+                      <td className="border px-3 py-1 text-center text-black whitespace-nowrap">
+                        {block.Date}
+                      </td>
+                      <td className="border px-3 py-1 text-center text-black whitespace-nowrap">
+                        {block.Section}
+                      </td>
+                      <td className="border px-3 py-1 text-center text-black whitespace-nowrap">
+                        {block.selectedDepartment || "—"}
+                      </td>
+                      <td className="border px-3 py-1 text-center text-black whitespace-nowrap">
+                        {block.Duration}
+                      </td>
+                      <td className="border px-3 py-1 text-center text-black whitespace-nowrap">
+                        {block.Type}
+                      </td>
+                      <td className="border px-3 py-1 text-center whitespace-nowrap">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                            block.Status === "APPROVED"
+                              ? "bg-green-100 text-green-800"
+                              : block.Status === "PENDING"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : block.Status === "REJECTED"
+                              ? "bg-red-100 text-red-800"
+                              : "bg-gray-100 text-gray-700"
+                          }`}
+                        >
+                          {block.overAllStatus || block.Status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={7} className="text-center py-4 text-black">
+                      No records match the selected filter.
                     </td>
                   </tr>
-                ))}
-            </tbody>
-          </table>
-          {filteredBlocks.length === 0 && (
-            <div className="text-black border border-black w-full py-4 text-center">
-              {activeFilter ? "No records match the selected filter." : reportGenerated ? "No blocks found for selected filters." : "Generate a report to see blocks."}
-            </div>
-          )}
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
