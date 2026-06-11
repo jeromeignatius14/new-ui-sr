@@ -138,6 +138,12 @@ export interface UserRequest {
         depot: string;
         department: string;
     };
+    batchId?: string | null;
+    batchTimeFrom?: string | null;
+    batchTimeTo?: string | null;
+    batchSpellIndex?: number | null;
+    batchTotalSpells?: number | null;
+    spellDurationMinutes?: number | null;
 }
 
 export interface UserRequestsResponse {
