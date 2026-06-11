@@ -645,7 +645,7 @@ const clearGlobalFilters = () => {
         return false;
     }
 }
-        if (activeSection && block.Section !== activeSection) return false;
+        if (activeSection && block.Section !== activeSection && block.selectedDepo !== activeSection) return false;
     if (!filterBlocksByDepartmentCount(block)) return false;
 
     return true;
@@ -1413,7 +1413,7 @@ const clearGlobalFilters = () => {
               <thead>
                 <tr className="bg-[#f7c7ac] text-black text-[14px] md:text-[24px] font-bold">
                   <th className="border-2 border-black px-1 md:px-2 py-2">
-                    Section
+                    Section / Depot
                   </th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">
   <div className="flex flex-col items-center justify-center">
@@ -1646,9 +1646,10 @@ const clearGlobalFilters = () => {
                           );
                         }}
                       >
-                         {summary.PercentSanctioned !== undefined
-                          ? summary.PercentSanctioned.toFixed(2) + "%"
-                          : ""}
+                         <div className="text-center leading-tight">
+                           <span>{summary.Demanded > 0 ? ((summary.Approved / summary.Demanded) * 100).toFixed(2) : "0.00"}% / {(summary.DemandsCount || 0) > 0 ? (((summary.ApprovedCount || 0) / (summary.DemandsCount || 1)) * 100).toFixed(2) : "0.00"}%</span>
+                           <div className="text-[10px] opacity-60">Hrs / Nos</div>
+                         </div>
                       </td>
                       <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
@@ -1678,9 +1679,10 @@ const clearGlobalFilters = () => {
                       </td>
 
                       <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                        {summary.PercentGranted !== undefined
-                          ? summary.PercentGranted.toFixed(2) + "%"
-                          : ""}
+                        <div className="text-center leading-tight">
+                          <span>{(summary.Applied || 0) > 0 ? (((summary.Granted || 0) / (summary.Applied || 1)) * 100).toFixed(2) : "0.00"}% / {(summary.AppliedCount || 0) > 0 ? (((summary.GrantedCount || 0) / (summary.AppliedCount || 1)) * 100).toFixed(2) : "0.00"}%</span>
+                          <div className="text-[10px] opacity-60">Hrs / Nos</div>
+                        </div>
                       </td>
                       <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
@@ -1696,9 +1698,10 @@ const clearGlobalFilters = () => {
                         {summary.Availed.toFixed(2)} / {summary.AvailedCount}
                       </td>
                       <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                        {summary.PercentAvailed !== undefined
-                          ? summary.PercentAvailed.toFixed(2) + "%"
-                          : ""}
+                        <div className="text-center leading-tight">
+                          <span>{(summary.Granted || 0) > 0 ? (((summary.Availed || 0) / (summary.Granted || 1)) * 100).toFixed(2) : "0.00"}% / {(summary.GrantedCount || 0) > 0 ? (((summary.AvailedCount || 0) / (summary.GrantedCount || 1)) * 100).toFixed(2) : "0.00"}%</span>
+                          <div className="text-[10px] opacity-60">Hrs / Nos</div>
+                        </div>
                       </td>
                                                                                                                                       <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
@@ -1794,18 +1797,14 @@ const clearGlobalFilters = () => {
                     </td>
 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
   {(() => {
-    const totalApproved = pastBlockSummary.reduce(
-      (sum, item) => sum + (item.ApprovedCount || 0),
-      0
-    );
-    const totalDemanded = pastBlockSummary.reduce(
-      (sum, item) => sum + (item.DemandsCount || 0),
-      0
-    );
-    return totalDemanded > 0 
-      ? ((totalApproved / totalDemanded) * 100).toFixed(2)
-      : "0.00";
-  })()}%
+    const totalApprovedHrs = pastBlockSummary.reduce((sum, item) => sum + (item.Approved || 0), 0);
+    const totalDemandedHrs = pastBlockSummary.reduce((sum, item) => sum + (item.Demanded || 0), 0);
+    const totalApprovedCount = pastBlockSummary.reduce((sum, item) => sum + (item.ApprovedCount || 0), 0);
+    const totalDemandedCount = pastBlockSummary.reduce((sum, item) => sum + (item.DemandsCount || 0), 0);
+    const hrsPercent = totalDemandedHrs > 0 ? ((totalApprovedHrs / totalDemandedHrs) * 100).toFixed(2) : "0.00";
+    const countPercent = totalDemandedCount > 0 ? ((totalApprovedCount / totalDemandedCount) * 100).toFixed(2) : "0.00";
+    return (<div className="text-center leading-tight"><span>{hrsPercent}% / {countPercent}%</span><div className="text-[10px] text-gray-400">Hrs / Nos</div></div>);
+  })()}
 </td>
                                                             <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
                        onClick={() => {
@@ -1838,19 +1837,15 @@ const clearGlobalFilters = () => {
                       )}
                     </td>
                                          <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                                                                   {(() => {
-    const totalApplied = pastBlockSummary.reduce(
-      (sum, item) => sum + (item.AppliedCount || 0),
-      0
-    );
-    const totalGranted = pastBlockSummary.reduce(
-      (sum, item) => sum + (item.GrantedCount || 0),
-      0
-    );
-    return totalApplied > 0 
-      ? ((totalGranted / totalApplied) * 100).toFixed(2)
-      : "0.00";
-  })()}%
+                      {(() => {
+    const totalAppliedHrs = pastBlockSummary.reduce((sum, item) => sum + (item.Applied || 0), 0);
+    const totalGrantedHrs = pastBlockSummary.reduce((sum, item) => sum + (item.Granted || 0), 0);
+    const totalAppliedCount = pastBlockSummary.reduce((sum, item) => sum + (item.AppliedCount || 0), 0);
+    const totalGrantedCount = pastBlockSummary.reduce((sum, item) => sum + (item.GrantedCount || 0), 0);
+    const hrsPercent = totalAppliedHrs > 0 ? ((totalGrantedHrs / totalAppliedHrs) * 100).toFixed(2) : "0.00";
+    const countPercent = totalAppliedCount > 0 ? ((totalGrantedCount / totalAppliedCount) * 100).toFixed(2) : "0.00";
+    return (<div className="text-center leading-tight"><span>{hrsPercent}% / {countPercent}%</span><div className="text-[10px] text-gray-400">Hrs / Nos</div></div>);
+  })()}
                     </td>
 
                                                           <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
@@ -1869,19 +1864,15 @@ const clearGlobalFilters = () => {
                       )}
                     </td>
                                                              <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
-                                                                                        {(() => {
-    const totalAvailed = pastBlockSummary.reduce(
-      (sum, item) => sum + (item.AvailedCount || 0),
-      0
-    );
-    const totalGranted = pastBlockSummary.reduce(
-      (sum, item) => sum + (item.GrantedCount || 0),
-      0
-    );
-    return totalAvailed > 0 
-      ? ((totalAvailed / totalGranted) * 100).toFixed(2)
-      : "0.00";
-  })()}%
+                      {(() => {
+    const totalAvailedHrs = pastBlockSummary.reduce((sum, item) => sum + (item.Availed || 0), 0);
+    const totalGrantedHrs = pastBlockSummary.reduce((sum, item) => sum + (item.Granted || 0), 0);
+    const totalAvailedCount = pastBlockSummary.reduce((sum, item) => sum + (item.AvailedCount || 0), 0);
+    const totalGrantedCount = pastBlockSummary.reduce((sum, item) => sum + (item.GrantedCount || 0), 0);
+    const hrsPercent = totalGrantedHrs > 0 ? ((totalAvailedHrs / totalGrantedHrs) * 100).toFixed(2) : "0.00";
+    const countPercent = totalGrantedCount > 0 ? ((totalAvailedCount / totalGrantedCount) * 100).toFixed(2) : "0.00";
+    return (<div className="text-center leading-tight"><span>{hrsPercent}% / {countPercent}%</span><div className="text-[10px] text-gray-400">Hrs / Nos</div></div>);
+  })()}
                     </td>
                                                                                                             <td   className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
                          onClick={() => {

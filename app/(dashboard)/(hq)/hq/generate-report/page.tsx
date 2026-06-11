@@ -64,6 +64,10 @@ interface UpcomingBlock {
   Status: string;
   DemandedTimeFrom?: any;
   DemandedTimeTo?: any;
+  isSanctioned?: boolean;
+  isGranted?: boolean;
+  isApplied?: boolean;
+  userAcceptanceForSanction?: boolean;
 }
 
 interface DetailedData extends UpcomingBlock {
@@ -113,6 +117,8 @@ export default function GenerateReportPage() {
   ]);
   const [displayStartDate, setDisplayStartDate] = useState<string>("");
 const [displayEndDate, setDisplayEndDate] = useState<string>("");
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<string | null>(null);
   const router = useRouter();
   const {
     register,
@@ -176,12 +182,26 @@ const [displayEndDate, setDisplayEndDate] = useState<string>("");
     }
   }, [error]);
 
-  // Function to handle row click for section details
-  const handleSectionClick = (section: string) => {
-    toast.success(`Viewing details for section: ${section}`);
-    // In a real implementation, this would navigate to a detail view
-    // router.push(`/dashboard/drm/drm/section-details/${section}`);
-  };
+  const filteredBlocks = upcomingBlocks.filter((block) => {
+    if (activeFilter === "approved" && !block.isSanctioned) return false;
+    if (activeFilter === "granted" && !block.isGranted) return false;
+    if (activeFilter === "applied") {
+      if (!(block.isApplied === true && block.isSanctioned === true && block.userAcceptanceForSanction === true)) return false;
+    }
+    if (activeFilter === "availed" && !block.AvailedTimeFrom) return false;
+    if (activeFilter === "demanded" && !block.DemandedTimeFrom) return false;
+    if (activeFilter === "notSanctioned" && block.isSanctioned !== false) return false;
+    if (activeFilter === "notGranted" && !(block.isGranted === false && block.isApplied === true && block.isSanctioned === true)) return false;
+    if (activeFilter === "notAvailed") {
+      const isNotAvailed =
+        (block.isSanctioned && !block.userAcceptanceForSanction) ||
+        (block.isSanctioned && block.userAcceptanceForSanction && (!block.isApplied || block.isApplied === null)) ||
+        (block.isSanctioned && block.isApplied && block.isGranted && block.userAcceptanceForSanction && (!block.AvailedTimeFrom || block.AvailedTimeFrom == null));
+      if (!isNotAvailed) return false;
+    }
+    if (activeSection && block.Section !== activeSection && block.selectedDepo !== activeSection) return false;
+    return true;
+  });
 
   // Toggle selection for buttons
   const toggleLocation = (location: string) => {
@@ -590,7 +610,7 @@ Department: {selectedDepartments.join(", ")}
             <thead>
               <tr className="bg-[#e49edd]">
                 <th className="border px-4 py-2 text-left text-black">
-                  Section
+                  Section / Depot
                 </th>
                 <th className="border px-4 py-2 text-center text-black">
                     <div className="flex flex-col items-center justify-center">
@@ -772,48 +792,49 @@ Department: {selectedDepartments.join(", ")}
                         {item.corridorType && item.corridorType}
                       </span>
                     </td> */}
-                    <td
-                     className="border px-4 py-2 text-center text-black" 
-                    >
+                    <td className="border px-4 py-2 text-center text-black">
                       {item.Department}
                     </td>
-                    <td className="border px-4 py-2 text-center text-black">
+                    <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => { setActiveFilter("demanded"); setActiveSection(item.Department as string); }}>
                        {item.Demanded.toFixed(2)} / {item.DemandsCount}
                     </td>
-                    <td className="border px-4 py-2 text-center text-black">
+                    <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => { setActiveFilter("approved"); setActiveSection(item.Department as string); }}>
                         {item.Approved.toFixed(2)} / {item.ApprovedCount}
                     </td>
                     <td className="border px-4 py-2 text-center text-black">
-                        {item.PercentSanctioned !== undefined
-                          ? item.PercentSanctioned.toFixed(2) + "%"
-                          : ""}
+                      <div className="text-center leading-tight">
+                        <span>{item.Demanded > 0 ? ((item.Approved / item.Demanded) * 100).toFixed(2) : "0.00"}% / {(item.DemandsCount || 0) > 0 ? (((item.ApprovedCount || 0) / (item.DemandsCount || 1)) * 100).toFixed(2) : "0.00"}%</span>
+                        <div className="text-[10px] opacity-60">Hrs / Nos</div>
+                      </div>
                     </td>
-                    <td className="border px-4 py-2 text-center text-black">
+                    <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => { setActiveFilter("applied"); setActiveSection(item.Department as string); }}>
                         {item.Applied} /{item.AppliedCount}
                     </td>
-                    <td className="border px-4 py-2 text-center text-black">
+                    <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => { setActiveFilter("granted"); setActiveSection(item.Department as string); }}>
                           {item.Granted.toFixed(2)} /{item.GrantedCount}
                     </td>
                     <td className="border px-4 py-2 text-center text-black">
-                      {item.PercentGranted !== undefined
-                          ? item.PercentGranted.toFixed(2) + "%"
-                          : ""}
+                      <div className="text-center leading-tight">
+                        <span>{(item.Applied || 0) > 0 ? (((item.Granted || 0) / (item.Applied || 1)) * 100).toFixed(2) : "0.00"}% / {(item.AppliedCount || 0) > 0 ? (((item.GrantedCount || 0) / (item.AppliedCount || 1)) * 100).toFixed(2) : "0.00"}%</span>
+                        <div className="text-[10px] opacity-60">Hrs / Nos</div>
+                      </div>
                     </td>
-                       <td className="border px-4 py-2 text-center text-black">
+                    <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => { setActiveFilter("availed"); setActiveSection(item.Department as string); }}>
                       {item.Availed.toFixed(2)} / {item.AvailedCount}
                     </td>
-                      <td className="border px-4 py-2 text-center text-black">
-                      {item.PercentAvailed !== undefined
-                          ? item.PercentAvailed.toFixed(2) + "%"
-                          : ""}
+                    <td className="border px-4 py-2 text-center text-black">
+                      <div className="text-center leading-tight">
+                        <span>{(item.Granted || 0) > 0 ? (((item.Availed || 0) / (item.Granted || 1)) * 100).toFixed(2) : "0.00"}% / {(item.GrantedCount || 0) > 0 ? (((item.AvailedCount || 0) / (item.GrantedCount || 1)) * 100).toFixed(2) : "0.00"}%</span>
+                        <div className="text-[10px] opacity-60">Hrs / Nos</div>
+                      </div>
                     </td>
-                         <td className="border px-4 py-2 text-center text-black">
+                    <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => { setActiveFilter("notSanctioned"); setActiveSection(item.Department as string); }}>
                          {item.NotSanctionedCount}
                     </td>
-                             <td className="border px-4 py-2 text-center text-black">
+                    <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => { setActiveFilter("notGranted"); setActiveSection(item.Department as string); }}>
                                        {item.NotGrantedCount}
                     </td>
-                           <td className="border px-4 py-2 text-center text-black">
+                    <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => { setActiveFilter("notAvailed"); setActiveSection(item.Department as string); }}>
                                                   {item.NotAvailedCount}
                     </td>
                   </tr>
@@ -824,7 +845,7 @@ Department: {selectedDepartments.join(", ")}
                   <td className="border px-4 py-2 text-center text-black">
                     Total
                   </td>
-                  <td className="border px-4 py-2 text-center text-black">
+                  <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => { setActiveFilter("demanded"); setActiveSection(null); }}>
                                  {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Demanded || 0), 0)
                         .toFixed(2)}{" "}
@@ -834,7 +855,7 @@ Department: {selectedDepartments.join(", ")}
                         0
                       )}
                   </td>
-                  <td className="border px-4 py-2 text-center text-black">
+                  <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => { setActiveFilter("approved"); setActiveSection(null); }}>
                        {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Approved || 0), 0)
                         .toFixed(2)}{" "}
@@ -846,20 +867,16 @@ Department: {selectedDepartments.join(", ")}
                   </td>
                   <td className="border px-4 py-2 text-center text-black">
                   {(() => {
-    const totalApproved = pastBlockSummary.reduce(
-      (sum, item) => sum + (item.ApprovedCount || 0),
-      0
-    );
-    const totalDemanded = pastBlockSummary.reduce(
-      (sum, item) => sum + (item.DemandsCount || 0),
-      0
-    );
-    return totalDemanded > 0 
-      ? ((totalApproved / totalDemanded) * 100).toFixed(2)
-      : "0.00";
-  })()}%
+    const totalApprovedHrs = pastBlockSummary.reduce((sum, item) => sum + (item.Approved || 0), 0);
+    const totalDemandedHrs = pastBlockSummary.reduce((sum, item) => sum + (item.Demanded || 0), 0);
+    const totalApprovedCount = pastBlockSummary.reduce((sum, item) => sum + (item.ApprovedCount || 0), 0);
+    const totalDemandedCount = pastBlockSummary.reduce((sum, item) => sum + (item.DemandsCount || 0), 0);
+    const hrsPercent = totalDemandedHrs > 0 ? ((totalApprovedHrs / totalDemandedHrs) * 100).toFixed(2) : "0.00";
+    const countPercent = totalDemandedCount > 0 ? ((totalApprovedCount / totalDemandedCount) * 100).toFixed(2) : "0.00";
+    return (<div className="text-center leading-tight"><span>{hrsPercent}% / {countPercent}%</span><div className="text-[10px] text-gray-400">Hrs / Nos</div></div>);
+  })()}
                   </td>
-                  <td className="border px-4 py-2 text-center text-black">
+                  <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => { setActiveFilter("applied"); setActiveSection(null); }}>
                      {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Applied || 0), 0)
                         .toFixed(2)}{" "}
@@ -869,7 +886,7 @@ Department: {selectedDepartments.join(", ")}
                         0
                       )}
                   </td>
-                  <td className="border px-4 py-2 text-center text-black">
+                  <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => { setActiveFilter("granted"); setActiveSection(null); }}>
                       {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Granted || 0), 0)
                         .toFixed(2)}{" "}
@@ -880,23 +897,19 @@ Department: {selectedDepartments.join(", ")}
                       )}
                   </td>
                   <td className="border px-4 py-2 text-center text-black">
-                                                                                   {(() => {
-    const totalApplied = pastBlockSummary.reduce(
-      (sum, item) => sum + (item.AppliedCount || 0),
-      0
-    );
-    const totalGranted = pastBlockSummary.reduce(
-      (sum, item) => sum + (item.GrantedCount || 0),
-      0
-    );
-    return totalApplied > 0 
-      ? ((totalGranted / totalApplied) * 100).toFixed(2)
-      : "0.00";
-  })()}%
+                  {(() => {
+    const totalAppliedHrs = pastBlockSummary.reduce((sum, item) => sum + (item.Applied || 0), 0);
+    const totalGrantedHrs = pastBlockSummary.reduce((sum, item) => sum + (item.Granted || 0), 0);
+    const totalAppliedCount = pastBlockSummary.reduce((sum, item) => sum + (item.AppliedCount || 0), 0);
+    const totalGrantedCount = pastBlockSummary.reduce((sum, item) => sum + (item.GrantedCount || 0), 0);
+    const hrsPercent = totalAppliedHrs > 0 ? ((totalGrantedHrs / totalAppliedHrs) * 100).toFixed(2) : "0.00";
+    const countPercent = totalAppliedCount > 0 ? ((totalGrantedCount / totalAppliedCount) * 100).toFixed(2) : "0.00";
+    return (<div className="text-center leading-tight"><span>{hrsPercent}% / {countPercent}%</span><div className="text-[10px] text-gray-400">Hrs / Nos</div></div>);
+  })()}
                   </td>
 
 
-                                    <td className="border px-4 py-2 text-center text-black">
+                                    <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => { setActiveFilter("availed"); setActiveSection(null); }}>
      {pastBlockSummary
                         .reduce((sum, item) => sum + (item.Availed || 0), 0)
                         .toFixed(2)}{" "}
@@ -909,34 +922,30 @@ Department: {selectedDepartments.join(", ")}
 
 
                                                    <td className="border px-4 py-2 text-center text-black">
-                                                                                         {(() => {
-    const totalAvailed = pastBlockSummary.reduce(
-      (sum, item) => sum + (item.AvailedCount || 0),
-      0
-    );
-    const totalGranted = pastBlockSummary.reduce(
-      (sum, item) => sum + (item.GrantedCount || 0),
-      0
-    );
-    return totalAvailed > 0 
-      ? ((totalAvailed / totalGranted) * 100).toFixed(2)
-      : "0.00";
-  })()}%
+                  {(() => {
+    const totalAvailedHrs = pastBlockSummary.reduce((sum, item) => sum + (item.Availed || 0), 0);
+    const totalGrantedHrs = pastBlockSummary.reduce((sum, item) => sum + (item.Granted || 0), 0);
+    const totalAvailedCount = pastBlockSummary.reduce((sum, item) => sum + (item.AvailedCount || 0), 0);
+    const totalGrantedCount = pastBlockSummary.reduce((sum, item) => sum + (item.GrantedCount || 0), 0);
+    const hrsPercent = totalGrantedHrs > 0 ? ((totalAvailedHrs / totalGrantedHrs) * 100).toFixed(2) : "0.00";
+    const countPercent = totalGrantedCount > 0 ? ((totalAvailedCount / totalGrantedCount) * 100).toFixed(2) : "0.00";
+    return (<div className="text-center leading-tight"><span>{hrsPercent}% / {countPercent}%</span><div className="text-[10px] text-gray-400">Hrs / Nos</div></div>);
+  })()}
                   </td>
-                                                                  <td className="border px-4 py-2 text-center text-black">
+                                                                  <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => { setActiveFilter("notSanctioned"); setActiveSection(null); }}>
     {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.NotSanctionedCount || 0),
                         0
                       )}
                   </td>
 
-                                                                                    <td className="border px-4 py-2 text-center text-black">
+                                                                                    <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => { setActiveFilter("notGranted"); setActiveSection(null); }}>
    {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.NotGrantedCount || 0),
                         0
                       )}
                   </td>
-                                                                                                      <td className="border px-4 py-2 text-center text-black">
+                                                                                                      <td className="border px-4 py-2 text-center text-blue-600 underline cursor-pointer" onClick={() => { setActiveFilter("notAvailed"); setActiveSection(null); }}>
   {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.NotAvailedCount || 0),
                         0
@@ -957,8 +966,16 @@ Department: {selectedDepartments.join(", ")}
 
       {/* Upcoming Blocks Table */}
       <div className="mb-6">
-        <div className=" bg-[#f1a983] p-2 font-semibold text-black">
-          (B) Upcoming Blocks (Summary): {displayStartDate} to {displayEndDate} Division {selectedDepartments.join(", ")} Department
+        <div className=" bg-[#f1a983] p-2 font-semibold text-black flex items-center justify-between flex-wrap gap-2">
+          <span>(B) Detailed Block Requests: {displayStartDate} to {displayEndDate}{activeFilter && activeSection ? ` — ${activeSection} (${activeFilter})` : activeFilter ? ` — All Depts (${activeFilter})` : ""} [{filteredBlocks.length} records]</span>
+          {activeFilter && (
+            <button
+              onClick={() => { setActiveFilter(null); setActiveSection(null); }}
+              className="bg-white text-black text-sm px-3 py-1 rounded border border-gray-400 hover:bg-gray-100"
+            >
+              Clear Filter
+            </button>
+          )}
         </div>
         <div className="overflow-x-auto border border-gray-200 rounded-b">
           <table className="min-w-full bg-white">
@@ -1008,8 +1025,8 @@ Department: {selectedDepartments.join(", ")}
               </tr>
             </thead>
             <tbody className="overflow-y-auto">
-              {upcomingBlocks.length > 0 &&
-                upcomingBlocks.map((block, index) => (
+              {filteredBlocks.length > 0 &&
+                filteredBlocks.map((block, index) => (
                   <tr
                     key={index}
                     className={`${
@@ -1026,7 +1043,9 @@ Department: {selectedDepartments.join(", ")}
                           </Link>
                     </td> */}
                         <td className="border px-4 py-2 text-center text-black">
-                      {block.DivisionId}
+                      <Link href={`/hq/view-request/${block.id}`} className="text-blue-600 underline">
+                        {block.DivisionId}
+                      </Link>
                     </td>
                     <td className="border px-4 py-2 text-center text-black">
                       {block.Date}
@@ -1105,9 +1124,9 @@ Department: {selectedDepartments.join(", ")}
                 ))}
             </tbody>
           </table>
-          {upcomingBlocks.length === 0 && (
+          {filteredBlocks.length === 0 && (
             <div className="bg-white hover:bg-gray-50 text-black border border-black w-full py-2 text-center">
-              No data available
+              {activeFilter ? "No records match the selected filter." : "No data available"}
             </div>
           )}
         </div>
