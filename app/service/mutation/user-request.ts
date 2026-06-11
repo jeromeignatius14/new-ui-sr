@@ -11,6 +11,17 @@ export function useCreateUserRequest() {
     });
 }
 
+export function useCreateBatchRequest() {
+    return useMutation({
+        mutationFn: (data: {
+            spells: { durationMinutes: number }[];
+            batchTimeFrom: string;
+            batchTimeTo: string;
+            [key: string]: any;
+        }) => userRequestService.createBatch(data),
+    });
+}
+
 /**
  * Hook for updating an existing user request
  * @param id - The ID of the request to update

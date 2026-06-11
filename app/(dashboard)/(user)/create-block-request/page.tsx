@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { useCreateUserRequest } from "@/app/service/mutation/user-request";
+import { useCreateUserRequest, useCreateBatchRequest } from "@/app/service/mutation/user-request";
 import { useSession, signOut } from "next-auth/react";
 import { ToastContainer, toast } from "react-toastify";
 import {
@@ -1464,6 +1464,12 @@ const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
   }, [selectedSTDepots, selectedTRDDepots,selectedENGDepots]);
 
   const mutation = useCreateUserRequest();
+  const batchMutation = useCreateBatchRequest();
+
+  // Spell / batch state
+  const [spellCount, setSpellCount] = useState<number>(1);
+  const [spellDurations, setSpellDurations] = useState<number[]>([]);
+
   const userLocation = session?.user.location;
   // const majorSectionOptions =
   //   userLocation && MajorSection[userLocation as keyof typeof MajorSection]
@@ -2501,16 +2507,34 @@ const findCutoffThursday = () => {
       };
 
       // ─── 7. Submit to backend ────────────────────────────────────────────
-      const response = await mutation.mutateAsync(submitData);
+      let response: any;
+      const isBatch = spellCount > 1 && spellDurations.length === spellCount && spellDurations.every(d => d > 0);
+
+      if (isBatch) {
+        // Batch submit: batchTimeFrom/To = the overall demand window; spells have auto-computed times
+        response = await batchMutation.mutateAsync({
+          ...submitData,
+          spells: spellDurations.map(d => ({ durationMinutes: d })),
+          batchTimeFrom: submitData.demandTimeFrom,
+          batchTimeTo: submitData.demandTimeTo,
+        });
+      } else {
+        response = await mutation.mutateAsync(submitData);
+      }
+
       if (response) {
-        toast.success("Block request submitted successfully!");
+        toast.success(isBatch
+          ? `${spellCount} spell requests created successfully!`
+          : "Block request submitted successfully!");
         setSubmittedSummary({
           date: submitData.date,
-          id: response.data?.divisionId || response.data?.id,
+          id: isBatch
+            ? response.data?.requests?.[0]?.divisionId || response.data?.batchId
+            : response.data?.divisionId || response.data?.id,
           blockSection: submitData.missionBlock || "-",
           lineOrRoad:
             submitData.processedLineSections
-              ?.map((s) => s.lineName || s.road)
+              ?.map((s: any) => s.lineName || s.road)
               .join(", ") || "-",
           duration:
             getDurationFromTimes(
@@ -2526,6 +2550,8 @@ const findCutoffThursday = () => {
         setSelectedActivities([]);
         setCustomActivity("");
         setErrors({});
+        setSpellCount(1);
+        setSpellDurations([]);
         setIsShadowBlock(false);
         setShadowParentId("");
         setShadowListExpanded(true);
@@ -5131,6 +5157,110 @@ useEffect(() => {
                   ) || "--"}
                 </span>
               </div>
+
+              {/* ─── SPELLS SECTION ─────────────────────────────────────────── */}
+              {!isShadowBlock && formData.demandTimeFrom && formData.demandTimeTo && (
+                <div style={{
+                  background: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)",
+                  border: "2px solid #3b82f6",
+                  borderRadius: "16px",
+                  padding: "20px 16px",
+                  marginTop: "12px",
+                  width: "100%",
+                }}>
+                  <div style={{ textAlign: "center", marginBottom: "14px" }}>
+                    <span style={{ fontSize: "20px", fontWeight: 800, color: "#1e40af", letterSpacing: "0.5px" }}>
+                      ⚡ Spells
+                    </span>
+                    <p style={{ fontSize: "13px", color: "#3b82f6", fontWeight: 600, margin: "4px 0 0" }}>
+                      Split this demand window into multiple spells (individual block requests grouped together)
+                    </p>
+                  </div>
+
+                  {/* Spell count selector */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", marginBottom: "16px" }}>
+                    <span style={{ fontWeight: 700, fontSize: "16px", color: "#1e3a8a" }}>Number of Spells:</span>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      {[1,2,3,4,5,6,7,8].map(n => (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => {
+                            setSpellCount(n);
+                            setSpellDurations(prev => {
+                              const next = [...prev];
+                              while (next.length < n) next.push(0);
+                              return next.slice(0, n);
+                            });
+                          }}
+                          style={{
+                            width: "36px", height: "36px", borderRadius: "50%",
+                            background: spellCount === n ? "#1d4ed8" : "#ffffff",
+                            color: spellCount === n ? "#ffffff" : "#1d4ed8",
+                            border: "2px solid #1d4ed8",
+                            fontWeight: 800, fontSize: "15px", cursor: "pointer",
+                          }}
+                        >
+                          {n}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Duration inputs for each spell */}
+                  {spellCount > 1 && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                      {Array.from({ length: spellCount }, (_, i) => {
+                        return (
+                            <div key={i} style={{
+                              display: "flex", alignItems: "center", gap: "10px",
+                              background: "#ffffff", borderRadius: "10px",
+                              padding: "10px 14px", border: "1.5px solid #93c5fd",
+                            }}>
+                              <span style={{ fontWeight: 800, fontSize: "14px", color: "#1e40af", minWidth: "60px" }}>
+                                Spell {i + 1}
+                              </span>
+                              <input
+                                type="number"
+                                min={1}
+                                max={600}
+                                placeholder="mins"
+                                value={spellDurations[i] || ""}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value) || 0;
+                                  setSpellDurations(prev => {
+                                    const next = [...prev];
+                                    next[i] = val;
+                                    return next;
+                                  });
+                                }}
+                                style={{
+                                  width: "70px", padding: "6px 8px", border: "1.5px solid #3b82f6",
+                                  borderRadius: "8px", fontSize: "15px", fontWeight: 700,
+                                  textAlign: "center", color: "#1e3a8a",
+                                }}
+                              />
+                              <span style={{ fontSize: "13px", color: "#64748b", fontWeight: 600 }}>mins</span>
+                            </div>
+                          );
+                        })}
+                      {spellDurations.slice(0, spellCount).every(d => d > 0) && (
+                        <div style={{
+                          marginTop: "8px", padding: "10px 14px",
+                          background: "#fef3c7", border: "1.5px solid #f59e0b",
+                          borderRadius: "10px", fontSize: "13px", fontWeight: 700, color: "#92400e",
+                          textAlign: "center",
+                        }}>
+                          ✅ {spellCount} individual block requests will be created under one batch
+                          &nbsp;({formData.demandTimeFrom} – {formData.demandTimeTo})
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+              {/* ─── END SPELLS ─────────────────────────────────────────────── */}
+
               {/* Site Location row */}
               {getDisplayInfo(blockSectionValue[0])?.text === 'Corridor for this section' &&(
  <div className="flex flex-row items-center gap-4 w-full pl-1">

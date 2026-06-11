@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { groupRequestsByBatch } from "@/app/components/BatchGroupBanner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { managerService, UserRequest } from "@/app/service/api/manager";
 import {
@@ -795,23 +796,50 @@ const handleDownloadExcel = async () => {
     </tr>
   ) : (
     filteredRequests.filter((request: UserRequest) => request.isSanctioned === true).length > 0 ? (
-    filteredRequests
-      .filter((request: UserRequest) => request.isSanctioned === true)
-      .sort((a, b) => new Date(a.sanctionedTimeFrom || a.optimizeTimeFrom || a.demandTimeFrom).getTime() - new Date(b.sanctionedTimeFrom || b.optimizeTimeFrom || b.demandTimeTo).getTime())
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .map((request: UserRequest, index: number) => {
-        const status = getDisplayStatus(request);
-        const rowBgColor = index % 2 === 0 ? "bg-[#F5EEFF]" : "bg-white";
+    (() => {
+      const sorted = filteredRequests
+        .filter((request: UserRequest) => request.isSanctioned === true)
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      const grouped = groupRequestsByBatch(sorted as any[]);
+      let rowIdx = 0;
+      return grouped.flatMap((item: any) => {
+        if (item.isBatch) {
+          const hdr = (
+            <tr key={`batch-hdr-${item.batchId}`} style={{ background: "linear-gradient(90deg,#1d4ed8,#3b82f6)" }}>
+              <td colSpan={9} style={{ padding: "6px 14px", color: "#fff", fontWeight: 800, fontSize: "13px" }}>
+                ⚡ BATCH — {item.requests.length} Spells &nbsp;|&nbsp;
+                {item.requests[0]?.batchTimeFrom ? new Date(item.requests[0].batchTimeFrom).toISOString().slice(11,16) : "--"}
+                {" – "}
+                {item.requests[0]?.batchTimeTo ? new Date(item.requests[0].batchTimeTo).toISOString().slice(11,16) : "--"}
+              </td>
+            </tr>
+          );
+          const rows = item.requests.map((req: any, si: number) => renderRow(req, rowIdx++, si, item.requests.length));
+          return [hdr, ...rows];
+        }
+        return [renderRow(item.request, rowIdx++, null, null)];
+      });
 
+      function renderRow(request: any, index: number, spellIdx: number|null, totalSpells: number|null) {
+        const status = getDisplayStatus(request);
+        const isBatchRow = spellIdx !== null;
+        const rowBgColor = isBatchRow
+          ? (spellIdx! % 2 === 0 ? "#eff6ff" : "#dbeafe")
+          : (index % 2 === 0 ? "#F5EEFF" : "#ffffff");
         return (
           <tr
             key={request.id}
-            className={`${rowBgColor} hover:bg-[#EDE4FF]`}
+            style={{ background: rowBgColor, borderLeft: isBatchRow ? "4px solid #3b82f6" : undefined }}
           >
             <td className="border border-[#B57CF6] p-2 text-center">
               {dayjs(request.date).format("DD-MM-YY")}
             </td>
             <td className="border border-[#B57CF6] p-2 text-center">
+              {isBatchRow && (
+                <span style={{ display: "block", fontSize: "10px", fontWeight: 800, color: "#1d4ed8", marginBottom: "2px" }}>
+                  Spell {spellIdx! + 1}/{totalSpells}
+                </span>
+              )}
               <Link
                 href={`/manage/view-request/${request.id}?from=request-table`}
                 className="text-[#6C3483] hover:underline font-semibold"
@@ -831,8 +859,10 @@ const handleDownloadExcel = async () => {
                 "N/A"}
             </td>
             <td className="border border-[#B57CF6] p-2 text-center">
-              {formatTime(request.demandTimeFrom)} -{" "}
-              {formatTime(request.demandTimeTo)}
+              {request.batchId && request.spellDurationMinutes
+                ? <span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span>
+                : <>{formatTime(request.demandTimeFrom)} -{" "}{formatTime(request.demandTimeTo)}</>
+              }
             </td>
   <td className="border border-[#B57CF6] p-2 text-center">
   {request.sanctionedTimeFrom && request.sanctionedTimeTo
@@ -852,7 +882,8 @@ const handleDownloadExcel = async () => {
             </td>
           </tr>
         );
-      })
+      }
+    })()
   ) : (
     <tr className="min-h-[100px]">
       <td colSpan={7} className="border border-[#B57CF6] text-center text-gray-500 align-middle">

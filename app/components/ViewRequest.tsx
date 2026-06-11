@@ -423,8 +423,30 @@ block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance"
             <tbody>
               <tr>
                 <td className="py-1 font-medium">Request ID:</td>
-                <td className="py-1">{request.divisionId || request.id}</td>
+                <td className="py-1">
+                  {request.divisionId || request.id}
+                  {request.batchId && (
+                    <span style={{
+                      marginLeft: "8px", fontSize: "11px", fontWeight: 800,
+                      background: "#1d4ed8", color: "#fff",
+                      borderRadius: "6px", padding: "2px 8px",
+                    }}>
+                      ⚡ Spell {request.batchSpellIndex}/{request.batchTotalSpells}
+                    </span>
+                  )}
+                </td>
               </tr>
+              {request.batchId && (
+                <tr>
+                  <td className="py-1 font-medium">Batch Window:</td>
+                  <td className="py-1" style={{ color: "#1d4ed8", fontWeight: 700 }}>
+                    {request.batchTimeFrom ? new Date(request.batchTimeFrom).toISOString().slice(11,16) : "--"}
+                    {" – "}
+                    {request.batchTimeTo ? new Date(request.batchTimeTo).toISOString().slice(11,16) : "--"}
+                    &nbsp;({request.batchTotalSpells} total spells)
+                  </td>
+                </tr>
+              )}
               <tr>
                 <td className="py-1 font-medium">Date:</td>
                 <td className="py-1">{formatDate(request.date)}</td>
@@ -501,8 +523,10 @@ block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance"
               <tr>
                 <td className="py-1 font-medium">Requested Time:</td>
                 <td className="py-1">
-                  {formatTime(request.demandTimeFrom)} to{" "}
-                  {formatTime(request.demandTimeTo)}
+                  {(request as any).batchId && (request as any).spellDurationMinutes
+                    ? <span style={{ fontWeight: 700 }}>{(request as any).spellDurationMinutes} mins</span>
+                    : <>{formatTime(request.demandTimeFrom)} to{" "}{formatTime(request.demandTimeTo)}</>
+                  }
                 </td>
               </tr>
               <tr>

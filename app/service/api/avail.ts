@@ -225,6 +225,18 @@ export const availService = {
     const response = await axiosInstance.get(`/api/avail/sanctioned-for-shadow?${params}`);
     return response.data?.data?.blocks as ShadowParentBlock[] ?? [];
   },
+
+  // GET: All depot codes for a given location (for transfer modal)
+  getDepotsByLocation: async (location: string) => {
+    const response = await axiosInstance.get(`/api/avail/depots?location=${encodeURIComponent(location)}`);
+    return response.data?.data?.depots as string[] ?? [];
+  },
+
+  // PATCH: Transfer a block to a different depot
+  transferBlock: async (requestId: string, targetDepot: string) => {
+    const response = await axiosInstance.patch(`/api/avail/transfer/${requestId}`, { targetDepot });
+    return response.data;
+  },
 };
 
 export interface ShadowParentBlock {

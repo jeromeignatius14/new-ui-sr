@@ -47,6 +47,26 @@ export const userRequestService = {
     return response.data;
   },
 
+  createBatch: async (data: {
+    spells: { durationMinutes: number }[];
+    batchTimeFrom: string;
+    batchTimeTo: string;
+    [key: string]: any;
+  }): Promise<UserRequestResponse> => {
+    const response = await axiosInstance.post<UserRequestResponse>(
+      "/api/user-request/batch",
+      data
+    );
+    return response.data;
+  },
+
+  getBatch: async (batchId: string): Promise<UserRequestResponse> => {
+    const response = await axiosInstance.get<UserRequestResponse>(
+      `/api/user-request/batch/${batchId}`
+    );
+    return response.data;
+  },
+
   /**
    * Get a user request by ID
    * @param id - The user request ID

@@ -1,6 +1,7 @@
 // app/(dashboard)/dashboard/request-table/page.tsx
 "use client";
 import { useState, useEffect, useCallback } from "react";
+import { BatchGroupBanner, groupRequestsByBatch } from "@/app/components/BatchGroupBanner";
 import {
   useGetUserRequests,
   useGetWeeklyUserRequests,
@@ -1080,15 +1081,53 @@ export default function RequestTablePage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredRequests.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map((request: any, idx: number) => (
+                {(() => {
+                  const sorted = [...filteredRequests].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                  const grouped = groupRequestsByBatch(sorted);
+                  let rowIdx = 0;
+                  return grouped.flatMap((item, gi) => {
+                    if (item.isBatch) {
+                      const batchHeaderRow = (
+                        <tr key={`batch-hdr-${item.batchId}`} style={{ background: "linear-gradient(90deg, #1d4ed8, #3b82f6)" }}>
+                          <td colSpan={10} style={{ padding: "6px 14px", color: "#fff", fontWeight: 800, fontSize: "13px", letterSpacing: "0.5px" }}>
+                            ⚡ BATCH — {item.requests.length} Spells &nbsp;|&nbsp;
+                            {item.requests[0]?.batchTimeFrom ? new Date(item.requests[0].batchTimeFrom).toISOString().slice(11,16) : "--"}
+                            {" – "}
+                            {item.requests[0]?.batchTimeTo ? new Date(item.requests[0].batchTimeTo).toISOString().slice(11,16) : "--"}
+                          </td>
+                        </tr>
+                      );
+                      const spellRows = item.requests.map((request: any, si: number) => {
+                        const idx = rowIdx++;
+                        return renderRequestRow(request, idx, si, item.requests.length);
+                      });
+                      return [batchHeaderRow, ...spellRows];
+                    } else {
+                      const idx = rowIdx++;
+                      return [renderRequestRow(item.request, idx, null, null)];
+                    }
+                  });
+
+                  function renderRequestRow(request: any, idx: number, spellIdx: number | null, totalSpells: number | null) {
+                    const isBatchRow = spellIdx !== null;
+                    return (
                   <tr
                     key={request.id}
-                    className={idx % 2 === 0 ? "bg-[#FFF86B]" : "bg-[#E6E6FA]"}
+                    className={isBatchRow ? "" : (idx % 2 === 0 ? "bg-[#FFF86B]" : "bg-[#E6E6FA]")}
+                    style={isBatchRow ? {
+                      background: spellIdx! % 2 === 0 ? "#eff6ff" : "#dbeafe",
+                      borderLeft: "4px solid #3b82f6",
+                    } : {}}
                   >
                     <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
                       {dayjs(request.date).format("DD-MM-YY")}
                     </td>
                     <td className="border border-black px-2 py-1 whitespace-nowrap text-center">
+                      {isBatchRow && (
+                        <span style={{ display: "block", fontSize: "10px", fontWeight: 800, color: "#1d4ed8", marginBottom: "2px" }}>
+                          Spell {spellIdx! + 1}/{totalSpells}
+                        </span>
+                      )}
                       <Link
                         href={`/view-request/${request.id}?from=request-table`}
                         className="text-black hover:underline"
@@ -1106,8 +1145,10 @@ export default function RequestTablePage() {
                       {request.activity}
                     </td>
                     <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
-                      {formatTime(request.demandTimeFrom)} -{" "}
-                      {formatTime(request.demandTimeTo)}
+                      {isBatchRow && request.spellDurationMinutes
+                        ? <span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span>
+                        : <>{formatTime(request.demandTimeFrom)} -{" "}{formatTime(request.demandTimeTo)}</>
+                      }
                     </td>
                     <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
                       {request.isSanctioned === true ? (
@@ -1228,7 +1269,9 @@ export default function RequestTablePage() {
                       )}
                     </td>
                   </tr>
-                ))}
+                    );
+                  }
+                })()}
               </tbody>
             </table>
           </div>
@@ -1324,8 +1367,10 @@ export default function RequestTablePage() {
                           {request.activity}
                         </td>
                         <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
-                          {formatTime(request.demandTimeFrom)} -{" "}
-                          {formatTime(request.demandTimeTo)}
+                          {request.batchId && request.spellDurationMinutes
+                            ? <span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span>
+                            : <>{formatTime(request.demandTimeFrom)} -{" "}{formatTime(request.demandTimeTo)}</>
+                          }
                         </td>
                         <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
                           {request.isSanctioned === true ? (
@@ -1564,8 +1609,10 @@ export default function RequestTablePage() {
                           {request.activity}
                         </td>
                         <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
-                          {formatTime(request.demandTimeFrom)} -{" "}
-                          {formatTime(request.demandTimeTo)}
+                          {request.batchId && request.spellDurationMinutes
+                            ? <span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span>
+                            : <>{formatTime(request.demandTimeFrom)} -{" "}{formatTime(request.demandTimeTo)}</>
+                          }
                         </td>
                         <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
                           {request.isSanctioned === true ? (
@@ -1802,8 +1849,10 @@ export default function RequestTablePage() {
                         {request.activity}
                       </td>
                       <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
-                        {formatTime(request.demandTimeFrom)} -{" "}
-                        {formatTime(request.demandTimeTo)}
+                        {request.batchId && request.spellDurationMinutes
+                          ? <span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span>
+                          : <>{formatTime(request.demandTimeFrom)} -{" "}{formatTime(request.demandTimeTo)}</>
+                        }
                       </td>
                       <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
                         {request.sanctionedTimeFrom && request.sanctionedTimeTo ? (

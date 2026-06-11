@@ -70,6 +70,12 @@ export interface RequestItem {
   demandTimeTo: string;
   sanctionedTimeFrom: string;
   sanctionedTimeTo: string;
+  batchId?: string | null;
+  batchTimeFrom?: string | null;
+  batchTimeTo?: string | null;
+  batchSpellIndex?: number | null;
+  batchTotalSpells?: number | null;
+  spellDurationMinutes?: number | null;
   sigDisconnection: boolean;
   elementarySection: string | null;
   elementarySectionTo: string | null;

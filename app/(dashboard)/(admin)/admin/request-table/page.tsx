@@ -968,8 +968,10 @@ if (activeSummaryFilters.searchId) {
                                 {request.missionBlock}
                               </td>
                               <td className="border border-black p-1">
-                                {formatTime(request.demandTimeFrom)} -{" "}
-                                {formatTime(request.demandTimeTo)}
+                                {request.batchId && request.spellDurationMinutes
+                                  ? <span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span>
+                                  : <>{formatTime(request.demandTimeFrom)} -{" "}{formatTime(request.demandTimeTo)}</>
+                                }
                               </td>
                               <td className="border border-black p-1">
                                 {`${formatTime(

@@ -3,8 +3,10 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { useGetDepotBlocks, useGetMyParticipations, useGetPendingAvailConcurrences } from "@/app/service/query/avail";
+import { useGetDepotBlocks, useGetMyParticipations, useGetPendingAvailConcurrences, useGetDepotsByLocation } from "@/app/service/query/avail";
+import { useTransferBlock } from "@/app/service/mutation/avail";
 import { useQueryClient } from "@tanstack/react-query";
+import { Toaster, toast } from "react-hot-toast";
 
 // ── Time helpers ───────────────────────────────────────────────────────────────
 const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
@@ -180,13 +182,15 @@ const td: React.CSSProperties = { border: "1px solid #9ca3af", padding: "7px 8px
 
 // ── BlockRow ───────────────────────────────────────────────────────────────────
 function BlockRow({
-  block, myParticipant, isConcurrence, onNavigate, onNavigateConcurrence,
+  block, myParticipant, isConcurrence, onNavigate, onNavigateConcurrence, onTransfer,
 }: {
   block: any; myParticipant?: any; isConcurrence?: boolean;
   onNavigate: (id: string) => void; onNavigateConcurrence: (id: string) => void;
+  onTransfer: (block: any) => void;
 }) {
   const urgency = getUrgency(block, myParticipant);
   const [tick, setTick] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => {
     if (!urgency && !isConcurrence) return;
     const id = setInterval(() => setTick(t => t + 1), isConcurrence ? 400 : 600);
@@ -237,6 +241,28 @@ function BlockRow({
       </td>
       <td style={{ ...td, color: ss.color }}>{ss.text}</td>
       <td style={{ ...td, fontSize: "11px", textAlign: "left", maxWidth: "220px", wordBreak: "break-word" }}>{det}</td>
+      <td style={{ ...td, position: "relative" }}>
+        <button
+          onClick={() => setMenuOpen(v => !v)}
+          style={{ background: "none", border: "1.5px solid #9ca3af", borderRadius: "6px", padding: "3px 8px", cursor: "pointer", fontSize: "16px", fontWeight: 900, color: "#374151", lineHeight: 1 }}
+          title="More actions"
+        >
+          ⋮
+        </button>
+        {menuOpen && (
+          <div
+            style={{ position: "absolute", right: 0, top: "110%", background: "#fff", border: "1.5px solid #d1d5db", borderRadius: "8px", boxShadow: "0 4px 16px rgba(0,0,0,0.12)", zIndex: 100, minWidth: "150px" }}
+            onMouseLeave={() => setMenuOpen(false)}
+          >
+            <button
+              onClick={() => { setMenuOpen(false); onTransfer(block); }}
+              style={{ display: "block", width: "100%", padding: "10px 16px", background: "none", border: "none", cursor: "pointer", textAlign: "left", fontSize: "13px", fontWeight: 800, color: "#7c3aed" }}
+            >
+              🔀 Transfer Block
+            </button>
+          </div>
+        )}
+      </td>
     </tr>
   );
 }
@@ -251,6 +277,14 @@ export default function AvailBlockPage() {
   const router = useRouter();
   const now = useClock();
   const qc = useQueryClient();
+
+  // Transfer block state
+  const [transferBlock, setTransferBlock] = useState<any>(null);
+  const [selectedDepot, setSelectedDepot] = useState("");
+  const transferMutation = useTransferBlock();
+  const location = session?.user?.location;
+  const { data: depotsData } = useGetDepotsByLocation(location);
+  const availableDepots: string[] = depotsData ?? [];
 
   const { data: depotData, isLoading: depotLoading, isError: depotError } = useGetDepotBlocks();
   const { data: myPartData } = useGetMyParticipations();
@@ -392,12 +426,69 @@ export default function AvailBlockPage() {
 
   const isEmpty = buckets.inProgress.length === 0 && buckets.needsAction.length === 0 && buckets.next12h.length === 0 && buckets.prev24h.length === 0;
 
+  const handleTransferSubmit = () => {
+    if (!transferBlock || !selectedDepot) { toast.error("Please select a depot"); return; }
+    transferMutation.mutate({ requestId: transferBlock.id, targetDepot: selectedDepot }, {
+      onSuccess: () => { setTransferBlock(null); setSelectedDepot(""); },
+    });
+  };
+
   return (
     <div style={{ minHeight: "100vh", background: "#c8f0c8", fontFamily: "Arial, sans-serif" }}>
+      <Toaster position="top-center" />
       <style>{`
         @keyframes blink { 0%,100% { opacity:1 } 50% { opacity:0.2 } }
         @media (max-width:640px) { .avail-info-row { flex-direction:column !important } }
       `}</style>
+
+      {/* Transfer Modal */}
+      {transferBlock && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
+          <div style={{ background: "#fff", borderRadius: "16px", padding: "24px", maxWidth: "420px", width: "100%", boxShadow: "0 8px 32px rgba(0,0,0,0.2)" }}>
+            <div style={{ fontWeight: 900, fontSize: "18px", color: "#7c3aed", marginBottom: "6px" }}>🔀 Transfer Block</div>
+            <div style={{ fontSize: "13px", color: "#374151", fontWeight: 700, marginBottom: "16px" }}>
+              Block: <span style={{ color: "#1d4ed8" }}>{transferBlock.divisionId ?? transferBlock.id.slice(0, 8)}</span>
+              {" · "}{transferBlock.selectedSection ?? transferBlock.missionBlock}
+            </div>
+            <div style={{ fontSize: "13px", fontWeight: 800, color: "#374151", marginBottom: "8px" }}>Select target depot:</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "260px", overflowY: "auto", marginBottom: "16px" }}>
+              {availableDepots.length === 0 ? (
+                <div style={{ fontSize: "13px", color: "#6b7280", fontStyle: "italic" }}>Loading depots…</div>
+              ) : (
+                availableDepots.map(dep => (
+                  <button
+                    key={dep}
+                    onClick={() => setSelectedDepot(dep)}
+                    style={{
+                      padding: "10px 16px", borderRadius: "8px", border: selectedDepot === dep ? "2px solid #7c3aed" : "1.5px solid #d1d5db",
+                      background: selectedDepot === dep ? "#ede9fe" : "#f9fafb",
+                      fontWeight: 800, fontSize: "14px", color: selectedDepot === dep ? "#7c3aed" : "#374151",
+                      cursor: "pointer", textAlign: "left",
+                    }}
+                  >
+                    {dep === transferBlock.selectedDepo ? `${dep} (current)` : dep}
+                  </button>
+                ))
+              )}
+            </div>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button
+                onClick={handleTransferSubmit}
+                disabled={!selectedDepot || transferMutation.isPending}
+                style={{ flex: 1, padding: "12px", borderRadius: "8px", background: selectedDepot ? "#7c3aed" : "#d1d5db", color: "#fff", border: "none", fontWeight: 900, fontSize: "15px", cursor: selectedDepot ? "pointer" : "not-allowed" }}
+              >
+                {transferMutation.isPending ? "Transferring…" : "Confirm Transfer"}
+              </button>
+              <button
+                onClick={() => { setTransferBlock(null); setSelectedDepot(""); }}
+                style={{ flex: 1, padding: "12px", borderRadius: "8px", background: "#f3f4f6", color: "#374151", border: "1.5px solid #d1d5db", fontWeight: 800, fontSize: "15px", cursor: "pointer" }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Header */}
       <div style={{ background: "#fef08a", padding: "12px 16px", textAlign: "center" }}>
@@ -464,12 +555,13 @@ export default function AvailBlockPage() {
                   <th style={th}>Applied By</th>
                   <th style={th}>Status</th>
                   <th style={th}>Detailed Status</th>
+                  <th style={th}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {isEmpty && (
                   <tr>
-                    <td colSpan={9} style={{ padding: "32px", textAlign: "center", color: "#6b7280", fontWeight: 700 }}>
+                    <td colSpan={10} style={{ padding: "32px", textAlign: "center", color: "#6b7280", fontWeight: 700 }}>
                       No sanctioned blocks found for your depot
                     </td>
                   </tr>
@@ -478,49 +570,49 @@ export default function AvailBlockPage() {
                 {/* ── Section 1: Currently In Progress ── */}
                 {buckets.inProgress.length > 0 && (
                   <tr>
-                    <td colSpan={9} style={{ background: "#dcfce7", borderTop: "2px solid #16a34a", borderBottom: "1px solid #16a34a", padding: "6px 12px", fontWeight: 900, fontSize: "13px", color: "#15803d", letterSpacing: "0.5px" }}>
+                    <td colSpan={10} style={{ background: "#dcfce7", borderTop: "2px solid #16a34a", borderBottom: "1px solid #16a34a", padding: "6px 12px", fontWeight: 900, fontSize: "13px", color: "#15803d", letterSpacing: "0.5px" }}>
                       ▶ CURRENTLY IN PROGRESS
                     </td>
                   </tr>
                 )}
                 {buckets.inProgress.map(({ block, myParticipant, isConcurrence }) => (
-                  <BlockRow key={block.id} block={block} myParticipant={myParticipant} isConcurrence={isConcurrence} onNavigate={navigateToBlock} onNavigateConcurrence={navigateToConcurrence} />
+                  <BlockRow key={block.id} block={block} myParticipant={myParticipant} isConcurrence={isConcurrence} onNavigate={navigateToBlock} onNavigateConcurrence={navigateToConcurrence} onTransfer={setTransferBlock} />
                 ))}
 
                 {/* ── Section 2: Attention Needed ── */}
                 {buckets.needsAction.length > 0 && (
                   <tr>
-                    <td colSpan={9} style={{ background: "#fef2f2", borderTop: "2px solid #dc2626", borderBottom: "1px solid #dc2626", padding: "6px 12px", fontWeight: 900, fontSize: "13px", color: "#b91c1c", letterSpacing: "0.5px" }}>
+                    <td colSpan={10} style={{ background: "#fef2f2", borderTop: "2px solid #dc2626", borderBottom: "1px solid #dc2626", padding: "6px 12px", fontWeight: 900, fontSize: "13px", color: "#b91c1c", letterSpacing: "0.5px" }}>
                       ⚡ ATTENTION — SM APPROVED / STARTING SOON / REJECTED
                     </td>
                   </tr>
                 )}
                 {buckets.needsAction.map(({ block, myParticipant, isConcurrence }) => (
-                  <BlockRow key={block.id} block={block} myParticipant={myParticipant} isConcurrence={isConcurrence} onNavigate={navigateToBlock} onNavigateConcurrence={navigateToConcurrence} />
+                  <BlockRow key={block.id} block={block} myParticipant={myParticipant} isConcurrence={isConcurrence} onNavigate={navigateToBlock} onNavigateConcurrence={navigateToConcurrence} onTransfer={setTransferBlock} />
                 ))}
 
                 {/* ── Section 3: Next 12 Hours ── */}
                 {buckets.next12h.length > 0 && (
                   <tr>
-                    <td colSpan={9} style={{ background: "#fefce8", borderTop: "2px solid #ca8a04", borderBottom: "1px solid #ca8a04", padding: "6px 12px", fontWeight: 900, fontSize: "13px", color: "#92400e", letterSpacing: "0.5px" }}>
+                    <td colSpan={10} style={{ background: "#fefce8", borderTop: "2px solid #ca8a04", borderBottom: "1px solid #ca8a04", padding: "6px 12px", fontWeight: 900, fontSize: "13px", color: "#92400e", letterSpacing: "0.5px" }}>
                       🕐 UPCOMING — NEXT 12 HOURS
                     </td>
                   </tr>
                 )}
                 {buckets.next12h.map(({ block, myParticipant, isConcurrence }) => (
-                  <BlockRow key={block.id} block={block} myParticipant={myParticipant} isConcurrence={isConcurrence} onNavigate={navigateToBlock} onNavigateConcurrence={navigateToConcurrence} />
+                  <BlockRow key={block.id} block={block} myParticipant={myParticipant} isConcurrence={isConcurrence} onNavigate={navigateToBlock} onNavigateConcurrence={navigateToConcurrence} onTransfer={setTransferBlock} />
                 ))}
 
                 {/* ── Section 4: Previous 24 Hours — No Action ── */}
                 {buckets.prev24h.length > 0 && (
                   <tr>
-                    <td colSpan={9} style={{ background: "#f1f5f9", borderTop: "2px solid #64748b", borderBottom: "1px solid #64748b", padding: "6px 12px", fontWeight: 900, fontSize: "13px", color: "#475569", letterSpacing: "0.5px" }}>
+                    <td colSpan={10} style={{ background: "#f1f5f9", borderTop: "2px solid #64748b", borderBottom: "1px solid #64748b", padding: "6px 12px", fontWeight: 900, fontSize: "13px", color: "#475569", letterSpacing: "0.5px" }}>
                       ⏰ PREVIOUS 24 HOURS — NO ACTION TAKEN
                     </td>
                   </tr>
                 )}
                 {buckets.prev24h.map(({ block, myParticipant, isConcurrence }) => (
-                  <BlockRow key={block.id} block={block} myParticipant={myParticipant} isConcurrence={isConcurrence} onNavigate={navigateToBlock} onNavigateConcurrence={navigateToConcurrence} />
+                  <BlockRow key={block.id} block={block} myParticipant={myParticipant} isConcurrence={isConcurrence} onNavigate={navigateToBlock} onNavigateConcurrence={navigateToConcurrence} onTransfer={setTransferBlock} />
                 ))}
 
               </tbody>

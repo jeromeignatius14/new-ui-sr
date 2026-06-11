@@ -473,26 +473,44 @@ export default function PermitBlockAtSitePage() {
           <div style={{ fontSize: "13px", color: "#92400e", fontWeight: 700, textAlign: "center", marginBottom: "12px" }}>
             Only blocks from the selected board's depots will be shown
           </div>
-          {TPC_BOARDS.map(board => (
-            <button
-              key={board.name}
-              onClick={() => setSelectedBoard(board)}
-              style={{
-                width: "100%", maxWidth: "480px", padding: "18px 20px",
-                background: "#fef3c7", border: "2.5px solid #d97706",
-                borderRadius: "14px", cursor: "pointer", textAlign: "left",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.10)",
-                transition: "transform 0.1s, background 0.15s",
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#fde68a"; (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.02)"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#fef3c7"; (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
-            >
-              <div style={{ fontWeight: 900, fontSize: "17px", color: "#78350f", marginBottom: "6px" }}>⚡ {board.name}</div>
-              <div style={{ fontSize: "12px", color: "#92400e", fontWeight: 700 }}>
-                Depots: {board.depots.join(" · ")}
-              </div>
-            </button>
-          ))}
+          {TPC_BOARDS.map(board => {
+            const boardPending = filterByBoard(
+              [...rawPendingPermits, ...rawPendingExtensions, ...rawPendingClosures],
+              board.depots
+            ).length;
+            return (
+              <button
+                key={board.name}
+                onClick={() => setSelectedBoard(board)}
+                style={{
+                  width: "100%", maxWidth: "480px", padding: "18px 20px",
+                  background: boardPending > 0 ? "#fef2f2" : "#fef3c7",
+                  border: boardPending > 0 ? "2.5px solid #dc2626" : "2.5px solid #d97706",
+                  borderRadius: "14px", cursor: "pointer", textAlign: "left",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.10)",
+                  transition: "transform 0.1s, background 0.15s",
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.02)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+                  <div style={{ fontWeight: 900, fontSize: "17px", color: "#78350f" }}>⚡ {board.name}</div>
+                  {boardPending > 0 ? (
+                    <div style={{ background: "#dc2626", color: "#fff", fontWeight: 900, fontSize: "13px", borderRadius: "20px", padding: "2px 12px", letterSpacing: "0.3px", whiteSpace: "nowrap" }}>
+                      {boardPending} pending ⚠️
+                    </div>
+                  ) : (
+                    <div style={{ background: "#16a34a", color: "#fff", fontWeight: 800, fontSize: "12px", borderRadius: "20px", padding: "2px 10px" }}>
+                      ✓ Clear
+                    </div>
+                  )}
+                </div>
+                <div style={{ fontSize: "12px", color: "#92400e", fontWeight: 700 }}>
+                  Depots: {board.depots.join(" · ")}
+                </div>
+              </button>
+            );
+          })}
         </div>
       ) : isLoading ? (
         <div style={{ textAlign: "center", padding: "60px", fontWeight: 800, fontSize: "16px", color: "#111827" }}>Loading…</div>

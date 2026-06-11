@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { groupRequestsByBatch } from "@/app/components/BatchGroupBanner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminService } from "@/app/service/api/admin";
 import { useAcceptUserRequest } from "@/app/service/mutation/admin";
@@ -1932,7 +1933,12 @@ const handleOptimize = async () => {
             <td className="border border-black p-2 text-[24px]">{request.selectedDepo}</td>
             <td className="border border-black p-2 text-[24px]">{request.missionBlock}</td>
             <td className="border border-black p-2 text-[24px]">{getLineOrRoad(request)}</td>
-            <td className="border border-black p-2 text-[24px]">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
+            <td className="border border-black p-2 text-[24px]">
+              {request.batchId && request.spellDurationMinutes
+                ? <span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span>
+                : <>{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</>
+              }
+            </td>
             <td className="border border-black p-2 text-[24px]">
               {editingId === request.id ? (
                 <div className="flex gap-1 items-center">
@@ -2219,15 +2225,38 @@ const handleOptimize = async () => {
                     </td>
                   </tr>
                 )}
-                {corridorRequestsFiltered.filter((request: UserRequest) => request.Draft === false).sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
+                {(() => {
+                  const sortedCorr = corridorRequestsFiltered
+                    .filter((request: UserRequest) => request.Draft === false)
+                    .sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime());
+                  const grouped = groupRequestsByBatch(sortedCorr as any[]);
+                  return grouped.flatMap((item: any) => {
+                    if (item.isBatch) {
+                      return [
+                        <tr key={`batch-hdr-${item.batchId}`} style={{ background: "linear-gradient(90deg,#1d4ed8,#3b82f6)" }}>
+                          <td colSpan={12} style={{ padding: "6px 14px", color: "#fff", fontWeight: 800, fontSize: "13px" }}>
+                            ⚡ BATCH — {item.requests.length} Spells &nbsp;|&nbsp;
+                            {item.requests[0]?.batchTimeFrom ? new Date(item.requests[0].batchTimeFrom).toISOString().slice(11,16) : "--"}
+                            {" – "}
+                            {item.requests[0]?.batchTimeTo ? new Date(item.requests[0].batchTimeTo).toISOString().slice(11,16) : "--"}
+                          </td>
+                        </tr>,
+                        ...item.requests.map((request: any, si: number) => renderCorrRow(request, si, item.requests.length)),
+                      ];
+                    }
+                    return [renderCorrRow(item.request, null, null)];
+                  });
+
+                  function renderCorrRow(request: any, spellIdx: number|null, totalSpells: number|null) {
+                    const isBatchRow = spellIdx !== null;
+                    const deptBg = request.selectedDepartment === "ENGG" ? "bg-red-50"
+                      : request.selectedDepartment === "TRD" ? "bg-blue-50"
+                      : request.selectedDepartment === "S&T" ? "bg-green-50" : "bg-white";
+                    return (
                   <tr
  key={`request-${request.id}-${request.date}`}
-className={`transition-colors ${
-  request.selectedDepartment === "ENGG" ? "bg-red-50"
-  : request.selectedDepartment === "TRD" ? "bg-blue-50"
-  : request.selectedDepartment === "S&T" ? "bg-green-50"
-  : "bg-white"
-}`}
+className={`transition-colors ${isBatchRow ? "" : deptBg}`}
+style={isBatchRow ? { background: spellIdx! % 2 === 0 ? "#eff6ff" : "#dbeafe", borderLeft: "4px solid #3b82f6" } : {}}
                   >
                        <td className="border border-black p-2 text-[24px]">
         <input
@@ -2289,8 +2318,10 @@ className={`transition-colors ${
                       {getLineOrRoad(request)}
                     </td>
                     <td className="border border-black p-2 text-[24px]">
-                      {formatTime(request.demandTimeFrom)} -{" "}
-                      {formatTime(request.demandTimeTo)}
+                      {request.batchId && request.spellDurationMinutes
+                        ? <span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span>
+                        : <>{formatTime(request.demandTimeFrom)} -{" "}{formatTime(request.demandTimeTo)}</>
+                      }
                     </td>
                     <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (
@@ -2476,6 +2507,11 @@ className={`transition-colors ${
   </div>
 </td>
                     <td className="border border-black p-2 text-[24px] min-w-[140px]">
+                      {isBatchRow && (
+                        <span style={{ display: "block", fontSize: "10px", fontWeight: 800, color: "#1d4ed8", marginBottom: "4px" }}>
+                          Spell {spellIdx! + 1}/{totalSpells}
+                        </span>
+                      )}
                       <div className="flex gap-2">
                         <Link
                           href={`/admin/view-request/${request.id}?from=request-table`}
@@ -2486,7 +2522,9 @@ className={`transition-colors ${
                       </div>
                     </td>
                   </tr>
-                ))}
+                    );
+                  }
+                })()}
               </tbody>
             </table>
           </div>
@@ -2680,8 +2718,10 @@ className={`transition-colors ${
                       {getLineOrRoad(request)}
                     </td>
                     <td className="border border-black p-2 text-[24px]">
-                      {formatTime(request.demandTimeFrom)} -{" "}
-                      {formatTime(request.demandTimeTo)}
+                      {request.batchId && request.spellDurationMinutes
+                        ? <span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span>
+                        : <>{formatTime(request.demandTimeFrom)} -{" "}{formatTime(request.demandTimeTo)}</>
+                      }
                     </td>
                     <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (
@@ -3008,8 +3048,10 @@ className={`transition-colors ${
                       {getLineOrRoad(request)}
                     </td>
                     <td className="border border-black p-2 text-[24px]">
-                      {formatTime(request.demandTimeFrom)} -{" "}
-                      {formatTime(request.demandTimeTo)}
+                      {request.batchId && request.spellDurationMinutes
+                        ? <span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span>
+                        : <>{formatTime(request.demandTimeFrom)} -{" "}{formatTime(request.demandTimeTo)}</>
+                      }
                     </td>
                     <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (

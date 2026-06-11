@@ -117,3 +117,13 @@ export function useGetTrdPending() {
     placeholderData: keep,
   });
 }
+
+// GET: All depot codes for a location (for transfer modal)
+export function useGetDepotsByLocation(location?: string) {
+  return useQuery({
+    queryKey: ["avail-depots", location],
+    queryFn: () => availService.getDepotsByLocation(location!),
+    enabled: !!location,
+    staleTime: 1000 * 60 * 5,
+  });
+}

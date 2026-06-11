@@ -913,7 +913,12 @@ useEffect(() => {
                                         return allValues.join(', ') || 'N/A';
                                     })()}
                                 </td>
-                                <td className="border border-black px-2 py-1 text-center align-middle">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">
+                                  {request.batchId && request.spellDurationMinutes
+                                    ? <span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span>
+                                    : <>{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</>
+                                  }
+                                </td>
                                 <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
                                 <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-[#E6E6FA] text-center align-middle w-32">
                                     <div className="flex gap-2 justify-center flex-col md:flex-row">
@@ -1012,7 +1017,12 @@ useEffect(() => {
                                 <td className="border border-black px-2 py-1 text-center align-middle">
                                     {request.workType || 'N/A'}
                                 </td>
-                                <td className="border border-black px-2 py-1 text-center align-middle">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">
+                                  {request.batchId && request.spellDurationMinutes
+                                    ? <span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span>
+                                    : <>{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</>
+                                  }
+                                </td>
                                 <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
                                 <td className="border border-black px-2 py-1 align-middle">{request.user?.name || 'N/A'}</td>
                             </tr>
@@ -1089,7 +1099,12 @@ useEffect(() => {
                                         return allValues.join(', ') || 'N/A';
                                     })()}
                                 </td>
-                                <td className="border border-black px-2 py-1 text-center align-middle">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">
+                                  {request.batchId && request.spellDurationMinutes
+                                    ? <span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span>
+                                    : <>{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</>
+                                  }
+                                </td>
                                 <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
                                 <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-[#E6E6FA] text-center align-middle w-32">
                                     <div className="flex gap-2 justify-center flex-col md:flex-row">
@@ -1201,7 +1216,12 @@ useEffect(() => {
                                         return allValues.join(', ') || 'N/A';
                                     })()}
                                 </td>
-                                <td className="border border-black px-2 py-1 text-center align-middle">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">
+                                  {request.batchId && request.spellDurationMinutes
+                                    ? <span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span>
+                                    : <>{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</>
+                                  }
+                                </td>
                                 <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
                                 <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-[#E6E6FA] text-center align-middle w-32">
                                     <div className="flex gap-2 justify-center flex-col md:flex-row">
@@ -1313,7 +1333,12 @@ useEffect(() => {
                                         return allValues.join(', ') || 'N/A';
                                     })()}
                                 </td>
-                                <td className="border border-black px-2 py-1 text-center align-middle">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">
+                                  {request.batchId && request.spellDurationMinutes
+                                    ? <span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span>
+                                    : <>{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</>
+                                  }
+                                </td>
                                 <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
                                 <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-[#E6E6FA] text-center align-middle w-32">
                                     <div className="flex gap-2 justify-center flex-col md:flex-row">
@@ -1413,7 +1438,12 @@ useEffect(() => {
                                         return allValues.join(', ') || 'N/A';
                                     })()}
                                 </td>
-                                <td className="border border-black px-2 py-1 text-center align-middle">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">
+                                  {request.batchId && request.spellDurationMinutes
+                                    ? <span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span>
+                                    : <>{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</>
+                                  }
+                                </td>
                                 <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
                                 <td className="border border-black px-2 py-1 align-middle">{request.overAllStatus}</td>
                                 <td className="border border-black px-2 py-1 align-middle">
