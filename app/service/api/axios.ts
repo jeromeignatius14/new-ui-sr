@@ -5,7 +5,7 @@ import { authService } from './auth';
 // Create axios instance
 const axiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000',
-  timeout: 30000,
+  timeout: 20000,
   headers: {
     'Content-Type': 'application/json',
   },
