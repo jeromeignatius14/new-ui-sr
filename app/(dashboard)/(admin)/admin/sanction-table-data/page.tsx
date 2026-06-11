@@ -131,6 +131,7 @@ interface DetailedData {
   isSanctioned?: boolean;
   Date: string;
   Section: string;
+  selectedDepo?: string;
   Duration: number;
   Type: string;
   Status: string;
