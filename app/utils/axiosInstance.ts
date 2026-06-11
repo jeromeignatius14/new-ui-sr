@@ -102,9 +102,14 @@ axiosInstance.interceptors.response.use(
       } catch (refreshError: any) {
         processQueue(refreshError, null);
 
-        // Only logout on genuine auth failures, not network timeouts
-        const isTimeout = refreshError?.code === 'ECONNABORTED' || refreshError?.message?.includes('timeout');
-        if (!isTimeout) {
+        // Logout only on genuine auth failures:
+        // - Refresh server returned 401 (token rejected)
+        // - No refresh token in session at all (broken session state)
+        // Network drops (no response), timeouts, and server 5xx must NOT log the user out.
+        const isGenuineAuthFailure =
+          refreshError?.response?.status === 401 ||
+          refreshError?.message === 'No refresh token available';
+        if (isGenuineAuthFailure) {
           const { signOut } = require('next-auth/react');
           await signOut({ redirect: false });
           if (typeof window !== 'undefined') {
