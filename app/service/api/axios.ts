@@ -5,7 +5,7 @@ import { authService } from './auth';
 // Create axios instance
 const axiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000',
-  timeout: 10000,
+  timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -107,11 +107,14 @@ axiosInstance.interceptors.response.use(
         
         // Retry the original request with new token
         return axiosInstance(originalRequest);
-      } catch (refreshError) {
-        // Failed to refresh token, logout user
+      } catch (refreshError: any) {
         processQueue(refreshError, null);
         isRefreshing = false;
-        await signOut({ redirect: false });
+        // Only logout on genuine auth failures, not network timeouts
+        const isTimeout = refreshError?.code === 'ECONNABORTED' || refreshError?.message?.includes('timeout');
+        if (!isTimeout) {
+          await signOut({ redirect: false });
+        }
         return Promise.reject(refreshError);
       }
     }
