@@ -54,29 +54,6 @@ axiosInstance.interceptors.response.use(
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
-      // Check if backend explicitly indicates token expiration
-      const isTokenExpired = 
-        error.response?.data?.message?.toLowerCase().includes('expired') || 
-        error.response?.data?.message?.toLowerCase().includes('invalid token') ||
-        error.response?.data?.message?.toLowerCase().includes('unauthorized');
-      
-      // If backend explicitly reports expired tokens, clear session immediately
-      if (isTokenExpired) {
-        console.log('Backend reported expired/invalid token. Clearing session immediately...');
-        try {
-          const { signOut } = require('next-auth/react');
-          await signOut({ redirect: false });
-          
-          // Redirect to login page
-          if (typeof window !== 'undefined') {
-            window.location.href = '/auth/login';
-          }
-          return Promise.reject(error);
-        } catch (signOutError) {
-          console.error('Error clearing session:', signOutError);
-        }
-      }
-      
       // Token refresh flow - only if not already refreshing
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -95,7 +72,7 @@ axiosInstance.interceptors.response.use(
       try {
         const session = await getSession();
         const refreshToken = session?.user?.refreshToken;
-        
+
         if (!refreshToken) {
           throw new Error('No refresh token available');
         }
@@ -124,21 +101,15 @@ axiosInstance.interceptors.response.use(
         return axiosInstance(originalRequest);
       } catch (refreshError: any) {
         processQueue(refreshError, null);
-        
-        // Handle refresh token expiration or other authentication errors
-        // Clear all session cookies by using the signOut function
-        try {
-          // Import directly from next-auth/react to avoid dynamic import issues
+
+        // Only logout on genuine auth failures, not network timeouts
+        const isTimeout = refreshError?.code === 'ECONNABORTED' || refreshError?.message?.includes('timeout');
+        if (!isTimeout) {
           const { signOut } = require('next-auth/react');
           await signOut({ redirect: false });
-          console.log('Session cleared due to refresh token failure');
-        } catch (signOutError) {
-          console.error('Error clearing session:', signOutError);
-        }
-        
-        // Redirect to login page after token refresh failure
-        if (typeof window !== 'undefined') {
-          window.location.href = '/auth/login';
+          if (typeof window !== 'undefined') {
+            window.location.href = '/auth/login';
+          }
         }
         return Promise.reject(refreshError);
       } finally {
