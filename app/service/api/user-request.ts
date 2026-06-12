@@ -251,4 +251,17 @@ export const userRequestService = {
     );
     return response.data;
   },
+
+  createPgtSpells: async (
+    parentId: string,
+    spells: { demandTimeFrom: string; demandTimeTo: string }[]
+  ) => {
+    const response = await axiosInstance.post(`/api/user-request/${parentId}/pgt-spells`, { spells });
+    return response.data;
+  },
+
+  getPgtSpells: async (parentId: string) => {
+    const response = await axiosInstance.get(`/api/user-request/${parentId}/pgt-spells`);
+    return response.data;
+  },
 };

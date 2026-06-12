@@ -505,6 +505,17 @@ block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance"
                   {formatTime(request.demandTimeTo)}
                 </td>
               </tr>
+              {(request.pgtMinDuration || request.pgtMinSpellDuration) && (
+                <tr>
+                  <td className="py-1 font-medium">PGT Spell Requirements:</td>
+                  <td className="py-1 text-[#2c3e50] font-semibold">
+                    {request.pgtMinDuration ? `Min. ${request.pgtMinDuration}h total` : ""}
+                    {request.pgtMinDuration && request.pgtMinSpellDuration ? " · " : ""}
+                    {request.pgtMinSpellDuration ? `Min. ${request.pgtMinSpellDuration}h per spell` : ""}
+                    {request.pgtSpellsCreated ? " ✔ Spells Created" : ""}
+                  </td>
+                </tr>
+              )}
               <tr>
                 <td className="py-1 font-medium">Sanctioned Time:</td>
                 <td className="py-1">

@@ -1142,6 +1142,8 @@ interface FormData {
   date: string;
   demandTimeFrom: string;
   demandTimeTo: string;
+  pgtMinDuration: string;
+  pgtMinSpellDuration: string;
   processedLineSections: {
     type: string;
     block: string;
@@ -1220,6 +1222,8 @@ export default function CreateBlockRequestPage() {
     date: "",
     demandTimeFrom: "",
     demandTimeTo: "",
+    pgtMinDuration: "",
+    pgtMinSpellDuration: "",
     processedLineSections: [],
     adminAcceptance: false,
     selectedDepartment: "",
@@ -2489,6 +2493,8 @@ const findCutoffThursday = () => {
         processedLineSections: processedSections,
         adminAcceptance: false,
         selectedDepo: userDepot || "",
+        ...(formData.pgtMinDuration ? { pgtMinDuration: Number(formData.pgtMinDuration) } : {}),
+        ...(formData.pgtMinSpellDuration ? { pgtMinSpellDuration: Number(formData.pgtMinSpellDuration) } : {}),
         ...(isShadowBlock
           ? { isShadowBlock: true, shadowParentId, isSanctioned: true, managerAcceptance: true }
           : durationMins <= 45 && !formData.sigActionsNeeded && !formData.trdActionsNeeded
@@ -5130,6 +5136,35 @@ useEffect(() => {
                     formData.demandTimeTo || ""
                   ) || "--"}
                 </span>
+                {/* PGT: Minimum Duration and Minimum Spell Duration */}
+                <div className="flex flex-row flex-wrap justify-center gap-6 mt-2 w-full">
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-[#2c3e50] font-bold text-[16px]">Min. Total Duration (hrs)</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={24}
+                      name="pgtMinDuration"
+                      value={formData.pgtMinDuration || ""}
+                      onChange={handleInputChange}
+                      placeholder="e.g. 3"
+                      className="border-2 border-[#2c3e50] rounded-lg px-4 py-2 text-2xl font-bold text-[#2c3e50] w-[120px] text-center bg-white shadow-inner focus:outline-none focus:ring-2 focus:ring-[#3498db]"
+                    />
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-[#2c3e50] font-bold text-[16px]">Min. Time Per Spell (hrs)</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={24}
+                      name="pgtMinSpellDuration"
+                      value={formData.pgtMinSpellDuration || ""}
+                      onChange={handleInputChange}
+                      placeholder="e.g. 1"
+                      className="border-2 border-[#2c3e50] rounded-lg px-4 py-2 text-2xl font-bold text-[#2c3e50] w-[120px] text-center bg-white shadow-inner focus:outline-none focus:ring-2 focus:ring-[#3498db]"
+                    />
+                  </div>
+                </div>
               </div>
               {/* Site Location row */}
               {getDisplayInfo(blockSectionValue[0])?.text === 'Corridor for this section' &&(
