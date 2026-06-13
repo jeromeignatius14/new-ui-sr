@@ -1417,11 +1417,10 @@ const handleOptimize = async () => {
     );
   }
 
-  useEffect(() => {
-    if (error) {
-      router.push('/auth/login');
-    }
-  }, [error, router]);
+  if (error) {
+    router.push('/auth/login');
+    return null;
+  }
 
 
 
