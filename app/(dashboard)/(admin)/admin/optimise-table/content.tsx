@@ -15,7 +15,7 @@ import {
   isSameDay,
 } from "date-fns";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { UserRequest } from "@/app/service/api/manager";
 import { useOptimizeRequests } from "@/app/service/query/optimise";
 import { flattenRecords } from "@/app/lib/optimse";
@@ -272,6 +272,7 @@ export default function OptimiseTablePage() {
 
   const acceptMutation = useAcceptUserRequest();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const { isUrgentMode } = useUrgentMode();
   const queryClient = useQueryClient();
 
@@ -357,7 +358,7 @@ const [selectedRequestsForSanction, setSelectedRequestsForSanction] = useState<U
     if (deptFilter !== 'ALL') {
       const params = new URLSearchParams(searchParams.toString());
       params.set("dept", deptFilter);
-      router.push(`?${params.toString()}`, { scroll: false });
+      router.push(`${pathname}?${params.toString()}`, { scroll: false });
     }
   }, []);
 
@@ -1478,12 +1479,12 @@ const handleOptimize = async () => {
                       if (dept !== 'ALL') {
                         const params = new URLSearchParams(searchParams.toString());
                         params.set("dept", dept);
-                        router.push(`?${params.toString()}`, { scroll: false });
+                        router.push(`${pathname}?${params.toString()}`, { scroll: false });
                       } else {
-                        
+
                         const params = new URLSearchParams(searchParams.toString());
                         params.delete("dept");
-                        router.push(`?${params.toString()}`, { scroll: false });
+                        router.push(`${pathname}?${params.toString()}`, { scroll: false });
                       }
                     }}
                     className={`block w-full text-left px-3 py-2 hover:bg-gray-100 text-black ${deptFilter === dept ? 'bg-blue-100' : ''

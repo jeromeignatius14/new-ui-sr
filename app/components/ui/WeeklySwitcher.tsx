@@ -1,5 +1,5 @@
 import { format, endOfWeek, startOfWeek, Day } from "date-fns";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 
 interface PeriodSwitcherProps {
   currentWeekStart: Date;
@@ -16,6 +16,7 @@ export function WeeklySwitcher({
 }: PeriodSwitcherProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
 
   const formatDateRange = () => {
     if (isUrgentMode) {
@@ -33,7 +34,7 @@ export function WeeklySwitcher({
 
     const params = new URLSearchParams(searchParams.toString());
     params.set("date", format(newDate, "yyyy-MM-dd"));
-    router.push(`?${params.toString()}`, { scroll: false });
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
 
     onWeekChange(direction);
   };
