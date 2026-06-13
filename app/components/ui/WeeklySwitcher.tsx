@@ -1,4 +1,5 @@
 import { format, endOfWeek, startOfWeek, Day } from "date-fns";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface PeriodSwitcherProps {
   currentWeekStart: Date;
@@ -13,6 +14,9 @@ export function WeeklySwitcher({
   isUrgentMode = false,
   weekStartsOn = 1 as Day,
 }: PeriodSwitcherProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const formatDateRange = () => {
     if (isUrgentMode) {
       return format(currentWeekStart, "dd-MM-yyyy");
@@ -22,10 +26,22 @@ export function WeeklySwitcher({
     return `${format(weekStart, "dd-MM-yyyy")} to ${format(weekEnd, "dd-MM-yyyy")}`;
   };
 
+  const handleWeekChange = (direction: "prev" | "next") => {
+    const newDate = direction === "prev"
+      ? new Date(currentWeekStart.getTime() - (isUrgentMode ? 24 : 7 * 24) * 60 * 60 * 1000)
+      : new Date(currentWeekStart.getTime() + (isUrgentMode ? 24 : 7 * 24) * 60 * 60 * 1000);
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("date", format(newDate, "yyyy-MM-dd"));
+    router.push(`?${params.toString()}`, { scroll: false });
+
+    onWeekChange(direction);
+  };
+
   return (
     <div className="flex items-center gap-2">
       <button
-        onClick={() => onWeekChange("prev")}
+        onClick={() => handleWeekChange("prev")}
         className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200"
       >
         Previous {isUrgentMode ? "Day" : "Week"}
@@ -35,7 +51,7 @@ export function WeeklySwitcher({
         {formatDateRange()}
       </span>
       <button
-        onClick={() => onWeekChange("next")}
+        onClick={() => handleWeekChange("next")}
         className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200"
       >
         Next {isUrgentMode ? "Day" : "Week"}
