@@ -356,7 +356,7 @@ const [selectedRequestsForSanction, setSelectedRequestsForSanction] = useState<U
     // Only update URL if dept filter changes to something other than ALL
     if (deptFilter !== 'ALL') {
       const params = new URLSearchParams(searchParams.toString());
-      params.set("dept", encodeURIComponent(deptFilter));
+      params.set("dept", deptFilter);
       router.push(`?${params.toString()}`, { scroll: false });
     }
   }, []);
@@ -1477,7 +1477,7 @@ const handleOptimize = async () => {
                       
                       if (dept !== 'ALL') {
                         const params = new URLSearchParams(searchParams.toString());
-                        params.set("dept", encodeURIComponent(dept));
+                        params.set("dept", dept);
                         router.push(`?${params.toString()}`, { scroll: false });
                       } else {
                         
