@@ -457,6 +457,12 @@ const finalWeekEnd = isUrgentMode ? currentWeekStart : weekEnd;
     staleTime: 60 * 1000,
   });
 
+  // Must be here (unconditionally, before any conditional returns) to satisfy
+  // Rules of Hooks — hook count must be identical on every render.
+  useEffect(() => {
+    if (error) router.push('/auth/login');
+  }, [error]);
+
   const handleRejectClick = (requestId: string) => {
     setCurrentRequestId(requestId);
     setShowRejectionModal(true);
@@ -1417,10 +1423,6 @@ const handleOptimize = async () => {
       </div>
     );
   }
-
-  useEffect(() => {
-    if (error) router.push('/auth/login');
-  }, [error]);
 
   if (error) return null;
 
