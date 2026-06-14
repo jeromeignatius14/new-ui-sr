@@ -281,6 +281,8 @@ export default function OptimiseTablePage() {
   const didInitializeDateRef = useRef(false);
   // Guard: auto-jump happens once per dept-filter change, not on every data refetch.
   const didAutoJumpRef = useRef(false);
+  // Tracks which weekStartStr we last auto-selected a day for, to avoid re-running on refetch.
+  const lastAutoSelectedWeekRef = useRef<string | null>(null);
 
 // Initialize currentWeekStart from URL parameter or default to current date
 const [currentWeekStart, setCurrentWeekStart] = useState(() => {
@@ -590,7 +592,23 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
     setCurrentWeekStart(minDate);
   }, [data, deptFilter]);
 
-
+  // When the user manually navigates weeks, auto-select the first day in the
+  // new week that has pending requests — prevents landing on Monday when all
+  // data is on Tuesday/Wednesday (which looks like an empty page).
+  useEffect(() => {
+    if (!data) return;
+    if (lastAutoSelectedWeekRef.current === weekStartStr) return; // already handled this week
+    lastAutoSelectedWeekRef.current = weekStartStr;
+    if (!pendingRequests.length) return;
+    const wStart = new Date(weekStartStr + "T00:00:00");
+    const wEnd = new Date(weekEndStr + "T23:59:59");
+    const inWeek = pendingRequests
+      .map((r: UserRequest) => { const d = new Date(r.date); d.setHours(0, 0, 0, 0); return d; })
+      .filter((d: Date) => d >= wStart && d <= wEnd);
+    if (!inWeek.length) return;
+    const first = inWeek.reduce((min: Date, d: Date) => d < min ? d : min, inWeek[0]);
+    if (!isSameDay(selectedDate, first)) setSelectedDate(first);
+  }, [data, weekStartStr]);
 
 
 const urgentRequestsFiltered = pendingRequests
