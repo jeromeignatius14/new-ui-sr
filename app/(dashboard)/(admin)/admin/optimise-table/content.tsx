@@ -446,15 +446,14 @@ const getWeekBoundaries = (date: Date) => {
 const { weekStart, weekEnd } = getWeekBoundaries(currentWeekStart);
 const finalWeekStart = isUrgentMode ? currentWeekStart : weekStart;
 const finalWeekEnd = isUrgentMode ? currentWeekStart : weekEnd;
+  const weekStartStr = format(finalWeekStart, "yyyy-MM-dd");
+  const weekEndStr = format(finalWeekEnd, "yyyy-MM-dd");
+
   // Fetch approved requests data
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["approved-requests", currentWeekStart, isUrgentMode],
+    queryKey: ["approved-requests", weekStartStr, weekEndStr, isUrgentMode],
     queryFn: () =>
-      adminService.getApprovedRequests(
-        format(finalWeekStart, "yyyy-MM-dd"),
-        format(finalWeekEnd, "yyyy-MM-dd"),
-        5000
-      ),
+      adminService.getApprovedRequests(weekStartStr, weekEndStr, 5000),
     staleTime: 60 * 1000,
   });
 
@@ -563,11 +562,13 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
   // Floor: never go before 1st June 2026
   const PENDING_FLOOR = new Date("2026-06-01T00:00:00.000Z");
   useEffect(() => {
-    if (didAutoJumpRef.current) return;         // already jumped for this dept
-    if (searchParams.get("date")) {             // URL already specifies exact date
+    if (didAutoJumpRef.current) return;
+    if (searchParams.get("date")) {
       didAutoJumpRef.current = true;
       return;
     }
+    if (!data) return; // still loading — don't lock the guard yet
+    didAutoJumpRef.current = true; // data is here; lock guard for all remaining paths
     if (!pendingRequests.length) return;
     const filtered = (deptFilter !== "ALL"
       ? pendingRequests.filter((r: UserRequest) => r.selectedDepartment === deptFilter)
@@ -578,7 +579,6 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
       const d = new Date(r.date); d.setHours(0, 0, 0, 0);
       return d < min ? d : min;
     }, (() => { const d = new Date(filtered[0].date); d.setHours(0, 0, 0, 0); return d; })());
-    didAutoJumpRef.current = true;
     if (isSameDay(selectedDate, minDate)) return;
     setSelectedDate(minDate);
     setCurrentWeekStart(minDate);
