@@ -651,7 +651,7 @@ const urgentRequestsFiltered = pendingRequests
     //   section.otherLines && section.otherLines.trim() !== ''
     // );
     // if (hasOtherLines) return false;
-  if (r.processedLineSections ) {
+  if (r.processedLineSections && r.processedLineSections.length > 0) {
       const firstSection = r.processedLineSections[0];
       const hasOtherLines = firstSection.otherLines && firstSection.otherLines.trim() !== '';
       if (hasOtherLines) return false; // Don't show if first section has otherLines
@@ -681,7 +681,7 @@ const nonCorridorRequestsFiltered = pendingRequests
     if (!matchesActivity(r)) return false;
     if (!matchesTimeSlot(r)) return false;
 
-     if (r.processedLineSections ) {
+    if (r.processedLineSections && r.processedLineSections.length > 0) {
       const firstSection = r.processedLineSections[0];
       const hasOtherLines = firstSection.otherLines && firstSection.otherLines.trim() !== '';
       if (hasOtherLines) return false; // Don't show if first section has otherLines
