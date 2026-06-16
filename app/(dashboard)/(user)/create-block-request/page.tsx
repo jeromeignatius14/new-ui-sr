@@ -27,6 +27,7 @@ import {
 import { useRouter } from "next/navigation";
 import Papa from "papaparse";
 import { useQuery } from "@tanstack/react-query";
+import axiosInstance from "@/app/utils/axiosInstance";
 import { userRequestService } from "@/app/service/api/user-request";
 import { availService } from "@/app/service/api/avail";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -1331,6 +1332,17 @@ const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
       window.location.href = "/auth/login";
     },
   });
+
+  const { data: lockStatus } = useQuery({
+    queryKey: ["my-lock-status"],
+    queryFn: async () => {
+      const res = await axiosInstance.get("/api/analytics/my-lock-status");
+      return res.data;
+    },
+    staleTime: 30 * 1000,
+    enabled: status === "authenticated",
+  });
+
   const [showPopup, setShowPopup] = useState(false);
   const [popupLink, setPopupLink] = useState("");
   const [proceedAnyway, setProceedAnyway] = useState(false);
@@ -4029,6 +4041,23 @@ useEffect(() => {
               </button>
             </div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (lockStatus?.isLocked) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#f7fafc] px-4">
+        <div className="bg-white border-2 border-[#dc2626] rounded-2xl max-w-md w-full shadow-2xl p-8 text-center">
+          <div className="text-5xl mb-4">🔒</div>
+          <h2 className="text-2xl font-extrabold text-[#dc2626] mb-3">Account Locked</h2>
+          <p className="text-gray-700 text-base leading-relaxed">
+            Your account has been locked due to repeated exceptions. You cannot submit new block requests at this time.
+          </p>
+          <p className="text-gray-700 text-base mt-3 font-semibold">
+            Please contact your <strong>Branch Officer or Department Controller</strong> to unlock your account.
+          </p>
         </div>
       </div>
     );

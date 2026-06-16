@@ -903,7 +903,47 @@ import { useQuery } from "@tanstack/react-query";
 import { userRequestService } from "@/app/service/api/user-request";
 import axiosInstance from "@/app/utils/axiosInstance";
 import { format, addDays } from "date-fns";
+import { useState } from "react";
+
+function LockingNoticePopup({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 px-4">
+      <div className="bg-white border-2 border-black rounded-2xl max-w-md w-full shadow-2xl">
+        <div className="bg-[#FFF3CD] border-b-2 border-black rounded-t-2xl px-6 py-4 flex items-center gap-2">
+          <span className="text-2xl">⚠️</span>
+          <span className="text-xl font-extrabold text-black tracking-wide">IMPORTANT NOTICE</span>
+        </div>
+        <div className="px-6 py-5 text-black text-base leading-relaxed space-y-3">
+          <p>
+            With <strong>immediate effect</strong>, accounts of users who appear in the{" "}
+            <strong>exceptions list</strong> (Sanctioned but Not Acknowledged / Acknowledged but Not
+            Applied) <strong>two or more times in a single week (Monday to Sunday)</strong> will be{" "}
+            <strong>automatically locked</strong> from submitting new block requests.
+          </p>
+          <p>
+            This check will be performed every <strong>Monday</strong> for the previous week&apos;s
+            records.
+          </p>
+          <p>
+            Locked accounts can only be <strong>unlocked by the concerned Branch Officer or
+            Department Controller</strong>.
+          </p>
+        </div>
+        <div className="px-6 pb-5 flex justify-center">
+          <button
+            onClick={onClose}
+            className="bg-[#13529e] text-white font-bold px-8 py-3 rounded-xl text-base hover:bg-[#0e3f7a] transition"
+          >
+            OK, I Understand
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
+  const [showNotice, setShowNotice] = useState(true);
   const { data: session, status } = useSession({
     required: true,
     onUnauthenticated() {
@@ -944,6 +984,7 @@ const hasInProgressBlock = requestsData?.data?.requests?.find(
   if (session?.user?.role === "USER" || session?.user?.role === "JE") {
     return (
       <div className="min-h-screen w-full flex flex-col items-center bg-[#fffbe9]">
+        {showNotice && <LockingNoticePopup onClose={() => setShowNotice(false)} />}
         {/* Header */}
         <div className="w-full border border-black bg-yellow-200 flex items-center justify-center relative p-2" style={{ minHeight: 60 }}>
           <span className="absolute left-4 top-1/2 -translate-y-1/2">
@@ -1018,6 +1059,7 @@ if (session?.user?.role === "ANALYST") {
   if (session?.user?.role === "ADMIN") {
     return (
       <div className="min-h-screen w-full flex flex-col items-center bg-[#fffbe9]">
+        {showNotice && <LockingNoticePopup onClose={() => setShowNotice(false)} />}
         {/* Header */}
         <div className="w-full border border-black bg-yellow-200 flex items-center justify-center relative p-2" style={{ minHeight: 60 }}>
           <span className="absolute left-4 top-1/2 -translate-y-1/2">
@@ -1076,6 +1118,7 @@ if (session?.user?.role === "ANALYST") {
 if (session?.user?.role === "PUNCTUALITY_CONTROLLER") {
     return (
       <div className="min-h-screen w-full flex flex-col items-center bg-[#fffbe9]">
+        {showNotice && <LockingNoticePopup onClose={() => setShowNotice(false)} />}
         {/* Header */}
         <div className="w-full border border-black bg-yellow-200 flex items-center justify-center relative p-2" style={{ minHeight: 60 }}>
           <span className="absolute left-4 top-1/2 -translate-y-1/2">
@@ -1149,6 +1192,7 @@ if (session?.user?.role === "PUNCTUALITY_CONTROLLER") {
 };
     return (
       <div className="min-h-screen w-full flex flex-col items-center bg-[#fffbe9]">
+        {showNotice && <LockingNoticePopup onClose={() => setShowNotice(false)} />}
         {/* Header */}
         <div className="w-full border border-black bg-yellow-200 flex items-center justify-center relative p-2" style={{ minHeight: 60 }}>
           <span className="absolute left-4 top-1/2 -translate-y-1/2">
@@ -1204,6 +1248,7 @@ if (session?.user?.role === "PUNCTUALITY_CONTROLLER") {
   if (session?.user?.role === "DRM") {
     return (
       <div className="min-h-screen w-full flex flex-col items-center bg-[#fffbe9]">
+        {showNotice && <LockingNoticePopup onClose={() => setShowNotice(false)} />}
         {/* Header */}
         <div
           className="w-full border border-black bg-yellow-200 flex items-center justify-center relative p-2"
@@ -1268,6 +1313,7 @@ if (session?.user?.role === "PUNCTUALITY_CONTROLLER") {
   if (session?.user?.role === "BRANCH_OFFICER"||session?.user?.role === "SENIOR_OFFICER" || session?.user?.role === "JUNIOR_OFFICER") {
     return (
       <div className="min-h-screen w-full flex flex-col items-center bg-[#fffbe9]">
+        {showNotice && <LockingNoticePopup onClose={() => setShowNotice(false)} />}
         {/* Header */}
         <div
           className="w-full border border-black bg-yellow-200 flex items-center justify-center relative p-2"
@@ -1308,6 +1354,13 @@ if (session?.user?.role === "PUNCTUALITY_CONTROLLER") {
             <Link href="/manage/defaulters" className="w-full">
               <button className="w-full rounded-2xl bg-[#ffd6d6] border-2 border-[#dc2626] py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
                 ⚠️ EXCEPTIONAL LIST
+              </button>
+            </Link>
+          )}
+          {session?.user?.role === "BRANCH_OFFICER" && (
+            <Link href="/manage/unlock-users" className="w-full">
+              <button className="w-full rounded-2xl bg-[#fff3cd] border-2 border-[#f59e0b] py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
+                🔓 UNLOCK USERS
               </button>
             </Link>
           )}

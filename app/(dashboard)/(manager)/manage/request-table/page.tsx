@@ -529,6 +529,17 @@ const handleDownloadExcel = async () => {
         </span>
       </div>
 
+      {/* Unlock Users button — DEPT_CONTROLLER only */}
+      {session?.user?.role === "DEPT_CONTROLLER" && (
+        <div className="flex justify-center mt-4 px-4">
+          <Link href="/manage/unlock-users" className="w-full max-w-sm">
+            <button className="w-full rounded-2xl bg-[#fff3cd] border-2 border-[#f59e0b] py-4 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">
+              🔓 UNLOCK USERS
+            </button>
+          </Link>
+        </div>
+      )}
+
 <div className="mx-4">
   
 <div className="flex justify-center mt-8 mb-6">
