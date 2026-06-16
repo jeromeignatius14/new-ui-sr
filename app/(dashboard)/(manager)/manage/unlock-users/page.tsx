@@ -91,14 +91,12 @@ export default function UnlockUsersPage() {
                     <p className="text-center text-gray-500 mt-10 font-semibold">Loading locked users...</p>
                 )}
 
-                {isError && (
-                    <p className="text-center text-red-600 mt-10 font-semibold">Failed to load locked users.</p>
-                )}
-
-                {!isLoading && !isError && users?.length === 0 && (
-                    <div className="text-center mt-16">
-                        <p className="text-2xl font-extrabold text-green-700">✅ No locked users</p>
-                        <p className="text-gray-500 mt-2">All users in your department are currently active.</p>
+                {(isError || (!isLoading && !isError && users?.length === 0)) && (
+                    <div className="text-center mt-16 px-4">
+                        <p className="text-2xl font-extrabold text-green-700">✅ No Locked Users</p>
+                        <p className="text-gray-600 mt-3 text-sm leading-relaxed">
+                            Locked user accounts, if any, will be populated here every Monday following the automated weekly exceptions review.
+                        </p>
                     </div>
                 )}
 
