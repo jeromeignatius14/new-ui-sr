@@ -321,17 +321,9 @@ export default function SmPendingAvailsPage() {
     setSmRemarks(""); setPowerNumber("");
     setRejectRmk(""); setClosureRmk(""); setExtRemarks(""); setExtAction("APPROVE");
 
-    // If the requested from time has already passed, pre-fill with current IST time
     const requestedFrom = req.requestedTimeFrom ?? req.grantedFromTime ?? req.sanctionedTimeFrom;
-    const requestedFromMs = requestedFrom ? new Date(requestedFrom).getTime() : null;
-    const nowAsIST = Date.now() + 5.5 * 60 * 60 * 1000;
-    if (requestedFromMs && nowAsIST > requestedFromMs) {
-      setSmTimeFrom(nowISTDatetimeLocal());
-      setSmFromAutoFilled(true);
-    } else {
-      setSmTimeFrom(toDatetimeLocal(requestedFrom));
-      setSmFromAutoFilled(false);
-    }
+    setSmTimeFrom(toDatetimeLocal(requestedFrom));
+    setSmFromAutoFilled(false);
     setSmTimeTo(toDatetimeLocal(req.requestedTimeTo ?? req.grantedToTime ?? req.sanctionedTimeTo));
 
     if (pendingApprovals.some((r: any) => (r._id||r.id) === (req._id||req.id))) {
@@ -349,10 +341,6 @@ export default function SmPendingAvailsPage() {
   function submitApprove() {
     if (!activeReq) return;
     if (!smTimeFrom || !smTimeTo) { toast.error("Enter both times"); return; }
-    // from must not be in the past
-    const nowIST = Date.now() + 5.5 * 60 * 60 * 1000;
-    const fromMs = new Date(smTimeFrom + ":00.000Z").getTime();
-    if (fromMs < nowIST - 60_000) { toast.error("From time cannot be in the past"); return; }
     // to must be after from
     if (smTimeTo <= smTimeFrom) { toast.error("To time must be later than From time"); return; }
     setSyncing(true);
@@ -604,7 +592,6 @@ export default function SmPendingAvailsPage() {
                     <input
                       type="datetime-local"
                       lang="en-GB"
-                      min={nowISTDatetimeLocal()}
                       style={{ ...fldInput, border: "2px solid #f59e0b", fontSize: "14px" }}
                       value={smTimeFrom}
                       onChange={e => setSmTimeFrom(e.target.value)}

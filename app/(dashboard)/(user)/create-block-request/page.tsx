@@ -2325,13 +2325,6 @@ const findCutoffThursday = () => {
 
     // ─── 1. Review‑mode guard ──────────────────────────────────────────────
     if (!reviewMode) {
-      // Check for pending unresolved blocks first
-      const pending = getPendingActionBlocks();
-      if (pending.length > 0) {
-        setPendingActionBlocks(pending);
-        setShowPendingModal(true);
-        return;
-      }
       setShowReviewModal(true);
       return;
     }
