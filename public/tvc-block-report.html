@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sr DSTE/TVC — Block Utilisation Report</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --primary: #1e3a5f;
+    --accent:  #e63946;
+    --gold:    #f4a261;
+    --green:   #2a9d8f;
+    --purple:  #6d28d9;
+    --bg:      #f0f4f8;
+    --card:    #ffffff;
+    --border:  #d1dce9;
+    --text:    #1a202c;
+    --muted:   #64748b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); }
+
+  /* ── Header ── */
+  .header {
+    background: linear-gradient(135deg, #1e3a5f 0%, #14213d 100%);
+    color: #fff; padding: 24px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 4px 20px rgba(0,0,0,.3);
+  }
+  .header-left h1 { font-size: 22px; font-weight: 700; letter-spacing: .5px; }
+  .header-left p  { font-size: 13px; opacity: .75; margin-top: 4px; }
+  .header-right   { text-align: right; font-size: 12px; opacity: .8; line-height: 1.6; }
+  .badge { background: var(--accent); color: #fff; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-block; margin-top: 6px; }
+
+  /* ── Layout ── */
+  .container { max-width: 1400px; margin: 0 auto; padding: 24px 20px; }
+
+  /* ── KPI row ── */
+  .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 28px; }
+  .kpi { background: var(--card); border-radius: 12px; padding: 18px 16px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,.07); border-top: 4px solid var(--primary); }
+  .kpi.s1 { border-color: #3b82f6; }
+  .kpi.s2 { border-color: #10b981; }
+  .kpi.s3 { border-color: #f59e0b; }
+  .kpi.s4 { border-color: #8b5cf6; }
+  .kpi.s5 { border-color: #ef4444; }
+  .kpi-val { font-size: 34px; font-weight: 800; line-height: 1; }
+  .kpi-lbl { font-size: 11px; color: var(--muted); margin-top: 6px; text-transform: uppercase; letter-spacing: .5px; }
+  .kpi-pct { font-size: 13px; font-weight: 600; margin-top: 4px; }
+
+  /* ── Section title ── */
+  .section-title {
+    font-size: 15px; font-weight: 700; color: var(--primary);
+    border-left: 4px solid var(--accent); padding-left: 10px;
+    margin: 28px 0 14px;
+  }
+
+  /* ── Charts row ── */
+  .charts-row { display: grid; grid-template-columns: 2fr 1fr; gap: 18px; margin-bottom: 28px; }
+  .chart-card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,.07); }
+  .chart-card h3 { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 14px; }
+  .chart-wrap { position: relative; height: 240px; }
+
+  /* ── Dept charts ── */
+  .dept-charts { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-bottom: 28px; }
+  .dept-chart-card { background: var(--card); border-radius: 12px; padding: 16px; box-shadow: 0 2px 10px rgba(0,0,0,.07); }
+  .dept-chart-card h3 { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; text-align: center; }
+  .dept-chart-wrap { position: relative; height: 180px; }
+
+  /* ── Table ── */
+  .table-card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,.07); margin-bottom: 22px; overflow-x: auto; }
+  .table-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 14px; color: var(--primary); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 600px; }
+  thead th { background: var(--primary); color: #fff; padding: 10px 12px; text-align: center; font-size: 11px; text-transform: uppercase; letter-spacing: .4px; white-space: nowrap; }
+  thead th:first-child { text-align: left; }
+  tbody tr:nth-child(even) { background: #f8fafc; }
+  tbody tr:hover { background: #eff6ff; }
+  tbody td { padding: 9px 12px; border-bottom: 1px solid var(--border); text-align: center; }
+  tbody td:first-child { text-align: left; font-weight: 600; }
+  .pct-cell { font-size: 11px; color: var(--muted); }
+
+  /* ── Funnel bars ── */
+  .funnel { display: flex; gap: 4px; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 4px; }
+  .f1 { background: #3b82f6; }
+  .f2 { background: #10b981; }
+  .f3 { background: #f59e0b; }
+  .f4 { background: #8b5cf6; }
+  .f5 { background: #ef4444; }
+
+  /* ── Dept tab selector ── */
+  .dept-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .dept-tab { padding: 6px 14px; border-radius: 20px; border: 2px solid var(--border); background: #fff; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .2s; color: var(--muted); }
+  .dept-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .dept-section { display: none; }
+  .dept-section.active { display: block; }
+
+  /* ── Spinner ── */
+  .spinner { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; gap: 14px; color: var(--muted); }
+  .spin { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: var(--primary); border-radius: 50%; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Last updated ── */
+  .last-upd { text-align: right; font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+  .refresh-btn { background: var(--primary); color: #fff; border: none; padding: 7px 16px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; margin-left: 10px; }
+
+  @media (max-width: 768px) {
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .charts-row { grid-template-columns: 1fr; }
+    .header { flex-direction: column; gap: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>⚡ Block Utilisation Report — TVC Division</h1>
+    <p>Last 14 days · Live data from RBMS · Updated every 5 minutes</p>
+    <span class="badge">Sr DSTE/TVC View</span>
+  </div>
+  <div class="header-right">
+    <div id="clock" style="font-size:18px;font-weight:700;"></div>
+    <div id="dateline"></div>
+    <div style="margin-top:6px;">South Railway · TVC Division</div>
+  </div>
+</div>
+
+<div class="container">
+  <div id="root"><div class="spinner"><div class="spin"></div><span>Loading live data…</span></div></div>
+</div>
+
+<script>
+// ── Config ──────────────────────────────────────────────────────────────────
+const API = "https://api-tvc.adrig.co.in/api/analytics/block-funnel-public?days=14";
+const REFRESH_MS = 5 * 60 * 1000;
+const DEPT_COLORS = { TRD:"#f59e0b", "S&T":"#3b82f6", ENGG:"#10b981", UNKNOWN:"#94a3b8" };
+const DEPT_ORDER  = ["TRD","S&T","ENGG","UNKNOWN"];
+
+// ── Clock ───────────────────────────────────────────────────────────────────
+function tickClock() {
+  const now = new Date();
+  const ist = new Date(now.toLocaleString("en-US",{timeZone:"Asia/Kolkata"}));
+  const pad = n => String(n).padStart(2,"0");
+  document.getElementById("clock").textContent = `${pad(ist.getHours())}:${pad(ist.getMinutes())}:${pad(ist.getSeconds())} IST`;
+  document.getElementById("dateline").textContent = ist.toLocaleDateString("en-IN",{weekday:"long",day:"2-digit",month:"long",year:"numeric",timeZone:"Asia/Kolkata"});
+}
+setInterval(tickClock,1000); tickClock();
+
+// ── Chart registry ──────────────────────────────────────────────────────────
+const chartRegistry = {};
+function destroyChart(id) { if(chartRegistry[id]) { chartRegistry[id].destroy(); delete chartRegistry[id]; } }
+
+// ── Fetch & render ──────────────────────────────────────────────────────────
+async function loadData() {
+  try {
+    const res = await fetch(API);
+    const json = await res.json();
+    if(!json.success) throw new Error(json.message);
+    render(json.data, json.generatedAt);
+  } catch(e) {
+    document.getElementById("root").innerHTML = `<div class="spinner"><span style="color:#ef4444;">⚠️ Failed to load: ${e.message}</span><button class="refresh-btn" onclick="loadData()">Retry</button></div>`;
+  }
+}
+
+// ── Process raw rows ─────────────────────────────────────────────────────────
+function processData(rows) {
+  // rows: [{block_date, department, total_requested, sanctioned, applied, granted, closed}]
+  const dates = [...new Set(rows.map(r=>r.block_date))].sort((a,b)=>new Date(b)-new Date(a));
+  const depts = [...new Set(rows.map(r=>r.department))].sort((a,b)=>{
+    const ia=DEPT_ORDER.indexOf(a), ib=DEPT_ORDER.indexOf(b);
+    return (ia===-1?99:ia)-(ib===-1?99:ib);
+  });
+
+  // Overall per date
+  const overallByDate = {};
+  dates.forEach(d => { overallByDate[d]={block_date:d,department:"ALL",total_requested:0,sanctioned:0,applied:0,granted:0,closed:0}; });
+  rows.forEach(r => {
+    const o=overallByDate[r.block_date];
+    o.total_requested+=r.total_requested; o.sanctioned+=r.sanctioned;
+    o.applied+=r.applied; o.granted+=r.granted; o.closed+=r.closed;
+  });
+  const overall = dates.map(d=>overallByDate[d]);
+
+  // Per dept per date
+  const byDept = {};
+  depts.forEach(dep => {
+    byDept[dep] = dates.map(d => {
+      const found = rows.find(r=>r.block_date===d && r.department===dep);
+      return found || {block_date:d,department:dep,total_requested:0,sanctioned:0,applied:0,granted:0,closed:0};
+    });
+  });
+
+  return { dates, depts, overall, byDept };
+}
+
+// ── Format date ──────────────────────────────────────────────────────────────
+function fmtDate(d) {
+  const dt = new Date(d);
+  return dt.toLocaleDateString("en-IN",{day:"2-digit",month:"short",timeZone:"UTC"});
+}
+function fmtDay(d) {
+  const dt = new Date(d);
+  return dt.toLocaleDateString("en-IN",{weekday:"short",timeZone:"UTC"});
+}
+function pct(num,den) { return den>0 ? Math.round(num/den*100)+"%" : "—"; }
+
+// ── KPI totals ───────────────────────────────────────────────────────────────
+function kpiHtml(overall) {
+  const tot = overall.reduce((a,r)=>({
+    total_requested:a.total_requested+r.total_requested,
+    sanctioned:a.sanctioned+r.sanctioned,
+    applied:a.applied+r.applied,
+    granted:a.granted+r.granted,
+    closed:a.closed+r.closed
+  }),{total_requested:0,sanctioned:0,applied:0,granted:0,closed:0});
+  return `
+  <div class="kpi-row">
+    <div class="kpi s1"><div class="kpi-val" style="color:#3b82f6">${tot.total_requested}</div><div class="kpi-lbl">Total Requested</div><div class="kpi-pct" style="color:#3b82f6">14-day total</div></div>
+    <div class="kpi s2"><div class="kpi-val" style="color:#10b981">${tot.sanctioned}</div><div class="kpi-lbl">Sanctioned</div><div class="kpi-pct" style="color:#10b981">${pct(tot.sanctioned,tot.total_requested)} of requested</div></div>
+    <div class="kpi s3"><div class="kpi-val" style="color:#f59e0b">${tot.applied}</div><div class="kpi-lbl">Applied to SM/TPC</div><div class="kpi-pct" style="color:#f59e0b">${pct(tot.applied,tot.sanctioned)} of sanctioned</div></div>
+    <div class="kpi s4"><div class="kpi-val" style="color:#8b5cf6">${tot.granted}</div><div class="kpi-lbl">Granted by SM/TPC</div><div class="kpi-pct" style="color:#8b5cf6">${pct(tot.granted,tot.applied)} of applied</div></div>
+    <div class="kpi s5"><div class="kpi-val" style="color:#ef4444">${tot.closed}</div><div class="kpi-lbl">Block Closed</div><div class="kpi-pct" style="color:#ef4444">${pct(tot.closed,tot.granted)} of granted</div></div>
+  </div>`;
+}
+
+// ── Table for a dataset ──────────────────────────────────────────────────────
+function tableHtml(rows, title, accentColor="#1e3a5f") {
+  const trs = rows.map(r => {
+    const sanctPct = pct(r.sanctioned, r.total_requested);
+    const applPct  = pct(r.applied,    r.sanctioned);
+    const grantPct = pct(r.granted,    r.applied);
+    const closePct = pct(r.closed,     r.granted);
+    const w = (a,b)=>b>0?Math.round(a/b*100):0;
+    return `<tr>
+      <td><strong>${fmtDate(r.block_date)}</strong><br><span style="font-size:11px;color:#94a3b8">${fmtDay(r.block_date)}</span></td>
+      <td><strong>${r.total_requested}</strong></td>
+      <td>${r.sanctioned}<br><span class="pct-cell">${sanctPct}</span></td>
+      <td>${r.applied}<br><span class="pct-cell">${applPct}</span></td>
+      <td>${r.granted}<br><span class="pct-cell">${grantPct}</span></td>
+      <td>${r.closed}<br><span class="pct-cell">${closePct}</span></td>
+      <td style="min-width:120px">
+        <div class="funnel">
+          <div class="f1" style="flex:${w(r.total_requested,r.total_requested)}"></div>
+          <div class="f2" style="flex:${w(r.sanctioned,r.total_requested)}"></div>
+          <div class="f3" style="flex:${w(r.applied,r.total_requested)}"></div>
+          <div class="f4" style="flex:${w(r.granted,r.total_requested)}"></div>
+          <div class="f5" style="flex:${w(r.closed,r.total_requested)}"></div>
+        </div>
+      </td>
+    </tr>`;
+  }).join("");
+
+  return `<div class="table-card">
+    <h3 style="color:${accentColor}">${title}</h3>
+    <table>
+      <thead><tr>
+        <th>Date</th>
+        <th>Requested</th>
+        <th>Sanctioned</th>
+        <th>Applied to SM/TPC</th>
+        <th>Granted by SM/TPC</th>
+        <th>Block Closed</th>
+        <th>Funnel</th>
+      </tr></thead>
+      <tbody>${trs}</tbody>
+    </table>
+  </div>`;
+}
+
+// ── Bar chart (overall trend) ────────────────────────────────────────────────
+function renderBarChart(canvasId, dates, overall) {
+  destroyChart(canvasId);
+  const ctx = document.getElementById(canvasId).getContext("2d");
+  chartRegistry[canvasId] = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: dates.map(d=>fmtDate(d)),
+      datasets: [
+        { label:"Requested",        data: overall.map(r=>r.total_requested), backgroundColor:"#3b82f688", borderColor:"#3b82f6", borderWidth:1.5 },
+        { label:"Sanctioned",       data: overall.map(r=>r.sanctioned),       backgroundColor:"#10b98188", borderColor:"#10b981", borderWidth:1.5 },
+        { label:"Applied SM/TPC",   data: overall.map(r=>r.applied),          backgroundColor:"#f59e0b88", borderColor:"#f59e0b", borderWidth:1.5 },
+        { label:"Granted SM/TPC",   data: overall.map(r=>r.granted),          backgroundColor:"#8b5cf688", borderColor:"#8b5cf6", borderWidth:1.5 },
+        { label:"Closed",           data: overall.map(r=>r.closed),           backgroundColor:"#ef444488", borderColor:"#ef4444", borderWidth:1.5 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position:"top", labels:{ font:{size:11} } } },
+      scales: { x:{ grid:{display:false}, ticks:{font:{size:10}} }, y:{ beginAtZero:true, ticks:{font:{size:10}} } }
+    }
+  });
+}
+
+// ── Pie chart (14-day funnel) ────────────────────────────────────────────────
+function renderPieChart(canvasId, overall) {
+  destroyChart(canvasId);
+  const tot = overall.reduce((a,r)=>({
+    total_requested:a.total_requested+r.total_requested,
+    sanctioned:a.sanctioned+r.sanctioned,
+    applied:a.applied+r.applied,
+    granted:a.granted+r.granted,
+    closed:a.closed+r.closed
+  }),{total_requested:0,sanctioned:0,applied:0,granted:0,closed:0});
+  const notSanctioned = tot.total_requested - tot.sanctioned;
+  const sanctNotApplied = tot.sanctioned - tot.applied;
+  const applNotGranted  = tot.applied - tot.granted;
+  const grantNotClosed  = tot.granted - tot.closed;
+  const ctx = document.getElementById(canvasId).getContext("2d");
+  chartRegistry[canvasId] = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: ["Not Sanctioned","Sanctioned→Not Applied","Applied→Not Granted","Granted→Not Closed","Block Closed"],
+      datasets:[{ data:[notSanctioned,sanctNotApplied,applNotGranted,grantNotClosed,tot.closed],
+        backgroundColor:["#94a3b8","#10b981","#f59e0b","#8b5cf6","#ef4444"], borderWidth:2 }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:"right", labels:{ font:{size:10}, boxWidth:14 } } }
+    }
+  });
+}
+
+// ── Dept bar chart (small) ────────────────────────────────────────────────────
+function renderDeptBar(canvasId, rows, color) {
+  destroyChart(canvasId);
+  const ctx = document.getElementById(canvasId).getContext("2d");
+  chartRegistry[canvasId] = new Chart(ctx, {
+    type:"bar",
+    data:{
+      labels: rows.map(r=>fmtDate(r.block_date)),
+      datasets:[
+        { label:"Req", data:rows.map(r=>r.total_requested), backgroundColor:color+"44", borderColor:color, borderWidth:1.5 },
+        { label:"Closed", data:rows.map(r=>r.closed), backgroundColor:color+"99", borderColor:color, borderWidth:1.5 }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ display:true, position:"top", labels:{font:{size:9}} } },
+      scales:{ x:{ticks:{font:{size:8}},grid:{display:false}}, y:{beginAtZero:true,ticks:{font:{size:9}}} }
+    }
+  });
+}
+
+// ── Main render ──────────────────────────────────────────────────────────────
+function render(rows, generatedAt) {
+  const { dates, depts, overall, byDept } = processData(rows);
+
+  const deptTabButtons = depts.map((d,i)=>`<button class="dept-tab${i===0?" active":""}" onclick="switchDept('${d}')" id="tab-${d}">${d}</button>`).join("");
+  const deptSections   = depts.map((d,i)=>{
+    const color = DEPT_COLORS[d]||"#64748b";
+    return `<div class="dept-section${i===0?" active":""}" id="sec-${d}">
+      <div class="dept-charts" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">
+        <div class="dept-chart-card">
+          <h3>${d} — Daily Trend</h3>
+          <div class="dept-chart-wrap"><canvas id="dbar-${d}"></canvas></div>
+        </div>
+        <div class="dept-chart-card">
+          <h3>${d} — 14-Day Funnel</h3>
+          <div class="dept-chart-wrap"><canvas id="dpie-${d}"></canvas></div>
+        </div>
+      </div>
+      ${tableHtml(byDept[d], `${d} Department — Day-wise Block Funnel`, color)}
+    </div>`;
+  }).join("");
+
+  const genTime = new Date(generatedAt).toLocaleString("en-IN",{timeZone:"Asia/Kolkata",hour12:false,hour:"2-digit",minute:"2-digit",second:"2-digit",day:"2-digit",month:"short"});
+
+  document.getElementById("root").innerHTML = `
+    <div class="last-upd">
+      Last fetched: ${genTime} IST
+      <button class="refresh-btn" onclick="loadData()">⟳ Refresh</button>
+    </div>
+
+    ${kpiHtml(overall)}
+
+    <div class="section-title">📊 14-Day Overall Trend</div>
+    <div class="charts-row">
+      <div class="chart-card">
+        <h3>Daily Block Pipeline — All Departments</h3>
+        <div class="chart-wrap"><canvas id="mainBar"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>14-Day Funnel Distribution</h3>
+        <div class="chart-wrap"><canvas id="mainPie"></canvas></div>
+      </div>
+    </div>
+
+    <div class="section-title">📋 Overall Summary Table — All Departments</div>
+    ${tableHtml(overall, "All Departments Combined")}
+
+    <div class="section-title">🏢 Department-wise Breakdown</div>
+    <div class="dept-tabs">${deptTabButtons}</div>
+    ${deptSections}
+
+    <div style="text-align:center;padding:20px 0;font-size:11px;color:#94a3b8">
+      South Railway · TVC Division · RBMS Block Utilisation Report · Sr DSTE/TVC View · Auto-refreshes every 5 minutes
+    </div>
+  `;
+
+  // render main charts
+  renderBarChart("mainBar", dates, overall);
+  renderPieChart("mainPie", overall);
+
+  // render dept charts for visible dept
+  const firstDept = depts[0];
+  if(firstDept) {
+    renderDeptBar(`dbar-${firstDept}`, byDept[firstDept], DEPT_COLORS[firstDept]||"#64748b");
+    renderDeptPie(`dpie-${firstDept}`, byDept[firstDept], DEPT_COLORS[firstDept]||"#64748b");
+  }
+}
+
+// ── Dept pie ─────────────────────────────────────────────────────────────────
+function renderDeptPie(canvasId, rows, color) {
+  destroyChart(canvasId);
+  const tot = rows.reduce((a,r)=>({
+    total_requested:a.total_requested+r.total_requested, sanctioned:a.sanctioned+r.sanctioned,
+    applied:a.applied+r.applied, granted:a.granted+r.granted, closed:a.closed+r.closed
+  }),{total_requested:0,sanctioned:0,applied:0,granted:0,closed:0});
+  const ctx = document.getElementById(canvasId)?.getContext("2d");
+  if(!ctx) return;
+  chartRegistry[canvasId] = new Chart(ctx, {
+    type:"doughnut",
+    data:{
+      labels:["Not Sanctioned","Sanctioned","Applied","Granted","Closed"],
+      datasets:[{data:[
+        tot.total_requested-tot.sanctioned, tot.sanctioned-tot.applied,
+        tot.applied-tot.granted, tot.granted-tot.closed, tot.closed
+      ], backgroundColor:["#cbd5e1","#10b981","#f59e0b","#8b5cf6","#ef4444"], borderWidth:2}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"right",labels:{font:{size:9},boxWidth:12}}}}
+  });
+}
+
+// ── Dept tab switcher ─────────────────────────────────────────────────────────
+window.switchDept = function(dept) {
+  document.querySelectorAll(".dept-tab").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll(".dept-section").forEach(s=>s.classList.remove("active"));
+  document.getElementById("tab-"+dept)?.classList.add("active");
+  const sec = document.getElementById("sec-"+dept);
+  if(sec) { sec.classList.add("active"); }
+
+  const deptRows = window._byDept?.[dept];
+  if(deptRows) {
+    setTimeout(()=>{
+      renderDeptBar("dbar-"+dept, deptRows, DEPT_COLORS[dept]||"#64748b");
+      renderDeptPie("dpie-"+dept, deptRows, DEPT_COLORS[dept]||"#64748b");
+    }, 50);
+  }
+};
+
+// ── Override render to cache byDept for tab switching ────────────────────────
+const _origRender = render;
+async function loadData() {
+  try {
+    const res = await fetch(API);
+    const json = await res.json();
+    if(!json.success) throw new Error(json.message);
+    const { dates, depts, overall, byDept } = processData(json.data);
+    window._byDept = byDept;
+    render(json.data, json.generatedAt);
+    // re-attach after DOM rebuilt
+    window._byDept = byDept;
+  } catch(e) {
+    document.getElementById("root").innerHTML = `<div class="spinner"><span style="color:#ef4444;">⚠️ Failed to load: ${e.message}</span><button class="refresh-btn" onclick="loadData()">Retry</button></div>`;
+  }
+}
+
+// ── Auto refresh ─────────────────────────────────────────────────────────────
+loadData();
+setInterval(loadData, REFRESH_MS);
+</script>
+</body>
+</html>
