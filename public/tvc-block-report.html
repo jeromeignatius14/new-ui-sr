@@ -3,22 +3,14 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Sr DSTE/TVC — Block Utilisation Report</title>
+<title>Sr DSTE/TVC &#8212; Block Utilisation Report</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <style>
-:root {
-  --bg: #fffbe9;
-  --header-bg: #1a1a4e;
-  --text: #111;
-  --muted: #555;
-  --border: #bbb;
-}
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: var(--text); font-size: 12px; }
+body { font-family: Arial, Helvetica, sans-serif; background: #fffbe9; color: #111; font-size: 12px; }
 
-/* ── Header ── */
 .top-header {
-  background: var(--header-bg); color: #fff;
+  background: #1a1a4e; color: #fff;
   display: flex; align-items: center; justify-content: space-between;
   padding: 12px 20px; gap: 12px;
 }
@@ -28,26 +20,27 @@ body { font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: 
 .clock-box { text-align: right; font-size: 11px; line-height: 1.7; }
 .clock-box .time { font-size: 16px; font-weight: 700; }
 
-/* ── Container ── */
-.container { padding: 14px 12px; max-width: 100%; }
-.last-upd { text-align: right; font-size: 10px; color: var(--muted); margin-bottom: 8px; }
-.refresh-btn { background: var(--header-bg); color: #fff; border: none; padding: 4px 12px; border-radius: 6px; font-size: 10px; font-weight: 700; cursor: pointer; margin-left: 8px; }
+.container { padding: 14px 12px; }
+.last-upd { text-align: right; font-size: 10px; color: #666; margin-bottom: 8px; }
+.refresh-btn { background: #1a1a4e; color: #fff; border: none; padding: 4px 12px; border-radius: 6px; font-size: 10px; font-weight: 700; cursor: pointer; margin-left: 8px; }
 
-/* ── Charts row ── */
 .charts-row { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; margin-bottom: 18px; }
-.chart-card { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
-.chart-card h3 { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
+.chart-card { background: #fff; border: 1px solid #ccc; border-radius: 8px; padding: 14px; }
+.chart-card h3 { font-size: 11px; font-weight: 700; color: #555; text-transform: uppercase; margin-bottom: 10px; }
 .chart-wrap { position: relative; height: 200px; }
 
-/* ── Section title ── */
-.section-title {
-  font-size: 12px; font-weight: 700; border-left: 4px solid #e63946;
-  padding-left: 8px; margin: 18px 0 8px; color: var(--header-bg);
-}
+.section-title { font-size: 12px; font-weight: 700; border-left: 4px solid #e63946; padding-left: 8px; margin: 18px 0 8px; color: #1a1a4e; }
 
-/* ── Main Table ── */
-.tbl-wrap { overflow-x: auto; border: 2px solid #333; border-radius: 4px; }
-table { width: 100%; border-collapse: collapse; min-width: 1300px; font-size: 11px; }
+/* Dept tabs */
+.dept-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.dept-tab { padding: 5px 16px; border-radius: 20px; border: 2px solid #ccc; background: #fff; font-size: 11px; font-weight: 700; cursor: pointer; color: #555; transition: all .15s; }
+.dept-tab.active { background: #1a1a4e; color: #fff; border-color: #1a1a4e; }
+.dept-section { display: none; }
+.dept-section.active { display: block; }
+
+/* Tables */
+.tbl-wrap { overflow-x: auto; border: 2px solid #333; border-radius: 4px; margin-bottom: 6px; }
+table { width: 100%; border-collapse: collapse; font-size: 11px; }
 
 .th-group { background: #1a1a4e; color: #fff; text-align: center; font-size: 10px; font-weight: 700; padding: 4px 3px; border: 1px solid #333; white-space: nowrap; }
 .th-group.green  { background: #1a6e3f; }
@@ -56,29 +49,28 @@ table { width: 100%; border-collapse: collapse; min-width: 1300px; font-size: 11
 .th-group.blue   { background: #1d4ed8; }
 .th-group.teal   { background: #0f766e; }
 .th-group.perf   { background: #7f1d1d; }
+.th-group.dept   { background: #1e5799; }
 
 .th-sub { text-align: center; font-size: 9px; font-weight: 700; padding: 4px 3px; border: 1px solid #aaa; white-space: nowrap; background: #f0f0f0; color: #222; }
-.th-sub.red-label { color: #b91c1c; font-style: italic; font-size: 9px; }
+.th-sub.red-label { color: #b91c1c; font-style: italic; }
 
 tbody tr:nth-child(even) { background: #fafafa; }
 tbody tr:hover { background: #fffbd0; }
 tbody tr.today-row { background: #fffde7; }
+tr.totals td { background: #1a1a4e !important; color: #fff; font-weight: 700; }
 
 td { padding: 5px 4px; border: 1px solid #ccc; text-align: center; white-space: nowrap; }
-td:first-child { text-align: left; font-weight: 700; background: #f5f5f5; padding-left: 6px; }
-.num  { font-weight: 700; }
-.red  { color: #dc2626; font-style: italic; font-weight: 700; }
+td.date-col { text-align: left; font-weight: 700; background: #f5f5f5; padding-left: 6px; min-width: 75px; }
+.red { color: #dc2626; font-style: italic; font-weight: 700; }
 .gray { color: #888; font-size: 9px; }
 
-.perf-cell { font-weight: 700; border-radius: 3px; padding: 2px 4px; display: inline-block; }
+.perf-cell { font-weight: 700; border-radius: 3px; padding: 2px 5px; display: inline-block; }
 .perf-low  { background: #fee2e2; color: #dc2626; }
 .perf-mid  { background: #fef3c7; color: #92400e; }
 .perf-high { background: #d1fae5; color: #065f46; }
 
-tr.totals td { background: #1a1a4e !important; color: #fff; font-weight: 700; }
-
-.spinner { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; gap: 12px; color: var(--muted); }
-.spin { width: 36px; height: 36px; border: 4px solid #e2e8f0; border-top-color: var(--header-bg); border-radius: 50%; animation: spin .8s linear infinite; }
+.spinner { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; gap: 12px; color: #666; }
+.spin { width: 36px; height: 36px; border: 4px solid #e2e8f0; border-top-color: #1a1a4e; border-radius: 50%; animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 768px) { .charts-row { grid-template-columns: 1fr; } .top-header { flex-direction: column; text-align: center; } }
@@ -89,7 +81,7 @@ tr.totals td { background: #1a1a4e !important; color: #fff; font-weight: 700; }
 <div class="top-header">
   <div>
     <h1>&#9889; Block Utilisation Report &#8212; TVC Division</h1>
-    <p>Last 14 days &middot; Live data from RBMS &middot; Same as Analyse in Detail &middot; Auto-refreshes every 5 minutes</p>
+    <p>Last 14 days &middot; Live data from RBMS &middot; Auto-refreshes every 5 minutes</p>
     <span class="badge">Sr DSTE/TVC View</span>
   </div>
   <div class="clock-box">
@@ -104,119 +96,223 @@ tr.totals td { background: #1a1a4e !important; color: #fff; font-weight: 700; }
 </div>
 
 <script>
-const API = "https://api-tvc.adrig.co.in/api/analytics/rbms-dashboard";
+const RBMS_API   = "https://api-tvc.adrig.co.in/api/analytics/rbms-dashboard";
+const DEPT_API   = "https://api-tvc.adrig.co.in/api/analytics/block-funnel-public?days=14";
 const REFRESH_MS = 5 * 60 * 1000;
 const DAYS = 14;
 const charts = {};
+const DEPT_COLORS = { TRD:"#f59e0b", "S&T":"#3b82f6", ENGG:"#10b981", UNKNOWN:"#94a3b8" };
 
 function tickClock() {
-  const ist = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
-  const p = n => String(n).padStart(2, "0");
+  const ist = new Date(new Date().toLocaleString("en-US", { timeZone:"Asia/Kolkata" }));
+  const p = n => String(n).padStart(2,"0");
   document.getElementById("clock").textContent = p(ist.getHours())+":"+p(ist.getMinutes())+":"+p(ist.getSeconds())+" IST";
-  document.getElementById("dateline").textContent = ist.toLocaleDateString("en-IN", { weekday:"long", day:"2-digit", month:"long", year:"numeric", timeZone:"Asia/Kolkata" });
+  document.getElementById("dateline").textContent = ist.toLocaleDateString("en-IN",{ weekday:"long",day:"2-digit",month:"long",year:"numeric",timeZone:"Asia/Kolkata" });
 }
-setInterval(tickClock, 1000); tickClock();
+setInterval(tickClock,1000); tickClock();
 
-function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+function destroyChart(id) { if(charts[id]){ charts[id].destroy(); delete charts[id]; } }
+function fmtDate(k) { return new Date(k+"T00:00:00Z").toLocaleDateString("en-IN",{day:"2-digit",month:"short",timeZone:"UTC"}); }
+function fmtDay(k)  { return new Date(k+"T00:00:00Z").toLocaleDateString("en-IN",{weekday:"short",timeZone:"UTC"}); }
+function pct(n,d)   { return d>0 ? (n/d*100).toFixed(1)+"%" : "&#8212;"; }
+function perfClass(v){ return v>=50?"perf-high":v>=25?"perf-mid":"perf-low"; }
+function istToday()  { return new Date().toLocaleDateString("en-CA",{timeZone:"Asia/Kolkata"}); }
 
 async function loadData() {
   try {
-    const res = await fetch(API);
-    const json = await res.json();
-    if (!json.status) throw new Error(json.message);
-    render(json.data);
-  } catch (e) {
-    document.getElementById("root").innerHTML = '<div class="spinner"><span style="color:#dc2626;">&#9888;&#65039; Failed: '+e.message+'</span><button class="refresh-btn" onclick="loadData()">Retry</button></div>';
+    const [r1, r2] = await Promise.all([fetch(RBMS_API), fetch(DEPT_API)]);
+    const [j1, j2] = await Promise.all([r1.json(), r2.json()]);
+    if(!j1.status) throw new Error(j1.message);
+    if(!j2.success) throw new Error(j2.message);
+    render(j1.data, j2.data);
+  } catch(e) {
+    document.getElementById("root").innerHTML = '<div class="spinner"><span style="color:#dc2626;">&#9888; Failed: '+e.message+'</span><button class="refresh-btn" onclick="loadData()">Retry</button></div>';
   }
 }
 
-function fmtDate(k) {
-  return new Date(k + "T00:00:00Z").toLocaleDateString("en-IN", { day:"2-digit", month:"short", timeZone:"UTC" });
-}
-function fmtDay(k) {
-  return new Date(k + "T00:00:00Z").toLocaleDateString("en-IN", { weekday:"short", timeZone:"UTC" });
-}
-function pct(n, d) { return d > 0 ? (n / d * 100).toFixed(1) + "%" : "&#8212;"; }
-function perfClass(v) { return v >= 50 ? "perf-high" : v >= 25 ? "perf-mid" : "perf-low"; }
-function istToday() { return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }); }
-
-function render(data) {
-  const allDays = (data.days || []).slice().sort((a, b) => a.date < b.date ? -1 : 1);
+// ── Main Analyse-in-Detail table (rbms-dashboard) ────────────────────────────
+function mainTableHtml(allDays) {
   const today = istToday();
-  const last14 = allDays.filter(d => d.date <= today).slice(-DAYS).reverse(); // newest first
-  const chartRows = last14.slice().reverse(); // oldest first for chart
+  const rows = allDays.slice().sort((a,b)=>a.date<b.date?-1:1).filter(d=>d.date<=today).slice(-DAYS).reverse();
+  const chartRows = rows.slice().reverse();
 
-  // Totals across 14 days
-  const tot = last14.reduce((a, d) => {
-    a.req += d.req; a.sanc += d.sanc;
-    a.reqOnDate += d.reqOnDate; a.sancOnDate += d.sancOnDate;
-    a.sseAck += d.sseAck; a.sseRej += d.sseRej;
-    a.applied += d.applied; a.exited += d.exited;
-    a.smPermitted += d.smPermitted; a.smRej += d.smRej;
-    a.availed += d.availed; a.closed += d.closed;
-    a.closedPD += d.closedPD;
-    return a;
-  }, { req:0,sanc:0,reqOnDate:0,sancOnDate:0,sseAck:0,sseRej:0,applied:0,exited:0,smPermitted:0,smRej:0,availed:0,closed:0,closedPD:0 });
+  const tot = rows.reduce((a,d)=>({
+    req:a.req+d.req, sanc:a.sanc+d.sanc,
+    reqOnDate:a.reqOnDate+d.reqOnDate, sancOnDate:a.sancOnDate+d.sancOnDate,
+    sseAck:a.sseAck+d.sseAck, sseRej:a.sseRej+d.sseRej,
+    applied:a.applied+d.applied, exited:a.exited+d.exited,
+    smPermitted:a.smPermitted+d.smPermitted, smRej:a.smRej+d.smRej,
+    availed:a.availed+d.availed, closed:a.closed+d.closed, closedPD:a.closedPD+d.closedPD,
+  }),{req:0,sanc:0,reqOnDate:0,sancOnDate:0,sseAck:0,sseRej:0,applied:0,exited:0,smPermitted:0,smRej:0,availed:0,closed:0,closedPD:0});
 
-  // Latest cumulative figures come from the most recent day in the full dataset
-  const latest = allDays[allDays.length - 1] || {};
-
-  const trs = last14.map(d => {
-    const isToday = d.date === today;
-    const sseInact   = Math.max(0, d.sanc - d.sseAck - d.sseRej);
-    const applyInact = Math.max(0, d.sseAck - d.applied - d.exited);
-    const smInact    = Math.max(0, d.applied - d.smPermitted - d.smRej);
-    const notClosed  = Math.max(0, d.availed - d.closedPD);
-    const fieldUtil  = d.sanc > 0 ? d.availed / d.sanc * 100 : 0;
-    const conclusion = d.sanc > 0 ? d.closed  / d.sanc * 100 : 0;
-
+  const trs = rows.map(d => {
+    const isToday   = d.date===today;
+    const sseInact  = Math.max(0,d.sanc-d.sseAck-d.sseRej);
+    const applyInact= Math.max(0,d.sseAck-d.applied-d.exited);
+    const smInact   = Math.max(0,d.applied-d.smPermitted-d.smRej);
+    const notClosed = Math.max(0,d.availed-d.closedPD);
+    const fu = d.sanc>0?d.availed/d.sanc*100:0;
+    const ci = d.sanc>0?d.closed/d.sanc*100:0;
     return '<tr class="'+(isToday?"today-row":"")+'">'+
-      '<td>'+fmtDate(d.date)+'<br><span class="gray">'+fmtDay(d.date)+'</span>'+(isToday?' &#9733;':'')+'</td>'+
-      '<td class="num">'+d.reqOnDate+'</td>'+
-      '<td class="num">'+d.sancOnDate+'</td>'+
-      '<td class="num">'+d.req+'</td>'+
-      '<td class="num">'+d.sanc+'</td>'+
-      '<td class="num">'+d.sseAck+'</td>'+
-      '<td class="num red">'+d.sseRej+'</td>'+
-      '<td class="num red">'+sseInact+'</td>'+
-      '<td class="num red">'+(d.cumInactApply ?? '&#8212;')+'</td>'+
-      '<td class="num">'+d.applied+'</td>'+
-      '<td class="num red">'+d.exited+'</td>'+
-      '<td class="num red">'+applyInact+'</td>'+
-      '<td class="num red">'+(d.cumInactSM ?? '&#8212;')+'</td>'+
-      '<td class="num">'+d.smPermitted+'</td>'+
-      '<td class="num red">'+d.smRej+'</td>'+
-      '<td class="num red">'+smInact+'</td>'+
-      '<td class="num red">'+(d.cumInactClose ?? '&#8212;')+'</td>'+
-      '<td class="num">'+d.availed+'</td>'+
-      '<td class="num red">'+notClosed+'</td>'+
-      '<td class="num red">'+(d.cumInactClose ?? '&#8212;')+'</td>'+
-      '<td><span class="perf-cell '+perfClass(fieldUtil)+'">'+pct(d.availed, d.sanc)+'</span></td>'+
-      '<td><span class="perf-cell '+perfClass(conclusion)+'">'+pct(d.closed, d.sanc)+'</span></td>'+
+      '<td class="date-col">'+fmtDate(d.date)+'<br><span class="gray">'+fmtDay(d.date)+'</span>'+(isToday?' &#9733;':'')+'</td>'+
+      '<td>'+d.reqOnDate+'</td><td>'+d.sancOnDate+'</td>'+
+      '<td>'+d.req+'</td><td>'+d.sanc+'</td>'+
+      '<td>'+d.sseAck+'</td><td class="red">'+d.sseRej+'</td><td class="red">'+sseInact+'</td>'+
+      '<td>'+d.applied+'</td><td class="red">'+d.exited+'</td><td class="red">'+applyInact+'</td>'+
+      '<td>'+d.smPermitted+'</td><td class="red">'+d.smRej+'</td><td class="red">'+smInact+'</td>'+
+      '<td>'+d.availed+'</td><td class="red">'+notClosed+'</td>'+
+      '<td><span class="perf-cell '+perfClass(fu)+'">'+pct(d.availed,d.sanc)+'</span></td>'+
+      '<td><span class="perf-cell '+perfClass(ci)+'">'+pct(d.closed,d.sanc)+'</span></td>'+
     '</tr>';
   }).join("");
 
-  const totSseInact   = Math.max(0, tot.sanc - tot.sseAck - tot.sseRej);
-  const totApplyInact = Math.max(0, tot.sseAck - tot.applied - tot.exited);
-  const totSmInact    = Math.max(0, tot.applied - tot.smPermitted - tot.smRej);
-  const totNotClosed  = Math.max(0, tot.availed - tot.closedPD);
-
+  const t = tot;
   const totRow = '<tr class="totals">'+
-    '<td>14-DAY TOTAL</td>'+
-    '<td>'+tot.reqOnDate+'</td><td>'+tot.sancOnDate+'</td>'+
-    '<td>'+tot.req+'</td><td>'+tot.sanc+'</td>'+
-    '<td>'+tot.sseAck+'</td><td>'+tot.sseRej+'</td>'+
-    '<td>'+totSseInact+'</td><td>'+(latest.cumInactApply ?? '&#8212;')+'</td>'+
-    '<td>'+tot.applied+'</td><td>'+tot.exited+'</td>'+
-    '<td>'+totApplyInact+'</td><td>'+(latest.cumInactSM ?? '&#8212;')+'</td>'+
-    '<td>'+tot.smPermitted+'</td><td>'+tot.smRej+'</td>'+
-    '<td>'+totSmInact+'</td><td>'+(latest.cumInactClose ?? '&#8212;')+'</td>'+
-    '<td>'+tot.availed+'</td><td>'+totNotClosed+'</td><td>'+(latest.cumInactClose ?? '&#8212;')+'</td>'+
-    '<td>'+pct(tot.availed, tot.sanc)+'</td>'+
-    '<td>'+pct(tot.closed, tot.sanc)+'</td>'+
+    '<td class="date-col">14-DAY TOTAL</td>'+
+    '<td>'+t.reqOnDate+'</td><td>'+t.sancOnDate+'</td>'+
+    '<td>'+t.req+'</td><td>'+t.sanc+'</td>'+
+    '<td>'+t.sseAck+'</td><td>'+t.sseRej+'</td><td>'+Math.max(0,t.sanc-t.sseAck-t.sseRej)+'</td>'+
+    '<td>'+t.applied+'</td><td>'+t.exited+'</td><td>'+Math.max(0,t.sseAck-t.applied-t.exited)+'</td>'+
+    '<td>'+t.smPermitted+'</td><td>'+t.smRej+'</td><td>'+Math.max(0,t.applied-t.smPermitted-t.smRej)+'</td>'+
+    '<td>'+t.availed+'</td><td>'+Math.max(0,t.availed-t.closedPD)+'</td>'+
+    '<td>'+pct(t.availed,t.sanc)+'</td><td>'+pct(t.closed,t.sanc)+'</td>'+
   '</tr>';
 
-  const now = new Date().toLocaleString("en-IN", { timeZone:"Asia/Kolkata", hour12:false, day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" });
+  const html =
+    '<div class="tbl-wrap"><table>'+
+      '<thead>'+
+        '<tr>'+
+          '<th class="th-group" rowspan="3" style="width:75px">DATE</th>'+
+          '<th class="th-group green" colspan="2">BLOCK DATE &#8212; ANY</th>'+
+          '<th class="th-group green" colspan="2">BLOCK DATE &#8212; TODAY</th>'+
+          '<th class="th-group yellow" colspan="3">SSE / JE &#8212; ACKNOWLEDGEMENT<br><span style="font-size:8px;font-weight:400">of Sanctioned For Date</span></th>'+
+          '<th class="th-group purple" colspan="3">SSE / JE &#8212; AVAILING APPLIED<br><span style="font-size:8px;font-weight:400">of Acknowledged</span></th>'+
+          '<th class="th-group blue" colspan="3">SM / TPC &#8212; PERMIT<br><span style="font-size:8px;font-weight:400">of Applied</span></th>'+
+          '<th class="th-group teal" colspan="2">OUTCOME<br><span style="font-size:8px;font-weight:400">of Sanctioned for Date</span></th>'+
+          '<th class="th-group perf" colspan="2">PERFORMANCE</th>'+
+        '</tr>'+
+        '<tr>'+
+          '<th class="th-sub" rowspan="2">REQUESTS<br>CREATED<br>TODAY</th>'+
+          '<th class="th-sub" rowspan="2">REQUESTS<br>SANCTIONED<br>ON DATE</th>'+
+          '<th class="th-sub" rowspan="2">REQUESTS FOR<br>SANCTIONING<br>TODAY</th>'+
+          '<th class="th-sub" rowspan="2">SANCTIONED<br>FOR DATE &#9733;</th>'+
+          '<th class="th-sub" rowspan="2">ACKNOWLEDGED</th>'+
+          '<th class="th-sub red-label" rowspan="2">REJECTED</th>'+
+          '<th class="th-sub red-label" rowspan="2">INACTION<br>TODAY\'S</th>'+
+          '<th class="th-sub" rowspan="2">APPLIED</th>'+
+          '<th class="th-sub red-label" rowspan="2">EXITED W/O<br>AVAILING</th>'+
+          '<th class="th-sub red-label" rowspan="2">INACTION<br>TODAY\'S</th>'+
+          '<th class="th-sub" rowspan="2">PERMITTED</th>'+
+          '<th class="th-sub red-label" rowspan="2">REJECTED</th>'+
+          '<th class="th-sub red-label" rowspan="2">INACTION<br>TODAY\'S</th>'+
+          '<th class="th-sub" rowspan="2">AVAILED</th>'+
+          '<th class="th-sub red-label" rowspan="2">NOT<br>CLOSED</th>'+
+          '<th class="th-sub" rowspan="2">FIELD UTIL<br>INDEX</th>'+
+          '<th class="th-sub" rowspan="2">CONCLUSION<br>INDEX</th>'+
+        '</tr>'+
+        '<tr></tr>'+
+      '</thead>'+
+      '<tbody>'+trs+totRow+'</tbody>'+
+    '</table></div>';
+
+  return { html, chartRows };
+}
+
+// ── Department table (block-funnel-public) ───────────────────────────────────
+function deptTableHtml(deptRows, deptName, color) {
+  const dates = [...new Set(deptRows.map(r => {
+    const d = r.block_date;
+    return typeof d === "string" ? d.slice(0,10) : new Date(d).toISOString().slice(0,10);
+  }))].sort((a,b) => b>a?1:-1);
+
+  const today = istToday();
+  const rows = dates.map(date => {
+    const r = deptRows.find(x => {
+      const xd = typeof x.block_date==="string"?x.block_date.slice(0,10):new Date(x.block_date).toISOString().slice(0,10);
+      return xd===date;
+    }) || { total_requested:0, sanctioned:0, applied:0, granted:0, closed:0 };
+    return { date, ...r };
+  });
+
+  const tot = rows.reduce((a,r)=>({
+    total_requested:a.total_requested+r.total_requested,
+    sanctioned:a.sanctioned+r.sanctioned,
+    applied:a.applied+r.applied,
+    granted:a.granted+r.granted,
+    closed:a.closed+r.closed
+  }),{total_requested:0,sanctioned:0,applied:0,granted:0,closed:0});
+
+  const trs = rows.map(r => {
+    const isToday = r.date===today;
+    const fu = r.sanctioned>0?r.granted/r.sanctioned*100:0;
+    const ci = r.sanctioned>0?r.closed/r.sanctioned*100:0;
+    return '<tr class="'+(isToday?"today-row":"")+'">'+
+      '<td class="date-col">'+fmtDate(r.date)+'<br><span class="gray">'+fmtDay(r.date)+'</span>'+(isToday?' &#9733;':'')+'</td>'+
+      '<td>'+r.total_requested+'</td>'+
+      '<td>'+r.sanctioned+'</td>'+
+      '<td>'+r.applied+'</td>'+
+      '<td>'+r.granted+'</td>'+
+      '<td>'+r.closed+'</td>'+
+      '<td><span class="perf-cell '+perfClass(fu)+'">'+pct(r.granted,r.sanctioned)+'</span></td>'+
+      '<td><span class="perf-cell '+perfClass(ci)+'">'+pct(r.closed,r.sanctioned)+'</span></td>'+
+    '</tr>';
+  }).join("");
+
+  const totRow = '<tr class="totals">'+
+    '<td class="date-col">14-DAY TOTAL</td>'+
+    '<td>'+tot.total_requested+'</td><td>'+tot.sanctioned+'</td>'+
+    '<td>'+tot.applied+'</td><td>'+tot.granted+'</td><td>'+tot.closed+'</td>'+
+    '<td>'+pct(tot.granted,tot.sanctioned)+'</td><td>'+pct(tot.closed,tot.sanctioned)+'</td>'+
+  '</tr>';
+
+  return '<div class="tbl-wrap"><table>'+
+    '<thead>'+
+      '<tr>'+
+        '<th class="th-group" style="background:'+color+';width:75px" rowspan="2">DATE</th>'+
+        '<th class="th-group" style="background:'+color+'" colspan="7">'+deptName+' &#8212; Block Funnel</th>'+
+      '</tr>'+
+      '<tr>'+
+        '<th class="th-sub">REQUESTED</th>'+
+        '<th class="th-sub">SANCTIONED</th>'+
+        '<th class="th-sub">APPLIED TO<br>SM/TPC</th>'+
+        '<th class="th-sub">PERMITTED<br>BY SM/TPC</th>'+
+        '<th class="th-sub">BLOCK<br>CLOSED</th>'+
+        '<th class="th-sub">FIELD UTIL<br>INDEX</th>'+
+        '<th class="th-sub">CONCLUSION<br>INDEX</th>'+
+      '</tr>'+
+    '</thead>'+
+    '<tbody>'+trs+totRow+'</tbody>'+
+  '</table></div>';
+}
+
+// ── Render ───────────────────────────────────────────────────────────────────
+function render(rbmsData, funnelRows) {
+  const { html: mainHtml, chartRows } = mainTableHtml(rbmsData.days || []);
+
+  // Group funnel rows by department
+  const deptMap = {};
+  funnelRows.forEach(r => {
+    const dept = r.department || "UNKNOWN";
+    if (!deptMap[dept]) deptMap[dept] = [];
+    deptMap[dept].push(r);
+  });
+  const DEPT_ORDER = ["TRD","S&T","ENGG","UNKNOWN"];
+  const depts = Object.keys(deptMap).sort((a,b)=>{
+    const ia=DEPT_ORDER.indexOf(a),ib=DEPT_ORDER.indexOf(b);
+    return (ia<0?99:ia)-(ib<0?99:ib);
+  });
+
+  const deptTabButtons = depts.map((d,i) =>
+    '<button class="dept-tab'+(i===0?" active":"")+'" id="dtab-'+d+'" onclick="switchDept(\''+d+'\')" style="border-color:'+(DEPT_COLORS[d]||"#555")+'">'+d+'</button>'
+  ).join("");
+
+  const deptSections = depts.map((d,i) =>
+    '<div class="dept-section'+(i===0?" active":"")+'" id="dsec-'+d+'">'+
+      deptTableHtml(deptMap[d], d+" Department", DEPT_COLORS[d]||"#1a1a4e")+
+    '</div>'
+  ).join("");
+
+  const now = new Date().toLocaleString("en-IN",{timeZone:"Asia/Kolkata",hour12:false,day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
 
   document.getElementById("root").innerHTML =
     '<div class="last-upd">Last fetched: '+now+' IST <button class="refresh-btn" onclick="loadData()">&#8635; Refresh</button></div>'+
@@ -226,97 +322,72 @@ function render(data) {
       '<div class="chart-card"><h3>14-Day Funnel Distribution</h3><div class="chart-wrap"><canvas id="pieChart"></canvas></div></div>'+
     '</div>'+
 
-    '<div class="section-title">&#128203; Analyse in Detail &#8212; Last 14 Days (TVC Division)</div>'+
-    '<div class="tbl-wrap"><table>'+
-      '<thead>'+
-        '<tr>'+
-          '<th class="th-group" rowspan="3" style="width:75px">DATE</th>'+
-          '<th class="th-group green" colspan="2">BLOCK DATE &#8212; ANY</th>'+
-          '<th class="th-group green" colspan="2">BLOCK DATE &#8212; TODAY</th>'+
-          '<th class="th-group yellow" colspan="4">SSE / JE &#8212; ACKNOWLEDGEMENT<br><span style="font-size:8px;font-weight:400">of Sanctioned For Date</span></th>'+
-          '<th class="th-group purple" colspan="4">SSE / JE &#8212; AVAILING APPLIED<br><span style="font-size:8px;font-weight:400">of Acknowledged</span></th>'+
-          '<th class="th-group blue" colspan="4">SM / TPC &#8212; PERMIT<br><span style="font-size:8px;font-weight:400">of Applied</span></th>'+
-          '<th class="th-group teal" colspan="3">OUTCOME<br><span style="font-size:8px;font-weight:400">of Sanctioned for Date</span></th>'+
-          '<th class="th-group perf" colspan="2">PERFORMANCE</th>'+
-        '</tr>'+
-        '<tr>'+
-          '<th class="th-sub" rowspan="2">REQUESTS<br>CREATED<br>TODAY</th>'+
-          '<th class="th-sub" rowspan="2">REQUESTS<br>SANCTIONED<br>ON DATE</th>'+
-          '<th class="th-sub" rowspan="2">REQUESTS<br>FOR<br>SANCTIONING<br>TODAY</th>'+
-          '<th class="th-sub" rowspan="2">SANCTIONED<br>FOR DATE &#9733;</th>'+
-          '<th class="th-sub" rowspan="2">ACKNOWLEDGED</th>'+
-          '<th class="th-sub red-label" rowspan="2">REJECTED</th>'+
-          '<th class="th-sub red-label" colspan="2">INACTION</th>'+
-          '<th class="th-sub" rowspan="2">APPLIED</th>'+
-          '<th class="th-sub red-label" rowspan="2">EXITED<br>W/O<br>AVAILING</th>'+
-          '<th class="th-sub red-label" colspan="2">INACTION</th>'+
-          '<th class="th-sub" rowspan="2">PERMITTED</th>'+
-          '<th class="th-sub red-label" rowspan="2">REJECTED</th>'+
-          '<th class="th-sub red-label" colspan="2">INACTION</th>'+
-          '<th class="th-sub" rowspan="2">AVAILED</th>'+
-          '<th class="th-sub red-label" colspan="2">NOT CLOSED</th>'+
-          '<th class="th-sub" rowspan="2">FIELD UTIL<br>INDEX</th>'+
-          '<th class="th-sub" rowspan="2">CONCLUSION<br>INDEX</th>'+
-        '</tr>'+
-        '<tr>'+
-          '<th class="th-sub red-label">TODAY\'S</th><th class="th-sub red-label">CUMULATIVE &#9658;</th>'+
-          '<th class="th-sub red-label">TODAY\'S</th><th class="th-sub red-label">CUMULATIVE &#9658;</th>'+
-          '<th class="th-sub red-label">TODAY\'S</th><th class="th-sub red-label">CUMULATIVE &#9658;</th>'+
-          '<th class="th-sub red-label">TODAY\'S</th><th class="th-sub red-label">CUMULATIVE &#9658;</th>'+
-        '</tr>'+
-      '</thead>'+
-      '<tbody>'+trs+totRow+'</tbody>'+
-    '</table></div>'+
+    '<div class="section-title">&#128203; Analyse in Detail &#8212; All Departments Combined (Last 14 Days)</div>'+
+    mainHtml+
 
-    '<div style="margin-top:10px;font-size:10px;color:#777;text-align:center">'+
-      '<b>Notes:</b> Field Util = Availed &divide; Sanctioned for Date &middot; '+
-      'Conclusion = Closed &divide; Sanctioned for Date &middot; '+
-      'INACTION Today\'s = pending as of block\'s own date &middot; '+
-      'CUMULATIVE &#9658; = carry-forward across all cohorts (live) &middot; '+
-      'Data: RBMS TVC (same source as Analyse in Detail)'+
+    '<div class="section-title">&#127970; Department-wise Block Funnel</div>'+
+    '<div class="dept-tabs">'+deptTabButtons+'</div>'+
+    deptSections+
+
+    '<div style="margin-top:12px;font-size:10px;color:#999;text-align:center">'+
+      'Field Util = Permitted &divide; Sanctioned &middot; Conclusion = Closed &divide; Sanctioned &middot; '+
+      'INACTION TODAY\'S = pending as of block\'s own date &middot; Data: RBMS TVC'+
     '</div>'+
-    '<div style="text-align:center;padding:14px 0 6px;font-size:10px;color:#aaa">'+
-      'South Railway &middot; TVC Division &middot; RBMS Block Report &middot; Sr DSTE/TVC View &middot; Refreshes every 5 min'+
+    '<div style="text-align:center;padding:12px 0 6px;font-size:10px;color:#bbb">'+
+      'South Railway &middot; TVC Division &middot; Sr DSTE/TVC View &middot; Refreshes every 5 min'+
     '</div>';
 
   // Bar chart
   destroyChart("barChart");
-  charts["barChart"] = new Chart(document.getElementById("barChart").getContext("2d"), {
-    type: "bar",
-    data: {
-      labels: chartRows.map(d => fmtDate(d.date)),
-      datasets: [
-        { label:"Sanctioned", data: chartRows.map(d=>d.sanc),        backgroundColor:"#10b98188", borderColor:"#10b981", borderWidth:1.5 },
-        { label:"Applied",    data: chartRows.map(d=>d.applied),      backgroundColor:"#f59e0b88", borderColor:"#f59e0b", borderWidth:1.5 },
-        { label:"Permitted",  data: chartRows.map(d=>d.smPermitted),  backgroundColor:"#6d28d988", borderColor:"#6d28d9", borderWidth:1.5 },
-        { label:"Availed",    data: chartRows.map(d=>d.availed),      backgroundColor:"#3b82f688", borderColor:"#3b82f6", borderWidth:1.5 },
-        { label:"Closed",     data: chartRows.map(d=>d.closed),       backgroundColor:"#ef444488", borderColor:"#ef4444", borderWidth:1.5 },
+  charts["barChart"] = new Chart(document.getElementById("barChart").getContext("2d"),{
+    type:"bar",
+    data:{
+      labels:chartRows.map(d=>fmtDate(d.date)),
+      datasets:[
+        {label:"Sanctioned",data:chartRows.map(d=>d.sanc),       backgroundColor:"#10b98166",borderColor:"#10b981",borderWidth:1.5},
+        {label:"Applied",   data:chartRows.map(d=>d.applied),     backgroundColor:"#f59e0b66",borderColor:"#f59e0b",borderWidth:1.5},
+        {label:"Permitted", data:chartRows.map(d=>d.smPermitted), backgroundColor:"#6d28d966",borderColor:"#6d28d9",borderWidth:1.5},
+        {label:"Availed",   data:chartRows.map(d=>d.availed),     backgroundColor:"#3b82f666",borderColor:"#3b82f6",borderWidth:1.5},
+        {label:"Closed",    data:chartRows.map(d=>d.closed),      backgroundColor:"#ef444466",borderColor:"#ef4444",borderWidth:1.5},
       ]
     },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ position:"top", labels:{ font:{size:10}, boxWidth:12 } } },
-      scales:{ x:{ grid:{display:false}, ticks:{font:{size:9}} }, y:{ beginAtZero:true, ticks:{font:{size:9}} } }
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:"top",labels:{font:{size:10},boxWidth:12}}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:9}}},y:{beginAtZero:true,ticks:{font:{size:9}}}}
     }
   });
 
-  // Pie chart
+  // Pie chart (14-day totals from funnel data)
   destroyChart("pieChart");
-  charts["pieChart"] = new Chart(document.getElementById("pieChart").getContext("2d"), {
-    type: "doughnut",
-    data: {
-      labels: ["Not Sanctioned","Sanc not Ack'd","Ack'd not Applied","Applied not Permitted","Availed"],
-      datasets:[{ data:[
-        Math.max(0, tot.req - tot.sanc),
-        Math.max(0, tot.sanc - tot.sseAck - tot.sseRej),
-        Math.max(0, tot.sseAck - tot.applied - tot.exited),
-        Math.max(0, tot.applied - tot.smPermitted - tot.smRej),
-        tot.availed
-      ], backgroundColor:["#94a3b8","#fbbf24","#f97316","#6d28d9","#10b981"], borderWidth:2 }]
+  const totFunnel = funnelRows.reduce((a,r)=>({
+    req:a.req+r.total_requested, sanc:a.sanc+r.sanctioned,
+    applied:a.applied+r.applied, granted:a.granted+r.granted, closed:a.closed+r.closed
+  }),{req:0,sanc:0,applied:0,granted:0,closed:0});
+  charts["pieChart"] = new Chart(document.getElementById("pieChart").getContext("2d"),{
+    type:"doughnut",
+    data:{
+      labels:["Not Sanctioned","Sanc not Applied","Applied not Permitted","Permitted not Closed","Closed"],
+      datasets:[{data:[
+        Math.max(0,totFunnel.req-totFunnel.sanc),
+        Math.max(0,totFunnel.sanc-totFunnel.applied),
+        Math.max(0,totFunnel.applied-totFunnel.granted),
+        Math.max(0,totFunnel.granted-totFunnel.closed),
+        totFunnel.closed
+      ],backgroundColor:["#94a3b8","#fbbf24","#f97316","#6d28d9","#10b981"],borderWidth:2}]
     },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:"right", labels:{ font:{size:9}, boxWidth:12 } } } }
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"right",labels:{font:{size:9},boxWidth:12}}}}
   });
 }
+
+window.switchDept = function(dept) {
+  document.querySelectorAll(".dept-tab").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll(".dept-section").forEach(s=>s.classList.remove("active"));
+  const tab = document.getElementById("dtab-"+dept);
+  const sec = document.getElementById("dsec-"+dept);
+  if(tab) tab.classList.add("active");
+  if(sec) sec.classList.add("active");
+};
 
 loadData();
 setInterval(loadData, REFRESH_MS);
