@@ -98,13 +98,11 @@ td.date-col { text-align: left; font-weight: 700; background: #f5f5f5; padding-l
 </div>
 
 <script>
-const RBMS_API = "https://api-tvc.adrig.co.in/api/analytics/rbms-dashboard";
 const DEPT_API = "https://api-tvc.adrig.co.in/api/analytics/block-funnel-public?days=14";
 const REFRESH  = 5 * 60 * 1000;
 const DAYS     = 14;
 const charts   = {};
 
-// dept → {label, btnClass, accentColor, headerColor}
 const DEPT_CFG = {
   OVERALL: { label:"Overall",  cls:"",     hdr:"#1a1a4e" },
   TRD:     { label:"TRD",      cls:"trd",  hdr:"#b45309" },
@@ -112,9 +110,11 @@ const DEPT_CFG = {
   ENGG:    { label:"ENGG",     cls:"engg", hdr:"#0f766e" },
 };
 
-let _rbmsRows = [];   // processed rows for OVERALL
-let _deptMap  = {};   // dept → processed rows
-let _activeDept = "OVERALL";
+// _overallRows — array of {date, req, sanc, applied, exited, permitted, sm_rejected, closed} sorted DESC
+// _deptMap — dept → same shape, keyed by the same date set
+let _overallRows = [];
+let _deptMap     = {};
+let _activeDept  = "OVERALL";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function tickClock() {
@@ -130,141 +130,148 @@ function fd(k) { return new Date(k+"T00:00:00Z").toLocaleDateString("en-IN",{day
 function dy(k) { return new Date(k+"T00:00:00Z").toLocaleDateString("en-IN",{weekday:"short",timeZone:"UTC"}); }
 function pct(n,d){ return d>0?(n/d*100).toFixed(1)+"%":"&#8212;"; }
 function pc(v)  { return v>=50?"perf-high":v>=25?"perf-mid":"perf-low"; }
-function td()   { return new Date().toLocaleDateString("en-CA",{timeZone:"Asia/Kolkata"}); }
-function dateKey(v){ return (typeof v==="string"?v:new Date(v).toISOString()).slice(0,10); }
+function todayIST() { return new Date().toLocaleDateString("en-CA",{timeZone:"Asia/Kolkata"}); }
+function dateKey(v){
+  if(typeof v === "string") return v.slice(0,10);
+  return new Date(v).toISOString().slice(0,10);
+}
 
-// ── Fetch ─────────────────────────────────────────────────────────────────────
+// ── Fetch & process ───────────────────────────────────────────────────────────
 async function loadData() {
   try {
-    const [r1,r2] = await Promise.all([fetch(RBMS_API),fetch(DEPT_API)]);
-    const [j1,j2] = await Promise.all([r1.json(),r2.json()]);
-    if(!j1.status)  throw new Error(j1.message);
-    if(!j2.success) throw new Error(j2.message);
+    const res = await fetch(DEPT_API);
+    const j   = await res.json();
+    if(!j.success) throw new Error(j.message);
 
-    // Process OVERALL rows (from rbms-dashboard)
-    const today = td();
-    _rbmsRows = (j1.data.days||[])
-      .slice().sort((a,b)=>a.date<b.date?-1:1)
-      .filter(d=>d.date<=today).slice(-DAYS).reverse();
-
-    // Process per-dept rows (from block-funnel-public)
-    _deptMap = {};
-    j2.data.forEach(r=>{
-      const dept = r.department||"UNKNOWN";
-      if(!_deptMap[dept]) _deptMap[dept]=[];
-      _deptMap[dept].push(r);
+    // Group raw rows by (date, dept)
+    const byDateDept = {}; // date → dept → raw row
+    j.data.forEach(r => {
+      const d   = dateKey(r.block_date);
+      const dep = r.department || "UNKNOWN";
+      if(!byDateDept[d]) byDateDept[d] = {};
+      byDateDept[d][dep] = r;
     });
-    // Build date-keyed lookup per dept
-    Object.keys(_deptMap).forEach(dept=>{
-      const byDate={};
-      _deptMap[dept].forEach(r=>{ byDate[dateKey(r.block_date)]=r; });
-      _deptMap[dept] = _rbmsRows.map(d=>({
-        date: d.date,
-        req:  (byDate[d.date]?.total_requested)||0,
-        sanc: (byDate[d.date]?.sanctioned)||0,
-        applied:(byDate[d.date]?.applied)||0,
-        granted:(byDate[d.date]?.granted)||0,
-        closed:(byDate[d.date]?.closed)||0,
-      }));
+
+    // All distinct IST dates from the API, sorted DESC, capped to DAYS
+    const today = todayIST();
+    const allDates = Object.keys(byDateDept)
+      .filter(d => d <= today)
+      .sort()
+      .slice(-DAYS)
+      .reverse();
+
+    // All departments that appear in the data
+    const allDepts = [...new Set(j.data.map(r => r.department || "UNKNOWN"))];
+
+    // Build OVERALL (sum across all depts per date) and per-dept rows
+    _overallRows = allDates.map(d => {
+      const depts = byDateDept[d] || {};
+      return sumDepts(d, Object.values(depts));
+    });
+
+    _deptMap = {};
+    allDepts.forEach(dep => {
+      _deptMap[dep] = allDates.map(d => {
+        const r = (byDateDept[d] || {})[dep];
+        return r ? toRow(d, r) : emptyRow(d);
+      });
     });
 
     renderAll();
   } catch(e) {
-    document.getElementById("root").innerHTML='<div class="spinner"><span style="color:#dc2626">&#9888; Failed: '+e.message+'</span><button class="refresh-btn" onclick="loadData()">Retry</button></div>';
+    document.getElementById("root").innerHTML =
+      '<div class="spinner"><span style="color:#dc2626">&#9888; Failed: '+e.message+'</span>'+
+      '<button class="refresh-btn" onclick="loadData()">Retry</button></div>';
   }
+}
+
+function toRow(date, r) {
+  return {
+    date,
+    req:        +r.total_requested || 0,
+    sanc:       +r.sanctioned      || 0,
+    applied:    +r.applied         || 0,
+    exited:     +r.exited          || 0,
+    permitted:  +r.permitted       || 0,
+    sm_rejected:+r.sm_rejected     || 0,
+    closed:     +r.closed          || 0,
+  };
+}
+
+function emptyRow(date) {
+  return { date, req:0, sanc:0, applied:0, exited:0, permitted:0, sm_rejected:0, closed:0 };
+}
+
+function sumDepts(date, raws) {
+  return raws.reduce((a, r) => ({
+    date,
+    req:         a.req         + (+r.total_requested || 0),
+    sanc:        a.sanc        + (+r.sanctioned      || 0),
+    applied:     a.applied     + (+r.applied         || 0),
+    exited:      a.exited      + (+r.exited          || 0),
+    permitted:   a.permitted   + (+r.permitted       || 0),
+    sm_rejected: a.sm_rejected + (+r.sm_rejected     || 0),
+    closed:      a.closed      + (+r.closed          || 0),
+  }), emptyRow(date));
 }
 
 // ── Build table rows ──────────────────────────────────────────────────────────
 function buildRows(dept) {
-  const isOverall = dept==="OVERALL";
-  const rows = isOverall ? _rbmsRows : (_deptMap[dept]||[]);
-  const today = td();
+  const rows = dept === "OVERALL" ? _overallRows : (_deptMap[dept] || []);
+  const today = todayIST();
 
-  const trs = rows.map(d=>{
-    const isT = d.date===today;
-    let req, sanc, applied, exited, inactApply, permitted, rejected, inactSM, closed, notClosed, fu, ci;
+  const trs = rows.map(d => {
+    const isT = d.date === today;
+    const inactApply = Math.max(0, d.sanc - d.applied - d.exited);
+    const inactSM    = Math.max(0, d.applied - d.permitted - d.sm_rejected);
+    const notClosed  = Math.max(0, d.permitted - d.closed);
+    const fu = d.sanc > 0 ? d.permitted / d.sanc * 100 : 0;
+    const ci = d.sanc > 0 ? d.closed    / d.sanc * 100 : 0;
 
-    if(isOverall) {
-      req        = d.req;
-      sanc       = d.sanc;
-      applied    = d.applied;
-      exited     = d.exited;
-      inactApply = Math.max(0, d.sanc - d.applied - d.exited - d.sseRej);
-      permitted  = d.smPermitted;
-      rejected   = d.smRej;
-      inactSM    = Math.max(0, d.applied - d.smPermitted - d.smRej);
-      closed     = d.closed;
-      notClosed  = Math.max(0, d.availed - d.closedPD);
-      fu = d.sanc>0 ? d.smPermitted/d.sanc*100 : 0;
-      ci = d.sanc>0 ? d.closed/d.sanc*100 : 0;
-    } else {
-      req        = d.req;
-      sanc       = d.sanc;
-      applied    = d.applied;
-      exited     = null;   // not available
-      inactApply = Math.max(0, d.sanc - d.applied);
-      permitted  = d.granted;
-      rejected   = null;   // not available
-      inactSM    = Math.max(0, d.applied - d.granted);
-      closed     = d.closed;
-      notClosed  = Math.max(0, d.granted - d.closed);
-      fu = d.sanc>0 ? d.granted/d.sanc*100 : 0;
-      ci = d.sanc>0 ? d.closed/d.sanc*100 : 0;
-    }
-
-    const na = '<span class="dim">&#8212;</span>';
     return '<tr class="'+(isT?"today-row":"")+'">'+
       '<td class="date-col">'+fd(d.date)+'<br><span class="gray">'+dy(d.date)+'</span>'+(isT?' &#9733;':'')+'</td>'+
-      '<td>'+req+'</td>'+
-      '<td><strong>'+sanc+'</strong></td>'+
-      '<td>'+applied+'</td>'+
-      '<td class="red">'+(exited!==null?exited:na)+'</td>'+
+      '<td>'+d.req+'</td>'+
+      '<td><strong>'+d.sanc+'</strong></td>'+
+      '<td>'+d.applied+'</td>'+
+      '<td class="red">'+d.exited+'</td>'+
       '<td class="red">'+inactApply+'</td>'+
-      '<td><strong>'+permitted+'</strong></td>'+
-      '<td class="red">'+(rejected!==null?rejected:na)+'</td>'+
+      '<td><strong>'+d.permitted+'</strong></td>'+
+      '<td class="red">'+d.sm_rejected+'</td>'+
       '<td class="red">'+inactSM+'</td>'+
-      '<td><strong>'+closed+'</strong></td>'+
+      '<td><strong>'+d.closed+'</strong></td>'+
       '<td class="red">'+notClosed+'</td>'+
-      '<td><span class="perf-cell '+pc(fu)+'">'+pct(permitted,sanc)+'</span></td>'+
-      '<td><span class="perf-cell '+pc(ci)+'">'+pct(closed,sanc)+'</span></td>'+
+      '<td><span class="perf-cell '+pc(fu)+'">'+pct(d.permitted,d.sanc)+'</span></td>'+
+      '<td><span class="perf-cell '+pc(ci)+'">'+pct(d.closed,d.sanc)+'</span></td>'+
     '</tr>';
   }).join("");
 
-  // Totals
-  const tot = rows.reduce((a,d)=>({
-    req:a.req+(d.req||0), sanc:a.sanc+(d.sanc||0),
-    applied:a.applied+(d.applied||0),
-    exited:a.exited+(d.exited||0),
-    sseRej:a.sseRej+(d.sseRej||0),
-    permitted:a.permitted+(isOverall?d.smPermitted:d.granted||0),
-    rejected:a.rejected+(isOverall?d.smRej:0),
-    closed:a.closed+(d.closed||0),
-    availed:a.availed+(d.availed||0),
-    closedPD:a.closedPD+(d.closedPD||0),
-    granted:a.granted+(d.granted||0),
-  }),{req:0,sanc:0,applied:0,exited:0,sseRej:0,permitted:0,rejected:0,closed:0,availed:0,closedPD:0,granted:0});
+  // Totals row
+  const tot = rows.reduce((a, d) => ({
+    req:         a.req         + d.req,
+    sanc:        a.sanc        + d.sanc,
+    applied:     a.applied     + d.applied,
+    exited:      a.exited      + d.exited,
+    permitted:   a.permitted   + d.permitted,
+    sm_rejected: a.sm_rejected + d.sm_rejected,
+    closed:      a.closed      + d.closed,
+  }), {req:0,sanc:0,applied:0,exited:0,permitted:0,sm_rejected:0,closed:0});
 
-  const tInactApply = isOverall
-    ? Math.max(0, tot.sanc - tot.applied - tot.exited)
-    : Math.max(0, tot.sanc - tot.applied);
-  const tInactSM = isOverall
-    ? Math.max(0, tot.applied - tot.permitted - tot.rejected)
-    : Math.max(0, tot.applied - tot.permitted);
-  const tNotClosed = isOverall
-    ? Math.max(0, tot.availed - tot.closedPD)
-    : Math.max(0, tot.permitted - tot.closed);
-  const na = '&#8212;';
+  const tInact = Math.max(0, tot.sanc - tot.applied - tot.exited);
+  const tInactSM = Math.max(0, tot.applied - tot.permitted - tot.sm_rejected);
+  const tNotClosed = Math.max(0, tot.permitted - tot.closed);
 
-  const totRow='<tr class="totals">'+
+  const totRow = '<tr class="totals">'+
     '<td class="date-col">14-DAY TOTAL</td>'+
-    '<td>'+tot.req+'</td><td>'+tot.sanc+'</td>'+
+    '<td>'+tot.req+'</td>'+
+    '<td>'+tot.sanc+'</td>'+
     '<td>'+tot.applied+'</td>'+
-    '<td>'+(isOverall?tot.exited:na)+'</td>'+
-    '<td>'+tInactApply+'</td>'+
+    '<td>'+tot.exited+'</td>'+
+    '<td>'+tInact+'</td>'+
     '<td>'+tot.permitted+'</td>'+
-    '<td>'+(isOverall?tot.rejected:na)+'</td>'+
+    '<td>'+tot.sm_rejected+'</td>'+
     '<td>'+tInactSM+'</td>'+
-    '<td>'+tot.closed+'</td><td>'+tNotClosed+'</td>'+
+    '<td>'+tot.closed+'</td>'+
+    '<td>'+tNotClosed+'</td>'+
     '<td>'+pct(tot.permitted,tot.sanc)+'</td>'+
     '<td>'+pct(tot.closed,tot.sanc)+'</td>'+
   '</tr>';
@@ -276,24 +283,20 @@ function buildRows(dept) {
 function renderTable(dept) {
   const cfg = DEPT_CFG[dept] || DEPT_CFG.OVERALL;
   document.getElementById("tbl-body").innerHTML = buildRows(dept);
-  // Update group header colour
-  document.querySelectorAll(".dyn-hdr").forEach(el=>{ el.style.background=cfg.hdr; });
-  // Update chart
+  document.querySelectorAll(".dyn-hdr").forEach(el => { el.style.background = cfg.hdr; });
   renderBarChart(dept);
 }
 
 // ── Full render (first load) ──────────────────────────────────────────────────
 function renderAll() {
-  const today = td();
   const now = new Date().toLocaleString("en-IN",{timeZone:"Asia/Kolkata",hour12:false,day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
 
-  // Build dept buttons — always show OVERALL + any depts that exist in funnel data
   const deptOrder = ["OVERALL","TRD","S&T","ENGG"];
-  const extraDepts = Object.keys(_deptMap).filter(d=>!deptOrder.includes(d));
-  const allDepts = [...deptOrder.filter(d=>d==="OVERALL"||_deptMap[d]), ...extraDepts];
+  const extraDepts = Object.keys(_deptMap).filter(d => !deptOrder.includes(d));
+  const allDepts = [...deptOrder.filter(d => d==="OVERALL" || _deptMap[d]), ...extraDepts];
 
-  const buttons = allDepts.map(d=>{
-    const cfg = DEPT_CFG[d]||{label:d,cls:"",hdr:"#1a1a4e"};
+  const buttons = allDepts.map(d => {
+    const cfg = DEPT_CFG[d] || {label:d, cls:"", hdr:"#1a1a4e"};
     return '<button class="dbt'+(d===_activeDept?" active"+(cfg.cls?" "+cfg.cls:""):"")+'" onclick="switchDept(\''+d+'\')">'+cfg.label+'</button>';
   }).join("");
 
@@ -336,8 +339,9 @@ function renderAll() {
     '<div class="tbl-wrap"><table>'+thead+'<tbody id="tbl-body">'+buildRows(_activeDept)+'</tbody></table></div>'+
 
     '<div style="margin-top:10px;font-size:10px;color:#999;text-align:center">'+
-      'INACTION = blocks pending at that stage as of the block\'s own date &middot; &#8212; = data not available at dept level &middot; '+
-      'Field Util = Permitted &divide; Sanctioned &middot; Conclusion = Closed &divide; Sanctioned'+
+      'INACTION = blocks pending at that stage &middot; '+
+      'Field Util = Permitted &divide; Sanctioned &middot; Conclusion = Closed &divide; Sanctioned &middot; '+
+      'TRD + S&T + ENGG + UNKNOWN = Overall (single consistent source)'+
     '</div>'+
     '<div style="text-align:center;padding:12px 0 6px;font-size:10px;color:#bbb">South Railway &middot; TVC Division &middot; Sr DSTE/TVC View &middot; Refreshes every 5 min</div>';
 
@@ -348,22 +352,17 @@ function renderAll() {
 // ── Charts ────────────────────────────────────────────────────────────────────
 function renderBarChart(dept) {
   dc("bar");
-  const isOverall = dept==="OVERALL";
-  const rows = (isOverall ? _rbmsRows : (_deptMap[dept]||[])).slice().reverse();
-  const labels = rows.map(d=>fd(d.date));
-  const sanc  = rows.map(d=>isOverall?d.sanc:d.sanc);
-  const appl  = rows.map(d=>isOverall?d.applied:d.applied);
-  const perm  = rows.map(d=>isOverall?d.smPermitted:d.granted);
-  const clos  = rows.map(d=>d.closed);
-  charts["bar"]=new Chart(document.getElementById("bar").getContext("2d"),{
+  const rows = (dept === "OVERALL" ? _overallRows : (_deptMap[dept] || [])).slice().reverse();
+  const labels = rows.map(d => fd(d.date));
+  charts["bar"] = new Chart(document.getElementById("bar").getContext("2d"), {
     type:"bar",
     data:{
       labels,
       datasets:[
-        {label:"Sanctioned",data:sanc,backgroundColor:"#10b98166",borderColor:"#10b981",borderWidth:1.5},
-        {label:"Applied",   data:appl,backgroundColor:"#f59e0b66",borderColor:"#f59e0b",borderWidth:1.5},
-        {label:"Permitted", data:perm,backgroundColor:"#3b82f666",borderColor:"#3b82f6",borderWidth:1.5},
-        {label:"Closed",    data:clos,backgroundColor:"#10b98199",borderColor:"#059669",borderWidth:1.5},
+        {label:"Sanctioned", data:rows.map(d=>d.sanc),       backgroundColor:"#10b98166",borderColor:"#10b981",borderWidth:1.5},
+        {label:"Applied",    data:rows.map(d=>d.applied),    backgroundColor:"#f59e0b66",borderColor:"#f59e0b",borderWidth:1.5},
+        {label:"Permitted",  data:rows.map(d=>d.permitted),  backgroundColor:"#3b82f666",borderColor:"#3b82f6",borderWidth:1.5},
+        {label:"Closed",     data:rows.map(d=>d.closed),     backgroundColor:"#10b98199",borderColor:"#059669",borderWidth:1.5},
       ]
     },
     options:{responsive:true,maintainAspectRatio:false,
@@ -374,18 +373,24 @@ function renderBarChart(dept) {
 
 function renderPieChart() {
   dc("pie");
-  // Use OVERALL totals for pie always
-  const tot = _rbmsRows.reduce((a,d)=>({
-    sanc:a.sanc+d.sanc, applied:a.applied+d.applied,
-    perm:a.perm+d.smPermitted, closed:a.closed+d.closed, req:a.req+d.req
-  }),{sanc:0,applied:0,perm:0,closed:0,req:0});
-  charts["pie"]=new Chart(document.getElementById("pie").getContext("2d"),{
+  const tot = _overallRows.reduce((a,d) => ({
+    req:     a.req     + d.req,
+    sanc:    a.sanc    + d.sanc,
+    applied: a.applied + d.applied,
+    perm:    a.perm    + d.permitted,
+    closed:  a.closed  + d.closed,
+  }), {req:0,sanc:0,applied:0,perm:0,closed:0});
+
+  charts["pie"] = new Chart(document.getElementById("pie").getContext("2d"), {
     type:"doughnut",
     data:{
       labels:["Not Sanctioned","Sanc not Applied","Applied not Permitted","Permitted not Closed","Closed"],
       datasets:[{data:[
-        Math.max(0,tot.req-tot.sanc), Math.max(0,tot.sanc-tot.applied),
-        Math.max(0,tot.applied-tot.perm), Math.max(0,tot.perm-tot.closed), tot.closed
+        Math.max(0,tot.req-tot.sanc),
+        Math.max(0,tot.sanc-tot.applied),
+        Math.max(0,tot.applied-tot.perm),
+        Math.max(0,tot.perm-tot.closed),
+        tot.closed
       ],backgroundColor:["#94a3b8","#fbbf24","#f97316","#6d28d9","#10b981"],borderWidth:2}]
     },
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"right",labels:{font:{size:9},boxWidth:12}}}}
@@ -395,16 +400,13 @@ function renderPieChart() {
 // ── Dept switch ───────────────────────────────────────────────────────────────
 window.switchDept = function(dept) {
   _activeDept = dept;
-  // Update button styles
-  document.querySelectorAll(".dbt").forEach(b=>{
-    b.classList.remove("active","trd","snt","engg");
-  });
-  const btns = document.querySelectorAll(".dbt");
+  document.querySelectorAll(".dbt").forEach(b => { b.classList.remove("active","trd","snt","engg"); });
   const deptOrder = ["OVERALL","TRD","S&T","ENGG"];
   const allD = ["OVERALL","TRD","S&T","ENGG",...Object.keys(_deptMap).filter(d=>!["TRD","S&T","ENGG"].includes(d))];
   const idx = allD.indexOf(dept);
+  const btns = document.querySelectorAll(".dbt");
   if(btns[idx]){
-    const cfg = DEPT_CFG[dept]||{cls:""};
+    const cfg = DEPT_CFG[dept] || {cls:""};
     btns[idx].classList.add("active");
     if(cfg.cls) btns[idx].classList.add(cfg.cls);
   }
