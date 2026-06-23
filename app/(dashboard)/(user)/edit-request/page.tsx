@@ -98,7 +98,7 @@ export default function EditRequestsPage() {
                                     setCancelError("");
                                     setDeletingId(cancelModal.id);
                                     try {
-                                        await deleteMutation.mutateAsync(cancelModal.id);
+                                        await deleteMutation.mutateAsync({ id: cancelModal.id, cancelRemark });
                                         setCancelModal({ id: "", open: false });
                                         setDeletingId(null);
                                         // Optionally, reload the page or refetch queries

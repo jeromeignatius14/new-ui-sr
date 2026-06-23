@@ -81,9 +81,10 @@ export const userRequestService = {
    * @param id - The user request ID to delete
    * @returns Promise with the response
    */
-  delete: async (id: string): Promise<UserRequestResponse> => {
+  delete: async (id: string, cancelRemark?: string): Promise<UserRequestResponse> => {
     const response = await axiosInstance.delete<UserRequestResponse>(
-      `/api/user-request/${id}`
+      `/api/user-request/${id}`,
+      { data: { cancelRemark } }
     );
     return response.data;
   },
@@ -254,14 +255,36 @@ export const userRequestService = {
 
   createPgtSpells: async (
     parentId: string,
-    spells: { demandTimeFrom: string; demandTimeTo: string }[]
+    spells: { demandTimeFrom: string; demandTimeTo: string }[],
+    isSanctioned: boolean = true
   ) => {
-    const response = await axiosInstance.post(`/api/user-request/${parentId}/pgt-spells`, { spells });
+    const response = await axiosInstance.post(`/api/user-request/${parentId}/pgt-spells`, { spells, isSanctioned });
     return response.data;
   },
 
   getPgtSpells: async (parentId: string) => {
     const response = await axiosInstance.get(`/api/user-request/${parentId}/pgt-spells`);
+    return response.data;
+  },
+
+  createSinglePgtSpell: async (
+    parentId: string,
+    spellIndex: number,
+    demandTimeFrom: string,
+    demandTimeTo: string,
+    isSanctioned: boolean
+  ) => {
+    const response = await axiosInstance.post(`/api/user-request/${parentId}/pgt-spell`, {
+      spellIndex,
+      demandTimeFrom,
+      demandTimeTo,
+      isSanctioned,
+    });
+    return response.data;
+  },
+
+  finalizePgtParent: async (parentId: string) => {
+    const response = await axiosInstance.post(`/api/user-request/${parentId}/pgt-spells/finalize`);
     return response.data;
   },
 };

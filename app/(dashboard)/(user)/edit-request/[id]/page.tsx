@@ -374,7 +374,7 @@ const handleDeleteSection = (indexToRemove: number) => {
                       setCancelError("");
                       setDeleting(true);
                       try {
-                        await deleteMutation.mutateAsync(params.id as string);
+                        await deleteMutation.mutateAsync({ id: params.id as string, cancelRemark });
                         setCancelModal(false);
                         setDeleting(false);
                         window.location.href = "/edit-request";
