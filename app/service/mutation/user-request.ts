@@ -26,7 +26,8 @@ export function useUpdateUserRequest(id: string) {
  */
 export function useDeleteUserRequest() {
     return useMutation({
-        mutationFn: (id: string) => userRequestService.delete(id),
+        mutationFn: ({ id, cancelRemark }: { id: string; cancelRemark?: string }) =>
+            userRequestService.delete(id, cancelRemark),
     });
 }
 
