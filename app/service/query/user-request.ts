@@ -150,6 +150,11 @@ export interface RequestItem {
   rejectedBy: User | null;
   AvailedTimeFrom: string | null;
   AvailedTimeTo: string | null;
+  pgtMinDuration?: number | null;
+  pgtMinSpellDuration?: number | null;
+  pgtParentId?: string | null;
+  pgtSpellSuffix?: string | null;
+  pgtSpellsCreated?: boolean;
 }
 
 export type User = {
