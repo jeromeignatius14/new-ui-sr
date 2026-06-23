@@ -140,7 +140,7 @@ export default function ViewRequestPage() {
           >
             Back 
           </Link>
-          {request.DisconnAcceptance === "PENDING" && (
+          {(request.myDepotDisconnStatus !== null ? request.myDepotDisconnStatus === "PENDING" : request.DisconnAcceptance === "PENDING") && (
             <div className="flex gap-2">
               <button
                 onClick={() => handleRequestAction(true)}
