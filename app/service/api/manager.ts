@@ -138,6 +138,11 @@ export interface UserRequest {
         depot: string;
         department: string;
     };
+    pgtMinDuration?: number | null;
+    pgtMinSpellDuration?: number | null;
+    pgtParentId?: string | null;
+    pgtSpellSuffix?: string | null;
+    pgtSpellsCreated?: boolean;
 }
 
 export interface UserRequestsResponse {
