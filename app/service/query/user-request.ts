@@ -150,6 +150,7 @@ export interface RequestItem {
   rejectedBy: User | null;
   AvailedTimeFrom: string | null;
   AvailedTimeTo: string | null;
+  myDepotDisconnStatus?: string | null;
 }
 
 export type User = {
