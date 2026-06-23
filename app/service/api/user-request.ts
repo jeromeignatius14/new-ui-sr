@@ -101,9 +101,10 @@ export const userRequestService = {
    * @param id - The user request ID to delete
    * @returns Promise with the response
    */
-  delete: async (id: string): Promise<UserRequestResponse> => {
+  delete: async (id: string, cancelRemark?: string): Promise<UserRequestResponse> => {
     const response = await axiosInstance.delete<UserRequestResponse>(
-      `/api/user-request/${id}`
+      `/api/user-request/${id}`,
+      { data: { cancelRemark } }
     );
     return response.data;
   },
