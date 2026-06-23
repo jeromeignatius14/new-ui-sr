@@ -657,25 +657,18 @@ export default function RequestTablePage() {
     },
   });
   const handleReject = async (id: string, reason: string) => {
-    if (confirm("Are you sure you want to reject this request?")) {
-      await rejectMutation.mutateAsync({ id, reason });
-
-      // This will refetch the correct query and update UI
-      await queryClient.invalidateQueries({ queryKey: ["requests"] });
-    }
+    await rejectMutation.mutateAsync({ id, reason });
+    await queryClient.invalidateQueries({ queryKey: ["requests"] });
   };
 
   const handleAccept = async (id: string) => {
-    if (confirm("Are you sure you want to accept this request?")) {
-      try {
-        await acceptMutation.mutateAsync(id);
-        // This will refetch the correct query and update UI
-        await queryClient.invalidateQueries({ queryKey: ["requests"] });
-        toast.success("Request accepted successfully!");
-      } catch (error) {
-        toast.error("Failed to accept request.");
-        console.error(error);
-      }
+    try {
+      await acceptMutation.mutateAsync(id);
+      await queryClient.invalidateQueries({ queryKey: ["requests"] });
+      toast.success("Request accepted successfully!");
+    } catch (error) {
+      toast.error("Failed to accept request.");
+      console.error(error);
     }
   };
 
