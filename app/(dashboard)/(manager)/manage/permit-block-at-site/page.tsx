@@ -247,7 +247,7 @@ function Modal({ title, accent, children, onClose }: { title: string; accent?: s
 
 // ── TPC Board → Depot mapping ─────────────────────────────────────────────────
 const TPC_BOARDS: { name: string; depots: string[] }[] = [
-  { name: "TPC (SRR-VARD-STRL)", depots: ["TCR", "CKI"] },
+  { name: "TPC (SRR-VARD-STRL)", depots: ["TCR", "CKI", "ERS"] },
   { name: "TPC (STRL-VARD-PVU/SP)", depots: ["KTYM", "ALLP", "KYJ", "QLN"] },
   { name: "TPC (PVU/SP-MP/SP)", depots: ["KZK", "NCJ", "NNN"] },
 ];
