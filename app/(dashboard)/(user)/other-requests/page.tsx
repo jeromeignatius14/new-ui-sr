@@ -149,6 +149,7 @@ export default function OtherRequestsPage() {
   const { data: session } = useSession();
   const router = useRouter();
   const userRole = session?.user?.role || "USER";
+  const userDepartment = (session?.user as any)?.department || "";
 
   // State for pagination and view type
   const [currentPage, setCurrentPage] = useState(1);
@@ -437,39 +438,64 @@ export default function OtherRequestsPage() {
                           View Details
                         </button>
                       </div>
-                      {request.DisconnAcceptance === "PENDING" && (
-                        <div className="flex gap-1 mt-1">
-                          <button
-                            onClick={() => handleStatusUpdate(request.id, true)}
-                            disabled={isMutating}
-                            className="px-2 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded border border-green-700 flex items-center"
-                          >
-                            <svg className="w-3 h-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                            Accept
-                          </button>
-                          <button
-                            onClick={() => handleStatusUpdate(request.id, false)}
-                            disabled={isMutating}
-                            className="px-2 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded border border-red-700 flex items-center"
-                          >
-                            <svg className="w-3 h-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                            </svg>
-                            Reject
-                          </button>
-                          {isMutating && (
-                            <span className="text-xs text-gray-500 flex items-center">
-                              <svg className="w-3 h-3 mr-1 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      {(() => {
+                        const myDisconnStatus =
+                          userDepartment === "TRD"
+                            ? request.trdDisconnections?.[0]?.status
+                            : userDepartment === "S&T"
+                            ? request.sntDisconnections?.[0]?.status
+                            : userDepartment === "ENGG"
+                            ? request.enggDisconnections?.[0]?.status
+                            : undefined;
+                        const overallPending = request.DisconnAcceptance === "PENDING";
+                        const myDepotAlreadyActed = myDisconnStatus && myDisconnStatus !== "PENDING";
+
+                        if (!overallPending) return null;
+
+                        if (myDepotAlreadyActed) {
+                          return (
+                            <div className="mt-1 px-2 py-1 bg-yellow-50 border border-yellow-300 rounded text-xs text-yellow-700">
+                              {myDisconnStatus === "ACCEPTED"
+                                ? "Accepted — pending with other depot(s)"
+                                : "Rejected — awaiting further action"}
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div className="flex gap-1 mt-1">
+                            <button
+                              onClick={() => handleStatusUpdate(request.id, true)}
+                              disabled={isMutating}
+                              className="px-2 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded border border-green-700 flex items-center"
+                            >
+                              <svg className="w-3 h-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                               </svg>
-                              Updating...
-                            </span>
-                          )}
-                        </div>
-                      )}
+                              Accept
+                            </button>
+                            <button
+                              onClick={() => handleStatusUpdate(request.id, false)}
+                              disabled={isMutating}
+                              className="px-2 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded border border-red-700 flex items-center"
+                            >
+                              <svg className="w-3 h-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                              </svg>
+                              Reject
+                            </button>
+                            {isMutating && (
+                              <span className="text-xs text-gray-500 flex items-center">
+                                <svg className="w-3 h-3 mr-1 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Updating...
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))}
