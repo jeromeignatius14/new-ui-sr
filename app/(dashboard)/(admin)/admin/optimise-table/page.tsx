@@ -564,8 +564,9 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
   }, [deptFilter]);
 
   // Auto-jump to earliest pending date — only once per dept change, not on every data refetch.
-  // Floor: never go before 1st June 2026
-  const PENDING_FLOOR = new Date("2026-06-01T00:00:00.000Z");
+  // Floor: today — never auto-jump to a past date
+  const autoJumpFloor = new Date();
+  autoJumpFloor.setHours(0, 0, 0, 0);
   useEffect(() => {
     if (didAutoJumpRef.current) return;         // already jumped for this dept
     if (searchParams.get("date")) {             // URL already specifies exact date
@@ -576,7 +577,7 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
     const filtered = (deptFilter !== "ALL"
       ? pendingRequests.filter((r: UserRequest) => r.selectedDepartment === deptFilter)
       : pendingRequests
-    ).filter((r: UserRequest) => new Date(r.date) >= PENDING_FLOOR);
+    ).filter((r: UserRequest) => { const d = new Date(r.date); d.setHours(0,0,0,0); return d >= autoJumpFloor; });
     if (!filtered.length) return;
     const minDate = filtered.reduce((min: Date, r: UserRequest) => {
       const d = new Date(r.date); d.setHours(0, 0, 0, 0);
