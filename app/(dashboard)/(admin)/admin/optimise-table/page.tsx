@@ -357,7 +357,7 @@ const [selectedRequestsForSanction, setSelectedRequestsForSanction] = useState<U
     // Only update URL if dept filter changes to something other than ALL
     if (deptFilter !== 'ALL') {
       const params = new URLSearchParams(searchParams.toString());
-      params.set("dept", encodeURIComponent(deptFilter));
+      params.set("dept", deptFilter);
       router.push(`?${params.toString()}`, { scroll: false });
     }
   }, []);
@@ -530,15 +530,19 @@ const finalWeekEnd = isUrgentMode ? currentWeekStart : weekEnd;
 
 
 const [selectedDate, setSelectedDate] = useState<Date>(() => {
-  // Try to get saved date from localStorage
+  // 1. URL ?date= param takes priority (navigation from ENGG/S&T/TRD/Click-to-View cards)
+  const dateParam = searchParams.get("date");
+  if (dateParam) {
+    const parsedDate = new Date(dateParam);
+    parsedDate.setHours(0, 0, 0, 0);
+    if (!isNaN(parsedDate.getTime())) return parsedDate;
+  }
+  // 2. Fallback to localStorage
   const savedDate = localStorage.getItem("urgentSelectedDate");
   if (savedDate) {
     const parsedDate = new Date(savedDate);
-    if (!isNaN(parsedDate.getTime())) {
-      return parsedDate;
-    }
+    if (!isNaN(parsedDate.getTime())) return parsedDate;
   }
-  // Fallback to current date (today)
   return new Date();
 });
 
@@ -1480,7 +1484,7 @@ const handleOptimize = async () => {
                       
                       if (dept !== 'ALL') {
                         const params = new URLSearchParams(searchParams.toString());
-                        params.set("dept", encodeURIComponent(dept));
+                        params.set("dept", dept);
                         router.push(`?${params.toString()}`, { scroll: false });
                       } else {
                         
