@@ -439,8 +439,19 @@ export default function OtherRequestsPage() {
                         </button>
                       </div>
                       {(() => {
-                        // Hide buttons only when a disconnection dept itself has rejected
-                        // DC rejection is independent — TRD/S&T can still act after DC rejects
+                        // DC rejection overrules everything — no buttons for TRD/S&T/ENGG either
+                        if (
+                          request.overAllStatus?.includes("return to applicant") &&
+                          request.overAllStatus?.includes("Dept controller")
+                        ) {
+                          return (
+                            <div className="mt-1 px-2 py-1 bg-red-50 border border-red-300 rounded text-xs text-red-700">
+                              Returned by Dept Controller — no action needed
+                            </div>
+                          );
+                        }
+
+                        // Any disconnection dept rejected — no buttons
                         if (request.DisconnAcceptance === "REJECTED") {
                           return (
                             <div className="mt-1 px-2 py-1 bg-red-50 border border-red-300 rounded text-xs text-red-700">
@@ -449,13 +460,14 @@ export default function OtherRequestsPage() {
                           );
                         }
 
+                        // Match this depot's specific disconnection record (handles multi-depot S&T/TRD)
                         const myDisconnStatus =
                           userDepartment === "TRD"
-                            ? request.trdDisconnections?.[0]?.status
+                            ? request.trdDisconnections?.find((d) => d.depot === selectedDepo)?.status
                             : userDepartment === "S&T"
-                            ? request.sntDisconnections?.[0]?.status
+                            ? request.sntDisconnections?.find((d) => d.depot === selectedDepo)?.status
                             : userDepartment === "ENGG"
-                            ? request.enggDisconnections?.[0]?.status
+                            ? request.enggDisconnections?.find((d) => d.depot === selectedDepo)?.status
                             : undefined;
                         const overallPending = request.DisconnAcceptance === "PENDING";
                         const myDepotAlreadyActed = myDisconnStatus && myDisconnStatus !== "PENDING";
