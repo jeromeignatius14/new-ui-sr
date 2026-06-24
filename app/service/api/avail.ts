@@ -139,6 +139,23 @@ export const availService = {
     return response.data;
   },
 
+  // GET: SM availed block history (for history page)
+  getSmHistory: async (
+    stationCode: string,
+    period?: string,
+    fromDate?: string,
+    toDate?: string,
+    dept?: string
+  ) => {
+    const params = new URLSearchParams({ stationCode });
+    if (period) params.set("period", period);
+    if (fromDate) params.set("fromDate", fromDate);
+    if (toDate) params.set("toDate", toDate);
+    if (dept) params.set("dept", dept);
+    const response = await axiosInstance.get(`/api/avail/sm/history?${params}`);
+    return response.data;
+  },
+
   // PUT: SM grants times (approve / modify / reject)
   smApproveAvail: async (
     requestId: string,

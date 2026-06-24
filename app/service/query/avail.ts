@@ -104,6 +104,24 @@ export function useGetSmStations() {
   });
 }
 
+// GET: SM availed history — on-demand, no polling (user filters manually)
+export function useGetSmHistory(
+  stationCode: string | undefined,
+  period: string,
+  fromDate?: string,
+  toDate?: string,
+  dept?: string
+) {
+  return useQuery({
+    queryKey: ["sm-availed-history", stationCode, period, fromDate, toDate, dept],
+    queryFn: () => availService.getSmHistory(stationCode!, period, fromDate, toDate, dept),
+    enabled: !!stationCode,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+    placeholderData: keep,
+  });
+}
+
 // GET: TRD Controller permit dashboard
 export function useGetTrdPending() {
   const { data: session } = useSession();

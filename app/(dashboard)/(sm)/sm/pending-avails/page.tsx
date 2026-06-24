@@ -505,6 +505,25 @@ export default function SmPendingAvailsPage() {
             <SectionTable title="UPCOMING SANCTIONED BLOCKS" subtitle="(CLICK ID TO SEE FULL DETAILS)" headerColor="#2e7d32" rows={upcomingSanctioned} onClickId={openModal} emptyMsg="No upcoming sanctioned blocks" />
             <SectionTable title="BLOCKS ALREADY AVAILED" subtitle="(CLICK ID TO SEE FULL DETAILS)" headerColor="#1565c0" rows={alreadyAvailed} onClickId={openModal} emptyMsg="No availed blocks in last 48 hrs" />
 
+            {/* ── Availed History Shortcuts ── */}
+            <div style={{ margin: "8px 0 4px", padding: "12px 14px", background: "#eff6ff", border: "1.5px solid #bfdbfe", borderRadius: "12px" }}>
+              <div style={{ fontSize: "11px", fontWeight: 800, color: "#1e40af", letterSpacing: "0.5px", textTransform: "uppercase", marginBottom: "10px" }}>View Availed Block History</div>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                {(["24h", "week", "month", "year"] as const).map((p) => {
+                  const labels: Record<string, string> = { "24h": "Past 24 Hours", week: "Past 1 Week", month: "Past 1 Month", year: "Past 1 Year" };
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => window.location.href = `/sm/availed-history?period=${p}`}
+                      style={{ background: "#1d4ed8", color: "#fff", border: "none", borderRadius: "20px", padding: "7px 16px", fontSize: "12px", fontWeight: 700, cursor: "pointer" }}
+                    >
+                      {labels[p]}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
           </div>
         )
       }
