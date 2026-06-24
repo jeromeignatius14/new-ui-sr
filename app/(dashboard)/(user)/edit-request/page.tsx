@@ -161,7 +161,7 @@ export default function EditRequestsPage() {
                                                         onClick={() => {
                                                             if (isEditable(request.date)) {
                                                                 router.push(`/edit-request/${request.id}`);
-                                                            } else {
+                                                            } else if (request.overAllStatus !== "Availing Active") {
                                                                 handleCancel(request.id);
                                                             }
                                                         }}
@@ -187,6 +187,8 @@ export default function EditRequestsPage() {
                                                         >
                                                             Edit
                                                         </button>
+                                                    ) : request.overAllStatus === "Availing Active" ? (
+                                                        <span className="text-orange-600 font-semibold text-[20px]">Active at Site</span>
                                                     ) : (
                                                         <button
                                                             onClick={() => handleCancel(request.id)}
