@@ -439,6 +439,22 @@ export default function OtherRequestsPage() {
                         </button>
                       </div>
                       {(() => {
+                        // If rejected/returned at any level — hide buttons for everyone
+                        const isReturnedOrRejected =
+                          request.overAllStatus?.includes("return to applicant") ||
+                          request.DisconnAcceptance === "REJECTED";
+
+                        if (isReturnedOrRejected) {
+                          const msg = request.overAllStatus?.includes("controller")
+                            ? "Returned by Dept Controller — no action needed"
+                            : "Rejected — returned to applicant";
+                          return (
+                            <div className="mt-1 px-2 py-1 bg-red-50 border border-red-300 rounded text-xs text-red-700">
+                              {msg}
+                            </div>
+                          );
+                        }
+
                         const myDisconnStatus =
                           userDepartment === "TRD"
                             ? request.trdDisconnections?.[0]?.status
