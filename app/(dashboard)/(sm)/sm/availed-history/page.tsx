@@ -324,11 +324,11 @@ function AvailedHistoryContent() {
                       {/* SM Approved From – To */}
                       <td style={{ padding: "9px 11px", verticalAlign: "top", fontFamily: "monospace", borderRight: `1px solid ${borderColor}`, fontSize: "12px", whiteSpace: "nowrap" }}>
                         <div style={{ fontWeight: 700, color: "#166534" }}>{fmtTime(b.smApprovedTimeFrom)}</div>
-                        <div style={{ color: "#6b7280", fontSize: "11px" }}>to {fmtTime(b.smApprovedTimeTo)}</div>
+                        <div style={{ fontWeight: 700, color: "#166534" }}>– {fmtTime(b.smApprovedTimeTo)}</div>
                       </td>
 
                       {/* Activity */}
-                      <td style={{ padding: "9px 11px", verticalAlign: "top", borderRight: `1px solid ${borderColor}`, fontSize: "12px", minWidth: "160px", maxWidth: "240px", color: "#111827", fontWeight: 500, lineHeight: "1.5", wordBreak: "break-word", whiteSpace: "normal" }}>
+                      <td style={{ padding: "9px 11px", verticalAlign: "top", borderRight: `1px solid ${borderColor}`, fontSize: "12px", minWidth: "120px", maxWidth: "180px", color: "#111827", fontWeight: 500, lineHeight: "1.5", wordBreak: "break-word", whiteSpace: "normal" }}>
                         {b.activity ?? "—"}
                       </td>
 
@@ -336,25 +336,25 @@ function AvailedHistoryContent() {
                       <td style={{ padding: "9px 11px", verticalAlign: "top", borderRight: `1px solid ${borderColor}`, fontSize: "12px", whiteSpace: "nowrap" }}>
                         {b.workLocationFrom || b.workLocationTo ? (
                           <>
-                            <div style={{ fontWeight: 600 }}>{b.workLocationFrom ?? "—"}</div>
-                            <div style={{ color: "#6b7280", fontSize: "11px" }}>→ {b.workLocationTo ?? "—"}</div>
+                            <div style={{ fontWeight: 600, color: "#b45309" }}>{b.workLocationFrom ?? "—"}</div>
+                            <div style={{ fontWeight: 600, color: "#b45309" }}>→ {b.workLocationTo ?? "—"}</div>
                           </>
                         ) : "—"}
                       </td>
 
-                      {/* Repercussions / Movement Restriction */}
+                      {/* Lines / Roads Affected — matches header position 10 */}
+                      <td style={{ padding: "9px 11px", verticalAlign: "top", borderRight: `1px solid ${borderColor}`, fontSize: "12px", minWidth: "140px", color: "#1e3a8a", fontWeight: 600, lineHeight: "1.5", wordBreak: "break-word", whiteSpace: "normal" }}>
+                        {getLinesAffected(b)}
+                      </td>
+
+                      {/* Repercussions / Movement Restriction — matches header position 11 */}
                       <td style={{ padding: "9px 11px", verticalAlign: "top", borderRight: `1px solid ${borderColor}`, fontSize: "12px", maxWidth: "180px", color: b.repercussions ? "#7c2d12" : "#9ca3af" }}>
                         {b.repercussions ?? "—"}
                       </td>
 
-                      {/* Remarks */}
+                      {/* Remarks — matches header position 12 */}
                       <td style={{ padding: "9px 11px", verticalAlign: "top", borderRight: `1px solid ${borderColor}`, fontSize: "12px", maxWidth: "160px", color: "#374151" }}>
                         {b.requestremarks ?? "—"}
-                      </td>
-
-                      {/* Lines / Roads Affected */}
-                      <td style={{ padding: "9px 11px", verticalAlign: "top", borderRight: `1px solid ${borderColor}`, fontSize: "12px", minWidth: "140px", color: "#1e3a8a", fontWeight: 600, lineHeight: "1.5", wordBreak: "break-word", whiteSpace: "normal" }}>
-                        {getLinesAffected(b)}
                       </td>
 
                       {/* Fresh Caution */}
