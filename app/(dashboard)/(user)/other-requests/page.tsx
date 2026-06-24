@@ -253,6 +253,9 @@ export default function OtherRequestsPage() {
         {
           id,
           accept,
+          mobileView: "mobileView",
+          depot: selectedDepo,
+          userDepartment,
         },
         {
           onSuccess: () => {
@@ -280,6 +283,9 @@ export default function OtherRequestsPage() {
         id: selectedRequestId,
         accept: false,
         disconnectionRequestRejectRemarks: rejectRemarks,
+        mobileView: "mobileView",
+        depot: selectedDepo,
+        userDepartment,
       },
       {
         onSuccess: () => {
