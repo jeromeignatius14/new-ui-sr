@@ -1409,6 +1409,8 @@ const handleOptimize = async () => {
 
   // Add state to track which row's Modify/Return is open
   const [modifyReturnOpenId, setModifyReturnOpenId] = useState<string | null>(null);
+  const [collapsedBatches, setCollapsedBatches] = useState<Set<string>>(new Set());
+  const toggleBatch = (id: string) => setCollapsedBatches(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
   if (isLoading) {
     return (
@@ -1864,20 +1866,36 @@ const handleOptimize = async () => {
           </td>
         </tr>
       )}
-      {urgentRequestsFiltered.filter((request: UserRequest) => {
-        const requestDate = typeof request.date === "string" ? parseISO(request.date) : request.date;
-        return isSameDay(requestDate, selectedDate)&&(request.Draft === false);
-      }).map((request: UserRequest) => {
-          const getDepartmentColor = (request: UserRequest) => {
-                         if (request.selectedDepartment === "ENGG") return "bg-red-50";
-                         if (request.selectedDepartment === "TRD") return "bg-blue-50";
-                         if (request.selectedDepartment === "S&T") return "bg-green-50";
-                         return "bg-white";
-                       };
-     
-                       const rowColor = getDepartmentColor(request);
-        
-        return (
+      {(() => {
+        const sortedUrg = urgentRequestsFiltered.filter((r: UserRequest) => {
+          const d = typeof r.date === "string" ? parseISO(r.date) : r.date;
+          return isSameDay(d, selectedDate) && r.Draft === false;
+        }).sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime());
+        const groupedUrg = groupRequestsByBatch(sortedUrg as any[]);
+        return groupedUrg.flatMap((item: any) => {
+          if (item.isBatch) {
+            const isCollapsed = collapsedBatches.has(item.batchId);
+            return [
+              <tr key={`batch-hdr-urg-${item.batchId}`} style={{ background: "linear-gradient(90deg,#1d4ed8,#3b82f6)", cursor: "pointer" }} onClick={() => toggleBatch(item.batchId)}>
+                <td colSpan={12} style={{ padding: "6px 14px", color: "#fff", fontWeight: 800, fontSize: "13px" }}>
+                  ⚡ BATCH — {item.requests.length} Spells &nbsp;|&nbsp;
+                  {item.requests[0]?.batchTimeFrom ? new Date(item.requests[0].batchTimeFrom).toISOString().slice(11,16) : "--"}
+                  {" – "}
+                  {item.requests[0]?.batchTimeTo ? new Date(item.requests[0].batchTimeTo).toISOString().slice(11,16) : "--"}
+                  &nbsp;<span style={{ fontSize: "12px" }}>{isCollapsed ? "▼ expand" : "▲ collapse"}</span>
+                </td>
+              </tr>,
+              ...(!isCollapsed ? item.requests.map((request: any) => renderUrgRow(request)) : []),
+            ];
+          }
+          return [renderUrgRow(item.request)];
+        });
+
+        function renderUrgRow(request: any) {
+          const rowColor = request.selectedDepartment === "ENGG" ? "bg-red-50"
+            : request.selectedDepartment === "TRD" ? "bg-blue-50"
+            : request.selectedDepartment === "S&T" ? "bg-green-50" : "bg-white";
+          return (
           <tr 
             key={`request-${request.id}-${request.date}`} 
             className={`hover:bg-gray-100 transition-colors ${rowColor}`}
@@ -1935,7 +1953,7 @@ const handleOptimize = async () => {
             <td className="border border-black p-2 text-[24px]">{getLineOrRoad(request)}</td>
             <td className="border border-black p-2 text-[24px]">
               {request.batchId && request.spellDurationMinutes
-                ? <span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span>
+                ? <div><span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span><div style={{ fontSize: "12px", color: "#1d4ed8", fontWeight: 600, marginTop: "2px" }}>{(request as any).batchTimeFrom ? new Date((request as any).batchTimeFrom).toISOString().slice(11,16) : "--"}{" – "}{(request as any).batchTimeTo ? new Date((request as any).batchTimeTo).toISOString().slice(11,16) : "--"}</div></div>
                 : <>{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</>
               }
             </td>
@@ -2132,8 +2150,9 @@ const handleOptimize = async () => {
               </div>
             </td>
           </tr>
-        );
-      })}
+          );
+        }
+        })()}
     </tbody>
   </table>
 </div>
@@ -2233,15 +2252,16 @@ const handleOptimize = async () => {
                   return grouped.flatMap((item: any) => {
                     if (item.isBatch) {
                       return [
-                        <tr key={`batch-hdr-${item.batchId}`} style={{ background: "linear-gradient(90deg,#1d4ed8,#3b82f6)" }}>
+                        <tr key={`batch-hdr-${item.batchId}`} style={{ background: "linear-gradient(90deg,#1d4ed8,#3b82f6)", cursor: "pointer" }} onClick={() => toggleBatch(item.batchId)}>
                           <td colSpan={12} style={{ padding: "6px 14px", color: "#fff", fontWeight: 800, fontSize: "13px" }}>
                             ⚡ BATCH — {item.requests.length} Spells &nbsp;|&nbsp;
                             {item.requests[0]?.batchTimeFrom ? new Date(item.requests[0].batchTimeFrom).toISOString().slice(11,16) : "--"}
                             {" – "}
                             {item.requests[0]?.batchTimeTo ? new Date(item.requests[0].batchTimeTo).toISOString().slice(11,16) : "--"}
+                            &nbsp;<span style={{ fontSize: "12px" }}>{collapsedBatches.has(item.batchId) ? "▼ expand" : "▲ collapse"}</span>
                           </td>
                         </tr>,
-                        ...item.requests.map((request: any, si: number) => renderCorrRow(request, si, item.requests.length)),
+                        ...(!collapsedBatches.has(item.batchId) ? item.requests.map((request: any, si: number) => renderCorrRow(request, si, item.requests.length)) : []),
                       ];
                     }
                     return [renderCorrRow(item.request, null, null)];
@@ -2319,7 +2339,7 @@ style={isBatchRow ? { background: spellIdx! % 2 === 0 ? "#eff6ff" : "#dbeafe", b
                     </td>
                     <td className="border border-black p-2 text-[24px]">
                       {request.batchId && request.spellDurationMinutes
-                        ? <span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span>
+                        ? <div><span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span><div style={{ fontSize: "12px", color: "#1d4ed8", fontWeight: 600, marginTop: "2px" }}>{(request as any).batchTimeFrom ? new Date((request as any).batchTimeFrom).toISOString().slice(11,16) : "--"}{" – "}{(request as any).batchTimeTo ? new Date((request as any).batchTimeTo).toISOString().slice(11,16) : "--"}</div></div>
                         : <>{formatTime(request.demandTimeFrom)} -{" "}{formatTime(request.demandTimeTo)}</>
                       }
                     </td>
@@ -2655,7 +2675,31 @@ style={isBatchRow ? { background: spellIdx! % 2 === 0 ? "#eff6ff" : "#dbeafe", b
                     </td>
                   </tr>
                 )}
-                {combinedRequestsFiltered.filter((request: UserRequest) => request.Draft === false&& request.corridorType !== "Urgent Block").sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
+                {(() => {
+                  const sortedComb = combinedRequestsFiltered
+                    .filter((r: UserRequest) => r.Draft === false && r.corridorType !== "Urgent Block")
+                    .sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime());
+                  const groupedComb = groupRequestsByBatch(sortedComb as any[]);
+                  return groupedComb.flatMap((item: any) => {
+                    if (item.isBatch) {
+                      const isCollapsed = collapsedBatches.has(item.batchId);
+                      return [
+                        <tr key={`batch-hdr-comb-${item.batchId}`} style={{ background: "linear-gradient(90deg,#1d4ed8,#3b82f6)", cursor: "pointer" }} onClick={() => toggleBatch(item.batchId)}>
+                          <td colSpan={11} style={{ padding: "6px 14px", color: "#fff", fontWeight: 800, fontSize: "13px" }}>
+                            ⚡ BATCH — {item.requests.length} Spells &nbsp;|&nbsp;
+                            {item.requests[0]?.batchTimeFrom ? new Date(item.requests[0].batchTimeFrom).toISOString().slice(11,16) : "--"}
+                            {" – "}
+                            {item.requests[0]?.batchTimeTo ? new Date(item.requests[0].batchTimeTo).toISOString().slice(11,16) : "--"}
+                            &nbsp;<span style={{ fontSize: "12px" }}>{isCollapsed ? "▼ expand" : "▲ collapse"}</span>
+                          </td>
+                        </tr>,
+                        ...(!isCollapsed ? item.requests.map((request: any) => renderCombRow(request)) : []),
+                      ];
+                    }
+                    return [renderCombRow(item.request)];
+                  });
+
+                  function renderCombRow(request: any) { return (
                   <tr
    key={`request-${request.id}-${request.date}`}
 className={`transition-colors ${
@@ -2719,7 +2763,7 @@ className={`transition-colors ${
                     </td>
                     <td className="border border-black p-2 text-[24px]">
                       {request.batchId && request.spellDurationMinutes
-                        ? <span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span>
+                        ? <div><span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span><div style={{ fontSize: "12px", color: "#1d4ed8", fontWeight: 600, marginTop: "2px" }}>{(request as any).batchTimeFrom ? new Date((request as any).batchTimeFrom).toISOString().slice(11,16) : "--"}{" – "}{(request as any).batchTimeTo ? new Date((request as any).batchTimeTo).toISOString().slice(11,16) : "--"}</div></div>
                         : <>{formatTime(request.demandTimeFrom)} -{" "}{formatTime(request.demandTimeTo)}</>
                       }
                     </td>
@@ -2920,7 +2964,8 @@ className={`transition-colors ${
                     </td>
 
                   </tr>
-                ))}
+                  ); }
+                  })()}
               </tbody>
             </table>
           </div>
@@ -2985,7 +3030,30 @@ className={`transition-colors ${
                     </td>
                   </tr>
                 )}
-                {nonCorridorRequestsFiltered.filter((request: UserRequest) => request.Draft === false).sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
+                {(() => {
+                  const sortedNonCorr = nonCorridorRequestsFiltered
+                    .filter((r: UserRequest) => r.Draft === false)
+                    .sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime());
+                  const groupedNonCorr = groupRequestsByBatch(sortedNonCorr as any[]);
+                  return groupedNonCorr.flatMap((item: any) => {
+                    if (item.isBatch) {
+                      const isCollapsed = collapsedBatches.has(item.batchId);
+                      return [
+                        <tr key={`batch-hdr-nc-${item.batchId}`} style={{ background: "linear-gradient(90deg,#1d4ed8,#3b82f6)", cursor: "pointer" }} onClick={() => toggleBatch(item.batchId)}>
+                          <td colSpan={11} style={{ padding: "6px 14px", color: "#fff", fontWeight: 800, fontSize: "13px" }}>
+                            ⚡ BATCH — {item.requests.length} Spells &nbsp;|&nbsp;
+                            {item.requests[0]?.batchTimeFrom ? new Date(item.requests[0].batchTimeFrom).toISOString().slice(11,16) : "--"}
+                            {" – "}
+                            {item.requests[0]?.batchTimeTo ? new Date(item.requests[0].batchTimeTo).toISOString().slice(11,16) : "--"}
+                            &nbsp;<span style={{ fontSize: "12px" }}>{isCollapsed ? "▼ expand" : "▲ collapse"}</span>
+                          </td>
+                        </tr>,
+                        ...(!isCollapsed ? item.requests.map((request: any) => renderNonCorrRow(request)) : []),
+                      ];
+                    }
+                    return [renderNonCorrRow(item.request)];
+                  });
+                  function renderNonCorrRow(request: any) { return (
                   <tr
   key={`request-${request.id}-${request.date}`}
 className={`transition-colors ${
@@ -3049,7 +3117,7 @@ className={`transition-colors ${
                     </td>
                     <td className="border border-black p-2 text-[24px]">
                       {request.batchId && request.spellDurationMinutes
-                        ? <span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span>
+                        ? <div><span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span><div style={{ fontSize: "12px", color: "#1d4ed8", fontWeight: 600, marginTop: "2px" }}>{(request as any).batchTimeFrom ? new Date((request as any).batchTimeFrom).toISOString().slice(11,16) : "--"}{" – "}{(request as any).batchTimeTo ? new Date((request as any).batchTimeTo).toISOString().slice(11,16) : "--"}</div></div>
                         : <>{formatTime(request.demandTimeFrom)} -{" "}{formatTime(request.demandTimeTo)}</>
                       }
                     </td>
@@ -3247,7 +3315,8 @@ className={`transition-colors ${
                     </td>
 
                   </tr>
-                ))}
+                  ); }
+                })()}
               </tbody>
             </table>
           </div>
