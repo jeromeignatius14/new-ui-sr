@@ -463,11 +463,11 @@ export default function OtherRequestsPage() {
                         // Match this depot's specific disconnection record (handles multi-depot S&T/TRD)
                         const myDisconnStatus =
                           userDepartment === "TRD"
-                            ? request.trdDisconnections?.find((d) => d.depot === selectedDepo)?.status
+                            ? request.trdDisconnections?.find((d: { depot: string }) => d.depot === selectedDepo)?.status
                             : userDepartment === "S&T"
-                            ? request.sntDisconnections?.find((d) => d.depot === selectedDepo)?.status
+                            ? request.sntDisconnections?.find((d: { depot: string }) => d.depot === selectedDepo)?.status
                             : userDepartment === "ENGG"
-                            ? request.enggDisconnections?.find((d) => d.depot === selectedDepo)?.status
+                            ? request.enggDisconnections?.find((d: { depot: string }) => d.depot === selectedDepo)?.status
                             : undefined;
                         const overallPending = request.DisconnAcceptance === "PENDING";
                         const myDepotAlreadyActed = myDisconnStatus && myDisconnStatus !== "PENDING";
