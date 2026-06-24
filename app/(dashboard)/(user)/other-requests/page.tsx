@@ -448,33 +448,42 @@ export default function OtherRequestsPage() {
                         // DC rejection overrules everything — no buttons for TRD/S&T/ENGG either
                         if (
                           request.overAllStatus?.includes("return to applicant") &&
-                          request.overAllStatus?.includes("Dept controller")
+                          request.overAllStatus?.toLowerCase().includes("controller")
                         ) {
                           return (
                             <div className="mt-1 px-2 py-1 bg-red-50 border border-red-300 rounded text-xs text-red-700">
-                              Returned by Dept Controller — no action needed
+                              <div>Returned by Dept Controller — no action needed</div>
+                              {request.remarkByManager && (
+                                <div className="mt-0.5 italic">Reason: {request.remarkByManager}</div>
+                              )}
                             </div>
                           );
                         }
 
-                        // Any disconnection dept rejected — no buttons
+                        // Any disconnection dept rejected — show remarks and no buttons
                         if (request.DisconnAcceptance === "REJECTED") {
                           return (
                             <div className="mt-1 px-2 py-1 bg-red-50 border border-red-300 rounded text-xs text-red-700">
-                              Disconnection rejected — returned to applicant
+                              <div>Disconnection rejected — returned to applicant</div>
+                              {request.disconnectionRequestRejectRemarks && (
+                                <div className="mt-0.5 italic">Reason: {request.disconnectionRequestRejectRemarks}</div>
+                              )}
                             </div>
                           );
                         }
 
-                        // Match this depot's specific disconnection record (handles multi-depot S&T/TRD)
-                        const myDisconnStatus =
+                        // Split depot (may be comma-separated) and find this depot's disconnection record
+                        const myDepots = selectedDepo.split(",").map((d: string) => d.trim()).filter(Boolean);
+                        const myDisconnRow =
                           userDepartment === "TRD"
-                            ? request.trdDisconnections?.find((d: { depot: string }) => d.depot === selectedDepo)?.status
+                            ? request.trdDisconnections?.find((d: { depot: string }) => myDepots.includes(d.depot))
                             : userDepartment === "S&T"
-                            ? request.sntDisconnections?.find((d: { depot: string }) => d.depot === selectedDepo)?.status
+                            ? request.sntDisconnections?.find((d: { depot: string }) => myDepots.includes(d.depot))
                             : userDepartment === "ENGG"
-                            ? request.enggDisconnections?.find((d: { depot: string }) => d.depot === selectedDepo)?.status
+                            ? request.enggDisconnections?.find((d: { depot: string }) => myDepots.includes(d.depot))
                             : undefined;
+                        const myDisconnStatus = (myDisconnRow as any)?.status;
+                        const myDisconnRemarks = (myDisconnRow as any)?.remarks;
                         const overallPending = request.DisconnAcceptance === "PENDING";
                         const myDepotAlreadyActed = myDisconnStatus && myDisconnStatus !== "PENDING";
 
@@ -483,9 +492,13 @@ export default function OtherRequestsPage() {
                         if (myDepotAlreadyActed) {
                           return (
                             <div className="mt-1 px-2 py-1 bg-yellow-50 border border-yellow-300 rounded text-xs text-yellow-700">
-                              {myDisconnStatus === "ACCEPTED"
+                              <div>{myDisconnStatus === "ACCEPTED"
                                 ? "Accepted — pending with other depot(s)"
                                 : "Rejected — awaiting further action"}
+                              </div>
+                              {myDisconnRemarks && (
+                                <div className="mt-0.5 italic">Remarks: {myDisconnRemarks}</div>
+                              )}
                             </div>
                           );
                         }
