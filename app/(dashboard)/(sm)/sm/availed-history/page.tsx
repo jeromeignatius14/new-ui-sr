@@ -6,29 +6,17 @@ import { useSession } from "next-auth/react";
 import { useGetSmHistory } from "@/app/service/query/avail";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function fmtDt(iso?: string | null) {
+function fmtDate(iso?: string | null) {
   if (!iso) return "—";
   try {
-    const s = new Date(iso).toISOString();
-    const [y, m, d] = s.slice(0, 10).split("-");
-    return `${d}-${m}-${y} ${s.slice(11, 16)}`;
+    const [y, m, d] = new Date(iso).toISOString().slice(0, 10).split("-");
+    return `${d}-${m}-${y}`;
   } catch { return "—"; }
 }
 
 function fmtTime(iso?: string | null) {
   if (!iso) return "—";
   try { return new Date(iso).toISOString().slice(11, 16); } catch { return "—"; }
-}
-
-function calcDuration(from?: string | null, to?: string | null) {
-  if (!from || !to) return "—";
-  try {
-    const mins = Math.round((new Date(to).getTime() - new Date(from).getTime()) / 60000);
-    if (mins < 0) return "—";
-    const h = Math.floor(mins / 60);
-    const m = mins % 60;
-    return h > 0 ? `${h}h ${m}m` : `${m}m`;
-  } catch { return "—"; }
 }
 
 const DEPT_OPTIONS = ["", "ENGG", "S&T", "TRD", "OHE", "OPTG", "COM"];
@@ -42,36 +30,42 @@ const PERIOD_OPTIONS: { value: string; label: string }[] = [
 // ── CSV Download ──────────────────────────────────────────────────────────────
 function downloadCsv(blocks: any[]) {
   const headers = [
-    "Date", "Block ID", "SM Station", "Department", "Depot", "Section",
-    "Mission Block", "SM Approved From", "SM Approved To", "Actual Duration",
-    "Activity", "Applied By", "Applied By Phone", "Applied By Depot",
-    "Burst", "Participants"
+    "Date", "Block ID (Division)", "Department", "Depot", "Section",
+    "SM Approved From", "SM Approved To", "Activity",
+    "Location From", "Location To", "Repercussions / Movement Restriction",
+    "Remarks", "Adjacent Lines Affected",
+    "Fresh Caution Speed", "Fresh Caution From", "Fresh Caution To",
+    "S&T Elem Section From", "S&T Elem Section To",
+    "S&T Discon Line", "S&T Discon Line From", "S&T Discon Line To",
+    "SM Remarks", "Applied By", "Applied By Phone", "Applied By Depot"
   ];
-  const rows = blocks.map((b) => {
-    const participants = (b.availParticipants ?? [])
-      .map((p: any) => `${p.userName}(${p.userDept})`)
-      .join(" | ");
-    const burst = (b.availParticipants ?? []).some((p: any) => p.blockBurst) ? "YES" : "NO";
-    const duration = calcDuration(b.availingStartedAt, b.smClosureAcknowledgedAt);
-    return [
-      fmtDt(b.date),
-      b.id,
-      b.smStation ?? "",
-      b.selectedDepartment ?? "",
-      b.appliedByDepot ?? "",
-      b.selectedSection ?? "",
-      b.missionBlock ? "YES" : "NO",
-      fmtTime(b.smApprovedTimeFrom),
-      fmtTime(b.smApprovedTimeTo),
-      duration,
-      b.activity ?? "",
-      b.appliedByName ?? "",
-      b.appliedByPhone ?? "",
-      b.appliedByDepot ?? "",
-      burst,
-      participants,
-    ].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",");
-  });
+  const rows = blocks.map((b) => [
+    fmtDate(b.date),
+    b.divisionId ?? b.id,
+    b.selectedDepartment ?? "",
+    b.selectedDepo ?? "",
+    b.selectedSection ?? "",
+    fmtTime(b.smApprovedTimeFrom),
+    fmtTime(b.smApprovedTimeTo),
+    b.activity ?? "",
+    b.workLocationFrom ?? "",
+    b.workLocationTo ?? "",
+    b.repercussions ?? "",
+    b.requestremarks ?? "",
+    b.adjacentLinesAffected ?? "",
+    b.freshCautionSpeed ?? "",
+    b.freshCautionLocationFrom ?? "",
+    b.freshCautionLocationTo ?? "",
+    b.sigElementarySectionFrom ?? "",
+    b.sigElementarySectionTo ?? "",
+    b.sntDisconnectionLine ?? "",
+    b.sntDisconnectionLineFrom ?? "",
+    b.sntDisconnectionLineTo ?? "",
+    b.smRemarks ?? "",
+    b.appliedByName ?? "",
+    b.appliedByPhone ?? "",
+    b.appliedByDepot ?? "",
+  ].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","));
   const csv = [headers.join(","), ...rows].join("\n");
   const blob = new Blob([csv], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
@@ -82,7 +76,32 @@ function downloadCsv(blocks: any[]) {
   URL.revokeObjectURL(url);
 }
 
-// ── Main page content ─────────────────────────────────────────────────────────
+// ── Cell component for consistent styling ─────────────────────────────────────
+function Cell({ children, mono, center, bold, color }: {
+  children: React.ReactNode;
+  mono?: boolean;
+  center?: boolean;
+  bold?: boolean;
+  color?: string;
+}) {
+  return (
+    <td style={{
+      padding: "9px 11px",
+      verticalAlign: "top",
+      fontFamily: mono ? "monospace" : "inherit",
+      textAlign: center ? "center" : "left",
+      fontWeight: bold ? 700 : 400,
+      color: color ?? "#111827",
+      borderRight: "1px solid #d1d5db",
+      fontSize: "12px",
+      lineHeight: "1.4",
+    }}>
+      {children}
+    </td>
+  );
+}
+
+// ── History page content ──────────────────────────────────────────────────────
 function AvailedHistoryContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -106,12 +125,13 @@ function AvailedHistoryContent() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#f0f4ff", fontFamily: "sans-serif" }}>
-      {/* Header */}
+
+      {/* ── Header ── */}
       <div style={{ background: "linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%)", padding: "16px 16px 14px", color: "#fff" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "4px" }}>
           <button
             onClick={() => router.back()}
-            style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: "20px", padding: "6px 14px", color: "#fff", fontWeight: 700, fontSize: "13px", cursor: "pointer" }}
+            style={{ background: "rgba(255,255,255,0.18)", border: "1px solid rgba(255,255,255,0.35)", borderRadius: "20px", padding: "6px 14px", color: "#fff", fontWeight: 700, fontSize: "13px", cursor: "pointer" }}
           >
             ← BACK
           </button>
@@ -120,24 +140,23 @@ function AvailedHistoryContent() {
           </div>
         </div>
         {stationCode && (
-          <div style={{ fontSize: "12px", opacity: 0.8, marginLeft: "2px" }}>
+          <div style={{ fontSize: "12px", opacity: 0.85, marginLeft: "2px" }}>
             Station: <strong>{stationCode}</strong>
           </div>
         )}
       </div>
 
-      {/* Filter bar */}
-      <div style={{ background: "#fff", borderBottom: "1.5px solid #dbeafe", padding: "12px 16px", display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center" }}>
-        {/* Period selector */}
+      {/* ── Filter bar ── */}
+      <div style={{ background: "#fff", borderBottom: "2px solid #dbeafe", padding: "12px 16px", display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center" }}>
         <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
           {PERIOD_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               onClick={() => setPeriod(opt.value)}
               style={{
-                background: period === opt.value ? "#1d4ed8" : "#eff6ff",
-                color: period === opt.value ? "#fff" : "#1e40af",
-                border: `1.5px solid ${period === opt.value ? "#1d4ed8" : "#bfdbfe"}`,
+                background: period === opt.value ? "#1d4ed8" : "#fff",
+                color: period === opt.value ? "#fff" : "#1d4ed8",
+                border: `2px solid ${period === opt.value ? "#1d4ed8" : "#93c5fd"}`,
                 borderRadius: "20px",
                 padding: "6px 14px",
                 fontSize: "12px",
@@ -150,11 +169,10 @@ function AvailedHistoryContent() {
           ))}
         </div>
 
-        {/* Dept filter */}
         <select
           value={dept}
           onChange={(e) => setDept(e.target.value)}
-          style={{ border: "1.5px solid #bfdbfe", borderRadius: "8px", padding: "6px 10px", fontSize: "12px", fontWeight: 700, color: "#1e40af", background: "#eff6ff", cursor: "pointer" }}
+          style={{ border: "2px solid #93c5fd", borderRadius: "8px", padding: "6px 10px", fontSize: "12px", fontWeight: 700, color: "#1e40af", background: "#fff", cursor: "pointer" }}
         >
           <option value="">All Departments</option>
           {DEPT_OPTIONS.filter(Boolean).map((d) => (
@@ -162,7 +180,6 @@ function AvailedHistoryContent() {
           ))}
         </select>
 
-        {/* Download CSV */}
         <button
           onClick={() => downloadCsv(blocks)}
           disabled={blocks.length === 0}
@@ -182,23 +199,22 @@ function AvailedHistoryContent() {
         </button>
       </div>
 
-      {/* Summary */}
-      <div style={{ padding: "10px 16px 0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ fontSize: "12px", color: "#374151", fontWeight: 600 }}>
-          {isLoading ? "Loading..." : `${total} block${total !== 1 ? "s" : ""} found`}
-        </div>
+      {/* ── Summary bar ── */}
+      <div style={{ padding: "8px 16px", background: "#e0e7ff", borderBottom: "1px solid #c7d2fe", fontSize: "12px", color: "#1e40af", fontWeight: 700 }}>
+        {isLoading ? "Loading..." : `${total} block${total !== 1 ? "s" : ""} found`}
+        {dept ? ` · Dept: ${dept}` : ""}
       </div>
 
-      {/* Content */}
-      <div style={{ padding: "10px 16px 32px" }}>
+      {/* ── Content ── */}
+      <div style={{ padding: "14px 12px 40px" }}>
         {isLoading && (
-          <div style={{ textAlign: "center", padding: "40px", color: "#6b7280", fontSize: "14px" }}>
+          <div style={{ textAlign: "center", padding: "60px", color: "#6b7280", fontSize: "14px" }}>
             Loading history...
           </div>
         )}
 
         {isError && (
-          <div style={{ textAlign: "center", padding: "40px", color: "#dc2626", fontSize: "14px" }}>
+          <div style={{ textAlign: "center", padding: "60px", color: "#dc2626", fontSize: "14px" }}>
             Failed to load history.{" "}
             <span style={{ cursor: "pointer", textDecoration: "underline" }} onClick={() => refetch()}>
               Retry
@@ -207,22 +223,35 @@ function AvailedHistoryContent() {
         )}
 
         {!isLoading && !isError && blocks.length === 0 && (
-          <div style={{ textAlign: "center", padding: "40px", color: "#6b7280", fontSize: "14px" }}>
+          <div style={{ textAlign: "center", padding: "60px", color: "#6b7280", fontSize: "14px" }}>
             No availed blocks found for the selected period{dept ? ` / ${dept}` : ""}.
           </div>
         )}
 
         {!isLoading && !isError && blocks.length > 0 && (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px", background: "#fff", borderRadius: "10px", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
+          <div style={{ overflowX: "auto", borderRadius: "10px", border: "2px solid #93c5fd", boxShadow: "0 2px 8px rgba(0,0,0,0.10)" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px", background: "#fff" }}>
               <thead>
-                <tr style={{ background: "#1d4ed8", color: "#fff" }}>
+                <tr style={{ background: "#1e3a8a", color: "#fff" }}>
                   {[
-                    "#", "Date", "Block ID", "SM Stn", "Dept", "Depot",
-                    "Section", "Mission", "SM Approved", "Duration",
-                    "Activity", "Applied By", "Burst", "Participants"
+                    "#", "Date", "Block ID", "Dept", "Depot", "Section",
+                    "SM Approved\nFrom – To", "Activity",
+                    "Location\nFrom → To", "Repercussions /\nMovement Restriction",
+                    "Remarks", "Adj. Lines\nAffected",
+                    "Fresh Caution\nSpeed / Location",
+                    "S&T Elem Section\n(From – To)",
+                    "S&T Discon Line\n(Line / From – To)",
+                    "SM Remarks", "Applied By"
                   ].map((h) => (
-                    <th key={h} style={{ padding: "9px 10px", textAlign: "left", fontWeight: 800, whiteSpace: "nowrap", fontSize: "11px" }}>
+                    <th key={h} style={{
+                      padding: "10px 11px",
+                      textAlign: "left",
+                      fontWeight: 800,
+                      whiteSpace: "pre-line",
+                      fontSize: "11px",
+                      borderRight: "1px solid #3b5bdb",
+                      lineHeight: "1.3",
+                    }}>
                       {h}
                     </th>
                   ))}
@@ -230,56 +259,117 @@ function AvailedHistoryContent() {
               </thead>
               <tbody>
                 {blocks.map((b, idx) => {
-                  const hasBurst = (b.availParticipants ?? []).some((p: any) => p.blockBurst);
-                  const duration = calcDuration(b.availingStartedAt, b.smClosureAcknowledgedAt);
-                  const participants = (b.availParticipants ?? [])
-                    .map((p: any) => `${p.userName} (${p.userDept}${p.userDepot ? "/" + p.userDepot : ""})`)
-                    .join(", ");
-                  const rowBg = idx % 2 === 0 ? "#fff" : "#f8faff";
+                  const rowBg = idx % 2 === 0 ? "#ffffff" : "#f0f4ff";
+                  const borderColor = "#d1d5db";
+                  const hasFreshCaution = b.freshCautionSpeed || b.freshCautionLocationFrom;
+                  const hasSntElem = b.sigElementarySectionFrom || b.elementarySection;
+                  const hasSntLine = b.sntDisconnectionLine || b.sntDisconnectionLineFrom;
+
                   return (
-                    <tr key={b.id} style={{ background: rowBg, borderBottom: "1px solid #e5e7eb" }}>
-                      <td style={{ padding: "8px 10px", color: "#6b7280", fontWeight: 600 }}>{idx + 1}</td>
-                      <td style={{ padding: "8px 10px", whiteSpace: "nowrap" }}>{fmtDt(b.date)}</td>
-                      <td style={{ padding: "8px 10px", whiteSpace: "nowrap", fontWeight: 700, color: "#1d4ed8", fontFamily: "monospace" }}>
-                        {b.id?.slice(-8).toUpperCase()}
+                    <tr key={b.id} style={{ background: rowBg, borderBottom: `2px solid ${borderColor}` }}>
+                      <Cell color="#6b7280" bold>{idx + 1}</Cell>
+
+                      {/* Date — just date, no time */}
+                      <Cell mono>{fmtDate(b.date)}</Cell>
+
+                      {/* Division ID */}
+                      <td style={{
+                        padding: "9px 11px", verticalAlign: "top", fontFamily: "monospace",
+                        fontWeight: 800, color: "#1e3a8a", borderRight: `1px solid ${borderColor}`,
+                        fontSize: "12px", whiteSpace: "nowrap"
+                      }}>
+                        {b.divisionId ?? "—"}
                       </td>
-                      <td style={{ padding: "8px 10px", whiteSpace: "nowrap" }}>{b.smStation ?? "—"}</td>
-                      <td style={{ padding: "8px 10px", whiteSpace: "nowrap" }}>
-                        <span style={{ background: "#eff6ff", color: "#1e40af", borderRadius: "4px", padding: "2px 6px", fontWeight: 700, fontSize: "11px" }}>
+
+                      {/* Dept */}
+                      <td style={{ padding: "9px 11px", verticalAlign: "top", borderRight: `1px solid ${borderColor}`, fontSize: "12px" }}>
+                        <span style={{ background: "#dbeafe", color: "#1e40af", borderRadius: "5px", padding: "2px 7px", fontWeight: 800, fontSize: "11px", whiteSpace: "nowrap" }}>
                           {b.selectedDepartment ?? "—"}
                         </span>
                       </td>
-                      <td style={{ padding: "8px 10px", whiteSpace: "nowrap" }}>{b.appliedByDepot ?? "—"}</td>
-                      <td style={{ padding: "8px 10px", whiteSpace: "nowrap", maxWidth: "140px", overflow: "hidden", textOverflow: "ellipsis" }}>{b.selectedSection ?? "—"}</td>
-                      <td style={{ padding: "8px 10px", textAlign: "center" }}>
-                        {b.missionBlock ? <span style={{ color: "#dc2626", fontWeight: 800 }}>YES</span> : <span style={{ color: "#6b7280" }}>—</span>}
+
+                      {/* Depot */}
+                      <Cell>{b.selectedDepo ?? "—"}</Cell>
+
+                      {/* Section */}
+                      <Cell>{b.selectedSection ?? "—"}</Cell>
+
+                      {/* SM Approved From – To */}
+                      <td style={{ padding: "9px 11px", verticalAlign: "top", fontFamily: "monospace", borderRight: `1px solid ${borderColor}`, fontSize: "12px", whiteSpace: "nowrap" }}>
+                        <div style={{ fontWeight: 700, color: "#166534" }}>{fmtTime(b.smApprovedTimeFrom)}</div>
+                        <div style={{ color: "#6b7280", fontSize: "11px" }}>to {fmtTime(b.smApprovedTimeTo)}</div>
                       </td>
-                      <td style={{ padding: "8px 10px", whiteSpace: "nowrap", fontFamily: "monospace" }}>
-                        {fmtTime(b.smApprovedTimeFrom)} – {fmtTime(b.smApprovedTimeTo)}
-                      </td>
-                      <td style={{ padding: "8px 10px", whiteSpace: "nowrap", fontWeight: 700, color: "#047857" }}>
-                        {duration}
-                      </td>
-                      <td style={{ padding: "8px 10px", maxWidth: "180px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+
+                      {/* Activity */}
+                      <td style={{ padding: "9px 11px", verticalAlign: "top", borderRight: `1px solid ${borderColor}`, fontSize: "12px", maxWidth: "160px" }}>
                         {b.activity ?? "—"}
                       </td>
-                      <td style={{ padding: "8px 10px", whiteSpace: "nowrap" }}>
-                        <div style={{ fontWeight: 700 }}>{b.appliedByName ?? "—"}</div>
-                        {b.appliedByPhone && (
-                          <div style={{ color: "#6b7280", fontSize: "11px" }}>{b.appliedByPhone}</div>
-                        )}
+
+                      {/* Location From → To */}
+                      <td style={{ padding: "9px 11px", verticalAlign: "top", borderRight: `1px solid ${borderColor}`, fontSize: "12px", whiteSpace: "nowrap" }}>
+                        {b.workLocationFrom || b.workLocationTo ? (
+                          <>
+                            <div style={{ fontWeight: 600 }}>{b.workLocationFrom ?? "—"}</div>
+                            <div style={{ color: "#6b7280", fontSize: "11px" }}>→ {b.workLocationTo ?? "—"}</div>
+                          </>
+                        ) : "—"}
                       </td>
-                      <td style={{ padding: "8px 10px", textAlign: "center" }}>
-                        {hasBurst ? (
-                          <span style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fca5a5", borderRadius: "4px", padding: "2px 6px", fontWeight: 800, fontSize: "11px" }}>
-                            BURST
+
+                      {/* Repercussions / Movement Restriction */}
+                      <td style={{ padding: "9px 11px", verticalAlign: "top", borderRight: `1px solid ${borderColor}`, fontSize: "12px", maxWidth: "180px", color: b.repercussions ? "#7c2d12" : "#9ca3af" }}>
+                        {b.repercussions ?? "—"}
+                      </td>
+
+                      {/* Remarks */}
+                      <td style={{ padding: "9px 11px", verticalAlign: "top", borderRight: `1px solid ${borderColor}`, fontSize: "12px", maxWidth: "160px", color: "#374151" }}>
+                        {b.requestremarks ?? "—"}
+                      </td>
+
+                      {/* Adjacent Lines Affected */}
+                      <Cell color={b.adjacentLinesAffected ? "#7c2d12" : "#9ca3af"}>
+                        {b.adjacentLinesAffected ?? "—"}
+                      </Cell>
+
+                      {/* Fresh Caution */}
+                      <td style={{ padding: "9px 11px", verticalAlign: "top", borderRight: `1px solid ${borderColor}`, fontSize: "12px", whiteSpace: "nowrap" }}>
+                        {hasFreshCaution ? (
+                          <>
+                            {b.freshCautionSpeed && <div style={{ fontWeight: 700, color: "#b45309" }}>{b.freshCautionSpeed} kmph</div>}
+                            {b.freshCautionLocationFrom && <div style={{ color: "#6b7280", fontSize: "11px" }}>{b.freshCautionLocationFrom} – {b.freshCautionLocationTo ?? ""}</div>}
+                          </>
+                        ) : <span style={{ color: "#9ca3af" }}>—</span>}
+                      </td>
+
+                      {/* S&T Elementary Section */}
+                      <td style={{ padding: "9px 11px", verticalAlign: "top", borderRight: `1px solid ${borderColor}`, fontSize: "12px", whiteSpace: "nowrap" }}>
+                        {hasSntElem ? (
+                          <span style={{ fontFamily: "monospace" }}>
+                            {b.sigElementarySectionFrom ?? b.elementarySection ?? "—"}
+                            {(b.sigElementarySectionTo ?? b.elementarySectionTo) ? ` – ${b.sigElementarySectionTo ?? b.elementarySectionTo}` : ""}
                           </span>
-                        ) : (
-                          <span style={{ color: "#6b7280", fontSize: "11px" }}>—</span>
-                        )}
+                        ) : <span style={{ color: "#9ca3af" }}>—</span>}
                       </td>
-                      <td style={{ padding: "8px 10px", maxWidth: "200px", fontSize: "11px", color: "#374151" }}>
-                        {participants || "—"}
+
+                      {/* S&T Disconnection Line */}
+                      <td style={{ padding: "9px 11px", verticalAlign: "top", borderRight: `1px solid ${borderColor}`, fontSize: "12px", whiteSpace: "nowrap" }}>
+                        {hasSntLine ? (
+                          <>
+                            {b.sntDisconnectionLine && <div style={{ fontWeight: 700 }}>{b.sntDisconnectionLine}</div>}
+                            {b.sntDisconnectionLineFrom && <div style={{ color: "#6b7280", fontSize: "11px" }}>{b.sntDisconnectionLineFrom} – {b.sntDisconnectionLineTo ?? ""}</div>}
+                          </>
+                        ) : <span style={{ color: "#9ca3af" }}>—</span>}
+                      </td>
+
+                      {/* SM Remarks */}
+                      <td style={{ padding: "9px 11px", verticalAlign: "top", borderRight: `1px solid ${borderColor}`, fontSize: "12px", maxWidth: "160px", color: "#374151" }}>
+                        {b.smRemarks ?? "—"}
+                      </td>
+
+                      {/* Applied By */}
+                      <td style={{ padding: "9px 11px", verticalAlign: "top", borderRight: `1px solid ${borderColor}`, fontSize: "12px", whiteSpace: "nowrap" }}>
+                        <div style={{ fontWeight: 700, color: "#111827" }}>{b.appliedByName ?? "—"}</div>
+                        {b.appliedByPhone && <div style={{ color: "#6b7280", fontSize: "11px" }}>{b.appliedByPhone}</div>}
+                        {b.appliedByDepot && <div style={{ color: "#6b7280", fontSize: "11px" }}>{b.appliedByDepot}</div>}
                       </td>
                     </tr>
                   );
