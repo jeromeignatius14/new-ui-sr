@@ -27,13 +27,37 @@ const PERIOD_OPTIONS: { value: string; label: string }[] = [
   { value: "year", label: "Past 1 Year" },
 ];
 
+// Derive "Block Section / Yard" from processedLineSections or fall back to selectedSection
+function getBlockSectionYard(b: any): string {
+  const sections = Array.isArray(b.processedLineSections) ? b.processedLineSections : [];
+  if (sections.length > 0 && sections[0].block) return sections[0].block;
+  return b.selectedSection ?? "—";
+}
+
+// Build "Lines / Roads Affected" by combining all entries' lineName, otherLines, road, otherRoads + adjacentLinesAffected
+function getLinesAffected(b: any): string {
+  const sections = Array.isArray(b.processedLineSections) ? b.processedLineSections : [];
+  const parts = new Set<string>();
+  sections.forEach((s: any) => {
+    if (s.lineName) parts.add(s.lineName.trim());
+    if (s.otherLines) s.otherLines.split(",").forEach((l: string) => { if (l.trim()) parts.add(l.trim()); });
+    if (s.road) parts.add(s.road.trim());
+    if (s.otherRoads) s.otherRoads.split(",").forEach((r: string) => { if (r.trim()) parts.add(r.trim()); });
+  });
+  if (b.adjacentLinesAffected) {
+    b.adjacentLinesAffected.split(",").forEach((l: string) => { if (l.trim()) parts.add(l.trim()); });
+  }
+  const result = [...parts].filter(Boolean).join(", ");
+  return result || "—";
+}
+
 // ── CSV Download ──────────────────────────────────────────────────────────────
 function downloadCsv(blocks: any[]) {
   const headers = [
-    "Date", "Block ID (Division)", "Department", "Depot", "Section",
+    "Date", "Block ID (Division)", "Department", "Depot", "Block Section / Yard",
     "SM Approved From", "SM Approved To", "Activity",
-    "Location From", "Location To", "Repercussions / Movement Restriction",
-    "Remarks", "Adjacent Lines Affected",
+    "Location From", "Location To", "Lines / Roads Affected",
+    "Repercussions / Movement Restriction", "Remarks",
     "Fresh Caution Speed", "Fresh Caution From", "Fresh Caution To",
     "S&T Elem Section From", "S&T Elem Section To",
     "S&T Discon Line", "S&T Discon Line From", "S&T Discon Line To",
@@ -44,15 +68,15 @@ function downloadCsv(blocks: any[]) {
     b.divisionId ?? b.id,
     b.selectedDepartment ?? "",
     b.selectedDepo ?? "",
-    b.selectedSection ?? "",
+    getBlockSectionYard(b),
     fmtTime(b.smApprovedTimeFrom),
     fmtTime(b.smApprovedTimeTo),
     b.activity ?? "",
     b.workLocationFrom ?? "",
     b.workLocationTo ?? "",
+    getLinesAffected(b),
     b.repercussions ?? "",
     b.requestremarks ?? "",
-    b.adjacentLinesAffected ?? "",
     b.freshCautionSpeed ?? "",
     b.freshCautionLocationFrom ?? "",
     b.freshCautionLocationTo ?? "",
@@ -234,10 +258,13 @@ function AvailedHistoryContent() {
               <thead>
                 <tr style={{ background: "#1e3a8a", color: "#fff" }}>
                   {[
-                    "#", "Date", "Block ID", "Dept", "Depot", "Section",
+                    "#", "Date", "Block ID", "Dept", "Depot",
+                    "Block Section\n/ Yard",
                     "SM Approved\nFrom – To", "Activity",
-                    "Location\nFrom → To", "Repercussions /\nMovement Restriction",
-                    "Remarks", "Adj. Lines\nAffected",
+                    "Location\nFrom → To",
+                    "Lines / Roads\nAffected",
+                    "Repercussions /\nMovement Restriction",
+                    "Remarks",
                     "Fresh Caution\nSpeed / Location",
                     "S&T Elem Section\n(From – To)",
                     "S&T Discon Line\n(Line / From – To)",
@@ -291,8 +318,8 @@ function AvailedHistoryContent() {
                       {/* Depot */}
                       <Cell>{b.selectedDepo ?? "—"}</Cell>
 
-                      {/* Section */}
-                      <Cell>{b.selectedSection ?? "—"}</Cell>
+                      {/* Block Section / Yard */}
+                      <Cell bold>{getBlockSectionYard(b)}</Cell>
 
                       {/* SM Approved From – To */}
                       <td style={{ padding: "9px 11px", verticalAlign: "top", fontFamily: "monospace", borderRight: `1px solid ${borderColor}`, fontSize: "12px", whiteSpace: "nowrap" }}>
@@ -301,7 +328,7 @@ function AvailedHistoryContent() {
                       </td>
 
                       {/* Activity */}
-                      <td style={{ padding: "9px 11px", verticalAlign: "top", borderRight: `1px solid ${borderColor}`, fontSize: "12px", maxWidth: "160px" }}>
+                      <td style={{ padding: "9px 11px", verticalAlign: "top", borderRight: `1px solid ${borderColor}`, fontSize: "12px", minWidth: "160px", maxWidth: "240px", color: "#111827", fontWeight: 500, lineHeight: "1.5", wordBreak: "break-word", whiteSpace: "normal" }}>
                         {b.activity ?? "—"}
                       </td>
 
@@ -325,10 +352,10 @@ function AvailedHistoryContent() {
                         {b.requestremarks ?? "—"}
                       </td>
 
-                      {/* Adjacent Lines Affected */}
-                      <Cell color={b.adjacentLinesAffected ? "#7c2d12" : "#9ca3af"}>
-                        {b.adjacentLinesAffected ?? "—"}
-                      </Cell>
+                      {/* Lines / Roads Affected */}
+                      <td style={{ padding: "9px 11px", verticalAlign: "top", borderRight: `1px solid ${borderColor}`, fontSize: "12px", minWidth: "140px", color: "#1e3a8a", fontWeight: 600, lineHeight: "1.5", wordBreak: "break-word", whiteSpace: "normal" }}>
+                        {getLinesAffected(b)}
+                      </td>
 
                       {/* Fresh Caution */}
                       <td style={{ padding: "9px 11px", verticalAlign: "top", borderRight: `1px solid ${borderColor}`, fontSize: "12px", whiteSpace: "nowrap" }}>
