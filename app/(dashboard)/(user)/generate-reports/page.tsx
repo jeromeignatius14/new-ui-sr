@@ -3046,7 +3046,18 @@ const clearGlobalFilters = () => {
                             {statusLabel}
                           </td>
                           <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
-                            {block.requestremarks || "-"}
+                            {(() => {
+                              if (block.availExitReason) return block.availExitReason;
+                              if (block.rejectionRemarks) return block.rejectionRemarks;
+                              if (block.disconnectionRequestRejectRemarks) return block.disconnectionRequestRejectRemarks;
+                              if (block.remarkByManager) return block.remarkByManager;
+                              if (block.smRemarks) return block.smRemarks;
+                              if (block.sanctionedRemarks) return block.sanctionedRemarks;
+                              if (block.sntAcceptRemarks) return block.sntAcceptRemarks;
+                              if (block.trdAcceptRemarks) return block.trdAcceptRemarks;
+                              if (block.requestremarks) return block.requestremarks;
+                              return "-";
+                            })()}
                           </td>
                         </tr>
                       );
