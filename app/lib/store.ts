@@ -1975,7 +1975,7 @@ export let blockSection = {
     "IPL-ERN", "ERN-ERS", "ERS-CHTS","ERN-ERSC","ERS-ERSC","ERSC-ERSD","ERSD-IPN",
     "ERSC-ERM","ERM-ERSD", "VTK-YD", "WKI-YD", "MGK-YD", "PNQ-YD", "TCR-YD", "OLR-YD", "PUK-YD", "IJK-YD",
     "CKI-YD", "KUC-YD", "AFK-YD", "AWY-YD", "KLMR-YD", "IPL-YD", "VPDM-YD", "ERN-YD",
-    "ERS-YD", "CHTS-YD"
+    "ERS-YD", "ERM-YD", "IPN-YD", "CHTS-YD"
   ],
   "TCR-GUV": [
     "TCR-PNQ", "PNQ-GUV",
@@ -2214,13 +2214,13 @@ export const streamData = {
   "WKI-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5 (Ballast Siding)"],
     "both direction not affected": [],
   },
   "MGK-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5"],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 1 FCI Siding", "Rd 2 FCI Siding", "Rd 3 FCI Siding"],
     "both direction not affected": []
   },
   "PNQ-YD": {
@@ -2232,31 +2232,31 @@ export const streamData = {
   "TCR-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
+    "both direction affected": ["Rd 1", "Rd 1 VIP Siding", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6"],
     "both direction not affected": []
   },
   "OLR-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
+    "both direction affected": ["Rd 1", "Rd 1 Siding", "Rd 2", "Rd 3", "Rd 3 Siding"],
     "both direction not affected": []
   },
   "PUK-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5"],
     "both direction not affected": []
   },
   "IJK-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Siding"],
     "both direction not affected": []
   },
   "CKI-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "AFK End Neck"],
     "both direction not affected": []
   },
   "KUC-YD": {
@@ -2268,19 +2268,19 @@ export const streamData = {
   "AFK-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5"],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 1 FCI Siding", "Rd 2 FCI Siding", "Rd 3 FCI Siding", "Sabari Line Neck"],
     "both direction not affected": []
   },
   "AWY-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6 (Spur Line)", "Shunting Neck AFK End", "Shunting Neck KLMR End"],
     "both direction not affected": []
   },
   "KLMR-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
+    "both direction affected": ["Rd 1", "Rd 1A", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 1 FACT Siding", "Rd 2 FACT Siding", "Rd 3 FACT Siding", "Container Siding", "Shunting Neck"],
     "both direction not affected": []
   },
   "IPL-YD": {
@@ -2304,7 +2304,7 @@ export const streamData = {
   "ERS-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6", "Rd 7", "Rd 8", "Rd 9", "Rd 10"],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6", "Rd 7", "Rd 8", "Rd 9", "Rd 10", "AC Loco Lay Bay", "VIP Siding", "SPART Siding", "Old MRV Siding", "Dedicated Line Shunting Neck", "Trip Shed", "DSL Shed", "ERMCD"],
     "both direction not affected": []
   },
   "ERSC-YD": {
@@ -2317,6 +2317,18 @@ export const streamData = {
     "up direction affected": [],
     "down direction affected": [],
     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
+    "both direction not affected": []
+  },
+  "ERM-YD": {
+    "up direction affected": [],
+    "down direction affected": [],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
+    "both direction not affected": []
+  },
+  "IPN-YD": {
+    "up direction affected": [],
+    "down direction affected": [],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
     "both direction not affected": []
   },
   "CHTS-YD": {
@@ -2346,7 +2358,7 @@ export const streamData = {
   "PVRD-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "HNL Siding"],
     "both direction not affected": []
   },
   "VARD-YD": {
@@ -2436,7 +2448,7 @@ export const streamData = {
   "ALLP-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6"],
     "both direction not affected": []
   },
   "AMPA-YD": {
