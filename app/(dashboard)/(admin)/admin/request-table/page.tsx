@@ -691,13 +691,11 @@ if (activeSummaryFilters.searchId) {
                 className="flex items-center justify-between w-fit bg-gradient-to-r from-[#FFB3B3] to-[#FFD5D5] text-[#B22222] font-bold py-2 px-0.5 rounded-xl border-2 border-[#FF6B6B] text-[22px] shadow-md hover:shadow-lg transition-all"
                 onClick={() => {
                   const minDate = getMinPendingDate(item.label);
-                  // Pre-populate optimise-table's cache so it doesn't double-fetch
-                  if (minDate) {
-                    const cacheDate = new Date(minDate + "T00:00:00.000Z");
-                    queryClient.setQueryData(["approved-requests", cacheDate, false], { data: { requests: allRequests } });
-                  }
-                  const dateParam = minDate ? `&date=${minDate}` : "";
-                  router.push(`/admin/optimise-table?dept=${encodeURIComponent(item.label)}${dateParam}`);
+                  const todayStr = new Date().toISOString().split("T")[0];
+                  const dateStr = minDate || todayStr;
+                  const cacheDate = new Date(dateStr + "T00:00:00.000Z");
+                  queryClient.setQueryData(["approved-requests", cacheDate, false], { data: { requests: allRequests } });
+                  router.push(`/admin/optimise-table?dept=${encodeURIComponent(item.label)}&date=${dateStr}`);
                 }}
               >
                 <span>{item.label}</span>
@@ -711,12 +709,11 @@ if (activeSummaryFilters.searchId) {
           <button
             onClick={() => {
               const minDate = getMinPendingDate();
-              if (minDate) {
-                const cacheDate = new Date(minDate + "T00:00:00.000Z");
-                queryClient.setQueryData(["approved-requests", cacheDate, false], { data: { requests: allRequests } });
-              }
-              const dateParam = minDate ? `?date=${minDate}` : "";
-              router.push(`/admin/optimise-table${dateParam}`);
+              const todayStr = new Date().toISOString().split("T")[0];
+              const dateStr = minDate || todayStr;
+              const cacheDate = new Date(dateStr + "T00:00:00.000Z");
+              queryClient.setQueryData(["approved-requests", cacheDate, false], { data: { requests: allRequests } });
+              router.push(`/admin/optimise-table?date=${dateStr}`);
             }}
             className="mx-auto w-fit flex items-center gap-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF8989] text-white font-bold px-8 py-3 mb-6 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-[22px]"
           >

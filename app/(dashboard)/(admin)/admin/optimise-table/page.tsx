@@ -537,12 +537,7 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
     parsedDate.setHours(0, 0, 0, 0);
     if (!isNaN(parsedDate.getTime())) return parsedDate;
   }
-  // 2. Fallback to localStorage
-  const savedDate = localStorage.getItem("urgentSelectedDate");
-  if (savedDate) {
-    const parsedDate = new Date(savedDate);
-    if (!isNaN(parsedDate.getTime())) return parsedDate;
-  }
+  // 2. Fall back to today — never use localStorage (it may hold a stale past date)
   return new Date();
 });
 
