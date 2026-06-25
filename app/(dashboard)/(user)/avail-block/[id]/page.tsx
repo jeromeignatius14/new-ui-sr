@@ -357,7 +357,11 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
   const blockId   = block.divisionId ?? id;
 
   // ── Find my participant record ───────────────────────────────────────────
-  const myParticipant: any = (block.availParticipants as any[])?.find((p: any) => p.userId === userId) ?? null;
+  // Fall back to phone match in case the user's account was recreated with a new ID
+  const userPhone = session?.user?.phone;
+  const myParticipant: any = (block.availParticipants as any[])?.find(
+    (p: any) => p.userId === userId || (userPhone && p.userPhone === userPhone)
+  ) ?? null;
   const isParticipant = !!myParticipant;
   const myAvailStarted = !!myParticipant?.availStartedAt;
   const myClosed = !!myParticipant?.closureSubmittedAt;
