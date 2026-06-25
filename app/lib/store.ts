@@ -1783,14 +1783,14 @@ export const depot: DepotStructure = {
 
   "ED-TP": {
     'TRD': ["KMD", "PLI","KRR"],
-    'S&T': ["KRR-W", "KRR-E","ED","KRR-Tele"],
-    'ENGG': ["TP","W-KRR","GS","BR-ED"]
+    'S&T': ["KRR-W", "KRR-E", "KRR", "ED","KRR-Tele"],
+    'ENGG': ["TP","W-KRR","KRR","GS","BR-ED"]
   },
 
   "KRR-DG": {
     'TRD': ["KRR"],
-    'S&T': ["KRR-E","KRR-Tele"],
-    'ENGG': ["E-KRR","GS","BR-ED"]
+    'S&T': ["KRR-E", "KRR", "KRR-Tele"],
+    'ENGG': ["E-KRR","KRR","GS","BR-ED"]
   },
 
   "SA-VRI": {
@@ -1807,8 +1807,8 @@ export const depot: DepotStructure = {
   
   "SA-KRR": {
     'TRD': ["SA", "NMKL", "KRR"],
-    'S&T': ["SA","KRR-W","SXT","VRI","KRR-Tele"],
-    'ENGG': ["NMKL","GS","BR-ED"]
+    'S&T': ["SA","KRR-W","KRR","SXT","VRI","KRR-Tele"],
+    'ENGG': ["NMKL","KRR","GS","BR-ED"]
   },
 
   "CBE-MTP": {
