@@ -195,6 +195,7 @@ export default function AdminRequestTablePage() {
       if (r.isSanctioned || r.Draft) return false;
       if (r.overAllStatus !== "with optg." && r.overAllStatus !== "with optg") return false;
       if (dept && r.selectedDepartment !== dept) return false;
+      if (!hasNoPendingDisconnections(r)) return false;
       const reqDate = new Date(r.date);
       reqDate.setHours(0, 0, 0, 0);
       if (reqDate < today) return false;
@@ -244,54 +245,61 @@ export default function AdminRequestTablePage() {
   //     reqDate.setHours(0, 0, 0, 0);
   //     return reqDate > today;
   //   }).length;
+  // Returns true only if all required disconnections are already accepted —
+  // same logic the optimise-table uses to decide whether to show a request.
+  const hasNoPendingDisconnections = (r: UserRequest) =>
+    !(r.enggDisconnectionsRequired && r.allEnggAcceptance !== "ACCEPTED") &&
+    !(r.sntDisconnectionRequired   && r.allSntAcceptance  !== "ACCEPTED") &&
+    !(r.powerBlockRequired         && r.allTrdAcceptance  !== "ACCEPTED");
+
   const TotalRequests = allRequests.filter((r: UserRequest) => {
     if (!r.date) return false;
-
     const reqDate = new Date(r.date);
     reqDate.setHours(0, 0, 0, 0);
     return (
-      !r.isSanctioned &&!r.Draft&&
-      (r.overAllStatus === "with optg."||r.overAllStatus ==="with optg") &&
-      reqDate >=today
+      !r.isSanctioned && !r.Draft &&
+      (r.overAllStatus === "with optg." || r.overAllStatus === "with optg") &&
+      reqDate >= today &&
+      hasNoPendingDisconnections(r)
     );
   }).length;
 
   const ENGGRequest = allRequests.filter((r: UserRequest) => {
     if (!r.date) return false;
-
     const reqDate = new Date(r.date);
     reqDate.setHours(0, 0, 0, 0);
     return (
-      !r.isSanctioned &&!r.Draft&&
+      !r.isSanctioned && !r.Draft &&
       r.selectedDepartment === "ENGG" &&
-      (r.overAllStatus === "with optg."||r.overAllStatus ==="with optg") &&
-      reqDate >=today
+      (r.overAllStatus === "with optg." || r.overAllStatus === "with optg") &&
+      reqDate >= today &&
+      hasNoPendingDisconnections(r)
     );
   }).length;
 
   const SandTRequest = allRequests.filter((r: UserRequest) => {
     if (!r.date) return false;
-
     const reqDate = new Date(r.date);
     reqDate.setHours(0, 0, 0, 0);
     return (
-      !r.isSanctioned &&!r.Draft&&
+      !r.isSanctioned && !r.Draft &&
       r.selectedDepartment === "S&T" &&
-      (r.overAllStatus === "with optg."||r.overAllStatus ==="with optg") &&
-      reqDate >=today
+      (r.overAllStatus === "with optg." || r.overAllStatus === "with optg") &&
+      reqDate >= today &&
+      hasNoPendingDisconnections(r)
     );
   }).length;
 
   const TRDRequest = allRequests.filter((r: UserRequest) => {
     if (!r.date) return false;
-
     const reqDate = new Date(r.date);
     reqDate.setHours(0, 0, 0, 0);
     return (
-      !r.isSanctioned &&!r.Draft&&
+      !r.isSanctioned && !r.Draft &&
       r.selectedDepartment === "TRD" &&
-      (r.overAllStatus === "with optg."||r.overAllStatus ==="with optg") &&
-      reqDate >=today
+      (r.overAllStatus === "with optg." || r.overAllStatus === "with optg") &&
+      reqDate >= today &&
+      hasNoPendingDisconnections(r)
     );
   }).length;
   // const handleDownloadCSV = () => {
