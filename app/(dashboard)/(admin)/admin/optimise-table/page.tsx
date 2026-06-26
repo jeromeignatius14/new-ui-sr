@@ -406,7 +406,7 @@ const handleSelectRequest = (requestId: string) => {
 const handleSelectAllUrgent = () => {
   const urgentRequests = urgentRequestsFiltered.filter((request: UserRequest) => {
     const requestDate = typeof request.date === "string" ? parseISO(request.date) : request.date;
-    return isSameDay(requestDate, selectedDate) && (request.Draft === false);
+    return isSameDay(requestDate, selectedDate) && (!request.Draft);
   });
   
   if (selectedRequestsForOptimization.size === urgentRequests.length) {
@@ -419,7 +419,7 @@ const handleSelectAllUrgent = () => {
 };
 
 const handleSelectAllCorridor = () => {
-  const corridorRequests = corridorRequestsFiltered.filter((request: UserRequest) => request.Draft === false);
+  const corridorRequests = corridorRequestsFiltered.filter((request: UserRequest) => !request.Draft);
   
   if (selectedRequestsForOptimization.size === corridorRequests.length) {
     // If all are selected, deselect all
@@ -746,7 +746,7 @@ const handleOptimizeUrgent = () => {
   // Get urgent requests for selected date
   const selectedUrgentRequests = urgentRequestsFiltered.filter((request: UserRequest) => {
     const requestDate = typeof request.date === "string" ? parseISO(request.date) : request.date;
-    return isSameDay(requestDate, selectedDate) && (request.Draft === false);
+    return isSameDay(requestDate, selectedDate) && (!request.Draft);
   });
   
   // Filter to only selected requests
@@ -804,7 +804,7 @@ const handleOptimizeCorridor = () => {
   
   // Get corridor requests
   const corridorRequests = corridorRequestsFiltered.filter((request: UserRequest) => 
-    request.Draft === false
+    !request.Draft
   );
   
   // Filter to only selected requests
@@ -1193,10 +1193,10 @@ const handleOptimize = async () => {
   if (isUrgentRequests) {
     preData = urgentRequestsFiltered.filter((request: UserRequest) => {
       const requestDate = typeof request.date === "string" ? parseISO(request.date) : request.date;
-      return isSameDay(requestDate, selectedDate) && (request.Draft === false);
+      return isSameDay(requestDate, selectedDate) && (!request.Draft);
     });
   } else {
-    preData = corridorRequestsFiltered.filter((request: UserRequest) => request.Draft === false);
+    preData = corridorRequestsFiltered.filter((request: UserRequest) => !request.Draft);
   }
   
   if (!preData || preData.length === 0) return;
@@ -1711,10 +1711,10 @@ const handleOptimize = async () => {
   if (isUrgentRequests) {
     preData = urgentRequestsFiltered.filter((request: UserRequest) => {
       const requestDate = typeof request.date === "string" ? parseISO(request.date) : request.date;
-      return isSameDay(requestDate, selectedDate) && (request.Draft === false);
+      return isSameDay(requestDate, selectedDate) && (!request.Draft);
     });
   } else {
-    preData = corridorRequestsFiltered.filter((request: UserRequest) => request.Draft === false);
+    preData = corridorRequestsFiltered.filter((request: UserRequest) => !request.Draft);
   }
   
   const selectedPreData = preData.filter((request: UserRequest) => 
@@ -1792,7 +1792,7 @@ const handleOptimize = async () => {
       urgentRequestsFiltered.filter((request: UserRequest) => {
         const requestDate =
           typeof request.date === "string" ? parseISO(request.date) : request.date;
-        return isSameDay(requestDate, selectedDate) && request.Draft === false;
+        return isSameDay(requestDate, selectedDate) && !request.Draft;
       }).length
     }
   )</h2>
@@ -1830,11 +1830,11 @@ const handleOptimize = async () => {
         checked={
           urgentRequestsFiltered.filter((request: UserRequest) => {
             const requestDate = typeof request.date === "string" ? parseISO(request.date) : request.date;
-            return isSameDay(requestDate, selectedDate) && (request.Draft === false);
+            return isSameDay(requestDate, selectedDate) && (!request.Draft);
           }).length > 0 &&
           selectedRequestsForOptimization.size === urgentRequestsFiltered.filter((request: UserRequest) => {
             const requestDate = typeof request.date === "string" ? parseISO(request.date) : request.date;
-            return isSameDay(requestDate, selectedDate) && (request.Draft === false);
+            return isSameDay(requestDate, selectedDate) && (!request.Draft);
           }).length
         }
       />
@@ -1869,7 +1869,7 @@ const handleOptimize = async () => {
       {(() => {
         const sortedUrg = urgentRequestsFiltered.filter((r: UserRequest) => {
           const d = typeof r.date === "string" ? parseISO(r.date) : r.date;
-          return isSameDay(d, selectedDate) && r.Draft === false;
+          return isSameDay(d, selectedDate) && !r.Draft;
         }).sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime());
         const groupedUrg = groupRequestsByBatch(sortedUrg as any[]);
         return groupedUrg.flatMap((item: any) => {
@@ -2160,7 +2160,7 @@ const handleOptimize = async () => {
 
         {/* Corridor Requests Section (with its own controls) */}
         <div className="mb-8">
-          <h2 className="text-[24px] font-semibold mb-2 text-[#13529e]">Corridor Requests ({corridorRequestsFiltered.filter((request: UserRequest) => request.Draft === false).sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).length})</h2>
+          <h2 className="text-[24px] font-semibold mb-2 text-[#13529e]">Corridor Requests ({corridorRequestsFiltered.filter((request: UserRequest) => !request.Draft).sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).length})</h2>
           <div className="flex justify-end py-2 gap-2">
             <button
             onClick={handleOptimizeCorridor}
@@ -2181,8 +2181,8 @@ const handleOptimize = async () => {
         type="checkbox"
         onChange={handleSelectAllCorridor}
         checked={
-          corridorRequestsFiltered.filter((request: UserRequest) => request.Draft === false).length > 0 &&
-          selectedRequestsForOptimization.size === corridorRequestsFiltered.filter((request: UserRequest) => request.Draft === false).length
+          corridorRequestsFiltered.filter((request: UserRequest) => !request.Draft).length > 0 &&
+          selectedRequestsForOptimization.size === corridorRequestsFiltered.filter((request: UserRequest) => !request.Draft).length
         }
       />
     </th>
@@ -2246,7 +2246,7 @@ const handleOptimize = async () => {
                 )}
                 {(() => {
                   const sortedCorr = corridorRequestsFiltered
-                    .filter((request: UserRequest) => request.Draft === false)
+                    .filter((request: UserRequest) => !request.Draft)
                     .sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime());
                   const grouped = groupRequestsByBatch(sortedCorr as any[]);
                   return grouped.flatMap((item: any) => {
@@ -2622,7 +2622,7 @@ style={isBatchRow ? { background: spellIdx! % 2 === 0 ? "#eff6ff" : "#dbeafe", b
 )}
 
                <div className="mb-8">
-          <h2 className="text-[24px] font-semibold mb-2 text-[#13529e]">Combined Requests (Multiple Line Selected) ({combinedRequestsFiltered.filter((request: UserRequest) => request.Draft === false&& request.corridorType !== "Urgent Block").length })</h2>
+          <h2 className="text-[24px] font-semibold mb-2 text-[#13529e]">Combined Requests (Multiple Line Selected) ({combinedRequestsFiltered.filter((request: UserRequest) => !request.Draft&& request.corridorType !== "Urgent Block").length })</h2>
           <div className="overflow-x-auto max-h-[70vh] overflow-y-auto rounded-lg border border-gray-300 shadow-sm">
             <table className="w-full border-collapse text-black bg-white">
               <thead className="sticky top-0 z-10 bg-gray-100 shadow">
@@ -2663,7 +2663,7 @@ style={isBatchRow ? { background: spellIdx! % 2 === 0 ? "#eff6ff" : "#dbeafe", b
                 </tr>
               </thead>
               <tbody>
-                {combinedRequestsFiltered.filter((request: UserRequest) => request.Draft === false&& request.corridorType !== "Urgent Block").length === 0 && (
+                {combinedRequestsFiltered.filter((request: UserRequest) => !request.Draft&& request.corridorType !== "Urgent Block").length === 0 && (
                   <tr>
                     <td
                       colSpan={12}
@@ -2677,7 +2677,7 @@ style={isBatchRow ? { background: spellIdx! % 2 === 0 ? "#eff6ff" : "#dbeafe", b
                 )}
                 {(() => {
                   const sortedComb = combinedRequestsFiltered
-                    .filter((r: UserRequest) => r.Draft === false && r.corridorType !== "Urgent Block")
+                    .filter((r: UserRequest) => !r.Draft && r.corridorType !== "Urgent Block")
                     .sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime());
                   const groupedComb = groupRequestsByBatch(sortedComb as any[]);
                   return groupedComb.flatMap((item: any) => {
@@ -2977,7 +2977,7 @@ className={`transition-colors ${
 
         {/* Non-Corridor Requests Section */}
         <div className="mb-8">
-          <h2 className="text-[24px] font-semibold mb-2 text-[#13529e]">Non-Corridor Requests ({nonCorridorRequestsFiltered.filter((request: UserRequest) => request.Draft === false).sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).length})</h2>
+          <h2 className="text-[24px] font-semibold mb-2 text-[#13529e]">Non-Corridor Requests ({nonCorridorRequestsFiltered.filter((request: UserRequest) => !request.Draft).sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).length})</h2>
           <div className="overflow-x-auto max-h-[70vh] overflow-y-auto rounded-lg border border-gray-300 shadow-sm">
             <table className="w-full border-collapse text-black bg-white">
               <thead className="sticky top-0 z-10 bg-gray-100 shadow">
@@ -3032,7 +3032,7 @@ className={`transition-colors ${
                 )}
                 {(() => {
                   const sortedNonCorr = nonCorridorRequestsFiltered
-                    .filter((r: UserRequest) => r.Draft === false)
+                    .filter((r: UserRequest) => !r.Draft)
                     .sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime());
                   const groupedNonCorr = groupRequestsByBatch(sortedNonCorr as any[]);
                   return groupedNonCorr.flatMap((item: any) => {
