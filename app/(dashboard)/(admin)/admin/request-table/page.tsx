@@ -693,7 +693,8 @@ if (activeSummaryFilters.searchId) {
                   const minDate = getMinPendingDate(item.label);
                   const todayStr = new Date().toISOString().split("T")[0];
                   const dateStr = minDate || todayStr;
-                  const cacheDate = new Date(dateStr + "T00:00:00.000Z");
+                  const cacheDate = new Date(dateStr);
+                  cacheDate.setHours(0, 0, 0, 0);
                   queryClient.setQueryData(["approved-requests", cacheDate, false], { data: { requests: allRequests } });
                   router.push(`/admin/optimise-table?dept=${encodeURIComponent(item.label)}&date=${dateStr}`);
                 }}
@@ -711,7 +712,8 @@ if (activeSummaryFilters.searchId) {
               const minDate = getMinPendingDate();
               const todayStr = new Date().toISOString().split("T")[0];
               const dateStr = minDate || todayStr;
-              const cacheDate = new Date(dateStr + "T00:00:00.000Z");
+              const cacheDate = new Date(dateStr);
+              cacheDate.setHours(0, 0, 0, 0);
               queryClient.setQueryData(["approved-requests", cacheDate, false], { data: { requests: allRequests } });
               router.push(`/admin/optimise-table?date=${dateStr}`);
             }}
