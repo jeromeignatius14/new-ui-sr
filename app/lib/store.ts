@@ -1778,7 +1778,7 @@ export const depot: DepotStructure = {
   "ED-PTJ": {
     'TRD': ["ED", "TUP", "PTJ"],
     'S&T': ["TUP", "PTJ", "CBE", "ED"],
-    'ENGG': ["ED","TUP","E-PTJ","CBE","GS","BR-ED","CBF"]
+    'ENGG': ["ED","TUP","E-PTJ","PTJ","CBE","GS","BR-ED","CBF"]
   },
 
   "ED-TP": {
@@ -1825,7 +1825,7 @@ export const depot: DepotStructure = {
   "PTJ-CNV": {
     'TRD': ["PTJ"],
     'S&T': ["PTJ"],
-    'ENGG': ["E-PTJ","GS","BR-ED"]
+    'ENGG': ["E-PTJ","PTJ","GS","BR-ED"]
   }
 };
 
