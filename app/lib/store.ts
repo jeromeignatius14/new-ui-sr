@@ -1996,7 +1996,7 @@ export let blockSection = {
   ],
   "KYJ-QLN": [
     "KYJ-OCR", "OCR-KPY", "KPY-STKT", "STKT-PRND", "PRND-QLN",
-    "KYJ-YD", "OCR-YD", "KPY-YD", "STKT-YD", "PRND-YD", "OLN-YD"
+    "KYJ-YD", "OCR-YD", "KPY-YD", "STKT-YD", "PRND-YD", "QLN-YD"
   ],
   "QLN-TVC": [
     "QLN-PVU", "PVU-VAK", "VAK-KVU", "KVU-MQU", "MQU-KZK",
@@ -2005,8 +2005,8 @@ export let blockSection = {
   ],
   "TVC-NCJ": [
     "TVC-TVCS", "TVCS-NYY", "NYY-PASA", "PASA-KZT", "KZT-ERL",
-    "ERL-NJT", "NJT-NCJ",
-    "TVC-YD", "NEM-YD", "NYY-YD", "PASA-YD", "KZT-YD", "ERL-YD", "NJT-YD", "NCJ-YD"
+    "ERL-NJT", "ERL-VRLR", "VRLR-NJT", "NJT-NCJ",
+    "TVC-YD", "NEM-YD", "NYY-YD", "PASA-YD", "KZT-YD", "ERL-YD", "VRLR-YD", "NJT-YD", "NCJ-YD"
   ],
   "NCJ-TEN": [
     "NCJ-AAY", "AAY-NPK", "NPK-VLY", "VLY-NNN", "NNN-MP", "MP-TEN",
@@ -2496,7 +2496,7 @@ export const streamData = {
   "QLN-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6", "Rd 7", "Rd 8","Rd 9","Rd 10","Rd 11","Rd 12","Rd 13","Rd 14","Rd 15","BA 1","BA 2"],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6", "Rd 7", "Rd 8","Rd 9","Rd 10","Rd 11","Rd 12","Rd 13","Rd 14","Rd 15","MEMU Line-1","MEMU Line-2","MEMU Line-3"],
     "both direction not affected": []
   },
   "PVU-YD": {
@@ -2532,7 +2532,12 @@ export const streamData = {
   "TVC-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5"],
+    "both direction affected": [
+      "Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6", "Rd 7", "Rd 8", "Rd 9", "Rd 10",
+      "Rd 11", "Rd 12", "Rd 13", "Rd 14", "Rd 15", "Rd 16", "Rd 17", "Rd 18", "Rd 19", "Rd 20",
+      "Rd 21", "Rd 22", "Rd 23", "Rd 24", "Rd 25", "Rd 26", "Rd 27",
+      "Parcel Laybye", "MRV Siding", "Tripshed Laybye 1", "Tripshed Laybye 2", "Shunting Neck", "Engine Laybye"
+    ],
     "both direction not affected": []
   },
   "TVCN-YD": {
@@ -2569,6 +2574,12 @@ export const streamData = {
   "ERL-YD": {
     "up direction affected": [],
     "down direction affected": [],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "BT Siding", "Loco Siding"],
+    "both direction not affected": []
+  },
+  "VRLR-YD": {
+    "up direction affected": [],
+    "down direction affected": [],
     "both direction affected": ["Rd 1", "Rd 2"],
     "both direction not affected": []
   },
@@ -2581,13 +2592,13 @@ export const streamData = {
   "NCJ-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5"],
+    "both direction affected": ["Rd 1", "Rd 1A", "Rd 1B", "Rd 1C", "Rd 1D", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 8", "Rd 13", "Sickline 1", "Sickline 2", "Shunting Neck", "Goods Line"],
     "both direction not affected": []
   },
   "AAY-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
     "both direction not affected": []
   },
   "NPK-YD": {
@@ -2623,7 +2634,7 @@ export const streamData = {
   "CAPE-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6", "Rd 7", "Rd 8"],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6", "Rd 7", "Rd 8", "Shunting Neck"],
     "both direction not affected": []
   }
 };
@@ -2831,7 +2842,9 @@ export let lineData = {
   "NYY-PASA": ["SINGLE"],
   "PASA-KZT": ["SINGLE"],
   "KZT-ERL": ["SINGLE"],
-  "ERL-NJT": ["SINGLE"],
+  "ERL-NJT": ["UP", "DN"],
+  "ERL-VRLR": ["UP", "DN"],
+  "VRLR-NJT": ["UP", "DN"],
   "NJT-NCJ": ["UP", "DN"],
 
   "NCJ-AAY": ["UP", "DN"],
@@ -2955,7 +2968,7 @@ export const depotOnLocation = {
     "KUMM", "KYJ", "KZK", "KZT", "MAKM", "MGK", "MP", "MQU", "MVLK", "NNN", "NYY", "OCR",
     "OLR", "PASA", "PNQ", "PRND", "QLN", "PUK", "PVRD", "PVU", "SRTL", "STKT", "TCR", "TRTR",
     "TUVR", "TVCS", "VARD", "VLY", "VTK", "WKI", "IPL", "CGY", "KVU", "ERSD", "MNTT", "ERS",
-    "TVC", "NPK", "ETM", "TVCN", "VAK", "QIN", "NJT", "TRVL"
+    "TVC", "NPK", "ETM", "TVCN", "VAK", "QIN", "NJT", "TRVL", "VRLR"
   ],
   TPJ: [
     "AGM", "AGX", "ALU", "ALK", "AMM", "ANP", "ARV", "ATQ", "AYI", "BAL", "CDM", "CLN", "GOC",
