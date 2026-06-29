@@ -916,8 +916,8 @@ function LockingNoticePopup({ onClose }: { onClose: () => void }) {
         <div className="px-6 py-5 text-black text-base leading-relaxed space-y-3">
           <p>
             With <strong>immediate effect</strong>, accounts of users who appear in the{" "}
-            <strong>exceptions list</strong> (Sanctioned but Not Acknowledged / Acknowledged but Not
-            Applied) <strong>two or more times in a single week (Monday to Sunday)</strong> will be{" "}
+            <strong>exceptions list</strong> (Sanctioned but Not Acknowledged / Acknowledged but
+            Neither Availed nor Exited well in time) <strong>two or more times in a single week (Monday to Sunday)</strong> will be{" "}
             <strong>automatically locked</strong> from submitting new block requests.
           </p>
           <p>
