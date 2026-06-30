@@ -83,8 +83,8 @@ export const BoardControllerDepotMap: { [key: string]: string[] } = {
 // //     "ACN-YD", "TRK-YD", "AYD-YD", "MMP-YD", "VKM-YD", "VM-YD"
 // //   ],
 // //   'CUPJ-VRI': [
-// //     "CUPJ-KJKPD", "KJKPD-VLU", "VLU-NVL", "NVL-UMG", "UMG-VRI",
-// //     "CUPJ-YD", "KJKPD-YD", "VLU-YD", "NVL-YD", "UMG-YD", "VRI-YD"
+// //     "CUPJ-KJPD", "KJPD-VLU", "VLU-NVL", "NVL-UMG", "UMG-VRI",
+// //     "CUPJ-YD", "KJPD-YD", "VLU-YD", "NVL-YD", "UMG-YD", "VRI-YD"
 // //   ],
 // //   'TPJ-TP': [
 // //     "TPJ-TPE", "TPE-TP",
@@ -151,7 +151,7 @@ export const BoardControllerDepotMap: { [key: string]: string[] } = {
 //     "TJM-TNM", "TNM-TNI", "TNI-TRK", "TRK-MMP", "MMP-VKM", "VKM-VM", "KPD-YD", "VLR-YD", "KNB-YD", "KMM-YD", "ARV-YD", "PRL-YD", "AGM-YD", "TJM-YD", "TNM-YD", "TNI-YD", "TRK-YD", "MMP-YD", "VKM-YD", "VM-YD"
 //   ],
 //   'CUPJ-VRI': [
-//     "CUPJ-KJKPD", "KJKPD-VLU", "VLU-NVL", "NVL-UMG", "UMG-VRI", "CUPJ-YD", "KJKPD-YD", "VLU-YD", "NVL-YD", "UMG-YD", "VRI-YD"
+//     "CUPJ-KJPD", "KJPD-VLU", "VLU-NVL", "NVL-UMG", "UMG-VRI", "CUPJ-YD", "KJPD-YD", "VLU-YD", "NVL-YD", "UMG-YD", "VRI-YD"
 //   ],
 //   'TPJ-TP': [
 //     "TPJ-TP", "TPJ-YD", "TP-YD"
@@ -1004,7 +1004,7 @@ export let Activity = {
 //     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
 //     "both direction not affected": []
 //   },
-//   'KJKPD-YD': {
+//   'KJPD-YD': {
 //     "up direction affected": [],
 //     "down direction affected": [],
 //     "both direction affected": ["Rd 1", "Rd 2"],
@@ -1622,13 +1622,13 @@ export let Activity = {
 //   // 'VM-YD': ['UP', 'DN'],  // Already listed in multiple sections
 
 //   // CUPJ-VRI Section - Single line
-//   'CUPJ-KJKPD': ['SINGLE'],  // CUPJ is junction with VM-MV line
-//   'KJKPD-VLU': ['SINGLE'],
+//   'CUPJ-KJPD': ['SINGLE'],  // CUPJ is junction with VM-MV line
+//   'KJPD-VLU': ['SINGLE'],
 //   'VLU-NVL': ['SINGLE'],
 //   'NVL-UMG': ['SINGLE'],
 //   'UMG-VRI': ['SINGLE'],  // VRI is junction with TPJ-VM line
 //   // 'CUPJ-YD': ['UP', 'DN'],  // Already listed in VM-MV
-//   'KJKPD-YD': ['SINGLE'],
+//   'KJPD-YD': ['SINGLE'],
 //   'VLU-YD': ['SINGLE'],
 //   'NVL-YD': ['SINGLE'],
 //   'UMG-YD': ['SINGLE'],
@@ -1692,9 +1692,9 @@ export let Activity = {
 //   },
 
 // //   "CUPJ-VRI": {
-// //     'TRD': ["CUPJ", "KJKPD"],
-// //     'S&T': ["CUPJ", "KJKPD"],
-// //     'ENGG': ["CUPJ", "KJKPD"]
+// //     'TRD': ["CUPJ", "KJPD"],
+// //     'S&T': ["CUPJ", "KJPD"],
+// //     'ENGG': ["CUPJ", "KJPD"]
 // //   },
 
 //   "MV-TVR": {
@@ -1722,9 +1722,9 @@ export let Activity = {
 //   },
 
 //   "CUPJ-VRI": {
-//     'TRD': ["CUPJ", "KJKPD"],
-//     'S&T': ["CUPJ", "KJKPD"],
-//     'ENGG': ["CUPJ", "KJKPD"]
+//     'TRD': ["CUPJ", "KJPD"],
+//     'S&T': ["CUPJ", "KJPD"],
+//     'ENGG': ["CUPJ", "KJPD"]
 //   },
 
 //   "TPJ-TP": {
@@ -1836,7 +1836,7 @@ export let Activity = {
 // export const depotOnLocation = {
 //   "TPJ": [
 //     "TPJ", "VM", "MV", "KTM", "TJ", "KIK", "PEM", "POM", "NNM", "TVR",
-//     "NMJ", "MQ", "VRA", "CBU", "VI", "PDY", "KPD", "VT", "CUPJ", "KJKPD",
+//     "NMJ", "MQ", "VRA", "CBU", "VI", "PDY", "KPD", "VT", "CUPJ", "KJPD",
 //     "NGT", "KKDI", "TTP", "AGX", "TVT", "PON", "SPE", "GDR", "WSTA",
 //     "WSTB", "AVD", "TRLA", "TRLB", "AJJ", "WJR", "AB", "JTJ", "TRT",
 //     "PUT", "CJ", "MS", "TBM", "CGL", "ACK", "TMV", "MSB", "BBQ", "GPD",
@@ -2943,8 +2943,8 @@ export let MajorSection = {
 //     "ACN-YD", "TRK-YD", "AYD-YD", "MMP-YD", "VKM-YD", "VM-YD"
 //   ],
 //   'CUPJ-VRI': [
-//     "CUPJ-KJKPD", "KJKPD-VLU", "VLU-NVL", "NVL-UMG", "UMG-VRI",
-//     "CUPJ-YD", "KJKPD-YD", "VLU-YD", "NVL-YD", "UMG-YD", "VRI-YD"
+//     "CUPJ-KJPD", "KJPD-VLU", "VLU-NVL", "NVL-UMG", "UMG-VRI",
+//     "CUPJ-YD", "KJPD-YD", "VLU-YD", "NVL-YD", "UMG-YD", "VRI-YD"
 //   ],
 //   'TPJ-TP': [
 //     "TPJ-TPE", "TPE-TP",
@@ -3011,7 +3011,7 @@ export let blockSection = {
     "TJM-TNM", "TNM-TNI", "TNI-TRK", "TRK-MMP", "MMP-VKM", "VKM-VM", "KPD-YD", "VLR-YD", "KNB-YD", "KMM-YD", "ARV-YD", "PRL-YD", "AGM-YD", "TJM-YD", "TNM-YD", "TNI-YD", "TRK-YD", "MMP-YD", "VKM-YD", "VM-YD"
   ],
   'CUPJ-VRI': [
-    "CUPJ-KJKPD", "KJKPD-VLU", "VLU-NVL", "NVL-UMG", "UMG-VRI", "CUPJ-YD", "KJKPD-YD", "VLU-YD", "NVL-YD", "UMG-YD", "VRI-YD"
+    "CUPJ-KJPD", "KJPD-VLU", "VLU-NVL", "NVL-UMG", "UMG-VRI", "CUPJ-YD", "KJPD-YD", "VLU-YD", "NVL-YD", "UMG-YD", "VRI-YD"
   ],
   'TPJ-TP': [
     "TPJ-TP", "TPJ-YD", "TP-YD"
@@ -3588,7 +3588,7 @@ export const streamData = {
     "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
     "both direction not affected": []
   },
-  'KJKPD-YD': {
+  'KJPD-YD': {
     "up direction affected": [],
     "down direction affected": [],
     "both direction affected": ["Rd 1", "Rd 2"],
@@ -4618,13 +4618,13 @@ export let lineData = {
   // 'VM-YD': ['UP', 'DN'],  // Already listed in multiple sections
 
   // CUPJ-VRI Section - Single line
-  'CUPJ-KJKPD': ['SINGLE'],  // CUPJ is junction with VM-MV line
-  'KJKPD-VLU': ['SINGLE'],
+  'CUPJ-KJPD': ['SINGLE'],  // CUPJ is junction with VM-MV line
+  'KJPD-VLU': ['SINGLE'],
   'VLU-NVL': ['SINGLE'],
   'NVL-UMG': ['SINGLE'],
   'UMG-VRI': ['SINGLE'],  // VRI is junction with TPJ-VM line
   // 'CUPJ-YD': ['UP', 'DN'],  // Already listed in VM-MV
-  'KJKPD-YD': ['SINGLE'],
+  'KJPD-YD': ['SINGLE'],
   'VLU-YD': ['SINGLE'],
   'NVL-YD': ['SINGLE'],
   'UMG-YD': ['SINGLE'],
@@ -5288,7 +5288,7 @@ export const location = {
 // export const depotOnLocation = {
 //   "TPJ": [
 //     "TPJ", "VM", "MV", "KTM", "TJ", "KIK", "PEM", "POM", "NNM", "TVR",
-//     "NMJ", "MQ", "VRA", "CBU", "VI", "PDY", "KPD", "VT", "CUPJ", "KJKPD",
+//     "NMJ", "MQ", "VRA", "CBU", "VI", "PDY", "KPD", "VT", "CUPJ", "KJPD",
 //     "NGT", "KKDI", "TTP", "AGX", "TVT", "PON", "SPE", "GDR", "WSTA",
 //     "WSTB", "AVD", "TRLA", "TRLB", "AJJ", "WJR", "AB", "JTJ", "TRT",
 //     "PUT", "CJ", "MS", "TBM", "CGL", "ACK", "TMV", "MSB", "BBQ", "GPD",
