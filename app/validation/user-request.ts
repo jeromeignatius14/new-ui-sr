@@ -87,6 +87,8 @@ export const userRequestSchema = z.object({
   freshCautionToTime: z.string().optional().nullable(),
   isShadowBlock: z.boolean().optional(),
   shadowParentId: z.string().optional(),
+  pgtMinDuration: z.number().int().positive().optional(),
+  pgtMinSpellDuration: z.number().int().positive().optional(),
 });
 
 export type UserRequestInput = z.infer<typeof userRequestSchema>;
