@@ -2496,13 +2496,13 @@ export const streamData = {
   "QLN-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6", "Rd 7", "Rd 8","Rd 9","Rd 10","Rd 11","Rd 12","Rd 13","Rd 14","Rd 15","MEMU Line-1","MEMU Line-2","MEMU Line-3"],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6", "Rd 7", "Rd 8", "Rd 9", "Rd 10", "Rd 11", "Rd 12", "Rd 13", "Rd 14", "Rd 15", "MEMU Line-1", "MEMU Line-2", "MEMU Line-3", "Memu Bay 1", "Memu Bay 2", "Memu Road 1", "Shunting line", "Shunting line 2", "Satellite depot Rd-1", "Satellite depot Rd-2", "Memu shed Road 1", "Memu shed Road 2"],
     "both direction not affected": []
   },
   "PVU-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Road 5 / BT siding"],
     "both direction not affected": []
   },
   "VAK-YD": {
