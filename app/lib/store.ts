@@ -278,7 +278,7 @@ export let blockSection = {
   ],
 
   'CAN-MAQ-MAJN': [
-    "VAPM-KPQ", "KPQ-PAZ", "PAZ-PAY", "PAY-CHV",
+    "CAN-VAPM", "VAPM-KPQ", "KPQ-PAZ", "PAZ-PAY", "PAY-CHV",
     "CHV-NLE", "NLE-KZE", "KZE-KQK", "KQK-KGQ",
     "KGQ-KMQ", "KMQ-MJS", "MJS-ULL", "ULL-NTVT",
     "NTVT-MAQ", "MAQ-NTVT", "NTVT-MAJN",
