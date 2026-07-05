@@ -2096,7 +2096,7 @@ const handleOptimize = async () => {
                             className="px-2 py-1 text-[24px] bg-[#2c3e50] text-white border border-black rounded"
                             onClick={() => {
                               setSpellExpandedId(request.id);
-                              setSpellInputs([{ from: "", to: "", status: "pending" as const }]);
+                              setSpellInputs([{ from: "", to: "" }]);
                             }}
                           >
                             Split into Spells
