@@ -8,13 +8,11 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
-import PgtSpellCreationModal from "@/app/components/PgtSpellCreationModal";
 
 export default function AdminRequestTablePage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: session } = useSession();
-  const [pgtSpellRequest, setPgtSpellRequest] = useState<any>(null);
   const [customDateRange, setCustomDateRange] = useState({
     start: "",
     end: "",
@@ -1000,18 +998,6 @@ if (activeSummaryFilters.searchId) {
                                 <span className="w-full block text-base">
                                   {status.label}
                                 </span>
-                                {/* PGT: show Create Spells button for accepted requests with min duration set */}
-                                {request.pgtMinDuration && !request.pgtSpellsCreated && request.managerAcceptance && (
-                                  <button
-                                    onClick={() => setPgtSpellRequest(request)}
-                                    className="mt-1 w-full bg-[#2c3e50] text-white text-xs font-bold rounded px-2 py-1 hover:bg-[#1a252f]"
-                                  >
-                                    + Create Spells
-                                  </button>
-                                )}
-                                {request.pgtSpellsCreated && (
-                                  <span className="block text-xs text-green-700 mt-1">✔ Spells Created</span>
-                                )}
                               </td>
                             </tr>
                           );
@@ -1083,12 +1069,6 @@ if (activeSummaryFilters.searchId) {
       </div>
 
       {/* PGT Spell Creation Modal */}
-      {pgtSpellRequest && (
-        <PgtSpellCreationModal
-          request={pgtSpellRequest}
-          onClose={() => setPgtSpellRequest(null)}
-        />
-      )}
     </div>
   );
 }

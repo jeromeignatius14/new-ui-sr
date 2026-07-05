@@ -12,9 +12,9 @@ interface Spell {
 interface Props {
   request: {
     id: string;
-    divisionId?: string;
-    pgtMinDuration?: number;
-    pgtMinSpellDuration?: number;
+    divisionId?: string | null;
+    pgtMinDuration?: number | null;
+    pgtMinSpellDuration?: number | null;
     date?: string;
   };
   onClose: () => void;
@@ -46,9 +46,7 @@ export default function PgtSpellCreationModal({ request, onClose }: Props) {
 
   const totalMinutes = spells.reduce((acc, s) => {
     if (!s.demandTimeFrom || !s.demandTimeTo) return acc;
-    const [fh, fm] = s.demandTimeFrom.split(":").map(Number);
-    const [th, tm] = s.demandTimeTo.split(":").map(Number);
-    const diff = (th * 60 + tm) - (fh * 60 + fm);
+    const diff = (new Date(s.demandTimeTo).getTime() - new Date(s.demandTimeFrom).getTime()) / 60000;
     return acc + (diff > 0 ? diff : 0);
   }, 0);
   const totalHours = (totalMinutes / 60).toFixed(1);
