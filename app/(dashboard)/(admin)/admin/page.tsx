@@ -26,6 +26,11 @@ export default function AdminDashboardPage() {
             </div>
             {/* Navigation buttons */}
             <div className="w-full flex flex-col items-center gap-8 mt-10 px-2 max-w-md">
+                <Link href="/admin/optimise-table" className="w-full">
+                    <button className="w-full rounded-2xl bg-[#b8f7c7] border border-black py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
+                        OPTIMISE &amp; SANCTION BLOCKS
+                    </button>
+                </Link>
                 <Link href="/admin/request-table" className="w-full">
                     <button className="w-full rounded-2xl bg-[#eeb8f7] border border-black py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
                         VIEW BLOCK DETAILS
