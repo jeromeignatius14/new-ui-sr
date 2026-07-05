@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Fragment } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminService } from "@/app/service/api/admin";
 import { useAcceptUserRequest } from "@/app/service/mutation/admin";
@@ -23,6 +23,8 @@ import { WeeklySwitcher } from "@/app/components/ui/WeeklySwitcher";
 import { useUrgentMode } from "@/app/context/UrgentModeContext";
 import { DaySwitcher } from "@/app/components/ui/DaySwitcher";
 import dayjs from "dayjs";
+import toast from "react-hot-toast";
+import { userRequestService } from "@/app/service/api/user-request";
 
 // Data structure for dynamic filters
 const workType = {
@@ -275,6 +277,36 @@ export default function OptimiseTablePage() {
   const { isUrgentMode } = useUrgentMode();
   const queryClient = useQueryClient();
 
+  const batchSpellMutation = useMutation({
+    mutationFn: ({ requestId, spells, isSanctioned }: { requestId: string; spells: { demandTimeFrom: string; demandTimeTo: string }[]; isSanctioned: boolean }) =>
+      userRequestService.createPgtSpells(requestId, spells, isSanctioned),
+    onSuccess: (_data, variables) => {
+      toast.success(variables.isSanctioned ? "Spells sanctioned successfully" : "Spells saved as draft");
+      queryClient.invalidateQueries({ queryKey: ["approved-requests"] });
+      setSpellExpandedId(null);
+      setSpellInputs([{ from: "", to: "" }]);
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Failed to create spells");
+    },
+  });
+
+  const getLocalDateStr = (isoDate: string) => {
+    const d = new Date(isoDate);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+
+  const handleBatchSpellAction = (request: UserRequest, isSanctioned: boolean) => {
+    const incomplete = spellInputs.some(s => !s.from || !s.to);
+    if (incomplete) { toast.error("Please fill in all spell times"); return; }
+    const localDate = getLocalDateStr(request.date);
+    const spells = spellInputs.map(s => ({
+      demandTimeFrom: new Date(`${localDate}T${s.from}`).toISOString(),
+      demandTimeTo: new Date(`${localDate}T${s.to}`).toISOString(),
+    }));
+    batchSpellMutation.mutate({ requestId: request.id, spells, isSanctioned });
+  };
+
   // Guard: date init from URL happens once on mount only.
   // Prevents dept-dropdown router.push from resetting the user's current date.
   const didInitializeDateRef = useRef(false);
@@ -343,6 +375,13 @@ useEffect(() => {
   const [isSanctionModalOpen, setIsSanctionModalOpen] = useState(false);
 const [sanctionRemark, setSanctionRemark] = useState("");
 const [selectedRequestsForSanction, setSelectedRequestsForSanction] = useState<UserRequest[]>([]);
+const [spellExpandedId, setSpellExpandedId] = useState<string | null>(null);
+  const [spellInputs, setSpellInputs] = useState<{ from: string; to: string }[]>([{ from: "", to: "" }]);
+
+  const addSpellRow = () => setSpellInputs(prev => [...prev, { from: "", to: "" }]);
+  const removeSpellRow = (i: number) => setSpellInputs(prev => prev.filter((_, idx) => idx !== i));
+  const updateSpellInput = (i: number, field: "from" | "to", value: string) =>
+    setSpellInputs(prev => prev.map((s, idx) => idx === i ? { ...s, [field]: value } : s));
   // Update URL when deptFilter changes
   // useEffect(() => {
   //   // Only update URL if dept filter changes to something other than ALL
@@ -612,8 +651,9 @@ const urgentRequestsFiltered = pendingRequests
 
   const corridorRequestsFiltered = pendingRequests
   .filter((r: UserRequest) => {
-    // First check if it's a corridor request
-    const isCorridor = r.corridorType === "Corridor" || r.corridorType === "Corridor Block";
+    // First check if it's a corridor request (case-insensitive for robustness)
+    const corridorTypeLower = r.corridorType?.toLowerCase();
+    const isCorridor = corridorTypeLower === "corridor" || corridorTypeLower === "corridor block";
     if (!isCorridor) return false;
 
     // Global filters
@@ -682,12 +722,11 @@ const combinedRequestsFiltered = pendingRequests
     //   section.otherLines && section.otherLines.trim() !== ''
     // );
     // if (!hasOtherLines) return false;
- if (r.processedLineSections && r.processedLineSections.length > 0) {
-      const firstSection = r.processedLineSections[0];
-      const hasOtherLines = firstSection.otherLines && firstSection.otherLines.trim() !== '';
-      // DON'T show if first section has EMPTY otherLines
-      if (!hasOtherLines) return false;
-    }
+    // Combined section only shows requests that have multiple line sections (otherLines set)
+    if (!r.processedLineSections || r.processedLineSections.length === 0) return false;
+    const firstSection = r.processedLineSections[0];
+    const hasOtherLines = firstSection.otherLines && firstSection.otherLines.trim() !== '';
+    if (!hasOtherLines) return false;
     // Global filters
     if (deptFilter !== 'ALL' && r.selectedDepartment !== deptFilter) return false;
     if (!matchesWorkType(r)) return false;
@@ -1437,7 +1476,7 @@ const handleOptimize = async () => {
   }
 `;
   return (
-
+    <>
     <div className="min-h-screen w-screen flex flex-col justify-between bg-white p-3 border border-black">
       <style jsx global>{flashingRowStyle}</style>
       <div>
@@ -1877,8 +1916,8 @@ const handleOptimize = async () => {
                        const rowColor = getDepartmentColor(request);
         
         return (
-          <tr 
-            key={`request-${request.id}-${request.date}`} 
+          <Fragment key={`request-${request.id}-${request.date}`}>
+          <tr
             className={`hover:bg-gray-100 transition-colors ${rowColor}`}
           >
               <td className="border border-black p-2 text-[24px]">
@@ -1984,9 +2023,11 @@ const handleOptimize = async () => {
                       Cancel
                     </button>
                   </>
+                ) : spellExpandedId === request.id ? (
+                  <span className="text-[20px] text-indigo-700 font-semibold italic">↓ Spell creation in progress...</span>
                 ) : modifyReturnOpenId === request.id ? (
                   <>
-                    {/* <button
+                    <button
                       className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
                       onClick={() => {
                         setEditingId(request.id);
@@ -1996,27 +2037,23 @@ const handleOptimize = async () => {
                         setModifyReturnOpenId(null);
                       }}
                     >
-                      Modify
-                    </button> */}
-                    <button
-  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-  onClick={() => {
-    setEditingId(request.id);
-    setEditDate(request.date.split("T")[0]);
-    setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
-    setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
-    
-    setModifyReturnOpenId(null);
-  }}
->
-  Modify
-</button>
+                      Edit Timing
+                    </button>
+                    {request.pgtMinDuration && !request.pgtSpellsCreated && (
+                      <button
+                        className="px-2 py-1 text-[24px] bg-[#2c3e50] text-white border border-black rounded"
+                        onClick={() => {
+                          setSpellExpandedId(request.id);
+                          setSpellInputs([{ from: "", to: "", status: "pending" as const }]);
+                          setModifyReturnOpenId(null);
+                        }}
+                      >
+                        Split into Spells
+                      </button>
+                    )}
                     <button
                       className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
-                      onClick={() => {
-                        handleRejectClick(request.id);
-                        setModifyReturnOpenId(null);
-                      }}
+                      onClick={() => { handleRejectClick(request.id); setModifyReturnOpenId(null); }}
                     >
                       Return
                     </button>
@@ -2030,85 +2067,60 @@ const handleOptimize = async () => {
                 ) : (
                   <>
                     {request.optimizeStatus === false ? (
-                      // <button
-                      //   className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-                      //   onClick={() => {
-                      //     setEditingId(request.id);
-                      //     setEditDate(request.date.split("T")[0]);
-                      //     setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
-                      //     setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
-                      //     setModifyReturnOpenId(null);
-                      //   }}
-                      // >
-                      //   Modify
-                      // </button>
                       <>
-                      <button
-  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-  onClick={() => {
-    setEditingId(request.id);
-    setEditDate(request.date.split("T")[0]);
-    setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
-    setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
-    
-
-    setModifyReturnOpenId(null);
-  }}
->
-  Modify
-</button>
-   <button
-                      className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
-                      onClick={() => {
-                        handleRejectClick(request.id);
-                        setModifyReturnOpenId(null);
-                      }}
-                    >
-                      Return
-                    </button></>
+                        <button
+                          className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+                          onClick={() => setModifyReturnOpenId(request.id)}
+                        >
+                          Modify
+                        </button>
+                        <button
+                          className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
+                          onClick={() => handleRejectClick(request.id)}
+                        >
+                          Return
+                        </button>
+                      </>
                     ) : (
                       <>
                         <button
                           className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-                         onClick={() => handleDraftClick(request)}
+                          onClick={() => handleDraftClick(request)}
                         >
                           Draft
                         </button>
-                              <button
-              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-                         onClick={() => handleSanctionClick(request)}
-
-            >
-              Sanction
-            </button>
-                        {/* <button
-                          className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
+                        {request.pgtSpellsCreated ? (
+                          <span className="px-2 py-1 text-[20px] text-green-700 font-bold">✔ Spells Created</span>
+                        ) : request.pgtMinDuration ? (
+                          <button
+                            className="px-2 py-1 text-[24px] bg-[#2c3e50] text-white border border-black rounded"
+                            onClick={() => {
+                              setSpellExpandedId(request.id);
+                              setSpellInputs([{ from: "", to: "", status: "pending" as const }]);
+                            }}
+                          >
+                            Split into Spells
+                          </button>
+                        ) : (
+                          <button
+                            className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
+                            onClick={() => handleSanctionClick(request)}
+                          >
+                            Sanction
+                          </button>
+                        )}
+                        <button
+                          className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
                           onClick={() => setModifyReturnOpenId(request.id)}
                         >
-                          Modify/Return
-                        </button> */}
-                                            <button
-  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-  onClick={() => {
-    setEditingId(request.id);
-    setEditDate(request.date.split("T")[0]);
-    setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
-    setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
-
-    setModifyReturnOpenId(null);
-  }}
->
-  Modify
-</button>
-        <button
-          className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
-          onClick={() => {
-            handleRejectClick(request.id);
-            setModifyReturnOpenId(null);
-          }}
-        >
-          Return
-        </button>
+                          Modify
+                        </button>
+                        <button
+                          className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
+                          onClick={() => handleRejectClick(request.id)}
+                        >
+                          Return
+                        </button>
                       </>
                     )}
                   </>
@@ -2126,6 +2138,74 @@ const handleOptimize = async () => {
               </div>
             </td>
           </tr>
+          {spellExpandedId === request.id && (
+            <>
+              {spellInputs.map((spell, si) => (
+                <tr key={`spell-row-${si}`} className="bg-blue-50 border-l-8 border-l-blue-400">
+                  <td className="border border-blue-200 p-2"></td>
+                  <td className="border border-blue-200 p-2 text-[26px] font-bold text-blue-700 text-center">
+                    <span className="bg-blue-200 px-3 py-1 rounded-full">{String.fromCharCode(65 + si)}</span>
+                  </td>
+                  <td className="border border-blue-200 p-2 text-[22px]">{request.selectedDepartment}</td>
+                  <td className="border border-blue-200 p-2 text-[22px]">{request.selectedSection}</td>
+                  <td className="border border-blue-200 p-2 text-[22px]">{request.selectedDepo}</td>
+                  <td className="border border-blue-200 p-2 text-[22px]">{request.missionBlock}</td>
+                  <td className="border border-blue-200 p-2 text-[22px]">{getLineOrRoad(request)}</td>
+                  <td className="border border-blue-200 p-2 text-[20px] text-gray-500">
+                    {formatTime(request.demandTimeFrom)} – {formatTime(request.demandTimeTo)}
+                  </td>
+                  <td className="border border-blue-200 p-2">
+                    {spell.status === "pending" ? (
+                      <div className="flex gap-1 items-center">
+                        <input type="time" value={spell.from} onChange={e => updateSpellInput(si, "from", e.target.value)} className="w-20 border p-1 text-sm rounded" />
+                        <span>-</span>
+                        <input type="time" value={spell.to} onChange={e => updateSpellInput(si, "to", e.target.value)} className="w-20 border p-1 text-sm rounded" />
+                      </div>
+                    ) : (
+                      <span className="text-[20px] font-semibold">{spell.from} – {spell.to}</span>
+                    )}
+                  </td>
+                  <td className="border border-blue-200 p-2 text-[22px]">{request.activity}</td>
+                  <td className="border border-blue-200 p-2">
+                    {spell.status === "pending" ? (
+                      <div className="flex gap-1 flex-wrap">
+                        <button onClick={() => handleSpellAction(request, si, false)} disabled={!spell.from || !spell.to || singleSpellMutation.isPending} className="px-2 py-1 text-[20px] bg-green-600 text-white border border-black rounded disabled:opacity-50">Draft</button>
+                        <button onClick={() => handleSpellAction(request, si, true)} disabled={!spell.from || !spell.to || singleSpellMutation.isPending} className="px-2 py-1 text-[20px] bg-[#2c3e50] text-white border border-black rounded disabled:opacity-50">Sanction</button>
+                        {spellInputs.filter(s => s.status === "pending").length > 1 && (
+                          <button onClick={() => removeSpellRow(si)} className="px-1 py-1 text-[18px] text-red-500 hover:text-red-700 font-bold">✕</button>
+                        )}
+                      </div>
+                    ) : (
+                      <span className={`px-2 py-1 text-[20px] font-bold rounded ${spell.status === "sanctioned" ? "text-green-700" : "text-amber-700"}`}>
+                        {spell.status === "sanctioned" ? "✔ Sanctioned" : "📋 Drafted"}
+                      </span>
+                    )}
+                  </td>
+                  <td className="border border-blue-200 p-2"></td>
+                </tr>
+              ))}
+              <tr className="bg-blue-50 border-l-8 border-l-blue-400">
+                <td colSpan={12} className="border border-blue-200 p-3">
+                  <div className="flex items-center justify-between flex-wrap gap-3">
+                    <button onClick={addSpellRow} className="px-3 py-1 text-[22px] border-2 border-dashed border-blue-500 text-blue-600 rounded-lg hover:bg-blue-50">
+                      + Add Spell
+                    </button>
+                    <div className="flex items-center gap-3">
+                      {spellInputs.some(s => s.status !== "pending") && (
+                        <button onClick={() => finalizeMutation.mutate(request.id)} disabled={finalizeMutation.isPending} className="px-3 py-1 text-[22px] bg-[#2c3e50] text-white border border-black rounded disabled:opacity-50">
+                          {finalizeMutation.isPending ? "Finalising..." : "✓ Finalise & Move to Sanctioned"}
+                        </button>
+                      )}
+                      <button onClick={() => { setSpellExpandedId(null); setSpellInputs([{ from: "", to: "", status: "pending" as const }]); }} className="px-3 py-1 text-[22px] bg-gray-300 text-black border border-black rounded">
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </>
+          )}
+          </Fragment>
         );
       })}
     </tbody>
@@ -2220,8 +2300,8 @@ const handleOptimize = async () => {
                   </tr>
                 )}
                 {corridorRequestsFiltered.filter((request: UserRequest) => request.Draft === false).sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
+                  <Fragment key={`request-${request.id}-${request.date}`}>
                   <tr
- key={`request-${request.id}-${request.date}`}
 className={`transition-colors ${
   request.selectedDepartment === "ENGG" ? "bg-red-50"
   : request.selectedDepartment === "TRD" ? "bg-blue-50"
@@ -2345,9 +2425,11 @@ className={`transition-colors ${
           Cancel
         </button>
       </>
+    ) : spellExpandedId === request.id ? (
+      <span className="text-[20px] text-indigo-700 font-semibold italic">↓ Spell creation in progress...</span>
     ) : modifyReturnOpenId === request.id ? (
       <>
-        {/* <button
+        <button
           className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
           onClick={() => {
             setEditingId(request.id);
@@ -2357,27 +2439,23 @@ className={`transition-colors ${
             setModifyReturnOpenId(null);
           }}
         >
-          Modify
-        </button> */}
-        <button
-  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-  onClick={() => {
-    setEditingId(request.id);
-    setEditDate(request.date.split("T")[0]);
-    setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
-    setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
-
-    setModifyReturnOpenId(null);
-  }}
->
-  Modify
-</button>
+          Edit Timing
+        </button>
+        {request.pgtMinDuration && !request.pgtSpellsCreated && (
+          <button
+            className="px-2 py-1 text-[24px] bg-[#2c3e50] text-white border border-black rounded"
+            onClick={() => {
+              setSpellExpandedId(request.id);
+              setSpellInputs([{ from: "", to: "", status: "pending" as const }]);
+              setModifyReturnOpenId(null);
+            }}
+          >
+            Split into Spells
+          </button>
+        )}
         <button
           className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
-          onClick={() => {
-            handleRejectClick(request.id);
-            setModifyReturnOpenId(null);
-          }}
+          onClick={() => { handleRejectClick(request.id); setModifyReturnOpenId(null); }}
         >
           Return
         </button>
@@ -2391,84 +2469,50 @@ className={`transition-colors ${
     ) : (
       <>
         {request.optimizeStatus === false ? (
-          // <button
-          //   className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-          //   onClick={() => {
-          //     setEditingId(request.id);
-          //     setEditDate(request.date.split("T")[0]);
-          //     setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
-          //     setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
-          //     setModifyReturnOpenId(null);
-          //   }}
-          // >
-          //   Modify
-          // </button>
           <>
-          <button
-  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-  onClick={() => {
-    setEditingId(request.id);
-    setEditDate(request.date.split("T")[0]);
-    setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
-    setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
-    
-
-    setModifyReturnOpenId(null);
-  }}
->
-  Modify
-</button>
-  <button
-          className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
-          onClick={() => {
-            handleRejectClick(request.id);
-            setModifyReturnOpenId(null);
-          }}
-        >
-          Return
-        </button></>
+            <button
+              className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+              onClick={() => setModifyReturnOpenId(request.id)}
+            >
+              Modify
+            </button>
+            <button
+              className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
+              onClick={() => handleRejectClick(request.id)}
+            >
+              Return
+            </button>
+          </>
         ) : (
           <>
             <button
               className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-             onClick={() => handleDraftClick(request)}
+              onClick={() => handleDraftClick(request)}
             >
               Draft
             </button>
-                  <button
-              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-             onClick={() => handleSanctionClick(request)}
-            >
-              Sanction
-            </button>
-            {/* <button
-              className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
+            {request.pgtSpellsCreated ? (
+              <span className="px-2 py-1 text-[20px] text-green-700 font-bold">✔ Spells Created</span>
+            ) : !request.pgtMinDuration ? (
+              <button
+                className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
+                onClick={() => handleSanctionClick(request)}
+              >
+                Sanction
+              </button>
+            ) : null}
+            <button
+              className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
               onClick={() => setModifyReturnOpenId(request.id)}
             >
-              Modify/Return
-            </button> */}
-                    <button
-  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-  onClick={() => {
-    setEditingId(request.id);
-    setEditDate(request.date.split("T")[0]);
-    setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
-    setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
-
-    setModifyReturnOpenId(null);
-  }}
->
-  Modify
-</button>
-        <button
-          className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
-          onClick={() => {
-            handleRejectClick(request.id);
-            setModifyReturnOpenId(null);
-          }}
-        >
-          Return
-        </button>
+              Modify
+            </button>
+            <button
+              className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
+              onClick={() => handleRejectClick(request.id)}
+            >
+              Return
+            </button>
           </>
         )}
       </>
@@ -2486,6 +2530,74 @@ className={`transition-colors ${
                       </div>
                     </td>
                   </tr>
+                  {spellExpandedId === request.id && (
+                    <>
+                      {spellInputs.map((spell, si) => (
+                        <tr key={`spell-row-${si}`} className="bg-blue-50 border-l-8 border-l-blue-400">
+                          <td className="border border-blue-200 p-2"></td>
+                          <td className="border border-blue-200 p-2 text-[26px] font-bold text-blue-700 text-center">
+                            <span className="bg-blue-200 px-3 py-1 rounded-full">{String.fromCharCode(65 + si)}</span>
+                          </td>
+                          <td className="border border-blue-200 p-2 text-[22px]">{request.selectedDepartment}</td>
+                          <td className="border border-blue-200 p-2 text-[22px]">{request.selectedSection}</td>
+                          <td className="border border-blue-200 p-2 text-[22px]">{request.selectedDepo}</td>
+                          <td className="border border-blue-200 p-2 text-[22px]">{request.missionBlock}</td>
+                          <td className="border border-blue-200 p-2 text-[22px]">{getLineOrRoad(request)}</td>
+                          <td className="border border-blue-200 p-2 text-[20px] text-gray-500">
+                            {formatTime(request.demandTimeFrom)} – {formatTime(request.demandTimeTo)}
+                          </td>
+                          <td className="border border-blue-200 p-2">
+                            {spell.status === "pending" ? (
+                              <div className="flex gap-1 items-center">
+                                <input type="time" value={spell.from} onChange={e => updateSpellInput(si, "from", e.target.value)} className="w-20 border p-1 text-sm rounded" />
+                                <span>-</span>
+                                <input type="time" value={spell.to} onChange={e => updateSpellInput(si, "to", e.target.value)} className="w-20 border p-1 text-sm rounded" />
+                              </div>
+                            ) : (
+                              <span className="text-[20px] font-semibold">{spell.from} – {spell.to}</span>
+                            )}
+                          </td>
+                          <td className="border border-blue-200 p-2 text-[22px]">{request.activity}</td>
+                          <td className="border border-blue-200 p-2">
+                            {spell.status === "pending" ? (
+                              <div className="flex gap-1 flex-wrap">
+                                <button onClick={() => handleSpellAction(request, si, false)} disabled={!spell.from || !spell.to || singleSpellMutation.isPending} className="px-2 py-1 text-[20px] bg-green-600 text-white border border-black rounded disabled:opacity-50">Draft</button>
+                                <button onClick={() => handleSpellAction(request, si, true)} disabled={!spell.from || !spell.to || singleSpellMutation.isPending} className="px-2 py-1 text-[20px] bg-[#2c3e50] text-white border border-black rounded disabled:opacity-50">Sanction</button>
+                                {spellInputs.filter(s => s.status === "pending").length > 1 && (
+                                  <button onClick={() => removeSpellRow(si)} className="px-1 py-1 text-[18px] text-red-500 hover:text-red-700 font-bold">✕</button>
+                                )}
+                              </div>
+                            ) : (
+                              <span className={`px-2 py-1 text-[20px] font-bold rounded ${spell.status === "sanctioned" ? "text-green-700" : "text-amber-700"}`}>
+                                {spell.status === "sanctioned" ? "✔ Sanctioned" : "📋 Drafted"}
+                              </span>
+                            )}
+                          </td>
+                          <td className="border border-blue-200 p-2"></td>
+                        </tr>
+                      ))}
+                      <tr className="bg-blue-50 border-l-8 border-l-blue-400">
+                        <td colSpan={12} className="border border-blue-200 p-3">
+                          <div className="flex items-center justify-between flex-wrap gap-3">
+                            <button onClick={addSpellRow} className="px-3 py-1 text-[22px] border-2 border-dashed border-blue-500 text-blue-600 rounded-lg hover:bg-blue-50">
+                              + Add Spell
+                            </button>
+                            <div className="flex items-center gap-3">
+                              {spellInputs.some(s => s.status !== "pending") && (
+                                <button onClick={() => finalizeMutation.mutate(request.id)} disabled={finalizeMutation.isPending} className="px-3 py-1 text-[22px] bg-[#2c3e50] text-white border border-black rounded disabled:opacity-50">
+                                  {finalizeMutation.isPending ? "Finalising..." : "✓ Finalise & Move to Sanctioned"}
+                                </button>
+                              )}
+                              <button onClick={() => { setSpellExpandedId(null); setSpellInputs([{ from: "", to: "", status: "pending" as const }]); }} className="px-3 py-1 text-[22px] bg-gray-300 text-black border border-black rounded">
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    </>
+                  )}
+                  </Fragment>
                 ))}
               </tbody>
             </table>
@@ -2946,8 +3058,8 @@ className={`transition-colors ${
                   </tr>
                 )}
                 {nonCorridorRequestsFiltered.filter((request: UserRequest) => request.Draft === false).sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).map((request: UserRequest) => (
+                  <Fragment key={`request-${request.id}-${request.date}`}>
                   <tr
-  key={`request-${request.id}-${request.date}`}
 className={`transition-colors ${
   request.selectedDepartment === "ENGG" ? "bg-red-50"
   : request.selectedDepartment === "TRD" ? "bg-blue-50"
@@ -3064,9 +3176,11 @@ className={`transition-colors ${
           Cancel
         </button>
       </>
+    ) : spellExpandedId === request.id ? (
+      <span className="text-[20px] text-indigo-700 font-semibold italic">↓ Spell creation in progress...</span>
     ) : modifyReturnOpenId === request.id ? (
       <>
-        {/* <button
+        <button
           className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
           onClick={() => {
             setEditingId(request.id);
@@ -3076,26 +3190,23 @@ className={`transition-colors ${
             setModifyReturnOpenId(null);
           }}
         >
-          Modify
-        </button> */}
-        <button
-  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-  onClick={() => {
-    setEditingId(request.id);
-    setEditDate(request.date.split("T")[0]);
-    setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
-    setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
-    setModifyReturnOpenId(null);
-  }}
->
-  Modify
-</button>
+          Edit Timing
+        </button>
+        {request.pgtMinDuration && !request.pgtSpellsCreated && (
+          <button
+            className="px-2 py-1 text-[24px] bg-[#2c3e50] text-white border border-black rounded"
+            onClick={() => {
+              setSpellExpandedId(request.id);
+              setSpellInputs([{ from: "", to: "", status: "pending" as const }]);
+              setModifyReturnOpenId(null);
+            }}
+          >
+            Split into Spells
+          </button>
+        )}
         <button
           className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
-          onClick={() => {
-            handleRejectClick(request.id);
-            setModifyReturnOpenId(null);
-          }}
+          onClick={() => { handleRejectClick(request.id); setModifyReturnOpenId(null); }}
         >
           Return
         </button>
@@ -3109,84 +3220,50 @@ className={`transition-colors ${
     ) : (
       <>
         {request.optimizeStatus === false ? (
-          // <button
-          //   className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-          //   onClick={() => {
-          //     setEditingId(request.id);
-          //     setEditDate(request.date.split("T")[0]);
-          //     setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
-          //     setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
-          //     setModifyReturnOpenId(null);
-          //   }}
-          // >
-          //   Modify
-          // </button>
           <>
-          <button
-  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-  onClick={() => {
-    setEditingId(request.id);
-    setEditDate(request.date.split("T")[0]);
-    setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
-    setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
-    setModifyReturnOpenId(null);
-  }}
->
-  Modify
-</button>
-  <button
-          className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
-          onClick={() => {
-            handleRejectClick(request.id);
-            setModifyReturnOpenId(null);
-          }}
-        >
-          Return
-        </button>
-        </>
+            <button
+              className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+              onClick={() => setModifyReturnOpenId(request.id)}
+            >
+              Modify
+            </button>
+            <button
+              className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
+              onClick={() => handleRejectClick(request.id)}
+            >
+              Return
+            </button>
+          </>
         ) : (
           <>
             <button
               className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-             onClick={() => handleDraftClick(request)}
+              onClick={() => handleDraftClick(request)}
             >
-              Draft  
+              Draft
             </button>
-             <button
-              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
-                        onClick={() => handleSanctionClick(request)}
-
-            >
-              Sanction
-            </button>
-            {/* <button
-              className="px-2 py-1 text-[24px] bg-gray-300 text-black border border-black rounded"
+            {request.pgtSpellsCreated ? (
+              <span className="px-2 py-1 text-[20px] text-green-700 font-bold">✔ Spells Created</span>
+            ) : !request.pgtMinDuration ? (
+              <button
+                className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
+                onClick={() => handleSanctionClick(request)}
+              >
+                Sanction
+              </button>
+            ) : null}
+            <button
+              className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
               onClick={() => setModifyReturnOpenId(request.id)}
             >
-              Modify/Return
-            </button> */}
-                                <button
-  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
-  onClick={() => {
-    setEditingId(request.id);
-    setEditDate(request.date.split("T")[0]);
-    setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
-    setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
-
-    setModifyReturnOpenId(null);
-  }}
->
-  Modify
-</button>
-        <button
-          className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
-          onClick={() => {
-            handleRejectClick(request.id);
-            setModifyReturnOpenId(null);
-          }}
-        >
-          Return
-        </button>
+              Modify
+            </button>
+            <button
+              className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
+              onClick={() => handleRejectClick(request.id)}
+            >
+              Return
+            </button>
           </>
         )}
       </>
@@ -3205,6 +3282,74 @@ className={`transition-colors ${
                     </td>
 
                   </tr>
+                  {spellExpandedId === request.id && (
+                    <>
+                      {spellInputs.map((spell, si) => (
+                        <tr key={`spell-row-${si}`} className="bg-blue-50 border-l-8 border-l-blue-400">
+                          <td className="border border-blue-200 p-2"></td>
+                          <td className="border border-blue-200 p-2 text-[26px] font-bold text-blue-700 text-center">
+                            <span className="bg-blue-200 px-3 py-1 rounded-full">{String.fromCharCode(65 + si)}</span>
+                          </td>
+                          <td className="border border-blue-200 p-2 text-[22px]">{request.selectedDepartment}</td>
+                          <td className="border border-blue-200 p-2 text-[22px]">{request.selectedSection}</td>
+                          <td className="border border-blue-200 p-2 text-[22px]">{request.selectedDepo}</td>
+                          <td className="border border-blue-200 p-2 text-[22px]">{request.missionBlock}</td>
+                          <td className="border border-blue-200 p-2 text-[22px]">{getLineOrRoad(request)}</td>
+                          <td className="border border-blue-200 p-2 text-[20px] text-gray-500">
+                            {formatTime(request.demandTimeFrom)} – {formatTime(request.demandTimeTo)}
+                          </td>
+                          <td className="border border-blue-200 p-2">
+                            {spell.status === "pending" ? (
+                              <div className="flex gap-1 items-center">
+                                <input type="time" value={spell.from} onChange={e => updateSpellInput(si, "from", e.target.value)} className="w-20 border p-1 text-sm rounded" />
+                                <span>-</span>
+                                <input type="time" value={spell.to} onChange={e => updateSpellInput(si, "to", e.target.value)} className="w-20 border p-1 text-sm rounded" />
+                              </div>
+                            ) : (
+                              <span className="text-[20px] font-semibold">{spell.from} – {spell.to}</span>
+                            )}
+                          </td>
+                          <td className="border border-blue-200 p-2 text-[22px]">{request.activity}</td>
+                          <td className="border border-blue-200 p-2">
+                            {spell.status === "pending" ? (
+                              <div className="flex gap-1 flex-wrap">
+                                <button onClick={() => handleSpellAction(request, si, false)} disabled={!spell.from || !spell.to || singleSpellMutation.isPending} className="px-2 py-1 text-[20px] bg-green-600 text-white border border-black rounded disabled:opacity-50">Draft</button>
+                                <button onClick={() => handleSpellAction(request, si, true)} disabled={!spell.from || !spell.to || singleSpellMutation.isPending} className="px-2 py-1 text-[20px] bg-[#2c3e50] text-white border border-black rounded disabled:opacity-50">Sanction</button>
+                                {spellInputs.filter(s => s.status === "pending").length > 1 && (
+                                  <button onClick={() => removeSpellRow(si)} className="px-1 py-1 text-[18px] text-red-500 hover:text-red-700 font-bold">✕</button>
+                                )}
+                              </div>
+                            ) : (
+                              <span className={`px-2 py-1 text-[20px] font-bold rounded ${spell.status === "sanctioned" ? "text-green-700" : "text-amber-700"}`}>
+                                {spell.status === "sanctioned" ? "✔ Sanctioned" : "📋 Drafted"}
+                              </span>
+                            )}
+                          </td>
+                          <td className="border border-blue-200 p-2"></td>
+                        </tr>
+                      ))}
+                      <tr className="bg-blue-50 border-l-8 border-l-blue-400">
+                        <td colSpan={12} className="border border-blue-200 p-3">
+                          <div className="flex items-center justify-between flex-wrap gap-3">
+                            <button onClick={addSpellRow} className="px-3 py-1 text-[22px] border-2 border-dashed border-blue-500 text-blue-600 rounded-lg hover:bg-blue-50">
+                              + Add Spell
+                            </button>
+                            <div className="flex items-center gap-3">
+                              {spellInputs.some(s => s.status !== "pending") && (
+                                <button onClick={() => finalizeMutation.mutate(request.id)} disabled={finalizeMutation.isPending} className="px-3 py-1 text-[22px] bg-[#2c3e50] text-white border border-black rounded disabled:opacity-50">
+                                  {finalizeMutation.isPending ? "Finalising..." : "✓ Finalise & Move to Sanctioned"}
+                                </button>
+                              )}
+                              <button onClick={() => { setSpellExpandedId(null); setSpellInputs([{ from: "", to: "", status: "pending" as const }]); }} className="px-3 py-1 text-[22px] bg-gray-300 text-black border border-black rounded">
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    </>
+                  )}
+                  </Fragment>
                 ))}
               </tbody>
             </table>
@@ -3275,6 +3420,8 @@ className={`transition-colors ${
           © {new Date().getFullYear()} Indian Railways
         </div>
       </div>
+
+    </>
   );
 }
 
