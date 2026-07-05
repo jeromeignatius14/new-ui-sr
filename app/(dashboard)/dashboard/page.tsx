@@ -903,6 +903,48 @@ import { useQuery } from "@tanstack/react-query";
 import { userRequestService } from "@/app/service/api/user-request";
 import axiosInstance from "@/app/utils/axiosInstance";
 import { format, addDays } from "date-fns";
+import { useState } from "react";
+
+const LOCK_NOTICE_ACTIVE_UNTIL = new Date("2026-07-14T00:00:00+05:30").getTime();
+
+function LockNoticeModal({ children }: { children: React.ReactNode }) {
+  const [dismissed, setDismissed] = useState(false);
+  const isExpired = Date.now() > LOCK_NOTICE_ACTIVE_UNTIL;
+  if (isExpired || dismissed) return <>{children}</>;
+  const isLive = Date.now() >= new Date("2026-07-06T00:30:00Z").getTime();
+  return (
+    <>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+        <div className="bg-white border-2 border-amber-400 rounded-2xl shadow-2xl max-w-md w-full p-6 flex flex-col gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-3xl">⚠️</span>
+            <h2 className="text-xl font-extrabold text-amber-800">
+              {isLive ? "Account Locking is Now Active" : "Important Notice — Account Locking"}
+            </h2>
+          </div>
+          <p className="text-gray-800 text-base leading-relaxed">
+            {isLive
+              ? <>From <strong>every Monday</strong>, accounts with <strong>2 or more</strong> unacknowledged or unapplied block exceptions in the previous week are <strong>automatically locked</strong>. Locked accounts cannot submit new block requests.</>
+              : <>Starting <strong>6th July 2026 (Monday)</strong>, accounts with <strong>2 or more</strong> unacknowledged or unapplied block exceptions in any week will be <strong>automatically locked every Monday</strong>. Locked accounts cannot submit new block requests.</>
+            }
+          </p>
+          <p className="text-gray-600 text-sm">
+            To avoid locking: ensure all your sanctioned blocks are acknowledged and availed on time.<br />
+            If locked, contact your <strong>Branch Officer</strong> or <strong>Department Controller</strong>.
+          </p>
+          <button
+            onClick={() => setDismissed(true)}
+            className="w-full bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-lg py-3 rounded-xl border border-amber-700 transition"
+          >
+            Okay, Understood
+          </button>
+        </div>
+      </div>
+      {children}
+    </>
+  );
+}
+
 export default function DashboardPage() {
   const { data: session, status } = useSession({
     required: true,
@@ -943,6 +985,7 @@ const hasInProgressBlock = requestsData?.data?.requests?.find(
   // Custom user dashboard UI - same for USER and JE roles
   if (session?.user?.role === "USER" || session?.user?.role === "JE") {
     return (
+      <LockNoticeModal>
       <div className="min-h-screen w-full flex flex-col items-center bg-[#fffbe9]">
         {/* Header */}
         <div className="w-full border border-black bg-yellow-200 flex items-center justify-center relative p-2" style={{ minHeight: 60 }}>
@@ -995,6 +1038,7 @@ const hasInProgressBlock = requestsData?.data?.requests?.find(
           </form>
         </div>
       </div>
+      </LockNoticeModal>
     );
   }
 
