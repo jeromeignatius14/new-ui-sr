@@ -376,12 +376,44 @@ useEffect(() => {
 const [sanctionRemark, setSanctionRemark] = useState("");
 const [selectedRequestsForSanction, setSelectedRequestsForSanction] = useState<UserRequest[]>([]);
 const [spellExpandedId, setSpellExpandedId] = useState<string | null>(null);
-  const [spellInputs, setSpellInputs] = useState<{ from: string; to: string }[]>([{ from: "", to: "" }]);
+  const [spellInputs, setSpellInputs] = useState<{ from: string; to: string; status: "pending" | "sanctioned" | "drafted" }[]>([{ from: "", to: "", status: "pending" }]);
 
-  const addSpellRow = () => setSpellInputs(prev => [...prev, { from: "", to: "" }]);
+  const addSpellRow = () => setSpellInputs(prev => [...prev, { from: "", to: "", status: "pending" as const }]);
   const removeSpellRow = (i: number) => setSpellInputs(prev => prev.filter((_, idx) => idx !== i));
   const updateSpellInput = (i: number, field: "from" | "to", value: string) =>
     setSpellInputs(prev => prev.map((s, idx) => idx === i ? { ...s, [field]: value } : s));
+
+  const singleSpellMutation = useMutation({
+    mutationFn: ({ parentId, spellIndex, demandTimeFrom, demandTimeTo, isSanctioned }: { parentId: string; spellIndex: number; demandTimeFrom: string; demandTimeTo: string; isSanctioned: boolean }) =>
+      userRequestService.createSinglePgtSpell(parentId, spellIndex, demandTimeFrom, demandTimeTo, isSanctioned),
+    onSuccess: (_, variables) => {
+      setSpellInputs(prev => prev.map((s, idx) => idx === variables.spellIndex ? { ...s, status: variables.isSanctioned ? "sanctioned" as const : "drafted" as const } : s));
+      queryClient.invalidateQueries({ queryKey: ["approved-requests"] });
+      toast.success(variables.isSanctioned ? `Spell ${String.fromCharCode(65 + variables.spellIndex)} sanctioned` : `Spell ${String.fromCharCode(65 + variables.spellIndex)} saved as draft`);
+    },
+    onError: (err: any) => toast.error(err?.response?.data?.message || "Failed to create spell"),
+  });
+
+  const finalizeMutation = useMutation({
+    mutationFn: (parentId: string) => userRequestService.finalizePgtParent(parentId),
+    onSuccess: () => {
+      setSpellExpandedId(null);
+      setSpellInputs([{ from: "", to: "", status: "pending" }]);
+      queryClient.invalidateQueries({ queryKey: ["approved-requests"] });
+      toast.success("All spells finalised and moved to sanctioned");
+    },
+    onError: (err: any) => toast.error(err?.response?.data?.message || "Failed to finalise"),
+  });
+
+  const handleSpellAction = (request: UserRequest, spellIndex: number, isSanctioned: boolean) => {
+    const spell = spellInputs[spellIndex];
+    if (!spell.from || !spell.to) { toast.error("Please enter spell times"); return; }
+    const dateStr = request.date.split("T")[0];
+    const fromDt = `${dateStr}T${spell.from}:00.000Z`;
+    const toDt = `${dateStr}T${spell.to}:00.000Z`;
+    singleSpellMutation.mutate({ parentId: request.id, spellIndex, demandTimeFrom: fromDt, demandTimeTo: toDt, isSanctioned });
+  };
+
   // Update URL when deptFilter changes
   // useEffect(() => {
   //   // Only update URL if dept filter changes to something other than ALL
@@ -1971,7 +2003,17 @@ const handleOptimize = async () => {
             <td className="border border-black p-2 text-[24px]">{request.selectedDepo}</td>
             <td className="border border-black p-2 text-[24px]">{request.missionBlock}</td>
             <td className="border border-black p-2 text-[24px]">{getLineOrRoad(request)}</td>
-            <td className="border border-black p-2 text-[24px]">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
+            <td className="border border-black p-2 text-[24px]">
+              <div className="flex flex-col gap-0.5">
+                <span>{formatTime(request.demandTimeFrom)} – {formatTime(request.demandTimeTo)}</span>
+                {request.pgtMinDuration && (
+                  <span className="text-[14px] text-blue-700 font-semibold">Min total: {request.pgtMinDuration} min</span>
+                )}
+                {request.pgtMinSpellDuration && (
+                  <span className="text-[14px] text-indigo-700 font-semibold">Min/spell: {request.pgtMinSpellDuration} min</span>
+                )}
+              </div>
+            </td>
             <td className="border border-black p-2 text-[24px]">
               {editingId === request.id ? (
                 <div className="flex gap-1 items-center">
@@ -2048,7 +2090,7 @@ const handleOptimize = async () => {
                           setModifyReturnOpenId(null);
                         }}
                       >
-                        Split into Spells
+                        Create Multiple Spells
                       </button>
                     )}
                     <button
@@ -2091,24 +2133,14 @@ const handleOptimize = async () => {
                         </button>
                         {request.pgtSpellsCreated ? (
                           <span className="px-2 py-1 text-[20px] text-green-700 font-bold">✔ Spells Created</span>
-                        ) : request.pgtMinDuration ? (
-                          <button
-                            className="px-2 py-1 text-[24px] bg-[#2c3e50] text-white border border-black rounded"
-                            onClick={() => {
-                              setSpellExpandedId(request.id);
-                              setSpellInputs([{ from: "", to: "" }]);
-                            }}
-                          >
-                            Split into Spells
-                          </button>
-                        ) : (
+                        ) : !request.pgtMinDuration ? (
                           <button
                             className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
                             onClick={() => handleSanctionClick(request)}
                           >
                             Sanction
                           </button>
-                        )}
+                        ) : null}
                         <button
                           className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
                           onClick={() => setModifyReturnOpenId(request.id)}
@@ -2369,8 +2401,15 @@ className={`transition-colors ${
                       {getLineOrRoad(request)}
                     </td>
                     <td className="border border-black p-2 text-[24px]">
-                      {formatTime(request.demandTimeFrom)} -{" "}
-                      {formatTime(request.demandTimeTo)}
+                      <div className="flex flex-col gap-0.5">
+                        <span>{formatTime(request.demandTimeFrom)} – {formatTime(request.demandTimeTo)}</span>
+                        {request.pgtMinDuration && (
+                          <span className="text-[14px] text-blue-700 font-semibold">Min total: {request.pgtMinDuration} min</span>
+                        )}
+                        {request.pgtMinSpellDuration && (
+                          <span className="text-[14px] text-indigo-700 font-semibold">Min/spell: {request.pgtMinSpellDuration} min</span>
+                        )}
+                      </div>
                     </td>
                     <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (
@@ -2450,7 +2489,7 @@ className={`transition-colors ${
               setModifyReturnOpenId(null);
             }}
           >
-            Split into Spells
+            Create Multiple Spells
           </button>
         )}
         <button
@@ -2792,8 +2831,15 @@ className={`transition-colors ${
                       {getLineOrRoad(request)}
                     </td>
                     <td className="border border-black p-2 text-[24px]">
-                      {formatTime(request.demandTimeFrom)} -{" "}
-                      {formatTime(request.demandTimeTo)}
+                      <div className="flex flex-col gap-0.5">
+                        <span>{formatTime(request.demandTimeFrom)} – {formatTime(request.demandTimeTo)}</span>
+                        {request.pgtMinDuration && (
+                          <span className="text-[14px] text-blue-700 font-semibold">Min total: {request.pgtMinDuration} min</span>
+                        )}
+                        {request.pgtMinSpellDuration && (
+                          <span className="text-[14px] text-indigo-700 font-semibold">Min/spell: {request.pgtMinSpellDuration} min</span>
+                        )}
+                      </div>
                     </td>
                     <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (
@@ -3120,8 +3166,15 @@ className={`transition-colors ${
                       {getLineOrRoad(request)}
                     </td>
                     <td className="border border-black p-2 text-[24px]">
-                      {formatTime(request.demandTimeFrom)} -{" "}
-                      {formatTime(request.demandTimeTo)}
+                      <div className="flex flex-col gap-0.5">
+                        <span>{formatTime(request.demandTimeFrom)} – {formatTime(request.demandTimeTo)}</span>
+                        {request.pgtMinDuration && (
+                          <span className="text-[14px] text-blue-700 font-semibold">Min total: {request.pgtMinDuration} min</span>
+                        )}
+                        {request.pgtMinSpellDuration && (
+                          <span className="text-[14px] text-indigo-700 font-semibold">Min/spell: {request.pgtMinSpellDuration} min</span>
+                        )}
+                      </div>
                     </td>
                     <td className="border border-black p-2 text-[24px]">
                       {editingId === request.id ? (
@@ -3201,7 +3254,7 @@ className={`transition-colors ${
               setModifyReturnOpenId(null);
             }}
           >
-            Split into Spells
+            Create Multiple Spells
           </button>
         )}
         <button
