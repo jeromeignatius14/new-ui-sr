@@ -284,7 +284,7 @@ export default function OptimiseTablePage() {
       toast.success(variables.isSanctioned ? "Spells sanctioned successfully" : "Spells saved as draft");
       queryClient.invalidateQueries({ queryKey: ["approved-requests"] });
       setSpellExpandedId(null);
-      setSpellInputs([{ from: "", to: "" }]);
+      setSpellInputs([{ from: "", to: "", status: "pending" as const }]);
     },
     onError: (err: any) => {
       toast.error(err?.response?.data?.message || "Failed to create spells");
