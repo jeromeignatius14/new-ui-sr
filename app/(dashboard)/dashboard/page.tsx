@@ -903,7 +903,7 @@ import { useQuery } from "@tanstack/react-query";
 import { userRequestService } from "@/app/service/api/user-request";
 import axiosInstance from "@/app/utils/axiosInstance";
 import { format, addDays } from "date-fns";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const LOCK_NOTICE_ACTIVE_UNTIL = new Date("2026-07-14T00:00:00+05:30").getTime();
 
@@ -962,13 +962,23 @@ export default function DashboardPage() {
   const { data: requestsData } = useQuery({
     queryKey: ["user-requests"],
     queryFn: () => userRequestService.getUserRequests(1, 10, formattedStartDate, formattedEndDate),
-    enabled: !!session?.user,
+    enabled: !!session?.user && (session?.user?.role === "USER" || session?.user?.role === "JE"),
   });
 
 const hasInProgressBlock = requestsData?.data?.requests?.find(
   (request: any) =>
     ["inprogress", "in-progress"].includes(request.overAllStatus?.toLowerCase())
 );
+
+  useEffect(() => {
+    if (status !== "authenticated" || !session?.user?.role) return;
+    const role = session.user.role;
+    if (role === "DEPT_CONTROLLER") window.location.href = "/manage/request-table";
+    else if (role === "HQ") window.location.href = "/hq/generate-report";
+    else if (role === "BOARD_CONTROLLER") window.location.href = "/tpc";
+    else if (role === "SM") window.location.href = "/sm/pending-avails";
+    else if (role === "ANALYST") window.location.href = "/analyst";
+  }, [status, session?.user?.role]);
 
   if (status === "loading") {
     return <Loader name="dashboard" />;
@@ -1042,22 +1052,6 @@ const hasInProgressBlock = requestsData?.data?.requests?.find(
     );
   }
 
-if (session?.user?.role === "DEPT_CONTROLLER") {
-    window.location.href = "/manage/request-table";
-  }
-if (session?.user?.role === "HQ") {
-    window.location.href = "/hq/generate-report";
-}
-if (session?.user?.role === "BOARD_CONTROLLER") {
-    window.location.href = "/tpc";
-}
-
-if (session?.user?.role === "SM") {
-    window.location.href = "/sm/pending-avails";
-}
-if (session?.user?.role === "ANALYST") {
-    window.location.href = "/analyst";
-}
   // Custom admin dashboard UI (match manager dashboard style)
   if (session?.user?.role === "ADMIN") {
     return (
@@ -1136,7 +1130,7 @@ if (session?.user?.role === "PUNCTUALITY_CONTROLLER") {
         {/* Designation bar */}
         <div className="w-full flex justify-center mt-4">
           <div className="bg-[#ffeaea] rounded-full px-6 py-2 border border-black flex flex-col items-center" style={{ maxWidth: '90vw' }}>
-            <span className="text-lg font-bold text-black tracking-wide">DESGN:{session?.user.name}</span>
+            <span className="text-lg font-bold text-black tracking-wide">DESGN:{session?.user?.name}</span>
           </div>
         </div>
         {/* Navigation buttons */}
