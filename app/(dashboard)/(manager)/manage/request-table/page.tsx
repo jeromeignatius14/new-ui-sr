@@ -28,13 +28,15 @@ import toast from "react-hot-toast";
 function LockedUsersPanel() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [permitted, setPermitted] = useState(false);
   const [unlocking, setUnlocking] = useState<string | null>(null);
 
   const fetchLocked = async () => {
     try {
       const res = await axiosInstance.get("/api/analytics/locked-users");
       setUsers(res.data?.data || []);
-    } catch { /* no locked users or no permission */ }
+      setPermitted(true);
+    } catch { /* 403 = not a BO/DC — hide panel */ }
     finally { setLoading(false); }
   };
 
@@ -51,7 +53,7 @@ function LockedUsersPanel() {
     } finally { setUnlocking(null); }
   };
 
-  if (loading || users.length === 0) return null;
+  if (loading || !permitted) return null;
 
   return (
     <div className="w-full max-w-md mx-auto mt-6 border-2 border-red-500 rounded-2xl overflow-hidden">
@@ -59,24 +61,30 @@ function LockedUsersPanel() {
         <span className="text-xl">🔒</span>
         <span className="font-extrabold text-red-800 text-lg">Locked Accounts ({users.length})</span>
       </div>
-      <div className="bg-white divide-y divide-gray-200">
-        {users.map(u => (
-          <div key={u.id} className="px-4 py-3 flex items-center justify-between gap-2">
-            <div>
-              <p className="font-bold text-black text-base">{u.name}</p>
-              <p className="text-sm text-gray-500">{u.department} · {u.depot}</p>
-              <p className="text-xs text-red-500">Locked: {u.lockedAt ? new Date(u.lockedAt).toLocaleDateString("en-IN") : "—"}</p>
+      {users.length === 0 ? (
+        <div className="bg-white px-4 py-4 text-center text-sm text-gray-500">
+          No locked accounts in your department.
+        </div>
+      ) : (
+        <div className="bg-white divide-y divide-gray-200">
+          {users.map(u => (
+            <div key={u.id} className="px-4 py-3 flex items-center justify-between gap-2">
+              <div>
+                <p className="font-bold text-black text-base">{u.name}</p>
+                <p className="text-sm text-gray-500">{u.department} · {u.depot}</p>
+                <p className="text-xs text-red-500">Locked: {u.lockedAt ? new Date(u.lockedAt).toLocaleDateString("en-IN") : "—"}</p>
+              </div>
+              <button
+                onClick={() => unlock(u.id, u.name)}
+                disabled={unlocking === u.id}
+                className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm font-bold border border-green-800 disabled:opacity-50"
+              >
+                {unlocking === u.id ? "..." : "Unlock"}
+              </button>
             </div>
-            <button
-              onClick={() => unlock(u.id, u.name)}
-              disabled={unlocking === u.id}
-              className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm font-bold border border-green-800 disabled:opacity-50"
-            >
-              {unlocking === u.id ? "..." : "Unlock"}
-            </button>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

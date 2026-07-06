@@ -640,9 +640,6 @@ export default function RequestTablePage() {
     },
   });
 
-  console.log("userRequestService  ----- > ")
-  console.dir(data)
-
   // Reject Mutation
   const rejectMutation = useMutation({
     mutationFn: ({ id, reason }: { id: string; reason: string }) => userRequestService.rejectUserRequestRemark(id, reason),
@@ -1093,7 +1090,7 @@ export default function RequestTablePage() {
                       {request.missionBlock}
                     </td>
                     <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
-                      {request.processedLineSections[0].lineName || request.processedLineSections[0].road || "N/A"}
+                      {request.processedLineSections?.[0]?.lineName || request.processedLineSections?.[0]?.road || "N/A"}
                     </td>
                     <td className="border border-black px-2 py-1 text-black">
                       {request.activity}
@@ -1302,7 +1299,7 @@ export default function RequestTablePage() {
                           {request.missionBlock}
                         </td>
                         <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
-                          {request.processedLineSections
+                          {(request.processedLineSections || [])
                             .map((section: any) =>
                               section.type === "line"
                                 ? [section.lineName, section.otherLines]
@@ -1542,7 +1539,7 @@ export default function RequestTablePage() {
                           {request.missionBlock}
                         </td>
                         <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
-                          {request.processedLineSections
+                          {(request.processedLineSections || [])
                             .map((section: any) =>
                               section.type === "line"
                                 ? [section.lineName, section.otherLines]
@@ -1781,7 +1778,7 @@ export default function RequestTablePage() {
                         {request.missionBlock}
                       </td>
                       <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
-                        {request.processedLineSections
+                        {(request.processedLineSections || [])
                           .map((section: any) =>
                             section.type === "line"
                               ? [section.lineName, section.otherLines]
