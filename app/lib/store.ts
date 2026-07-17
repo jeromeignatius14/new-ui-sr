@@ -17,7 +17,7 @@ export let MajorSection = {
   "MAS": ["MAS-GDR","MAS-AJJ","AJJ-KPD", "KPD-JTJ", "AJJ-RU","AJJ-CGL","MSB-VM","MSB-VLCY"],
   "TPJ": ["TPJ-VM", "VM-MV", "TPJ-MV","TJ-KIK","MV-TVR","NMJ- MQ","VM-PDY","KPD-VM","CUPJ-VRI","TPJ-TP","NGT-VLNK","TVR- KKDI","TTP-AGX"],
   "SA": ["JTJ-ED","ED-PTJ","ED-TPJ","KRR-DG","SA-VRI","SA-MTDM","SA-KRR","CBE-MTP","MTP-UAM","PTJ-CNV"],
-  "TVC": ["SRR-CHTS", "TCR-GUV", "ERS-KTYM-KYJ", "ERS-ALLP-KYJ", "KYJ-QLN", "QLN-TVC", "TVC-NCJ", "NCJ-TEN", "NCJ-CAPE"]
+  "TVC": ["SRR-CHTS", "TCR-GUV", "ERS-KTYM-KYJ", "ERS-ALLP-KYJ", "KYJ-QLN", "QLN-TVC", "TVC-NCJ", "NCJ-TEN", "NCJ-CAPE", "ERN-CRL"]
 };
 // export let MajorSection = {
 //   "MAS": ["MAS-GDR","MAS-AJJ","AJJ-KPD", "KPD-JTJ", "AJJ-RU","AJJ-CGL","MSB-VM","MSB-VLCY"],
@@ -1975,18 +1975,18 @@ export let blockSection = {
     "IPL-ERN", "ERN-ERS", "ERS-CHTS","ERN-ERSC","ERS-ERSC","ERSC-ERSD","ERSD-IPN",
     "ERSC-ERM","ERM-ERSD", "VTK-YD", "WKI-YD", "MGK-YD", "PNQ-YD", "TCR-YD", "OLR-YD", "PUK-YD", "IJK-YD",
     "CKI-YD", "KUC-YD", "AFK-YD", "AWY-YD", "KLMR-YD", "IPL-YD", "VPDM-YD", "ERN-YD",
-    "ERS-YD", "ERM-YD", "IPN-YD", "CHTS-YD"
+    "ERS-YD", "ERM-YD", "IPN-YD", "CHTS-YD", "MTNC-YD"
   ],
   "TCR-GUV": [
     "TCR-PNQ", "PNQ-GUV",
     "TCR-YD", "PNQ-YD", "GUV-YD"
   ],
   "ERS-KTYM-KYJ": [
-    "ERS-ERSC","ERSC-TRTD","ERSD-TRTR", "TRTR-MNTT", "TRTR-IPN", "MNTT-PVRD", "PVRD-VARD",
+    "ERS-ERSC","ERSC-ERSD","ERSC-TRTD","ERSD-TRTR", "TRTR-MNTT", "TRTR-IPN", "MNTT-PVRD", "PVRD-VARD",
     "VARD-KRPP", "KRPP-ETM", "ETM-KTYM", "KTYM-CGV", "CGV-CGY",
     "CGY-TRVL", "TRVL-CNGR", "CNGR-MVLK", "MVLK-KYJ",
     "ERS-YD","ERSC-YD","ERSD-YD", "TRTR-YD", "MNTT-YD", "PVRD-YD", "VARD-YD", "KRPP-YD", "ETM-YD",
-    "KTYM-YD", "CGV-YD", "CGY-YD", "TRVL-YD", "CNGR-YD", "MVLK-YD", "KYJ-YD"
+    "KTYM-YD", "CGV-YD", "CGY-YD", "TRVL-YD", "CNGR-YD", "MVLK-YD", "KYJ-YD", "ERM-CD-YD"
   ],
   "ERS-ALLP-KYJ": [
     "ERS-KUMM", "KUMM-TUVR", "TUVR-SRTL", "SRTL-MAKM", "MAKM-ALLP",
@@ -2015,6 +2015,9 @@ export let blockSection = {
   "NCJ-CAPE": [
     "NCJ-CAPE",
     "NCJ-YD", "CAPE-YD"
+  ],
+  "ERN-CRL": [
+    "MTNC-YD"
   ]
 };
  
@@ -2148,7 +2151,7 @@ export let Activity = {
     'FRM ', 'TRT ',
     'UTV', 'DTS',
     'T28', 'SQRS',
-    'RGM working'],
+    'RGM working', 'PCTM'],
   'Non-Machine': ['Rail renewal',
     'Welding work',
     'Destressing work',
@@ -2304,13 +2307,13 @@ export const streamData = {
   "ERS-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6", "Rd 7", "Rd 8", "Rd 9", "Rd 10", "AC Loco Lay Bay", "VIP Siding", "SPART Siding", "Old MRV Siding", "Dedicated Line Shunting Neck", "Trip Shed", "DSL Shed", "ERMCD"],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6", "Rd 7", "Rd 8", "Rd 9", "Rd 10", "AC Loco Lay Bay", "VIP Siding", "SPART Siding", "Old MRV Siding", "Dedicated Line Shunting Neck", "Trip Shed", "DSL Shed", "ERMCD", "Shunting Neck", "Dedicated Line"],
     "both direction not affected": []
   },
   "ERSC-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "ERN-ERSC UP line", "ERN-ERSC DN line", "Dedicated line", "Over run line"],
     "both direction not affected": []
   },
   "ERSD-YD": {
@@ -2508,13 +2511,13 @@ export const streamData = {
   "VAK-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Machine Siding"],
     "both direction not affected": []
   },
   "KVU-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "BT Siding"],
     "both direction not affected": []
   },
   "MQU-YD": {
@@ -2526,7 +2529,7 @@ export const streamData = {
   "KZK-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4"],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Machine Siding", "Spur Line", "Shunting Neck", "FCI Siding"],
     "both direction not affected": []
   },
   "TVC-YD": {
@@ -2543,7 +2546,7 @@ export const streamData = {
   "TVCN-YD": {
     "up direction affected": [],
     "down direction affected": [],
-    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5","Rd 6","Rd 7","Rd 8","Rd 9","Rd 10","Rd 11","Rd 12","Rd 13","Rd 14"],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5","Rd 6","Rd 7","Rd 8","Rd 9","Rd 10","Rd 11","Rd 12","Rd 13","Rd 14", "Military Siding", "Spur Line", "Shunting Neck", "Sickline 1", "Sickline 2", "Sickline 3", "Loco Lay Bay"],
     "both direction not affected": []
   },
 
@@ -2635,6 +2638,18 @@ export const streamData = {
     "up direction affected": [],
     "down direction affected": [],
     "both direction affected": ["Rd 1", "Rd 2", "Rd 3", "Rd 4", "Rd 5", "Rd 6", "Rd 7", "Rd 8", "Shunting Neck"],
+    "both direction not affected": []
+  },
+  "MTNC-YD": {
+    "up direction affected": [],
+    "down direction affected": [],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
+    "both direction not affected": []
+  },
+  "ERM-CD-YD": {
+    "up direction affected": [],
+    "down direction affected": [],
+    "both direction affected": ["Rd 1", "Rd 2", "Rd 3"],
     "both direction not affected": []
   }
 };
@@ -4250,9 +4265,14 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
       "S&T": "",
       "ENGG": "ERS",
       "TRD": "ERS"
+    },
+    "MTNC-YD": {
+      "S&T": "ERS",
+      "ENGG": "ERS",
+      "TRD": "ERS"
     }
   },
-  
+
     "TCR-GUV": {
       "TCR-PNQ": {
         "S&T": "TCR",
@@ -4450,9 +4470,14 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
       "S&T": "KYJ",
       "ENGG": "MVLK",
       "TRD": "KYJ"
+    },
+    "ERM-CD-YD": {
+      "S&T": "ERS",
+      "ENGG": "ERS",
+      "TRD": "ERS"
     }
   },
-  
+
     "ERS-ALLP-KYJ": {
       "ERS-KUMM": {
         "S&T": "ERS",
@@ -4874,6 +4899,14 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
       "TRD": "ERS"
     },
     "IPN-YD": {
+      "S&T": "ERS",
+      "ENGG": "ERS",
+      "TRD": "ERS"
+    }
+  },
+
+  "ERN-CRL": {
+    "MTNC-YD": {
       "S&T": "ERS",
       "ENGG": "ERS",
       "TRD": "ERS"
