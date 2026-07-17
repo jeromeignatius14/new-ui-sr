@@ -796,9 +796,17 @@ export default function PhoneLoginForm() {
         )}
 
         {/* Error */}
-        {authError && (
+        {authError && authError.includes("ACCOUNT_LOCKED") ? (
+          <div className="w-full bg-red-50 border-2 border-red-400 rounded-2xl p-4 mb-4 text-center">
+            <div className="text-red-700 font-bold text-base mb-1">Account Locked</div>
+            <div className="text-red-600 text-sm leading-relaxed">
+              Your account has been locked due to repeated exceptions.<br />
+              Please contact your <strong>Branch Officer</strong> or <strong>Department Controller</strong> to unlock it.
+            </div>
+          </div>
+        ) : authError ? (
           <div className="w-full text-red-500 text-sm mb-4 text-center">{authError}</div>
-        )}
+        ) : null}
 
         {/* Submit */}
         <button
