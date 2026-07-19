@@ -8,7 +8,7 @@ import { format } from "date-fns";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useGenerateReport } from "@/app/service/query/hq";
-import { MajorSection } from "@/app/lib/store";
+import axiosInstance from "@/app/utils/axiosInstance";
 import { useSession } from "next-auth/react";
 
 interface OptionType {
@@ -107,15 +107,12 @@ export default function GenerateReportPage() {
       const userLocation = session.user.location;
       setSelectedLocations([userLocation]);
 
-      // Set up major section options based on user's location
-      if (MajorSection[userLocation as keyof typeof MajorSection]) {
-        const sections = MajorSection[userLocation as keyof typeof MajorSection];
-        const options = sections.map(section => ({
-          value: section,
-          label: section
-        }));
-        setMajorSectionOptions([{ value: "All", label: "All" }, ...options]);
-      }
+      axiosInstance.get("/api/master?type=MAJOR").then((res) => {
+        const opts = (res.data.data ?? [])
+          .sort((a: any, b: any) => a.sort - b.sort)
+          .map((m: any) => ({ value: m.code, label: m.label || m.code }));
+        setMajorSectionOptions([{ value: "All", label: "All" }, ...opts]);
+      }).catch(() => {});
     }
   }, [session]);
 
