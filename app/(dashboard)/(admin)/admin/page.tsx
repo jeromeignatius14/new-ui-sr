@@ -41,6 +41,11 @@ export default function AdminDashboardPage() {
                         BLOCK SUMMARY REPORT
                     </button>
                 </Link>
+                <Link href="/admin/master-data" className="w-full">
+                    <button className="w-full rounded-2xl bg-[#d4edda] border border-black py-6 text-2xl font-extrabold text-black text-center shadow hover:scale-105 transition">
+                        MANAGE MASTER DATA
+                    </button>
+                </Link>
             </div>
         </div>
     );
