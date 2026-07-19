@@ -11,6 +11,20 @@ import { getCurrentPosition } from "@/app/hooks/useGeoLocation";
 import { availService } from "@/app/service/api/avail";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
+function getStationsFromBlock(block: any): string[] {
+  const sectionStr = (block?.missionBlock ?? block?.selectedSection ?? "").trim();
+  if (!sectionStr) return [];
+  const seen = new Set<string>();
+  sectionStr.split(",").forEach((sec: string) => {
+    const s = sec.trim();
+    if (!s) return;
+    const parts = s.split("-");
+    if (parts.length === 1) { seen.add(s); }
+    else { parts.forEach((p) => { const t = p.trim(); if (t) seen.add(t); }); }
+  });
+  return [...seen].filter(s => s.toUpperCase() !== "YD");
+}
+
 function fmtDt(dt?: string | null) {
   if (!dt) return "—";
   try {
@@ -530,55 +544,88 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
         </div>
 
         {/* SM closure acknowledgement station selector — hidden for TRD blocks */}
-        {block.selectedDepartment !== "TRD" && <div style={{ ...card, background: "#fffbeb", border: "2px solid #f59e0b" }}>
-          <label style={{ ...labelStyle, color: "#92400e" }}>
-            SM Station for Closure Acknowledgement
-          </label>
-          <div style={{ fontSize: "12px", color: "#78350f", marginBottom: "10px", lineHeight: "1.5" }}>
-            Select which SM station should acknowledge this closure. Defaults to the granting SM ({block?.smStation ?? "—"}).
-            Change this only if manpower/machines are being cleared at a different station.
-          </div>
-          <div style={{ position: "relative" }}>
-            <input
-              type="text"
-              placeholder="Type station code or name…"
-              value={closureAckSmStation || closureStationInput}
-              onChange={(e) => { setClosureAckSmStation(""); setClosureStationInput(e.target.value.toUpperCase()); setClosureStationOpen(true); }}
-              onFocus={() => setClosureStationOpen(true)}
-              onBlur={() => setTimeout(() => setClosureStationOpen(false), 150)}
-              autoComplete="off"
-              style={{
-                width: "100%", padding: "12px 14px", paddingRight: closureAckSmStation ? "40px" : "14px",
-                border: `2px solid ${closureAckSmStation ? "#16a34a" : "#f59e0b"}`,
-                borderRadius: "10px", fontSize: "15px", fontWeight: 600,
-                background: closureAckSmStation ? "#f0fdf4" : "#fffbeb", color: "#1a1a2e", outline: "none",
-                boxSizing: "border-box",
-              }}
-            />
-            {closureAckSmStation && (
-              <button type="button" onMouseDown={() => { setClosureAckSmStation(""); setClosureStationInput(""); }} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: "#9ca3af" }}>✕</button>
-            )}
-            {closureStationOpen && !closureAckSmStation && (
-              <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#fff", border: "2px solid #d1d5db", borderRadius: "8px", maxHeight: "200px", overflowY: "auto", zIndex: 200, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
-                {smStations.filter((s: any) => !closureStationInput || s.code.includes(closureStationInput) || s.smName?.toUpperCase().includes(closureStationInput)).length === 0 ? (
-                  <div style={{ padding: "10px 14px", fontSize: "13px", color: "#9ca3af" }}>No matching stations found</div>
-                ) : smStations.filter((s: any) => !closureStationInput || s.code.includes(closureStationInput) || s.smName?.toUpperCase().includes(closureStationInput)).map((s: any) => (
-                  <div key={s.code} onMouseDown={() => { setClosureAckSmStation(s.code); setClosureStationInput(""); setClosureStationOpen(false); }}
-                    style={{ padding: "10px 14px", cursor: "pointer", fontSize: "14px", fontWeight: 600, borderBottom: "1px solid #f3f4f6", display: "flex", gap: "8px", alignItems: "center" }}>
-                    <span style={{ fontWeight: 800, color: "#1d4ed8" }}>{s.code}</span>
-                    {s.smName && <span style={{ color: "#6b7280", fontWeight: 500 }}>— {s.smName}</span>}
-                    {s.code === block?.smStation && <span style={{ marginLeft: "auto", fontSize: "11px", color: "#16a34a", fontWeight: 700 }}>★ Granting SM</span>}
-                  </div>
-                ))}
+        {block.selectedDepartment !== "TRD" && (() => {
+          const closureStationOptions = getStationsFromBlock(block);
+          return (
+            <div style={{ ...card, background: "#fffbeb", border: "2px solid #f59e0b" }}>
+              <label style={{ ...labelStyle, color: "#92400e" }}>
+                SM Station for Closure Acknowledgement
+              </label>
+              <div style={{ fontSize: "12px", color: "#78350f", marginBottom: "10px", lineHeight: "1.5" }}>
+                Select which SM station should acknowledge this closure. Defaults to the granting SM ({block?.smStation ?? "—"}).
+                Change this only if manpower/machines are being cleared at a different station.
               </div>
-            )}
-          </div>
-          {closureAckSmStation && closureAckSmStation !== block?.smStation && (
-            <div style={{ marginTop: "8px", fontSize: "12px", color: "#b45309", fontWeight: 700 }}>
-              ⚠ Closure ack routed to {closureAckSmStation} — the granting SM ({block?.smStation}) will see this as view-only.
+
+              {/* ── 1. Native dropdown from block sections ── */}
+              {closureStationOptions.length > 0 && (
+                <select
+                  value={closureStationOptions.includes(closureAckSmStation) ? closureAckSmStation : ""}
+                  onChange={(e) => { setClosureAckSmStation(e.target.value); setClosureStationInput(""); setClosureStationOpen(false); }}
+                  style={{
+                    width: "100%", padding: "12px 14px", marginBottom: "10px",
+                    border: `2px solid ${closureStationOptions.includes(closureAckSmStation) ? "#16a34a" : "#f59e0b"}`,
+                    borderRadius: "10px", fontSize: "15px", fontWeight: 600,
+                    background: closureStationOptions.includes(closureAckSmStation) ? "#f0fdf4" : "#fffbeb",
+                    color: "#1a1a2e", outline: "none", boxSizing: "border-box" as const,
+                  }}
+                >
+                  <option value="">— Select from block sections —</option>
+                  {closureStationOptions.map((s: string) => (
+                    <option key={s} value={s}>{s}{s === block?.smStation ? " ★ Granting SM" : ""}</option>
+                  ))}
+                </select>
+              )}
+
+              {/* ── Divider ── */}
+              <p style={{ fontSize: "12px", color: "#78350f", margin: "0 0 6px" }}>
+                {closureStationOptions.length > 0 ? "Or search all SM stations:" : "Search SM station:"}
+              </p>
+
+              {/* ── 2. Combobox search from DB ── */}
+              <div style={{ position: "relative" }}>
+                <input
+                  type="text"
+                  placeholder="Type station code or name…"
+                  value={!closureStationOptions.includes(closureAckSmStation) && closureAckSmStation ? closureAckSmStation : closureStationInput}
+                  onChange={(e) => { setClosureAckSmStation(""); setClosureStationInput(e.target.value.toUpperCase()); setClosureStationOpen(true); }}
+                  onFocus={() => { if (!closureStationOptions.includes(closureAckSmStation)) setClosureStationOpen(true); }}
+                  onBlur={() => setTimeout(() => setClosureStationOpen(false), 150)}
+                  autoComplete="off"
+                  style={{
+                    width: "100%", padding: "12px 14px",
+                    paddingRight: closureAckSmStation && !closureStationOptions.includes(closureAckSmStation) ? "40px" : "14px",
+                    border: `2px solid ${closureAckSmStation && !closureStationOptions.includes(closureAckSmStation) ? "#16a34a" : "#f59e0b"}`,
+                    borderRadius: "10px", fontSize: "15px", fontWeight: 600,
+                    background: closureAckSmStation && !closureStationOptions.includes(closureAckSmStation) ? "#f0fdf4" : "#fffbeb",
+                    color: "#1a1a2e", outline: "none", boxSizing: "border-box" as const,
+                  }}
+                />
+                {closureAckSmStation && !closureStationOptions.includes(closureAckSmStation) && (
+                  <button type="button" onMouseDown={() => { setClosureAckSmStation(""); setClosureStationInput(""); }} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: "#9ca3af" }}>✕</button>
+                )}
+                {closureStationOpen && !closureAckSmStation && (
+                  <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#fff", border: "2px solid #d1d5db", borderRadius: "8px", maxHeight: "200px", overflowY: "auto", zIndex: 200, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
+                    {smStations.filter((s: any) => !closureStationInput || s.code.includes(closureStationInput) || s.smName?.toUpperCase().includes(closureStationInput)).length === 0 ? (
+                      <div style={{ padding: "10px 14px", fontSize: "13px", color: "#9ca3af" }}>No matching stations found</div>
+                    ) : smStations.filter((s: any) => !closureStationInput || s.code.includes(closureStationInput) || s.smName?.toUpperCase().includes(closureStationInput)).map((s: any) => (
+                      <div key={s.code} onMouseDown={() => { setClosureAckSmStation(s.code); setClosureStationInput(""); setClosureStationOpen(false); }}
+                        style={{ padding: "10px 14px", cursor: "pointer", fontSize: "14px", fontWeight: 600, borderBottom: "1px solid #f3f4f6", display: "flex", gap: "8px", alignItems: "center" }}>
+                        <span style={{ fontWeight: 800, color: "#1d4ed8" }}>{s.code}</span>
+                        {s.smName && <span style={{ color: "#6b7280", fontWeight: 500 }}>— {s.smName}</span>}
+                        {s.code === block?.smStation && <span style={{ marginLeft: "auto", fontSize: "11px", color: "#16a34a", fontWeight: 700 }}>★ Granting SM</span>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {closureAckSmStation && closureAckSmStation !== block?.smStation && (
+                <div style={{ marginTop: "8px", fontSize: "12px", color: "#b45309", fontWeight: 700 }}>
+                  ⚠ Closure ack routed to {closureAckSmStation} — the granting SM ({block?.smStation}) will see this as view-only.
+                </div>
+              )}
             </div>
-          )}
-        </div>}
+          );
+        })()}
 
         {/* Certification text */}
         <div style={{ ...card, background: "#f0f4ff", border: "1.5px solid #c7d2fe", textAlign: "center", padding: "14px 18px" }}>

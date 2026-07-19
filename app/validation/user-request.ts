@@ -9,8 +9,8 @@ export const userRequestSchema = z.object({
     missionBlock: z.string(),  // present in both
     workType: z.string(),  // present in both
     activity: z.string(),  // present in both
-    corridorTypeSelection: z.enum(["Corridor", "Outside Corridor", "Urgent Block"]).nullable(),
-    corridorType: z.enum(["Corridor", "Outside Corridor", "Urgent Block"]).nullable(),  // present in both
+    corridorTypeSelection: z.enum(["Corridor", "Outside Corridor", "Urgent Block", "FTCP"]).nullable(),
+    corridorType: z.enum(["Corridor", "Outside Corridor", "Urgent Block", "FTCP"]).nullable(),  // present in both
     cautionRequired: z.boolean(),  // present in both
     cautionSpeed: z.number().optional(),  // present in both
     workLocationFrom: z.string(),  // present in both
