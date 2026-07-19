@@ -33,6 +33,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useGetMyParticipations, useGetDepotBlocks } from "@/app/service/query/avail";
 import roadData from "../../../../public/roadData.json";
 import { createSiteLocationChangeHandler, validateSiteLocationPair, getAllAvailableDepots, getAutoAssignedDepots } from './features/siteLocation';
+import axiosInstance from "@/app/utils/axiosInstance";
 
 
 type Department = "TRD" | "S&T" | "ENGG";
@@ -1317,6 +1318,7 @@ const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
   const [customActivity, setCustomActivity] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const [blockSectionValue, setBlockSectionValue] = useState<string[]>([]);
+  const [blockLines, setBlockLines] = useState<Record<string, string[]>>({});
   const [isDisabled, setIsDisabled] = useState(false);
   const [validCorridorType, setValidCorridorType] = useState(false);
   const [sntDisconnectionChecked, setSntDisconnectionChecked] = useState(false);
@@ -1452,6 +1454,22 @@ const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
     }
   }, [blockSectionValue, formData.selectedSection]);
 
+  useEffect(() => {
+    if (blockSectionValue.length === 0) return;
+    blockSectionValue.forEach(async (block) => {
+      if (blockLines[block] !== undefined) return;
+      const isYard = block.includes("-YD");
+      try {
+        const res = await axiosInstance.get(
+          `/api/master?type=${isYard ? "ROAD" : "LINE"}&dept=${encodeURIComponent(block)}`
+        );
+        const items: string[] = (res.data.data ?? []).map((s: { code: string }) => s.code);
+        if (items.length > 0) setBlockLines((prev) => ({ ...prev, [block]: items }));
+      } catch {
+        // silent — fallback to store.ts lineData/streamData
+      }
+    });
+  }, [blockSectionValue]);
 
   // Sync depot arrays with form data for API submission
   useEffect(() => {
@@ -4797,11 +4815,11 @@ useEffect(() => {
             {blockSectionValue.map((block: string, idx: number) => {
               const isYard = block.includes("-YD");
               const lineOrRoadOptions = isYard
-                ? getAllRoadsForYard(block).map((road: string) => ({
+                ? (blockLines[block]?.length ? blockLines[block] : getAllRoadsForYard(block)).map((road: string) => ({
                   value: road,
                   label: road,
                 }))
-                : (lineData[block as keyof typeof lineData] || []).map(
+                : (blockLines[block] || lineData[block as keyof typeof lineData] || []).map(
                   (line: string) => ({
                     value: line,
                     label: line,
@@ -5864,11 +5882,11 @@ useEffect(() => {
                           {blockSectionValue.flatMap((block) => {
                             const isYard = block.includes("-YD");
                             return isYard
-                              ? getAllRoadsForYard(block).map((r) => (
+                              ? (blockLines[block]?.length ? blockLines[block] : getAllRoadsForYard(block)).map((r) => (
                                 <option key={r} value={r} />
                               ))
                               : (
-                                lineData[block as keyof typeof lineData] || []
+                                blockLines[block] || lineData[block as keyof typeof lineData] || []
                               ).map((l) => <option key={l} value={l} />);
                           })}
                         </datalist>
@@ -5999,11 +6017,11 @@ useEffect(() => {
               {blockSectionValue.flatMap((block) => {
                 const isYard = block.includes("-YD");
                 return isYard
-                  ? getAllRoadsForYard(block).map((r) => (
+                  ? (blockLines[block]?.length ? blockLines[block] : getAllRoadsForYard(block)).map((r) => (
                     <option key={r} value={r} />
                   ))
                   : (
-                    lineData[block as keyof typeof lineData] || []
+                    blockLines[block] || lineData[block as keyof typeof lineData] || []
                   ).map((l) => <option key={l} value={l} />);
               })}
             </datalist>
