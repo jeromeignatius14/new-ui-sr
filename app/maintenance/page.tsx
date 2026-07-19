@@ -27,7 +27,7 @@ export default function MaintenancePage() {
         </p>
         <div style={{ width: "60px", height: "3px", background: "#fbbf24", borderRadius: "2px", margin: "0 auto 24px" }} />
         <p style={{ color: "#cbd5e1", fontSize: "15px", lineHeight: 1.7, margin: "0 0 12px" }}>
-          We are rolling out a new feature update to the Railway Block Management System. The app will be briefly unavailable during this time.
+          We are rolling out a new feature update and improving server speed and efficiency for the Railway Block Management System. The app will be briefly unavailable during this time.
         </p>
         <p style={{ color: "#94a3b8", fontSize: "13px", lineHeight: 1.6, margin: "0 0 32px" }}>
           We will be back online within <strong style={{ color: "#fbbf24" }}>25–30 minutes</strong>. Thank you for your patience.
