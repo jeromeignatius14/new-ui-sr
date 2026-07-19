@@ -15,7 +15,7 @@ import { toast } from "react-hot-toast";
 import { format } from "date-fns";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { MajorSection } from "@/app/lib/store";
+import axiosInstance from "@/app/utils/axiosInstance";
 import { useSession } from "next-auth/react";
 import { managerService, UserRequest } from "@/app/service/api/manager";
 import { useQuery } from "@tanstack/react-query";
@@ -274,16 +274,12 @@ const durationDropdownRef = useRef<HTMLDivElement>(null);
       const userLocation = session.user.location;
       setSelectedLocations([userLocation]);
 
-      // Set up major section options based on user's location
-      if (MajorSection[userLocation as keyof typeof MajorSection]) {
-        const sections =
-          MajorSection[userLocation as keyof typeof MajorSection];
-        const options = sections.map((section) => ({
-          value: section,
-          label: section,
-        }));
-        setMajorSectionOptions([{ value: "All", label: "All" }, ...options]);
-      }
+      axiosInstance.get("/api/master?type=MAJOR").then((res) => {
+        const opts = (res.data.data ?? [])
+          .sort((a: any, b: any) => a.sort - b.sort)
+          .map((m: any) => ({ value: m.code, label: m.label || m.code }));
+        setMajorSectionOptions([{ value: "All", label: "All" }, ...opts]);
+      }).catch(() => {});
     }
   }, [session]);
 
