@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useUpdateUserRequest } from "@/app/service/mutation/user-request";
 import { useSession } from "next-auth/react";
-import { MajorSection, blockSection } from "@/app/lib/store";
+import axiosInstance from "@/app/utils/axiosInstance";
 import { useParams } from "next/navigation";
 import { useGetUserRequestById } from "@/app/service/query/user-request";
 import { Loader } from "@/app/components/ui/Loader";
@@ -87,6 +87,16 @@ export default function CreateBlockRequestPage() {
   const [cancelRemark, setCancelRemark] = useState("");
   const [cancelError, setCancelError] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [availableLines, setAvailableLines] = useState<string[]>([]);
+
+  useEffect(() => {
+    const section = formData.selectedSection;
+    if (!section) return;
+    axiosInstance
+      .get(`/api/master?type=LINE&dept=${section}`)
+      .then((res) => setAvailableLines((res.data.data ?? []).map((m: any) => m.code)))
+      .catch(() => {});
+  }, [formData.selectedSection]);
 
   useEffect(() => {
     if (userDataById?.data) {
@@ -265,15 +275,11 @@ export default function CreateBlockRequestPage() {
 
   // Helper to get roads for the selected mission block, excluding the selected road
   const getOtherRoads = () => {
-    const roads = blockSection[
-      formData.selectedSection as keyof typeof blockSection
-    ] || [];
-    // Exclude the selected mission block and the selected road
-    return roads.filter(
+    return availableLines.filter(
       (road) =>
         road !== formData.missionBlock &&
         road !== formData.lineType &&
-        ["UP", "DN", "SL", "No", "SINGLE"].indexOf(road) === -1 // Exclude generic values
+        ["UP", "DN", "SL", "No", "SINGLE"].indexOf(road) === -1
     );
   };
 
