@@ -124,7 +124,7 @@ function CountdownBadge({ block }: { block: any }) {
 // ── Modal ─────────────────────────────────────────────────────────────────────
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 1000, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "16px", paddingTop: "max(16px, 5vh)", overflowY: "auto" }}>
       <div style={{ background: "#fff", borderRadius: "16px", padding: "28px 24px", width: "100%", maxWidth: "460px", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
         <h3 style={{ marginBottom: "20px", fontWeight: 700, fontSize: "17px", color: "#111827", borderBottom: "2px solid #fbbf24", paddingBottom: "10px" }}>{title}</h3>
         {children}
@@ -157,7 +157,7 @@ function AuditTrail({ block, myParticipant }: { block: any; myParticipant?: any 
       icon: wasCancelled && !block.sseAcceptedSmModification ? "❌" : wasModified ? "✏️" : "✅",
       label,
       at: block.smApprovedAt,
-      sub: block.smRemarks ?? undefined,
+      sub: [block.powerNumber ? `Power No: ${block.powerNumber}` : null, block.smRemarks ?? null].filter(Boolean).join(" · ") || undefined,
       color: wasCancelled && !block.sseAcceptedSmModification ? "#dc2626" : "#047857",
     });
   }
@@ -358,7 +358,11 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
   const blockId   = block.divisionId ?? id;
 
   // ── Find my participant record ───────────────────────────────────────────
-  const myParticipant: any = (block.availParticipants as any[])?.find((p: any) => p.userId === userId) ?? null;
+  // Fall back to phone match in case the user's account was recreated with a new ID
+  const userPhone = session?.user?.phone;
+  const myParticipant: any = (block.availParticipants as any[])?.find(
+    (p: any) => p.userId === userId || (userPhone && p.userPhone === userPhone)
+  ) ?? null;
   const isParticipant = !!myParticipant;
   const myAvailStarted = !!myParticipant?.availStartedAt;
   const myClosed = !!myParticipant?.closureSubmittedAt;
@@ -381,6 +385,16 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
   const handleApply = () => {
     const station = selectedStation;
     if (!station) { toast.error("Select a station from the dropdown"); return; }
+    // from must not be in the past
+    if (applyTimeFrom) {
+      const fromMs = new Date(applyTimeFrom + ":00.000Z").getTime();
+      const nowMs  = Date.now() + IST_OFFSET_MS;
+      if (fromMs < nowMs - 60_000) { toast.error("From time cannot be in the past"); return; }
+    }
+    // to must be after from (when both are entered)
+    if (applyTimeFrom && applyTimeTo) {
+      if (applyTimeTo <= applyTimeFrom) { toast.error("To time must be later than From time"); return; }
+    }
     setSyncing(true);
     applyMut.mutate({
       requestId: id,
@@ -529,8 +543,8 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
 
       {/* ── Geo-fence override warning dialog ── */}
       {geoWarn && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ background: "#fff", borderRadius: "12px", padding: "24px 20px", maxWidth: "320px", width: "90%", textAlign: "center", boxShadow: "0 8px 32px rgba(0,0,0,0.25)" }}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 9999, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "16px", paddingTop: "max(16px, 10vh)", overflowY: "auto" }}>
+          <div style={{ background: "#fff", borderRadius: "12px", padding: "24px 20px", maxWidth: "320px", width: "100%", textAlign: "center", boxShadow: "0 8px 32px rgba(0,0,0,0.25)" }}>
             <div style={{ fontSize: "32px", marginBottom: "8px" }}>⚠️</div>
             <div style={{ fontWeight: 700, fontSize: "16px", color: "#92400e", marginBottom: "8px" }}>Outside Work Location</div>
             <div style={{ fontSize: "14px", color: "#374151", marginBottom: "20px" }}>
@@ -648,6 +662,9 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
                   <span>From: {fmtDt(block.smApprovedTimeFrom)}</span>
                   <span>To: {fmtDt(block.smApprovedTimeTo)}</span>
                 </div>
+                {block.powerNumber && (
+                  <p style={{ fontSize: "13px", color: "#1d4ed8", margin: "6px 0 0", fontWeight: 800 }}>⚡ Power No: <strong>{block.powerNumber}</strong></p>
+                )}
                 {block.smRemarks && (
                   <p style={{ fontSize: "13px", color: "#374151", margin: "6px 0 0" }}>Remarks: <strong>{block.smRemarks}</strong></p>
                 )}
@@ -886,26 +903,44 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
               </div>
             )}
 
-            {/* Station selection — combobox from DB */}
+            {/* Station selection — block-section dropdown + DB search combobox */}
             <div style={{ marginBottom: "16px" }}>
               <label style={fieldLabel}>
                 {isTrdBlock ? "Select Depot / Station code" : "Select SM Station"}
               </label>
-              <p style={{ fontSize: "12px", color: "#6b7280", margin: "0 0 8px" }}>
-                Type to search, then tap to select from the list.
+
+              {/* ── 1. Native dropdown from block sections (the "wheel") ── */}
+              {stationOptions.length > 0 && (
+                <select
+                  value={stationOptions.includes(selectedStation) ? selectedStation : ""}
+                  onChange={(e) => { setSelectedStation(e.target.value); setStationInput(""); setStationDropdownOpen(false); }}
+                  style={{ ...fieldInput, marginBottom: "10px", borderColor: stationOptions.includes(selectedStation) ? "#16a34a" : "#d1d5db", background: stationOptions.includes(selectedStation) ? "#f0fdf4" : "#fff" }}
+                >
+                  <option value="">— Select from block sections —</option>
+                  {stationOptions.map((s: string) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              )}
+
+              {/* ── Divider ── */}
+              <p style={{ fontSize: "12px", color: "#6b7280", margin: "0 0 6px" }}>
+                {stationOptions.length > 0 ? "Or search all SM stations by code / name:" : "Type to search SM station:"}
               </p>
+
+              {/* ── 2. Combobox search from DB ── */}
               <div style={{ position: "relative" }}>
                 <input
                   type="text"
                   placeholder="Type station code or name…"
-                  value={selectedStation || stationInput}
+                  value={!stationOptions.includes(selectedStation) && selectedStation ? selectedStation : stationInput}
                   onChange={(e) => { setSelectedStation(""); setStationInput(e.target.value.toUpperCase()); setStationDropdownOpen(true); }}
-                  onFocus={() => setStationDropdownOpen(true)}
+                  onFocus={() => { if (!stationOptions.includes(selectedStation)) setStationDropdownOpen(true); }}
                   onBlur={() => setTimeout(() => setStationDropdownOpen(false), 150)}
-                  style={{ ...fieldInput, borderColor: selectedStation ? "#16a34a" : "#d1d5db", background: selectedStation ? "#f0fdf4" : "#fff", paddingRight: selectedStation ? "36px" : undefined }}
+                  style={{ ...fieldInput, borderColor: selectedStation && !stationOptions.includes(selectedStation) ? "#16a34a" : "#d1d5db", background: selectedStation && !stationOptions.includes(selectedStation) ? "#f0fdf4" : "#fff", paddingRight: selectedStation && !stationOptions.includes(selectedStation) ? "36px" : undefined }}
                   autoComplete="off"
                 />
-                {selectedStation && (
+                {selectedStation && !stationOptions.includes(selectedStation) && (
                   <button type="button" onMouseDown={() => { setSelectedStation(""); setStationInput(""); }} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: "#9ca3af" }}>✕</button>
                 )}
                 {stationDropdownOpen && !selectedStation && (
@@ -940,16 +975,20 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
               <p style={{ fontSize: "13px", fontWeight: 700, color: "#0369a1", margin: "0 0 10px" }}>
                 ✏️ Edit requested times (optional — leave blank to use sanctioned times)
               </p>
-              <label style={fieldLabel}>Requested Time From</label>
+              <label style={fieldLabel}>Requested Time From (24h)</label>
               <input
                 type="datetime-local"
+                lang="en-GB"
+                min={new Date(Date.now() + IST_OFFSET_MS).toISOString().slice(0, 16)}
                 style={fieldInput}
                 value={applyTimeFrom}
                 onChange={(e) => setApplyTimeFrom(e.target.value)}
               />
-              <label style={fieldLabel}>Requested Time To</label>
+              <label style={fieldLabel}>Requested Time To (24h — must be after From)</label>
               <input
                 type="datetime-local"
+                lang="en-GB"
+                min={applyTimeFrom || new Date(Date.now() + IST_OFFSET_MS).toISOString().slice(0, 16)}
                 style={{ ...fieldInput, marginBottom: 0 }}
                 value={applyTimeTo}
                 onChange={(e) => setApplyTimeTo(e.target.value)}
