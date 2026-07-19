@@ -26,69 +26,6 @@ import { request } from "http";
 import axiosInstance from "@/app/utils/axiosInstance";
 import toast from "react-hot-toast";
 
-function LockedUsersPanel() {
-  const [users, setUsers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [permitted, setPermitted] = useState(false);
-  const [unlocking, setUnlocking] = useState<string | null>(null);
-
-  const fetchLocked = async () => {
-    try {
-      const res = await axiosInstance.get("/api/analytics/locked-users");
-      setUsers(res.data?.data || []);
-      setPermitted(true);
-    } catch { /* 403 = not a DC/BO — hide panel */ }
-    finally { setLoading(false); }
-  };
-
-  useEffect(() => { fetchLocked(); }, []);
-
-  const unlock = async (userId: string, name: string) => {
-    setUnlocking(userId);
-    try {
-      await axiosInstance.patch("/api/analytics/unlock-user", { userId });
-      toast.success(`${name} unlocked successfully`);
-      setUsers(prev => prev.filter(u => u.id !== userId));
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message || "Failed to unlock");
-    } finally { setUnlocking(null); }
-  };
-
-  if (loading || !permitted) return null;
-
-  return (
-    <div className="w-full max-w-md mx-auto mt-6 border-2 border-red-500 rounded-2xl overflow-hidden">
-      <div className="bg-red-100 px-4 py-3 flex items-center gap-2 border-b border-red-400">
-        <span className="text-xl">🔒</span>
-        <span className="font-extrabold text-red-800 text-lg">Locked Accounts ({users.length})</span>
-      </div>
-      {users.length === 0 ? (
-        <div className="bg-white px-4 py-4 text-center text-sm text-gray-500">
-          No locked accounts in your department.
-        </div>
-      ) : (
-        <div className="bg-white divide-y divide-gray-200">
-          {users.map(u => (
-            <div key={u.id} className="px-4 py-3 flex items-center justify-between gap-2">
-              <div>
-                <p className="font-bold text-black text-base">{u.name}</p>
-                <p className="text-sm text-gray-500">{u.department} · {u.depot}</p>
-                <p className="text-xs text-red-500">Locked: {u.lockedAt ? new Date(u.lockedAt).toLocaleDateString("en-IN") : "—"}</p>
-              </div>
-              <button
-                onClick={() => unlock(u.id, u.name)}
-                disabled={unlocking === u.id}
-                className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm font-bold border border-green-800 disabled:opacity-50"
-              >
-                {unlocking === u.id ? "..." : "Unlock"}
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 export default function ManagerRequestTablePage() {
   const router = useRouter();
@@ -1035,7 +972,15 @@ const handleDownloadExcel = async () => {
     PERMIT BLOCK AT SITE
   </button>
 </Link>}
-  <LockedUsersPanel />
+  {session?.user?.role === "DEPT_CONTROLLER" && (
+    <div className="flex justify-center mt-4 px-4">
+      <Link href="/manage/unlock-users" className="w-full max-w-sm">
+        <button className="w-full rounded-2xl bg-[#fff3cd] border-2 border-[#f59e0b] py-4 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">
+          🔓 UNLOCK USERS
+        </button>
+      </Link>
+    </div>
+  )}
   <button
     onClick={async () => {
       const { signOut } = await import("next-auth/react");
