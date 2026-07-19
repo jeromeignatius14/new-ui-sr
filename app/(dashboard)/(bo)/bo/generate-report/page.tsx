@@ -263,7 +263,8 @@ export default function GenerateReportPage() {
   });
   
   const [sseDropdownOpen, setSseDropdownOpen] = useState(false);
-  
+  const [selectedDepotFilter, setSelectedDepotFilter] = useState<string>("All");
+
   // Add after your existing state variables
   const [globalWorkTypeFilter, setGlobalWorkTypeFilter] = useState<string>(() => {
     const params = new URLSearchParams(searchParams);
@@ -763,7 +764,12 @@ const filteredUpcomingBlocks: DetailedData[] = (
       return false;
     }
   }
-  
+
+  // Depot filter (for TRD users)
+  if (session?.user?.department === "TRD" && selectedDepotFilter !== "All") {
+    if ((block as any).selectedDepo !== selectedDepotFilter) return false;
+  }
+
   return true;
 });
 
@@ -1013,9 +1019,13 @@ const handleDownloadUpcomingBlocks = () => {
         "Sanctioned Time": block.SanctionedTimeFrom && block.SanctionedTimeTo
           ? `${formatTime(block.SanctionedTimeFrom)} to ${formatTime(block.SanctionedTimeTo)}`
           : "Not Available",
+        "Granted Time": (block as any).GrantedTimeFrom && (block as any).GrantedTimeTo
+          ? `${formatTime((block as any).GrantedTimeFrom)} to ${formatTime((block as any).GrantedTimeTo)}`
+          : "Not Available",
         "Availed Time": block.AvailedTimeFrom && block.AvailedTimeTo
           ? `${formatTime(block.AvailedTimeFrom)} to ${formatTime(block.AvailedTimeTo)}`
           : "Not Available",
+        "Work Type": (block as any).WorkType || "N/A",
         "Status": statusLabel,
         "Station ID": block.stationId || "N/A",
         "Duration": block.Duration || "N/A",
@@ -1263,90 +1273,108 @@ const handleDownloadDepartmentCount = () => {
       {/* === FILTERS SECTION === */}
       <div className="w-full max-w-screen-lg bg-[#fffbe9] px-2 py-2">
         <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 items-end w-full">
-          <div className="flex flex-col w-full sm:min-w-[90px] sm:max-w-[110px]">
-            <span className="text-[16px] md:text-[24px] font-bold text-black mb-1 whitespace-nowrap">
-              Choose Section
-            </span>
-            <Select
-              options={majorSectionOptions}
-              isMulti={true}
-              value={majorSectionOptions.filter((opt) =>
-                selectedMajorSections.includes(opt.value)
-              )}
-              onChange={(opts) => handleMajorSectionChange(opts)}
-              classNamePrefix="section-select"
-              styles={{
-                container: (base) => ({
-                  ...base,
-                  width: "100%",
-                  maxWidth: "110px",
-                  minWidth: "90px",
-                }),
-                control: (base, state) => ({
-                  ...base,
-                  borderColor: "#00bfff",
-                  borderWidth: 2,
-                  borderRadius: 0,
-                  minHeight: 32,
-                  fontSize: 16,
-                  width: "100%",
-                  maxWidth: "110px",
-                  minWidth: "90px",
-                  // Show only the count in the input
-                  "&:after": selectedMajorSections.length > 0 ? {
-                    content: `"${selectedMajorSections.length}"`,
-                    position: 'absolute',
-                    left: 8,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: '#000',
-                    fontWeight: 'bold',
-                    pointerEvents: 'none',
-                  } : {},
-                }),
-                input: (base) => ({
-                  ...base,
-                  opacity: 0, // Hide the default input
-                  width: 0,
-                }),
-                placeholder: (base) => ({
-                  ...base,
-                  display: selectedMajorSections.length > 0 ? 'none' : 'block',
-                }),
-                option: (base, state) => ({
-                  ...base,
-                  backgroundColor: state.isSelected ? "#b7e3ee" : "#fff",
-                  color: "#000",
-                  fontWeight: "bold",
-                  fontSize: 16,
-                }),
-                menu: (base) => ({ ...base, zIndex: 50 }),
-                multiValue: (base) => ({
-                  ...base,
-                  backgroundColor: "#e0e0ff",
-                  color: "#000",
-                  display: 'none', // Hide the chips in the input
-                }),
-                multiValueLabel: (base) => ({
-                  ...base,
-                  color: "#000",
-                  fontWeight: "bold",
-                }),
-                multiValueRemove: (base) => ({
-                  ...base,
-                  color: "#b07be0",
-                  ":hover": { backgroundColor: "#b07be0", color: "white" },
-                }),
-              }}
-              placeholder="Section"
-              closeMenuOnSelect={false}
-              hideSelectedOptions={false}
-              menuPortalTarget={
-                typeof window !== "undefined" ? document.body : undefined
-              }
-              menuPosition="fixed"
-            />
-          </div>
+          {session?.user?.department === "TRD" ? (
+            <div className="flex flex-col w-full sm:min-w-[90px] sm:max-w-[130px]">
+              <span className="text-[16px] md:text-[24px] font-bold text-black mb-1 whitespace-nowrap">
+                Choose Depot
+              </span>
+              <select
+                value={selectedDepotFilter}
+                onChange={(e) => setSelectedDepotFilter(e.target.value)}
+                className="border-2 border-[#00bfff] rounded text-black text-[16px] font-bold bg-white px-1 py-1"
+                style={{ minWidth: 90, maxWidth: 130 }}
+              >
+                <option value="All">All</option>
+                {[...new Set((detailedData as any[]).map((b: any) => b.selectedDepo).filter(Boolean))].sort().map((depot: string) => (
+                  <option key={depot} value={depot}>{depot}</option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <div className="flex flex-col w-full sm:min-w-[90px] sm:max-w-[110px]">
+              <span className="text-[16px] md:text-[24px] font-bold text-black mb-1 whitespace-nowrap">
+                Choose Section
+              </span>
+              <Select
+                options={majorSectionOptions}
+                isMulti={true}
+                value={majorSectionOptions.filter((opt) =>
+                  selectedMajorSections.includes(opt.value)
+                )}
+                onChange={(opts) => handleMajorSectionChange(opts)}
+                classNamePrefix="section-select"
+                styles={{
+                  container: (base) => ({
+                    ...base,
+                    width: "100%",
+                    maxWidth: "110px",
+                    minWidth: "90px",
+                  }),
+                  control: (base, state) => ({
+                    ...base,
+                    borderColor: "#00bfff",
+                    borderWidth: 2,
+                    borderRadius: 0,
+                    minHeight: 32,
+                    fontSize: 16,
+                    width: "100%",
+                    maxWidth: "110px",
+                    minWidth: "90px",
+                    "&:after": selectedMajorSections.length > 0 ? {
+                      content: `"${selectedMajorSections.length}"`,
+                      position: 'absolute',
+                      left: 8,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      color: '#000',
+                      fontWeight: 'bold',
+                      pointerEvents: 'none',
+                    } : {},
+                  }),
+                  input: (base) => ({
+                    ...base,
+                    opacity: 0,
+                    width: 0,
+                  }),
+                  placeholder: (base) => ({
+                    ...base,
+                    display: selectedMajorSections.length > 0 ? 'none' : 'block',
+                  }),
+                  option: (base, state) => ({
+                    ...base,
+                    backgroundColor: state.isSelected ? "#b7e3ee" : "#fff",
+                    color: "#000",
+                    fontWeight: "bold",
+                    fontSize: 16,
+                  }),
+                  menu: (base) => ({ ...base, zIndex: 50 }),
+                  multiValue: (base) => ({
+                    ...base,
+                    backgroundColor: "#e0e0ff",
+                    color: "#000",
+                    display: 'none',
+                  }),
+                  multiValueLabel: (base) => ({
+                    ...base,
+                    color: "#000",
+                    fontWeight: "bold",
+                  }),
+                  multiValueRemove: (base) => ({
+                    ...base,
+                    color: "#b07be0",
+                    ":hover": { backgroundColor: "#b07be0", color: "white" },
+                  }),
+                }}
+                placeholder="Section"
+                closeMenuOnSelect={false}
+                hideSelectedOptions={false}
+                menuPortalTarget={
+                  typeof window !== "undefined" ? document.body : undefined
+                }
+                menuPosition="fixed"
+              />
+            </div>
+          )}
           
           {/* Select Period */}
           <div className="flex flex-col w-full">
