@@ -4842,15 +4842,6 @@ useEffect(() => {
                 }
                 required
               />
-              {selectedMajorSection && (
-                <button
-                  type="button"
-                  onClick={() => setQuickAdd({ type: "BLOCK", parentCode: selectedMajorSection, dept: "", label: selectedMajorSection })}
-                  className="text-[18px] px-3 py-2 rounded-lg bg-blue-50 border border-blue-300 text-blue-700 font-semibold hover:bg-blue-100 whitespace-nowrap"
-                  title="Add new block section to master data"
-                >+ Add Block
-                </button>
-              )}
               {errors.missionBlock && (
                 <span className="text-[24px] text-[#e07a5f] font-medium mt-1 block">
                   {errors.missionBlock}
