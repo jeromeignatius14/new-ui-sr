@@ -14,7 +14,7 @@ export default function MasterDataPage() {
   const [saving, setSaving] = useState(false);
 
   const token = (session?.user as any)?.token;
-  const apiUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   async function fetchSections() {
     try {
