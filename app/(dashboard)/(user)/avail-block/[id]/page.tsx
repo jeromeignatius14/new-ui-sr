@@ -403,7 +403,7 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
       requestedTimeTo: applyTimeTo ? toUTCSlot(applyTimeTo) : undefined,
     }, {
       onSuccess: async () => {
-        setModal(null); setSelectedStation(""); setManualStation(""); setApplyTimeFrom(""); setApplyTimeTo("");
+        setModal(null); setSelectedStation(""); setStationInput(""); setStationDropdownOpen(false); setApplyTimeFrom(""); setApplyTimeTo("");
         toast.success("Application submitted");
         await refetch();
         setSyncing(false);
