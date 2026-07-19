@@ -1,10 +1,6 @@
 {
     "name": "client",
-<<<<<<< HEAD
-    "version": "3.5.61",
-=======
-    "version": "3.5.72",
->>>>>>> bc7bf7c3 (fix: remove maintenance mode, fix master-data API URL, bump version)
+    "version": "3.5.62",
     "private": true,
     "scripts": {
         "dev": "next dev --turbopack",
