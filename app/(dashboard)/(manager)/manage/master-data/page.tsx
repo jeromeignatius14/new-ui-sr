@@ -50,7 +50,6 @@ export default function MasterDataPage() {
     item?: MasterSection;
   } | null>(null);
   const [formCode, setFormCode] = useState("");
-  const [formLabel, setFormLabel] = useState("");
   const [formDept, setFormDept] = useState("ENGG");
   const [saving, setSaving] = useState(false);
 
@@ -93,11 +92,11 @@ export default function MasterDataPage() {
   const roadsFor = (yardCode: string) => allSections.filter((s) => s.type === "ROAD" && s.dept === yardCode).sort((a, b) => a.sort - b.sort);
 
   function openAdd(type: SectionType, parent?: string, dept?: string) {
-    setFormCode(""); setFormLabel(""); setFormDept(dept ?? "ENGG");
+    setFormCode(""); setFormDept(dept ?? "ENGG");
     setModal({ mode: "add", type, parent, dept });
   }
   function openEdit(item: MasterSection) {
-    setFormCode(item.code); setFormLabel(item.label ?? ""); setFormDept(item.dept ?? "ENGG");
+    setFormCode(item.code); setFormDept(item.dept ?? "ENGG");
     setModal({ mode: "edit", type: item.type, item });
   }
 
@@ -108,7 +107,7 @@ export default function MasterDataPage() {
     setSaving(true);
     try {
       if (modal.mode === "edit" && modal.item) {
-        const payload: any = { code: code.toUpperCase(), label: formLabel.trim() || code.toUpperCase() };
+        const payload: any = { code: code.toUpperCase(), label: code.toUpperCase() };
         if (modal.item.type === "DEPOT") payload.dept = formDept;
         const res = await axiosInstance.put(`/api/master/${modal.item.id}`, payload);
         if (res.data.status) {
@@ -117,7 +116,7 @@ export default function MasterDataPage() {
           setModal(null); fetchAll();
         } else toast.error(res.data.message || "Failed");
       } else {
-        const payload: any = { type: modal.type, code: code.toUpperCase(), label: formLabel.trim() || code.toUpperCase() };
+        const payload: any = { type: modal.type, code: code.toUpperCase(), label: code.toUpperCase() };
         if (modal.parent) payload.parent = modal.parent;
         if (modal.type === "DEPOT") payload.dept = formDept;
         if (modal.type === "LINE" || modal.type === "ROAD") payload.dept = modal.dept;
@@ -413,13 +412,7 @@ export default function MasterDataPage() {
                 <label className="block text-xs font-bold text-gray-600 mb-1">Code <span className="text-red-500">*</span></label>
                 <input value={formCode} onChange={(e) => setFormCode(e.target.value)}
                   placeholder={modal.type === "LINE" ? "e.g. UP line" : modal.type === "ROAD" ? "e.g. Rd 1" : modal.type === "DEPOT" ? "e.g. BBQ" : "e.g. MAS-BBQ"}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-yellow-400" autoFocus />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-600 mb-1">Label / Display Name</label>
-                <input value={formLabel} onChange={(e) => setFormLabel(e.target.value)}
-                  placeholder="Leave blank to use code"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-mono text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400" autoFocus />
               </div>
               {(modal.type === "DEPOT" || (modal.mode === "edit" && modal.item?.type === "DEPOT")) && (
                 <div>
