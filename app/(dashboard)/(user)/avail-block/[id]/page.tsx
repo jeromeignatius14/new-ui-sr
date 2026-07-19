@@ -3,7 +3,7 @@
 import { use, useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useGetAvailRequestById } from "@/app/service/query/avail";
+import { useGetAvailRequestById, useGetSmStations } from "@/app/service/query/avail";
 import {
   useApplyForAvailing,
   useSubmitAvailConcurrence,
@@ -255,6 +255,8 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
 
   const { data, isLoading, refetch } = useGetAvailRequestById(id);
   const block = data?.data ?? null;
+  const { data: smStationsData } = useGetSmStations();
+  const smStations: { code: string; smName: string }[] = Array.isArray(smStationsData?.data) ? smStationsData.data : [];
 
   const [syncing, setSyncing] = useState(false);
   const [modal, setModal] = useState<"apply" | "concurrence" | "extend" | "exit" | null>(null);
@@ -378,6 +380,10 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
   const handleApply = () => {
     const station = manualStation.trim() || selectedStation;
     if (!station) { toast.error("Select or enter a station code"); return; }
+    if (smStations.length > 0 && !smStations.some((s: any) => s.code === station)) {
+      toast.error(`"${station}" is not a registered SM station. Please select a valid station from the list.`);
+      return;
+    }
     setSyncing(true);
     applyMut.mutate({
       requestId: id,
