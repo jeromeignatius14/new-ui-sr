@@ -262,7 +262,8 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
   const [modal, setModal] = useState<"apply" | "concurrence" | "extend" | "exit" | null>(null);
 
   const [selectedStation, setSelectedStation]       = useState("");
-  const [manualStation, setManualStation]           = useState("");
+  const [stationInput, setStationInput]             = useState("");
+  const [stationDropdownOpen, setStationDropdownOpen] = useState(false);
   const [applyTimeFrom, setApplyTimeFrom]           = useState("");
   const [applyTimeTo, setApplyTimeTo]               = useState("");
   const [concurrenceRemarks, setConcurrenceRemarks] = useState("");
@@ -378,12 +379,8 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
 
   // ── Handlers ─────────────────────────────────────────────────────────────
   const handleApply = () => {
-    const station = manualStation.trim() || selectedStation;
-    if (!station) { toast.error("Select or enter a station code"); return; }
-    if (smStations.length > 0 && !smStations.some((s: any) => s.code === station)) {
-      toast.error(`"${station}" is not a registered SM station. Please select a valid station from the list.`);
-      return;
-    }
+    const station = selectedStation;
+    if (!station) { toast.error("Select a station from the dropdown"); return; }
     // from must not be in the past
     if (applyTimeFrom) {
       const fromMs = new Date(applyTimeFrom + ":00.000Z").getTime();
@@ -402,7 +399,7 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
       requestedTimeTo: applyTimeTo ? toUTCSlot(applyTimeTo) : undefined,
     }, {
       onSuccess: async () => {
-        setModal(null); setSelectedStation(""); setManualStation(""); setApplyTimeFrom(""); setApplyTimeTo("");
+        setModal(null); setSelectedStation(""); setStationInput(""); setStationDropdownOpen(false); setApplyTimeFrom(""); setApplyTimeTo("");
         toast.success("Application submitted");
         await refetch();
         setSyncing(false);
@@ -888,9 +885,9 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
       {modal === "apply" && (() => {
         const isTrdBlock = block.selectedDepartment === "TRD";
         const stationOptions = getStationsFromBlock(block);
-        const canApply = !!(selectedStation || manualStation.trim());
+        const canApply = !!selectedStation;
         return (
-          <Modal title="Apply for Availing" onClose={() => { setModal(null); setSelectedStation(""); setManualStation(""); setApplyTimeFrom(""); setApplyTimeTo(""); }}>
+          <Modal title="Apply for Availing" onClose={() => { setModal(null); setSelectedStation(""); setStationInput(""); setStationDropdownOpen(false); setApplyTimeFrom(""); setApplyTimeTo(""); }}>
 
             {isTrdBlock && (
               /* TRD info banner — still need station selection below */
@@ -902,66 +899,46 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
               </div>
             )}
 
-            {/* Station selection — required for all departments including TRD */}
-            <>
-            {!isTrdBlock && <>
-                          <p style={{ fontSize: "13px", color: "#6b7280", marginBottom: "12px" }}>
-                {/* {isTrdBlock
-                  ? "Select the depot / station code for this block:"
-                  : "Select the SM station for this block section:"} */}
-
-                  Select the SM station for this block section:
+            {/* Station selection — combobox from DB */}
+            <div style={{ marginBottom: "16px" }}>
+              <label style={fieldLabel}>
+                {isTrdBlock ? "Select Depot / Station code" : "Select SM Station"}
+              </label>
+              <p style={{ fontSize: "12px", color: "#6b7280", margin: "0 0 8px" }}>
+                Type to search, then tap to select from the list.
               </p>
-            </>}
-
-              {!isTrdBlock&& <>
-                <div style={{ marginBottom: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
-                {stationOptions.map((code) => {
-                  const isSelected = selectedStation === code;
-                  return (
-                    <button
-                      key={code}
-                      type="button"
-                      onClick={() => { setSelectedStation(code); setManualStation(""); }}
-                      style={{
-                        padding: "14px 18px", borderRadius: "10px",
-                        fontSize: "17px", fontWeight: 700, textAlign: "left",
-                        cursor: "pointer", border: "2px solid",
-                        borderColor: isSelected ? "#16a34a" : "#e5e7eb",
-                        background: isSelected ? "#f0fdf4" : "#fff",
-                        color: isSelected ? "#15803d" : "#111827",
-                        display: "flex", alignItems: "center", justifyContent: "space-between",
-                      }}
-                    >
-                      {code}
-                      {isSelected && <span style={{ fontSize: "18px" }}>✓</span>}
-                    </button>
-                  );
-                })}
-              </div>
-              
-              </>}
-            
-              <div style={{ marginBottom: "16px" }}>
-                <label style={fieldLabel}>
-                  {isTrdBlock ? "Depot / Station (type to search)" : "Station code (type to search or select above)"}
-                </label>
+              <div style={{ position: "relative" }}>
                 <input
                   type="text"
-                  list="sm-station-options"
-                  placeholder={isTrdBlock ? "e.g. MDU, DG, POY…" : "e.g. VRI, MNM, TPJ…"}
-                  value={manualStation}
-                  onChange={(e) => { setManualStation(e.target.value.toUpperCase()); setSelectedStation(""); }}
-                  style={fieldInput}
+                  placeholder="Type station code or name…"
+                  value={selectedStation || stationInput}
+                  onChange={(e) => { setSelectedStation(""); setStationInput(e.target.value.toUpperCase()); setStationDropdownOpen(true); }}
+                  onFocus={() => setStationDropdownOpen(true)}
+                  onBlur={() => setTimeout(() => setStationDropdownOpen(false), 150)}
+                  style={{ ...fieldInput, borderColor: selectedStation ? "#16a34a" : "#d1d5db", background: selectedStation ? "#f0fdf4" : "#fff", paddingRight: selectedStation ? "36px" : undefined }}
                   autoComplete="off"
                 />
-                <datalist id="sm-station-options">
-                  {smStations.map((s) => (
-                    <option key={s.code} value={s.code}>{s.smName ? `${s.code} — ${s.smName}` : s.code}</option>
-                  ))}
-                </datalist>
+                {selectedStation && (
+                  <button type="button" onMouseDown={() => { setSelectedStation(""); setStationInput(""); }} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: "#9ca3af" }}>✕</button>
+                )}
+                {stationDropdownOpen && !selectedStation && (
+                  <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#fff", border: "2px solid #d1d5db", borderRadius: "8px", maxHeight: "200px", overflowY: "auto", zIndex: 200, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
+                    {smStations.filter((s: any) => !stationInput || s.code.includes(stationInput) || s.smName?.toUpperCase().includes(stationInput)).length === 0 ? (
+                      <div style={{ padding: "10px 14px", fontSize: "13px", color: "#9ca3af" }}>No matching stations found</div>
+                    ) : smStations.filter((s: any) => !stationInput || s.code.includes(stationInput) || s.smName?.toUpperCase().includes(stationInput)).map((s: any) => (
+                      <div key={s.code} onMouseDown={() => { setSelectedStation(s.code); setStationInput(""); setStationDropdownOpen(false); }}
+                        style={{ padding: "10px 14px", cursor: "pointer", fontSize: "14px", fontWeight: 600, borderBottom: "1px solid #f3f4f6", display: "flex", gap: "8px" }}>
+                        <span style={{ fontWeight: 800, color: "#1d4ed8" }}>{s.code}</span>
+                        {s.smName && <span style={{ color: "#6b7280", fontWeight: 500 }}>— {s.smName}</span>}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            </>
+              {selectedStation && (
+                <div style={{ marginTop: "6px", fontSize: "12px", color: "#16a34a", fontWeight: 700 }}>✓ Selected: {selectedStation}</div>
+              )}
+            </div>
 
             {/* Optional time edit */}
             <div style={{ background: "#f0f9ff", border: "1.5px solid #bae6fd", borderRadius: "10px", padding: "12px 14px", marginBottom: "16px" }}>
