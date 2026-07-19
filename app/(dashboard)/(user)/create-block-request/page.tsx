@@ -4857,15 +4857,6 @@ useEffect(() => {
                   {errors.missionBlock}
                 </span>
               )}
-              {formData.selectedSection && (
-                <button
-                  type="button"
-                  onClick={() => setQuickAdd({ type: "BLOCK", parentCode: formData.selectedSection, dept: formData.selectedSection, label: formData.selectedSection })}
-                  className="ml-2 px-3 py-1 rounded-lg bg-amber-100 border border-amber-400 text-amber-800 text-sm font-semibold hover:bg-amber-200 whitespace-nowrap"
-                >
-                  + Add Block
-                </button>
-              )}
             </div>
             {blockSectionValue.map((block: string, idx: number) => {
               const isYard = block.includes("-YD");
