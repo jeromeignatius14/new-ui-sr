@@ -40,6 +40,9 @@ export default function ManagerQuickLinks() {
             {(isDeptController || isBranchOfficer || isSeniorOfficer || isJuniorOfficer) && (
                 <a href="/manage/defaulters" className="w-full rounded-2xl bg-[#ffd6d6] border-2 border-[#dc2626] py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">⚠️ EXCEPTIONAL LIST</a>
             )}
+            {isDeptController && (
+                <a href="/manage/master-data" className="w-full rounded-2xl bg-[#e0f2fe] border-2 border-[#0284c7] py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">🗂️ MANAGE MASTER DATA</a>
+            )}
             <a href="/analyst" className="w-full rounded-2xl bg-[#d4edda] border border-black py-6 text-xl font-extrabold text-black text-center shadow hover:scale-105 transition">ANALYSE IN DETAIL</a>
         </div>
     );
