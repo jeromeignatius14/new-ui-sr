@@ -1,56 +1,35 @@
-import { withAuth } from 'next-auth/middleware';
-import { NextResponse } from 'next/server';
-import { NextRequest } from 'next/server';
+import { withAuth } from "next-auth/middleware";
+import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
-// Debug middleware execution
-const debug = (req: NextRequest, message: string, data?: any) => {
-  console.log(`[Middleware] ${message} - URL: ${req.nextUrl.pathname}`, data ? data : '');
-};
+// ── Set to false when maintenance is over and redeploy ────────────────────────
+const MAINTENANCE_MODE = true;
 
 export default withAuth(
-  function middleware(req) {
-    debug(req, 'Processing request');
-    
-    // Allow access to the login page even when authenticated
-    if (req.nextUrl.pathname.startsWith('/auth/login')) {
-      debug(req, 'Login page access');
+  function middleware(req: NextRequest) {
+    if (MAINTENANCE_MODE) {
+      return NextResponse.redirect(new URL("/maintenance", req.url));
+    }
+    if (req.nextUrl.pathname.startsWith("/auth/login")) {
       return NextResponse.next();
     }
-    
-    // For protected routes, the withAuth wrapper will handle authentication
-    debug(req, 'Protected route access');
     return NextResponse.next();
   },
   {
     callbacks: {
       authorized: ({ token, req }) => {
-        const isAuthenticated = !!token;
-        const isAuthPage = req.nextUrl.pathname.startsWith('/auth/login');
-        
-        debug(req, 'Authorization check', { isAuthenticated, isAuthPage, tokenExists: !!token });
-        
-        // Allow unauthenticated users to access login page
-        if (isAuthPage) {
-          return true;
-        }
-        
-        // For all other routes, require authentication
-        return isAuthenticated;
+        if (MAINTENANCE_MODE) return true;
+        const isAuthPage = req.nextUrl.pathname.startsWith("/auth/login");
+        if (isAuthPage) return true;
+        return !!token;
       },
     },
     pages: {
-      signIn: '/auth/login',
+      signIn: "/auth/login",
     },
   }
 );
 
 export const config = {
-  matcher: [
-    // Protected routes that require authentication
-    '/dashboard/:path*',
-    '/sm/:path*',
-    '/avail-block/:path*',
-    // Auth pages
-    '/auth/login',
-  ],
+  matcher: ["/((?!_next|api/auth|favicon.ico|maintenance).*)"],
 };
