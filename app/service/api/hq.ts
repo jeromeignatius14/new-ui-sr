@@ -1,6 +1,5 @@
 import axios from "axios";
 import axiosInstance from "@/app/utils/axiosInstance";
-import { MajorSection } from "@/app/lib/store";
 
 export interface GenerateReportParams {
   pcInstalledStation?: any;
