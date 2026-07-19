@@ -899,26 +899,44 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
               </div>
             )}
 
-            {/* Station selection — combobox from DB */}
+            {/* Station selection — block-section dropdown + DB search combobox */}
             <div style={{ marginBottom: "16px" }}>
               <label style={fieldLabel}>
                 {isTrdBlock ? "Select Depot / Station code" : "Select SM Station"}
               </label>
-              <p style={{ fontSize: "12px", color: "#6b7280", margin: "0 0 8px" }}>
-                Type to search, then tap to select from the list.
+
+              {/* ── 1. Native dropdown from block sections (the "wheel") ── */}
+              {stationOptions.length > 0 && (
+                <select
+                  value={stationOptions.includes(selectedStation) ? selectedStation : ""}
+                  onChange={(e) => { setSelectedStation(e.target.value); setStationInput(""); setStationDropdownOpen(false); }}
+                  style={{ ...fieldInput, marginBottom: "10px", borderColor: stationOptions.includes(selectedStation) ? "#16a34a" : "#d1d5db", background: stationOptions.includes(selectedStation) ? "#f0fdf4" : "#fff" }}
+                >
+                  <option value="">— Select from block sections —</option>
+                  {stationOptions.map((s: string) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              )}
+
+              {/* ── Divider ── */}
+              <p style={{ fontSize: "12px", color: "#6b7280", margin: "0 0 6px" }}>
+                {stationOptions.length > 0 ? "Or search all SM stations by code / name:" : "Type to search SM station:"}
               </p>
+
+              {/* ── 2. Combobox search from DB ── */}
               <div style={{ position: "relative" }}>
                 <input
                   type="text"
                   placeholder="Type station code or name…"
-                  value={selectedStation || stationInput}
+                  value={!stationOptions.includes(selectedStation) && selectedStation ? selectedStation : stationInput}
                   onChange={(e) => { setSelectedStation(""); setStationInput(e.target.value.toUpperCase()); setStationDropdownOpen(true); }}
-                  onFocus={() => setStationDropdownOpen(true)}
+                  onFocus={() => { if (!stationOptions.includes(selectedStation)) setStationDropdownOpen(true); }}
                   onBlur={() => setTimeout(() => setStationDropdownOpen(false), 150)}
-                  style={{ ...fieldInput, borderColor: selectedStation ? "#16a34a" : "#d1d5db", background: selectedStation ? "#f0fdf4" : "#fff", paddingRight: selectedStation ? "36px" : undefined }}
+                  style={{ ...fieldInput, borderColor: selectedStation && !stationOptions.includes(selectedStation) ? "#16a34a" : "#d1d5db", background: selectedStation && !stationOptions.includes(selectedStation) ? "#f0fdf4" : "#fff", paddingRight: selectedStation && !stationOptions.includes(selectedStation) ? "36px" : undefined }}
                   autoComplete="off"
                 />
-                {selectedStation && (
+                {selectedStation && !stationOptions.includes(selectedStation) && (
                   <button type="button" onMouseDown={() => { setSelectedStation(""); setStationInput(""); }} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: "#9ca3af" }}>✕</button>
                 )}
                 {stationDropdownOpen && !selectedStation && (
