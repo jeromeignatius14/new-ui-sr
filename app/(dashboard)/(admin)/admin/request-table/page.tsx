@@ -704,7 +704,7 @@ if (activeSummaryFilters.searchId) {
                   const cacheDate = new Date(dateStr);
                   cacheDate.setHours(0, 0, 0, 0);
                   queryClient.setQueryData(["approved-requests", cacheDate, false], { data: { requests: allRequests } });
-                  router.push(`/admin/optimise-table?dept=${encodeURIComponent(item.label)}&date=${dateStr}`);
+                  router.push(`/admin/optimise-table?dept=${item.label === 'S&T' ? 'SNT' : item.label}&date=${dateStr}`);
                 }}
               >
                 <span>{item.label}</span>
