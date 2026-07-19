@@ -122,6 +122,7 @@ export default function AdminRequestTablePage() {
     { label: "Non-corridor(NC)", value: "Outside Corridor" },
     { label: "Emergency (E)", value: "Urgent Block" },
     { label: "Mega Block (M)", value: "MEGA_BLOCK" },
+    { label: "FTCP", value: "FTCP" },
   ];
 
   // Status mapping for admin (lookalike to manager's, but with admin-specific labels)

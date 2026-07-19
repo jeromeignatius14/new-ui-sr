@@ -420,7 +420,7 @@ const handleSelectAllUrgent = () => {
 
 const handleSelectAllCorridor = () => {
   const corridorRequests = corridorRequestsFiltered.filter((request: UserRequest) => !request.Draft);
-  
+
   if (selectedRequestsForOptimization.size === corridorRequests.length) {
     // If all are selected, deselect all
     setSelectedRequestsForOptimization(new Set());
@@ -428,6 +428,19 @@ const handleSelectAllCorridor = () => {
     // Select all corridor requests
     setSelectedRequestsForOptimization(new Set(corridorRequests.map((req: { id: any; }) => req.id)));
   }
+};
+
+const handleSelectAllFtcp = () => {
+  const dayFtcp = ftcpRequestsFiltered.filter((r: UserRequest) => {
+    const d = typeof r.date === "string" ? parseISO(r.date) : r.date;
+    return isSameDay(d, selectedDate) && !r.Draft;
+  });
+  if (dayFtcp.every((r: UserRequest) => selectedRequestsForOptimization.has(r.id))) {
+    dayFtcp.forEach((r: UserRequest) => selectedRequestsForOptimization.delete(r.id));
+  } else {
+    dayFtcp.forEach((r: UserRequest) => selectedRequestsForOptimization.add(r.id));
+  }
+  setSelectedRequestsForOptimization(new Set(selectedRequestsForOptimization));
 };
 
 const isRequestSelected = (requestId: string) => {
@@ -672,6 +685,17 @@ const nonCorridorRequestsFiltered = pendingRequests
     if (r.sntDisconnectionRequired && !(r.sigActionsNeeded || allSntAcceptance)) return false;
     if (r.enggDisconnectionsRequired && !allEnggAcceptance) return false;
 
+    return true;
+  })
+  .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+const ftcpRequestsFiltered = pendingRequests
+  .filter((r: UserRequest) => {
+    if (r.corridorType !== "FTCP") return false;
+    if (deptFilter !== 'ALL' && r.selectedDepartment !== deptFilter) return false;
+    if (!matchesWorkType(r)) return false;
+    if (!matchesActivity(r)) return false;
+    if (!matchesTimeSlot(r)) return false;
     return true;
   })
   .sort((a: UserRequest, b: UserRequest) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -1646,7 +1670,7 @@ const handleOptimize = async () => {
         </div>
 {/* {isOptimizeDialogOpen && (() => {
   // Calculate the requests to be optimized for dialog preview
-  const preData = isUrgentRequests ? urgentRequestsFiltered : [...corridorRequestsFiltered, ...nonCorridorRequestsFiltered];
+  const preData = isUrgentRequests ? urgentRequestsFiltered : [...corridorRequestsFiltered, ...nonCorridorRequestsFiltered, ...ftcpRequestsFiltered];
   const requestsToOptimize = preData.filter(
     (request: UserRequest) => {
       const requestDate = format(parseISO(request.date), "yyyy-MM-dd");
@@ -2974,6 +2998,275 @@ className={`transition-colors ${
 
 
 
+
+        {/* FTCP Requests Section */}
+        <div className="mb-8">
+          <h2 className="text-[24px] font-semibold mb-2 text-[#7c3aed] border-l-4 border-[#7c3aed] pl-3">FTCP Block Requests ({ftcpRequestsFiltered.filter((request: UserRequest) => !request.Draft).sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime()).length})</h2>
+          <div className="overflow-x-auto max-h-[70vh] overflow-y-auto rounded-lg border border-gray-300 shadow-sm">
+            <table className="w-full border-collapse text-black bg-white">
+              <thead className="sticky top-0 z-10 bg-gray-100 shadow">
+                <tr className="bg-gray-50">
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="date" title="Date" />
+                  </th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="date" title="Dept" />
+                  </th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="section" title="Major Section" />
+                  </th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="section" title="SSE" />
+                  </th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="section" title="Block Section" />
+                  </th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="line" title="Line / Road" />
+                  </th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="time" title="Demanded" />
+                  </th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="time" title="Optimize" />
+                  </th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="work" title="Activity" />
+                  </th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="action" title="Actions" />
+                  </th>
+                  <th className="border border-black p-2 text-left text-[24px] font-semibold text-black sticky top-0 bg-gray-100 z-10">
+                    <ColumnHeader icon="view" title="View" />
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {ftcpRequestsFiltered.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={12}
+                      className="border border-black p-2 text-[24px] text-left"
+                    >
+                      <div className="text-center py-4">
+                        <p className="mb-2">No FTCP requests found.</p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                {(() => {
+                  const sortedFtcp = ftcpRequestsFiltered
+                    .filter((r: UserRequest) => !r.Draft)
+                    .sort((a: any, b: any) => new Date(a.demandTimeFrom).getTime() - new Date(b.demandTimeFrom).getTime());
+                  const groupedFtcp = groupRequestsByBatch(sortedFtcp as any[]);
+                  return groupedFtcp.flatMap((item: any) => {
+                    if (item.isBatch) {
+                      const isCollapsed = collapsedBatches.has(item.batchId);
+                      return [
+                        <tr key={`batch-hdr-ftcp-${item.batchId}`} style={{ background: "linear-gradient(90deg,#7c3aed,#a78bfa)", cursor: "pointer" }} onClick={() => toggleBatch(item.batchId)}>
+                          <td colSpan={11} style={{ padding: "6px 14px", color: "#fff", fontWeight: 800, fontSize: "13px" }}>
+                            ⚡ BATCH — {item.requests.length} Spells &nbsp;|&nbsp;
+                            {item.requests[0]?.batchTimeFrom ? new Date(item.requests[0].batchTimeFrom).toISOString().slice(11,16) : "--"}
+                            {" – "}
+                            {item.requests[0]?.batchTimeTo ? new Date(item.requests[0].batchTimeTo).toISOString().slice(11,16) : "--"}
+                            &nbsp;<span style={{ fontSize: "12px" }}>{isCollapsed ? "▼ expand" : "▲ collapse"}</span>
+                          </td>
+                        </tr>,
+                        ...(!isCollapsed ? item.requests.map((request: any) => renderFtcpRow(request)) : []),
+                      ];
+                    }
+                    return [renderFtcpRow(item.request)];
+                  });
+                  function renderFtcpRow(request: any) { return (
+                  <tr
+                    key={`request-${request.id}-${request.date}`}
+                    className={`transition-colors ${
+                      request.selectedDepartment === "ENGG" ? "bg-red-50"
+                      : request.selectedDepartment === "TRD" ? "bg-blue-50"
+                      : request.selectedDepartment === "S&T" ? "bg-green-50"
+                      : "bg-white"
+                    }`}
+                  >
+                    <td className="border border-black p-2 text-[24px]">
+                      {editingId === request.id ? (
+                        <input
+                          type="date"
+                          value={editDate}
+                          onChange={(e) => setEditDate(e.target.value)}
+                          className="w-28 border p-1 text-sm rounded"
+                        />
+                      ) : (
+                        dayjs(request.date).format("DD-MM-YY")
+                      )}
+                    </td>
+                    <td className="border border-black p-2 text-[24px]">
+                      <div className="flex flex-col items-start gap-1">
+                        <span>{request.selectedDepartment}</span>
+                        <div className="flex gap-1">
+                          {request.sntDisconnectionRequired && (
+                            <span className="bg-green-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">S</span>
+                          )}
+                          {request.powerBlockRequired && (
+                            <span className="bg-blue-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">T</span>
+                          )}
+                          {request.enggDisconnectionsRequired && (
+                            <span className="bg-red-500 text-white px-2 py-1 rounded-full text-sm font-bold min-w-6 text-center">E</span>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="border border-black p-2 text-[24px]">
+                      {request.selectedSection}
+                    </td>
+                    <td className="border border-black p-2 text-[24px]">
+                      {request.selectedDepo}
+                    </td>
+                    <td className="border border-black p-2 text-[24px]">
+                      {request.missionBlock}
+                    </td>
+                    <td className="border border-black p-2 text-[24px]">
+                      {getLineOrRoad(request)}
+                    </td>
+                    <td className="border border-black p-2 text-[24px]">
+                      {request.batchId && request.spellDurationMinutes
+                        ? <div><span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span><div style={{ fontSize: "12px", color: "#7c3aed", fontWeight: 600, marginTop: "2px" }}>{(request as any).batchTimeFrom ? new Date((request as any).batchTimeFrom).toISOString().slice(11,16) : "--"}{" – "}{(request as any).batchTimeTo ? new Date((request as any).batchTimeTo).toISOString().slice(11,16) : "--"}</div></div>
+                        : <>{formatTime(request.demandTimeFrom)} -{" "}{formatTime(request.demandTimeTo)}</>
+                      }
+                    </td>
+                    <td className="border border-black p-2 text-[24px]">
+                      {editingId === request.id ? (
+                        <div className="flex gap-1 items-center">
+                          <input
+                            type="time"
+                            value={timeFrom}
+                            onChange={(e) => setTimeFrom(e.target.value)}
+                            className="w-20 border p-1 text-sm rounded"
+                          />
+                          <span>-</span>
+                          <input
+                            type="time"
+                            value={timeTo}
+                            onChange={(e) => setTimeTo(e.target.value)}
+                            className="w-20 border p-1 text-sm rounded"
+                          />
+                        </div>
+                      ) : (
+                        <>
+                          {request.optimizeTimeFrom && request.optimizeTimeFrom !== "WrongRequest"
+                            ? formatTime(request.optimizeTimeFrom)
+                            : "N/A"}{" "}
+                          -{" "}
+                          {request.optimizeTimeTo && request.optimizeTimeTo !== "WrongRequest"
+                            ? formatTime(request.optimizeTimeTo)
+                            : "N/A"}
+                        </>
+                      )}
+                    </td>
+                    <td className="border border-black p-2 text-[24px]">
+                      {request.activity}
+                    </td>
+                    <td className="border border-black p-2 text-[24px]">
+                      <div className="flex gap-2">
+                        {editingId === request.id ? (
+                          <>
+                            <button
+                              onClick={() => handleUpdateClick(request.id)}
+                              className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
+                              disabled={updateOptimizedTimes.isPending}
+                            >
+                              {updateOptimizedTimes.isPending ? "Saving..." : "Save"}
+                            </button>
+                            <button
+                              onClick={handleCancelEdit}
+                              className="px-2 py-1 text-[24px] bg-gray-400 text-white border border-black rounded"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            {request.optimizeStatus === false ? (
+                              <>
+                                <button
+                                  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+                                  onClick={() => {
+                                    setEditingId(request.id);
+                                    setEditDate(request.date.split("T")[0]);
+                                    setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
+                                    setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
+                                    setModifyReturnOpenId(null);
+                                  }}
+                                >
+                                  Modify
+                                </button>
+                                <button
+                                  className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
+                                  onClick={() => {
+                                    handleRejectClick(request.id);
+                                    setModifyReturnOpenId(null);
+                                  }}
+                                >
+                                  Return
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
+                                  onClick={() => handleDraftClick(request)}
+                                >
+                                  Draft
+                                </button>
+                                <button
+                                  className="px-2 py-1 text-[24px] bg-green-600 text-white border border-black rounded"
+                                  onClick={() => handleSanctionClick(request)}
+                                >
+                                  Sanction
+                                </button>
+                                <button
+                                  className="px-2 py-1 text-[24px] bg-yellow-500 text-white border border-black rounded"
+                                  onClick={() => {
+                                    setEditingId(request.id);
+                                    setEditDate(request.date.split("T")[0]);
+                                    setTimeFrom(request.optimizeTimeFrom ? formatTime(request.optimizeTimeFrom) : "");
+                                    setTimeTo(request.optimizeTimeTo ? formatTime(request.optimizeTimeTo) : "");
+                                    setModifyReturnOpenId(null);
+                                  }}
+                                >
+                                  Modify
+                                </button>
+                                <button
+                                  className="px-2 py-1 text-[24px] bg-[#f69697] text-white border border-black rounded"
+                                  onClick={() => {
+                                    handleRejectClick(request.id);
+                                    setModifyReturnOpenId(null);
+                                  }}
+                                >
+                                  Return
+                                </button>
+                              </>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </td>
+                    <td className="border border-black p-2 text-[24px] min-w-[140px]">
+                      <div className="flex gap-2">
+                        <Link
+                          href={`/admin/view-request/${request.id}?from=request-table`}
+                          className="px-2 py-1 bg-blue-600 text-white border border-black rounded inline-block text-center w-full min-w-[120px]"
+                        >
+                          View
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                  ); }
+                })()}
+              </tbody>
+            </table>
+          </div>
+        </div>
 
         {/* Non-Corridor Requests Section */}
         <div className="mb-8">

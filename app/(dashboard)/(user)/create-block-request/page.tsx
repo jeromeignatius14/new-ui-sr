@@ -1161,8 +1161,9 @@ interface FormData {
   | "Corridor"
   | "Outside Corridor"
   | "Urgent Block"
+  | "FTCP"
   | null;
-  corridorType: "Corridor" | "Outside Corridor" | "Urgent Block" | null;
+  corridorType: "Corridor" | "Outside Corridor" | "Urgent Block" | "FTCP" | null;
   selectedStream: string;
   selectedRoad: string;
   selectedRoads: string[];
@@ -4607,6 +4608,23 @@ useEffect(() => {
                           >
                             NC
                           </button>
+                          <button
+                            type="button"
+                            className={`px-5 py-2 rounded-lg border-2 text-[24px] font-extrabold shadow-sm focus:outline-none transition-all ${formData.corridorTypeSelection === "FTCP"
+                              ? "bg-[#dbeafe] border-black text-black"
+                              : "bg-white border-[#93c5fd] text-[#888]"
+                              }`}
+                            onClick={() =>
+                              handleInputChange({
+                                target: {
+                                  name: "corridorTypeSelection",
+                                  value: "FTCP",
+                                },
+                              } as any)
+                            }
+                          >
+                            FTCP
+                          </button>
                         </div>
                       )
                     ) : null}
@@ -4624,7 +4642,7 @@ useEffect(() => {
             </div>
             {/* If not Corridor Block, show reason box (compact) */}
             {formData.corridorTypeSelection &&
-              !["Corridor Block", "Corridor"].includes(
+              !["Corridor Block", "Corridor", "FTCP"].includes(
                 formData.corridorTypeSelection
               ) && (
                 <div className="w-full">
