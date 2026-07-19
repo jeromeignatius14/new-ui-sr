@@ -938,6 +938,13 @@ const handleDownloadExcel = async () => {
 </Link>
 )}
 {session?.user?.role === "DEPT_CONTROLLER" && (
+<Link href="/manage/master-data">
+  <button className="w-fit px-16 rounded-full bg-[#e0f2fe] border-2 border-[#0284c7] py-6 text-2xl font-extrabold text-black text-center shadow-lg hover:scale-105 transition min-w-[320px]">
+    🗂️ MANAGE MASTER DATA
+  </button>
+</Link>
+)}
+{session?.user?.role === "DEPT_CONTROLLER" && (
 <Link href="/analyst">
   <button className="w-fit px-16 rounded-full bg-[#c8f0ff] border-2 border-[#1976d2] py-6 text-2xl font-extrabold text-black text-center shadow-lg hover:scale-105 transition min-w-[320px]">
     ANALYZE IN DETAIL
