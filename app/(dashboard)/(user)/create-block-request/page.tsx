@@ -8,7 +8,6 @@ import {
   blockSection,
   workType,
   Activity,
-  lineData,
   streamData,
   depot
 } from "@/app/lib/store";
@@ -34,6 +33,7 @@ import { useGetMyParticipations, useGetDepotBlocks } from "@/app/service/query/a
 import roadData from "../../../../public/roadData.json";
 import { createSiteLocationChangeHandler, validateSiteLocationPair, getAllAvailableDepots, getAutoAssignedDepots } from './features/siteLocation';
 import axiosInstance from "@/app/utils/axiosInstance";
+import MasterQuickAddModal from "@/app/components/ui/MasterQuickAddModal";
 
 
 type Department = "TRD" | "S&T" | "ENGG";
@@ -1317,6 +1317,7 @@ const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
   const [blockSectionValue, setBlockSectionValue] = useState<string[]>([]);
   const [blockLines, setBlockLines] = useState<Record<string, string[]>>({});
   const [dbMasters, setDbMasters] = useState<{ majors: any[]; blocks: any[]; depots: any[] }>({ majors: [], blocks: [], depots: [] });
+  const [quickAdd, setQuickAdd] = useState<{ type: "LINE" | "ROAD" | "BLOCK"; parentCode: string; dept: string; label: string } | null>(null);
   const [isDisabled, setIsDisabled] = useState(false);
   const [validCorridorType, setValidCorridorType] = useState(false);
   const [sntDisconnectionChecked, setSntDisconnectionChecked] = useState(false);
@@ -1547,24 +1548,19 @@ const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
     return filtered.length > 0 ? filtered : null;
   }, [dbMasters, userDepot, userDept]);
 
-  const majorSectionOptions: string[] = dbMajorOptions ?? storeMajorOptions;
+  const majorSectionOptions: string[] = dbMajorOptions ?? [];
 
   const selectedMajorSection = formData.selectedSection;
 
   const dbBlockOptions = useMemo(() => {
-    if (dbMasters.blocks.length === 0 || !selectedMajorSection) return null;
-    const filtered = dbMasters.blocks
+    if (dbMasters.blocks.length === 0 || !selectedMajorSection) return [];
+    return dbMasters.blocks
       .filter((b) => b.parent === selectedMajorSection)
       .sort((a, b) => a.sort - b.sort)
       .map((b) => b.code);
-    return filtered.length > 0 ? filtered : null;
   }, [dbMasters.blocks, selectedMajorSection]);
 
-  const blockSectionOptions: string[] =
-    dbBlockOptions ??
-    (selectedMajorSection && blockSection[selectedMajorSection as keyof typeof blockSection]
-      ? blockSection[selectedMajorSection as keyof typeof blockSection]
-      : []);
+  const blockSectionOptions: string[] = dbBlockOptions;
   const userDepartment = session?.user.department;
   const workTypeOptions =
     userDepartment && workType[userDepartment as keyof typeof workType]
@@ -4100,6 +4096,29 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-start bg-[#f7fafc] py-0">
+      {quickAdd && (
+        <MasterQuickAddModal
+          type={quickAdd.type}
+          parentCode={quickAdd.parentCode}
+          dept={quickAdd.dept}
+          label={quickAdd.label}
+          onAdded={(code) => {
+            if (quickAdd.type === "LINE" || quickAdd.type === "ROAD") {
+              setBlockLines((prev) => ({
+                ...prev,
+                [quickAdd.dept]: [...(prev[quickAdd.dept] ?? []), code],
+              }));
+            } else {
+              axiosInstance
+                .get("/api/master?type=BLOCK")
+                .then((res) =>
+                  setDbMasters((prev) => ({ ...prev, blocks: res.data.data ?? [] }))
+                );
+            }
+          }}
+          onClose={() => setQuickAdd(null)}
+        />
+      )}
       {/* Header */}
       <div className="w-full bg-[#fff9b2] py-6 flex flex-col items-center border-b-2 border-black">
         <span
@@ -4860,6 +4879,15 @@ useEffect(() => {
                 }
                 required
               />
+              {selectedMajorSection && (
+                <button
+                  type="button"
+                  onClick={() => setQuickAdd({ type: "BLOCK", parentCode: selectedMajorSection, dept: "", label: selectedMajorSection })}
+                  className="text-[18px] px-3 py-2 rounded-lg bg-blue-50 border border-blue-300 text-blue-700 font-semibold hover:bg-blue-100 whitespace-nowrap"
+                  title="Add new block section to master data"
+                >+ Add Block
+                </button>
+              )}
               {errors.missionBlock && (
                 <span className="text-[24px] text-[#e07a5f] font-medium mt-1 block">
                   {errors.missionBlock}
@@ -4868,17 +4896,10 @@ useEffect(() => {
             </div>
             {blockSectionValue.map((block: string, idx: number) => {
               const isYard = block.includes("-YD");
-              const lineOrRoadOptions = isYard
-                ? (blockLines[block]?.length ? blockLines[block] : getAllRoadsForYard(block)).map((road: string) => ({
-                  value: road,
-                  label: road,
-                }))
-                : (blockLines[block] || lineData[block as keyof typeof lineData] || []).map(
-                  (line: string) => ({
-                    value: line,
-                    label: line,
-                  })
-                );
+              const lineOrRoadOptions = (blockLines[block] ?? []).map((item: string) => ({
+                value: item,
+                label: item,
+              }));
 
               const sectionEntry: any = (formData.processedLineSections || []).find(
                 (s: any) => s.block === block
@@ -4997,6 +5018,13 @@ useEffect(() => {
                       closeMenuOnSelect={false}
                       required
                     />
+                    <button
+                      type="button"
+                      onClick={() => setQuickAdd({ type: isYard ? "ROAD" : "LINE", parentCode: block, dept: block, label: block })}
+                      className="text-[18px] px-3 py-2 rounded-lg bg-blue-50 border border-blue-300 text-blue-700 font-semibold hover:bg-blue-100 whitespace-nowrap"
+                      title={`Add new ${isYard ? "road" : "line"} to master data`}
+                    >+ Add
+                    </button>
                     {renderError(`${block}.lineName`)}
                     {renderError(`${block}.road`)}
                     {renderError(`${block}.stream`)}
@@ -6008,16 +6036,9 @@ useEffect(() => {
                           className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black placeholder-black px-1 w-28 text-2xl"
                         />
                         <datalist id={`adjacentLinesList-${idx}`}>
-                          {blockSectionValue.flatMap((block) => {
-                            const isYard = block.includes("-YD");
-                            return isYard
-                              ? (blockLines[block]?.length ? blockLines[block] : getAllRoadsForYard(block)).map((r) => (
-                                <option key={r} value={r} />
-                              ))
-                              : (
-                                blockLines[block] || lineData[block as keyof typeof lineData] || []
-                              ).map((l) => <option key={l} value={l} />);
-                          })}
+                          {blockSectionValue.flatMap((block) =>
+                            (blockLines[block] ?? []).map((r) => <option key={r} value={r} />)
+                          )}
                         </datalist>
 
                         <input
@@ -6143,16 +6164,9 @@ useEffect(() => {
               className="border-2 border-[#b71c1c] bg-[#fffbe9] text-black placeholder-black px-1 w-28 text-2xl"
             />
             <datalist id={`adjacentLinesList-${idx}`}>
-              {blockSectionValue.flatMap((block) => {
-                const isYard = block.includes("-YD");
-                return isYard
-                  ? (blockLines[block]?.length ? blockLines[block] : getAllRoadsForYard(block)).map((r) => (
-                    <option key={r} value={r} />
-                  ))
-                  : (
-                    blockLines[block] || lineData[block as keyof typeof lineData] || []
-                  ).map((l) => <option key={l} value={l} />);
-              })}
+              {blockSectionValue.flatMap((block) =>
+                (blockLines[block] ?? []).map((r) => <option key={r} value={r} />)
+              )}
             </datalist>
 
             <input
