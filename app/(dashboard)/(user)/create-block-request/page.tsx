@@ -1315,6 +1315,7 @@ const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
   const [isMobile, setIsMobile] = useState(false);
   const [blockSectionValue, setBlockSectionValue] = useState<string[]>([]);
   const [blockLines, setBlockLines] = useState<Record<string, string[]>>({});
+  const [dbMasters, setDbMasters] = useState<{ majors: any[]; blocks: any[]; depots: any[] }>({ majors: [], blocks: [], depots: [] });
   const [isDisabled, setIsDisabled] = useState(false);
   const [validCorridorType, setValidCorridorType] = useState(false);
   const [sntDisconnectionChecked, setSntDisconnectionChecked] = useState(false);
@@ -1478,6 +1479,23 @@ const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
     });
   }, [blockSectionValue]);
 
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    Promise.all([
+      axiosInstance.get("/api/master?type=MAJOR"),
+      axiosInstance.get("/api/master?type=BLOCK"),
+      axiosInstance.get("/api/master?type=DEPOT"),
+    ]).then(([m, b, d]) => {
+      setDbMasters({
+        majors: m.data.data ?? [],
+        blocks: b.data.data ?? [],
+        depots: d.data.data ?? [],
+      });
+    }).catch(() => {
+      // silent — fallback to store.ts MajorSection/blockSection/depot
+    });
+  }, [status]);
+
   // Sync depot arrays with form data for API submission
   useEffect(() => {
     const sntDepotsString = selectedSTDepots.join(", ");
@@ -1509,40 +1527,48 @@ const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
       ? MajorSection[userLocation as keyof typeof MajorSection]
       : [];
 
-  // const majorSectionOptions =
-  //   userDepot === "OVERALL"
-  //     ? locationSections
-  //     : locationSections.filter((section) => {
-  //       const depotData: any = depot[section as keyof typeof depot];
-  //       if (!depotData) return false;
+  const storeMajorOptions =
+    userDepot === "OVERALL"
+      ? locationSections
+      : locationSections.filter((section) => {
+          const depotData: any = depot[section as keyof typeof depot];
+          if (!depotData || !(userDept in depotData)) return false;
+          const userDepots = userDepot.split(",").map((d) => d.trim());
+          return userDepots.some((dep) => depotData[userDept].includes(dep));
+        });
 
-  //       if (!(userDept in depotData)) return false;
+  const dbMajorOptions = useMemo(() => {
+    if (dbMasters.majors.length === 0) return null;
+    if (userDepot === "OVERALL") return dbMasters.majors.sort((a, b) => a.sort - b.sort).map((m) => m.code);
+    const userDepots = userDepot.split(",").map((d) => d.trim());
+    const majorCodes = new Set(
+      dbMasters.depots
+        .filter((d) => userDepots.includes(d.code) && d.dept === userDept)
+        .map((d) => d.parent)
+        .filter(Boolean)
+    );
+    const filtered = dbMasters.majors.filter((m) => majorCodes.has(m.code)).sort((a, b) => a.sort - b.sort).map((m) => m.code);
+    return filtered.length > 0 ? filtered : null;
+  }, [dbMasters, userDepot, userDept]);
 
-  //       return depotData[userDept].includes(userDepot);
-  //     });
-  const majorSectionOptions =
-  userDepot === "OVERALL"
-    ? locationSections
-    : locationSections.filter((section) => {
-        const depotData: any = depot[section as keyof typeof depot];
-        if (!depotData) return false;
-
-        if (!(userDept in depotData)) return false;
-
-        // FIX: Handle multiple depots
-        const userDepots = userDepot.split(',').map(d => d.trim());
-        const sectionDepots = depotData[userDept];
-        
-        // Check if ANY user depot exists in section depots
-        return userDepots.some(depot => sectionDepots.includes(depot));
-      });
+  const majorSectionOptions: string[] = dbMajorOptions ?? storeMajorOptions;
 
   const selectedMajorSection = formData.selectedSection;
-  const blockSectionOptions =
-    selectedMajorSection &&
-      blockSection[selectedMajorSection as keyof typeof blockSection]
+
+  const dbBlockOptions = useMemo(() => {
+    if (dbMasters.blocks.length === 0 || !selectedMajorSection) return null;
+    const filtered = dbMasters.blocks
+      .filter((b) => b.parent === selectedMajorSection)
+      .sort((a, b) => a.sort - b.sort)
+      .map((b) => b.code);
+    return filtered.length > 0 ? filtered : null;
+  }, [dbMasters.blocks, selectedMajorSection]);
+
+  const blockSectionOptions: string[] =
+    dbBlockOptions ??
+    (selectedMajorSection && blockSection[selectedMajorSection as keyof typeof blockSection]
       ? blockSection[selectedMajorSection as keyof typeof blockSection]
-      : [];
+      : []);
   const userDepartment = session?.user.department;
   const workTypeOptions =
     userDepartment && workType[userDepartment as keyof typeof workType]
