@@ -153,6 +153,7 @@ const blockTypeOptions: OptionType[] = [
   { value: "Non-corridor", label: "Outside corridor" },
   { value: "Emergency", label: "Emergency" },
   { value: "Mega", label: "Mega Block" },
+  { value: "FTCP", label: "FTCP" },
 ];
 
 const departmentOptions: OptionType[] = [
