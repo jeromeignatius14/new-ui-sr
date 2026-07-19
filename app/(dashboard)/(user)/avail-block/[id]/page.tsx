@@ -380,6 +380,10 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
   const handleApply = () => {
     const station = manualStation.trim() || selectedStation;
     if (!station) { toast.error("Select or enter a station code"); return; }
+    if (smStations.length > 0 && !smStations.some((s: any) => s.code === station)) {
+      toast.error(`"${station}" is not a registered SM station. Please select a valid station from the list.`);
+      return;
+    }
     // from must not be in the past
     if (applyTimeFrom) {
       const fromMs = new Date(applyTimeFrom + ":00.000Z").getTime();

@@ -45,9 +45,20 @@ export default function EditRequestsPage() {
     const allRequests = Array.isArray(requests?.data?.requests) ? requests.data.requests : [];
     const now = new Date();
      now.setHours(0, 0, 0, 0);
+    const POST_SANCTION_STATUSES = [
+        "Sanctioned",
+        "Sanctioned, Pending with SSE For Acceptance",
+        "Sanctioned and Accepted by SSE",
+        "Sanctioned and Rejected by SSE",
+        "Availing Active",
+        "Availing Cancelled",
+        "Block Closed",
+        "All Closures Submitted",
+        "SM Rejected",
+    ];
     let userRequests = allRequests.filter((req: any) => {
         const blockDate = new Date(req.date);
-        return (req.userId === userId)&&(blockDate >= now);
+        return (req.userId === userId) && (blockDate >= now) && !POST_SANCTION_STATUSES.includes(req.overAllStatus);
     });
     userRequests = userRequests.sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
