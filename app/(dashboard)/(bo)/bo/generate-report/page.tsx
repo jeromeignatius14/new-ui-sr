@@ -1016,9 +1016,13 @@ const handleDownloadUpcomingBlocks = () => {
         "Sanctioned Time": block.SanctionedTimeFrom && block.SanctionedTimeTo
           ? `${formatTime(block.SanctionedTimeFrom)} to ${formatTime(block.SanctionedTimeTo)}`
           : "Not Available",
+        "Granted Time": (block as any).GrantedTimeFrom && (block as any).GrantedTimeTo
+          ? `${formatTime((block as any).GrantedTimeFrom)} to ${formatTime((block as any).GrantedTimeTo)}`
+          : "Not Available",
         "Availed Time": block.AvailedTimeFrom && block.AvailedTimeTo
           ? `${formatTime(block.AvailedTimeFrom)} to ${formatTime(block.AvailedTimeTo)}`
           : "Not Available",
+        "Work Type": (block as any).WorkType || "N/A",
         "Status": statusLabel,
         "Station ID": block.stationId || "N/A",
         "Duration": block.Duration || "N/A",
