@@ -286,6 +286,10 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
   };
 
   async function handleSubmit() {
+    if (closureAckSmStation && smStations.length > 0 && !smStations.some((s: any) => s.code === closureAckSmStation)) {
+      toast.error(`"${closureAckSmStation}" is not a registered SM station. Please select a valid station from the list.`);
+      return;
+    }
     const pos = await getCurrentPosition();
     if (!pos) { submitClosure(); return; }
     const station = block?.smStation ?? block?.missionBlock ?? "";
