@@ -44,9 +44,6 @@ export default function MaintenancePage() {
           <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#fbbf24" }} />
           <span style={{ color: "#fbbf24", fontSize: "13px", fontWeight: 600 }}>Update in progress</span>
         </div>
-        <p style={{ color: "#475569", fontSize: "12px", marginTop: "32px" }}>
-          For urgent matters, contact your Division Control Room directly.
-        </p>
       </div>
     </div>
   );
