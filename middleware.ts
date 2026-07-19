@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
 
 // ── Set to false when maintenance is over and redeploy ────────────────────────
-const MAINTENANCE_MODE = true;
+const MAINTENANCE_MODE = false;
 
 export default withAuth(
   function middleware(req: NextRequest) {
