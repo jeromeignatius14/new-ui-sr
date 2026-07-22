@@ -1,58 +1,6 @@
 {
-<<<<<<< HEAD
-    "name": "client",
-    "version": "3.5.80",
-    "private": true,
-    "scripts": {
-        "dev": "next dev --turbopack",
-        "build": "next build",
-        "start": "next start",
-        "lint": "next lint"
-    },
-    "dependencies": {
-        "@heroicons/react": "^2.2.0",
-        "@hookform/resolvers": "^5.0.1",
-        "@tanstack/react-query": "^5.75.1",
-        "@types/next-auth": "^3.15.0",
-        "@types/xlsx": "^0.0.35",
-        "axios": "^1.9.0",
-        "date-fns": "^4.1.0",
-        "date-fns-tz": "^3.2.0",
-        "dayjs": "^1.11.13",
-        "firebase": "^10.14.1",
-        "jspdf": "^3.0.1",
-        "jspdf-autotable": "^5.0.2",
-        "next": "^16.2.6",
-        "next-auth": "^4.24.11",
-        "next-pwa": "^5.6.0",
-        "papaparse": "^5.5.3",
-        "react": "^19.0.0",
-        "react-dom": "^19.0.0",
-        "react-hook-form": "^7.56.1",
-        "react-hot-toast": "^2.5.2",
-        "react-icons": "^5.5.0",
-        "react-select": "^5.10.1",
-        "react-toastify": "^11.0.5",
-        "recharts": "^3.8.1",
-        "uuid": "^11.1.0",
-        "xlsx": "^0.18.5",
-        "zod": "^3.24.3"
-    },
-    "devDependencies": {
-        "@tailwindcss/postcss": "^4",
-        "@types/node": "^20",
-        "@types/papaparse": "^5.3.16",
-        "@types/react": "^19",
-        "@types/react-dom": "^19",
-        "eslint": "9.26.0",
-        "eslint-config-next": "15.3.2",
-        "tailwindcss": "^4",
-        "typescript": "^5"
-    }
-}
-=======
   "name": "client",
-  "version": "3.5.35",
+  "version": "3.5.81",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -73,7 +21,7 @@
     "firebase": "^10.14.1",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
-    "next": "^16.0.7",
+    "next": "^16.2.6",
     "next-auth": "^4.24.11",
     "next-pwa": "^5.6.0",
     "papaparse": "^5.5.3",
@@ -101,4 +49,3 @@
     "typescript": "^5"
   }
 }
->>>>>>> 3976da46 (fix: allow JE role users to accept/reject disconnections in request-table; fix station dropdown always showing when open)
