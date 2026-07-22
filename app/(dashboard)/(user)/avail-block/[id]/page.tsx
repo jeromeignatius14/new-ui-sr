@@ -943,7 +943,7 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
                 {selectedStation && !stationOptions.includes(selectedStation) && (
                   <button type="button" onMouseDown={() => { setSelectedStation(""); setStationInput(""); }} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: "#9ca3af" }}>✕</button>
                 )}
-                {stationDropdownOpen && (!selectedStation || stationOptions.includes(selectedStation)) && (
+                {stationDropdownOpen && (
                   <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#fff", border: "2px solid #d1d5db", borderRadius: "8px", maxHeight: "200px", overflowY: "auto", zIndex: 200, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
                     {smStations.filter((s: any) => !stationInput || s.code.includes(stationInput) || s.smName?.toUpperCase().includes(stationInput)).length === 0 ? (
                       <div style={{ padding: "10px 14px", fontSize: "13px", color: "#9ca3af" }}>No matching stations found</div>
