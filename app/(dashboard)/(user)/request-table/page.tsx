@@ -1390,12 +1390,8 @@ export default function RequestTablePage() {
                             ) : (<span className="bg-gray-100 p-2 text-gray-600 rounded">
                               Sanctioned and Pending for Acceptance
                             </span>)
-                          ) : session?.user?.role === "JE" ? (
-                            <span className="bg-gray-100 p-2 text-gray-600 rounded">
-                              {request.overAllStatus || "Pending"}
-                            </span>
                           ) :
-                            // For USER role, check conditions for showing buttons
+                            // Both JE and USER roles: check conditions for showing disconnection buttons
                             (userDepartment === "S&T" && request.sntDisconnectionRequired && request.allSntAcceptance === "PENDING") ||
                               (userDepartment === "TRD" && request.powerBlockRequired && request.allTrdAcceptance === "PENDING") ? (
                               <div className="flex gap-2 justify-center">
@@ -1631,13 +1627,8 @@ export default function RequestTablePage() {
                             ) : (<span className="bg-gray-100 p-2 text-gray-600 rounded">
                               Sanctioned and Pending for Acceptance
                             </span>)
-                          ) : session?.user?.role === "JE" ? (
-                            <span className="bg-gray-100 p-2 text-gray-600 rounded">
-                              {request.overAllStatus || "Pending"}
-                            </span>
                           ) :
-                            // For USER role, check conditions for showing buttons
-                            
+                            // Both JE and USER roles: check conditions for showing disconnection buttons
                               (userDepartment === "ENGG" && request.enggDisconnectionsRequired && request.allEnggAcceptance === "PENDING") ? (
                               <div className="flex gap-2 justify-center">
                                 <button
