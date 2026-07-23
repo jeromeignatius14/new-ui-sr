@@ -286,6 +286,7 @@ export const managerService = {
         endDate?: string,
         status?: string,
         id?: string,
+        viewType?: string,
 
     ): Promise<UserRequestsResponse> => {
         const params = new URLSearchParams({
@@ -297,6 +298,7 @@ export const managerService = {
         if (startDate) params.append('startDate', startDate);
         if (endDate) params.append('endDate', endDate);
         if (status) params.append('status', status);
+        if (viewType) params.append('viewType', viewType);
         const response = await axiosInstance.get<UserRequestsResponse>(
             `api/user-request/admin/users-requests?${params.toString()}`
         );

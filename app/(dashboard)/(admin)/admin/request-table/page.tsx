@@ -76,7 +76,10 @@ export default function AdminRequestTablePage() {
         1,
         10000,
         customDateRange.start || undefined,
-        customDateRange.end || undefined
+        customDateRange.end || undefined,
+        undefined,
+        undefined,
+        "sanctioned"
       ),
   });
 
