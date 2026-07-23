@@ -11,6 +11,6 @@ export const useGenerateReport = (params: GenerateReportParams) => {
     return useQuery({
         queryKey: ["generate-report", params],
         queryFn: () => hqService.generateReport(params),
-        enabled: !!params.startDate && !!params.endDate && params.majorSections.length > 0,
+        enabled: !!params.startDate && !!params.endDate,
     });
 };
