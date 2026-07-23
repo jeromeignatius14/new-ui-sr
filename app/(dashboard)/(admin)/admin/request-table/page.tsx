@@ -68,9 +68,9 @@ export default function AdminRequestTablePage() {
   //  useEffect(()=>{
   // setSse(selectedSSEs)
   // },[selectedSSEs])
-  // Fetch all requests for admin
+  // Fetch sanctioned blocks for the summary table
   const { data, isLoading, error } = useQuery({
-    queryKey: ["admin-requests", customDateRange],
+    queryKey: ["admin-requests-sanctioned", customDateRange],
     queryFn: () =>
       managerService.getUserRequestsByAdmin(
         1,
@@ -81,6 +81,13 @@ export default function AdminRequestTablePage() {
         undefined,
         "sanctioned"
       ),
+  });
+
+  // Fetch pending requests for the "Requests Pending With Me" counter
+  const { data: pendingData } = useQuery({
+    queryKey: ["admin-requests-pending"],
+    queryFn: () =>
+      managerService.getUserRequestsByAdmin(1, 10000),
   });
 
   // Helper functions
@@ -188,6 +195,7 @@ export default function AdminRequestTablePage() {
   const today = new Date();
   today.setHours(0, 0, 0, 0); // ignore time
   const allRequests = data?.data?.requests || [];
+  const allPendingRequests = pendingData?.data?.requests || [];
   // console.log(allRequests);
 
   // const TotalRequests = allRequests.filter((r: UserRequest) => {
@@ -226,54 +234,50 @@ export default function AdminRequestTablePage() {
   //     reqDate.setHours(0, 0, 0, 0);
   //     return reqDate > today;
   //   }).length;
-  const TotalRequests = allRequests.filter((r: UserRequest) => {
+  const TotalRequests = allPendingRequests.filter((r: UserRequest) => {
     if (!r.date) return false;
-
     const reqDate = new Date(r.date);
     reqDate.setHours(0, 0, 0, 0);
     return (
-      !r.isSanctioned &&!r.Draft&&
-      (r.overAllStatus === "with optg."||r.overAllStatus ==="with optg") &&
-      reqDate >=today
+      !r.isSanctioned && !r.Draft &&
+      (r.overAllStatus === "with optg." || r.overAllStatus === "with optg") &&
+      reqDate >= today
     );
   }).length;
 
-  const ENGGRequest = allRequests.filter((r: UserRequest) => {
+  const ENGGRequest = allPendingRequests.filter((r: UserRequest) => {
     if (!r.date) return false;
-
     const reqDate = new Date(r.date);
     reqDate.setHours(0, 0, 0, 0);
     return (
-      !r.isSanctioned &&!r.Draft&&
+      !r.isSanctioned && !r.Draft &&
       r.selectedDepartment === "ENGG" &&
-      (r.overAllStatus === "with optg."||r.overAllStatus ==="with optg") &&
-      reqDate >=today
+      (r.overAllStatus === "with optg." || r.overAllStatus === "with optg") &&
+      reqDate >= today
     );
   }).length;
 
-  const SandTRequest = allRequests.filter((r: UserRequest) => {
+  const SandTRequest = allPendingRequests.filter((r: UserRequest) => {
     if (!r.date) return false;
-
     const reqDate = new Date(r.date);
     reqDate.setHours(0, 0, 0, 0);
     return (
-      !r.isSanctioned &&!r.Draft&&
+      !r.isSanctioned && !r.Draft &&
       r.selectedDepartment === "S&T" &&
-      (r.overAllStatus === "with optg."||r.overAllStatus ==="with optg") &&
-      reqDate >=today
+      (r.overAllStatus === "with optg." || r.overAllStatus === "with optg") &&
+      reqDate >= today
     );
   }).length;
 
-  const TRDRequest = allRequests.filter((r: UserRequest) => {
+  const TRDRequest = allPendingRequests.filter((r: UserRequest) => {
     if (!r.date) return false;
-
     const reqDate = new Date(r.date);
     reqDate.setHours(0, 0, 0, 0);
     return (
-      !r.isSanctioned &&!r.Draft&&
+      !r.isSanctioned && !r.Draft &&
       r.selectedDepartment === "TRD" &&
-      (r.overAllStatus === "with optg."||r.overAllStatus ==="with optg") &&
-      reqDate >=today
+      (r.overAllStatus === "with optg." || r.overAllStatus === "with optg") &&
+      reqDate >= today
     );
   }).length;
   // const handleDownloadCSV = () => {
