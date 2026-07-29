@@ -17,6 +17,14 @@ export default function AdminRequestTablePage() {
     start: "",
     end: "",
   });
+  const [expandedBatches, setExpandedBatches] = useState<Set<string>>(new Set());
+  const toggleBatch = (batchId: string) => {
+    setExpandedBatches(prev => {
+      const next = new Set(prev);
+      if (next.has(batchId)) next.delete(batchId); else next.add(batchId);
+      return next;
+    });
+  };
   const [sectionDropdownOpen, setSectionDropdownOpen] = useState(false);
   const [blockTypeDropdownOpen, setBlockTypeDropdownOpen] = useState(false);
   // const [sseDropdownOpen, setSseDropdownOpen] = useState(false);
@@ -189,17 +197,15 @@ export default function AdminRequestTablePage() {
   const allRequests = data?.data?.requests || [];
 
   // Compute the earliest pending date (for all or per dept) to pass to optimise-table
-  // Floor: today — never navigate to a past date (matches the count badge logic)
+  // Floor: never go before 1st June 2026
+  const PENDING_FLOOR = new Date("2026-06-01T00:00:00.000Z");
   const getMinPendingDate = (dept?: string): string => {
     const pending = allRequests.filter((r: UserRequest) => {
       if (!r.date) return false;
       if (r.isSanctioned || r.Draft) return false;
       if (r.overAllStatus !== "with optg." && r.overAllStatus !== "with optg") return false;
       if (dept && r.selectedDepartment !== dept) return false;
-      if (!hasNoPendingDisconnections(r)) return false;
-      const reqDate = new Date(r.date);
-      reqDate.setHours(0, 0, 0, 0);
-      if (reqDate < today) return false;
+      if (new Date(r.date) < PENDING_FLOOR) return false;
       return true;
     });
     if (!pending.length) return "";
@@ -246,61 +252,54 @@ export default function AdminRequestTablePage() {
   //     reqDate.setHours(0, 0, 0, 0);
   //     return reqDate > today;
   //   }).length;
-  // Returns true only if all required disconnections are already accepted —
-  // same logic the optimise-table uses to decide whether to show a request.
-  const hasNoPendingDisconnections = (r: UserRequest) =>
-    !(r.enggDisconnectionsRequired && r.allEnggAcceptance !== "ACCEPTED") &&
-    !(r.sntDisconnectionRequired   && r.allSntAcceptance  !== "ACCEPTED") &&
-    !(r.powerBlockRequired         && r.allTrdAcceptance  !== "ACCEPTED");
-
   const TotalRequests = allRequests.filter((r: UserRequest) => {
     if (!r.date) return false;
+
     const reqDate = new Date(r.date);
     reqDate.setHours(0, 0, 0, 0);
     return (
-      !r.isSanctioned && !r.Draft &&
-      (r.overAllStatus === "with optg." || r.overAllStatus === "with optg") &&
-      reqDate >= today &&
-      hasNoPendingDisconnections(r)
+      !r.isSanctioned &&!r.Draft&&
+      (r.overAllStatus === "with optg."||r.overAllStatus ==="with optg") &&
+      reqDate >=today
     );
   }).length;
 
   const ENGGRequest = allRequests.filter((r: UserRequest) => {
     if (!r.date) return false;
+
     const reqDate = new Date(r.date);
     reqDate.setHours(0, 0, 0, 0);
     return (
-      !r.isSanctioned && !r.Draft &&
+      !r.isSanctioned &&!r.Draft&&
       r.selectedDepartment === "ENGG" &&
-      (r.overAllStatus === "with optg." || r.overAllStatus === "with optg") &&
-      reqDate >= today &&
-      hasNoPendingDisconnections(r)
+      (r.overAllStatus === "with optg."||r.overAllStatus ==="with optg") &&
+      reqDate >=today
     );
   }).length;
 
   const SandTRequest = allRequests.filter((r: UserRequest) => {
     if (!r.date) return false;
+
     const reqDate = new Date(r.date);
     reqDate.setHours(0, 0, 0, 0);
     return (
-      !r.isSanctioned && !r.Draft &&
+      !r.isSanctioned &&!r.Draft&&
       r.selectedDepartment === "S&T" &&
-      (r.overAllStatus === "with optg." || r.overAllStatus === "with optg") &&
-      reqDate >= today &&
-      hasNoPendingDisconnections(r)
+      (r.overAllStatus === "with optg."||r.overAllStatus ==="with optg") &&
+      reqDate >=today
     );
   }).length;
 
   const TRDRequest = allRequests.filter((r: UserRequest) => {
     if (!r.date) return false;
+
     const reqDate = new Date(r.date);
     reqDate.setHours(0, 0, 0, 0);
     return (
-      !r.isSanctioned && !r.Draft &&
+      !r.isSanctioned &&!r.Draft&&
       r.selectedDepartment === "TRD" &&
-      (r.overAllStatus === "with optg." || r.overAllStatus === "with optg") &&
-      reqDate >= today &&
-      hasNoPendingDisconnections(r)
+      (r.overAllStatus === "with optg."||r.overAllStatus ==="with optg") &&
+      reqDate >=today
     );
   }).length;
   // const handleDownloadCSV = () => {
@@ -700,12 +699,7 @@ if (activeSummaryFilters.searchId) {
                 className="flex items-center justify-between w-fit bg-gradient-to-r from-[#FFB3B3] to-[#FFD5D5] text-[#B22222] font-bold py-2 px-0.5 rounded-xl border-2 border-[#FF6B6B] text-[22px] shadow-md hover:shadow-lg transition-all"
                 onClick={() => {
                   const minDate = getMinPendingDate(item.label);
-                  const todayStr = new Date().toISOString().split("T")[0];
-                  const dateStr = minDate || todayStr;
-                  const cacheDate = new Date(dateStr);
-                  cacheDate.setHours(0, 0, 0, 0);
-                  queryClient.setQueryData(["approved-requests", cacheDate, false], { data: { requests: allRequests } });
-                  router.push(`/admin/optimise-table?dept=${item.label === 'S&T' ? 'SNT' : item.label}&date=${dateStr}`);
+                  router.push(`/admin/optimise-table?dept=${encodeURIComponent(item.label)}${minDate ? `&date=${minDate}` : ""}`);
                 }}
               >
                 <span>{item.label}</span>
@@ -719,12 +713,7 @@ if (activeSummaryFilters.searchId) {
           <button
             onClick={() => {
               const minDate = getMinPendingDate();
-              const todayStr = new Date().toISOString().split("T")[0];
-              const dateStr = minDate || todayStr;
-              const cacheDate = new Date(dateStr);
-              cacheDate.setHours(0, 0, 0, 0);
-              queryClient.setQueryData(["approved-requests", cacheDate, false], { data: { requests: allRequests } });
-              router.push(`/admin/optimise-table?date=${dateStr}`);
+              router.push(`/admin/optimise-table${minDate ? `?date=${minDate}` : ""}`);
             }}
             className="mx-auto w-fit flex items-center gap-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF8989] text-white font-bold px-8 py-3 mb-6 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-[22px]"
           >
@@ -952,68 +941,100 @@ if (activeSummaryFilters.searchId) {
                       </tr>
                     </thead>
                     <tbody>
-                      {sanctionedRequests.sort((a: any, b: any) => new Date(a.sanctionedTimeFrom || a.optimizeTimeFrom || a.demandTimeFrom).getTime() - new Date(b.sanctionedTimeTo || b.optimizeTimeTo || b.demandTimeTo).getTime()).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(
-                        (request: UserRequest, idx: number) => {
-                          const status = getStatusDisplay(request);
-                          return (
-                            <tr
-                              key={request.id}
-                              className={
-                                idx % 2 === 0 ? "bg-[#FFC0CB]" : "bg-white"
-                              }
-                            >
-                              <td className="border border-black p-1 text-center">
-                                {dayjs(request.date).format("DD-MM-YY")}
-                              </td>
-                              <td className="border border-black p-1 text-center">
-                                <Link
-                                  href={`/admin/view-request/${request.id}?from=request-table`}
-                                  className="text-[#13529e] hover:underline font-semibold"
-                                >
-                                  {request.divisionId || request.id}
-                                </Link>
-                              </td>
-                              <td className="border border-black p-1">
-                                {request.missionBlock}
-                              </td>
-                              <td className="border border-black p-1">
-                                {request.batchId && request.spellDurationMinutes
-                                  ? <span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span>
-                                  : <>{formatTime(request.demandTimeFrom)} -{" "}{formatTime(request.demandTimeTo)}</>
-                                }
-                              </td>
-                              <td className="border border-black p-1">
-                                {`${formatTime(
-                                  request.sanctionedTimeFrom ||
-                                  request.optimizeTimeFrom
-                                )} - ${formatTime(
-                                  request.sanctionedTimeTo ||
-                                  request.optimizeTimeTo
-                                )}`}
-                              </td>
-                              <td className="border border-black p-1">
-                                {request.corridorType}
-                              </td>
-                              <td className="border border-black p-1 text-center">
-                                {request.processedLineSections?.[0]?.lineName ||
-                                  request.processedLineSections?.[0]?.road ||
-                                  "N/A"}
-                              </td>
-                              <td className="border border-black p-1">
-                                {request.activity}
-                              </td>
-                              <td
-                                className="border border-black p-1 sticky right-0 z-10 text-center font-bold"
-                                style={status.style}
-                              >
-                                <span className="w-full block text-base">
-                                  {status.label}
-                                </span>
-                              </td>
-                            </tr>
-                          );
+                      {(() => {
+                        const sorted = [...sanctionedRequests]
+                          .sort((a: any, b: any) => new Date(a.sanctionedTimeFrom || a.optimizeTimeFrom || a.demandTimeFrom).getTime() - new Date(b.sanctionedTimeTo || b.optimizeTimeTo || b.demandTimeTo).getTime())
+                          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                        // Group spell batches
+                        type GItem = { isGroup: false; request: UserRequest } | { isGroup: true; batchId: string; spells: UserRequest[] };
+                        const grouped: GItem[] = [];
+                        const seen = new Set<string>();
+                        for (const req of sorted) {
+                          if (!req.batchId) {
+                            grouped.push({ isGroup: false, request: req });
+                          } else if (!seen.has(req.batchId)) {
+                            seen.add(req.batchId);
+                            const spells = sorted.filter(r => r.batchId === req.batchId)
+                              .sort((a, b) => (a.batchSpellIndex ?? 0) - (b.batchSpellIndex ?? 0));
+                            grouped.push({ isGroup: true, batchId: req.batchId, spells });
+                          }
                         }
-                      )}
+                        let rowIdx = 0;
+                        return grouped.flatMap((item) => {
+                          if (!item.isGroup) {
+                            const request = item.request;
+                            const idx = rowIdx++;
+                            const status = getStatusDisplay(request);
+                            return [(
+                              <tr key={request.id} className={idx % 2 === 0 ? "bg-[#FFC0CB]" : "bg-white"}>
+                                <td className="border border-black p-1 text-center">{dayjs(request.date).format("DD-MM-YY")}</td>
+                                <td className="border border-black p-1 text-center">
+                                  <Link href={`/admin/view-request/${request.id}?from=request-table`} className="text-[#13529e] hover:underline font-semibold">{request.divisionId || request.id}</Link>
+                                </td>
+                                <td className="border border-black p-1">{request.missionBlock}</td>
+                                <td className="border border-black p-1">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
+                                <td className="border border-black p-1">{`${formatTime(request.sanctionedTimeFrom || request.optimizeTimeFrom)} - ${formatTime(request.sanctionedTimeTo || request.optimizeTimeTo)}`}</td>
+                                <td className="border border-black p-1">{request.corridorType}</td>
+                                <td className="border border-black p-1 text-center">{request.processedLineSections?.[0]?.lineName || request.processedLineSections?.[0]?.road || "N/A"}</td>
+                                <td className="border border-black p-1">{request.activity}</td>
+                                <td className="border border-black p-1 sticky right-0 z-10 text-center font-bold" style={status.style}>
+                                  <span className="w-full block text-base">{status.label}</span>
+                                </td>
+                              </tr>
+                            )];
+                          } else {
+                            const idx = rowIdx++;
+                            const firstSpell = item.spells[0];
+                            const isExpanded = expandedBatches.has(item.batchId);
+                            const bgClass = idx % 2 === 0 ? "bg-[#FFC0CB]" : "bg-white";
+                            const status = getStatusDisplay(firstSpell);
+                            const rows: any[] = [
+                              <tr key={`batch-${item.batchId}`} className={bgClass}>
+                                <td className="border border-black p-1 text-center">{dayjs(firstSpell.date).format("DD-MM-YY")}</td>
+                                <td className="border border-black p-1 text-center">
+                                  <div className="flex flex-col items-center gap-0.5">
+                                    <Link href={`/admin/view-request/${firstSpell.id}?from=request-table`} className="text-[#13529e] hover:underline font-semibold">{firstSpell.divisionId || firstSpell.id}</Link>
+                                    <span className="inline-flex items-center px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-bold border border-purple-300 whitespace-nowrap">&#8635; {item.spells.length} Spells</span>
+                                    <button onClick={() => toggleBatch(item.batchId)} className="text-xs px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded border border-indigo-300 hover:bg-indigo-200">{isExpanded ? "▲ Hide" : "▼ Show"}</button>
+                                  </div>
+                                </td>
+                                <td className="border border-black p-1">{firstSpell.missionBlock}</td>
+                                <td className="border border-black p-1 text-xs text-gray-500 italic">Multiple time slots</td>
+                                <td className="border border-black p-1 text-xs text-gray-500 italic">—</td>
+                                <td className="border border-black p-1">{firstSpell.corridorType}</td>
+                                <td className="border border-black p-1 text-center">{firstSpell.processedLineSections?.[0]?.lineName || firstSpell.processedLineSections?.[0]?.road || "N/A"}</td>
+                                <td className="border border-black p-1">{firstSpell.activity}</td>
+                                <td className="border border-black p-1 sticky right-0 z-10 text-center font-bold" style={status.style}>
+                                  <span className="w-full block text-base">{status.label}</span>
+                                </td>
+                              </tr>
+                            ];
+                            if (isExpanded) {
+                              item.spells.forEach((spell: UserRequest, si: number) => {
+                                const spellStatus = getStatusDisplay(spell);
+                                rows.push(
+                                  <tr key={spell.id} className="bg-purple-50">
+                                    <td className="border border-black p-1 text-center text-purple-700 text-sm font-bold">Spell {spell.batchSpellIndex || (si + 1)}</td>
+                                    <td className="border border-black p-1 text-center">
+                                      <Link href={`/admin/view-request/${spell.id}?from=request-table`} className="text-[#13529e] hover:underline text-sm">{spell.divisionId || spell.id}</Link>
+                                    </td>
+                                    <td className="border border-black p-1 text-sm text-gray-400">—</td>
+                                    <td className="border border-black p-1 text-sm">{formatTime(spell.demandTimeFrom)} - {formatTime(spell.demandTimeTo)}</td>
+                                    <td className="border border-black p-1 text-sm">{`${formatTime(spell.sanctionedTimeFrom || spell.optimizeTimeFrom)} - ${formatTime(spell.sanctionedTimeTo || spell.optimizeTimeTo)}`}</td>
+                                    <td className="border border-black p-1 text-sm text-gray-400">—</td>
+                                    <td className="border border-black p-1 text-sm text-gray-400">—</td>
+                                    <td className="border border-black p-1 text-sm text-gray-400">—</td>
+                                    <td className="border border-black p-1 sticky right-0 z-10 text-center font-bold bg-purple-50" style={spellStatus.style}>
+                                      <span className="w-full block text-sm">{spellStatus.label}</span>
+                                    </td>
+                                  </tr>
+                                );
+                              });
+                            }
+                            return rows;
+                          }
+                        });
+                      })()}
                     </tbody>
                   </table>
                 </div>

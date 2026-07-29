@@ -621,6 +621,16 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
             { label: "Asset Name",     value: block.assetName },
             { label: "Asset Number",   value: block.assetNumber },
             { label: "Applied By",     value: block.appliedByName ? `${block.appliedByName}${block.appliedByPhone ? ` (${block.appliedByPhone})` : ""}` : null },
+            { label: "Applicant Dept",  value: block.appliedByDept },
+            { label: "Applicant Depot", value: block.appliedByDepot },
+            { label: "Block Type",      value: block.corridorType },
+            { label: "Elementary Section", value: block.elementarySection ? (block.elementarySectionTo ? `${block.elementarySection} → ${block.elementarySectionTo}` : block.elementarySection) : null },
+            { label: "OHE Section",     value: block.oheMasFrom ? (block.oheMasTo ? `${block.oheMasFrom} → ${block.oheMasTo}` : block.oheMasFrom) : null },
+            { label: "Power Block Required", value: block.powerBlockRequired ? "Yes" : null },
+            { label: "Signal Disconnection", value: block.sigDisconnection ? "Yes" : null },
+            { label: "Demanded Time",   value: block.demandTimeFrom ? `${fmtDt(block.demandTimeFrom)} → ${fmtDt(block.demandTimeTo)}` : null },
+            { label: "Sanctioned Time", value: block.sanctionedTimeFrom ? `${fmtDt(block.sanctionedTimeFrom)} → ${fmtDt(block.sanctionedTimeTo)}` : null },
+            { label: "Applied Time",    value: block.requestedTimeFrom ? `${fmtDt(block.requestedTimeFrom)} → ${fmtDt(block.requestedTimeTo)}` : null },
           ].filter(r => r.value).map(({ label, value }) => (
             <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid #f3f4f6", gap: "12px" }}>
               <span style={{ fontSize: "14px", color: "#6b7280", fontWeight: 600, flexShrink: 0 }}>{label}</span>

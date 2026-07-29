@@ -9,9 +9,12 @@ import { managerService, UserRequest } from "@/app/service/api/manager";
 import { useBulkAcceptRequests, useBulkRejectRequests, useEditUserRequest } from "@/app/service/mutation/manager";
 import { toast } from "react-hot-toast";
 import { notFound } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 export default function PendingRequestsPage() {
     const { data: session } = useSession();
+    const searchParams = useSearchParams();
+    const targetDate = searchParams.get("date") || "";
     const [selectedRequests, setSelectedRequests] = useState<Set<string>>(new Set());
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [rejectionReason, setRejectionReason] = useState("");
@@ -29,6 +32,30 @@ export default function PendingRequestsPage() {
     });
     const [isEditing, setIsEditing] = useState(false);
     const [activeTab, setActiveTab] = useState<'urgent' | 'corridor' | 'non-corridor'|"disconnections" | 'multi-line' | 'rejected'>('urgent');
+    const [expandedBatches, setExpandedBatches] = useState<Set<string>>(new Set());
+    const toggleBatch = (batchId: string) => {
+        setExpandedBatches(prev => {
+            const next = new Set(prev);
+            if (next.has(batchId)) next.delete(batchId); else next.add(batchId);
+            return next;
+        });
+    };
+    // Helper: group requests by batchId for spell display
+    function groupByBatch(requests: UserRequest[]): Array<{ isGroup: false; request: UserRequest } | { isGroup: true; batchId: string; spells: UserRequest[] }> {
+        const grouped: Array<{ isGroup: false; request: UserRequest } | { isGroup: true; batchId: string; spells: UserRequest[] }> = [];
+        const seen = new Set<string>();
+        for (const req of requests) {
+            if (!req.batchId) {
+                grouped.push({ isGroup: false, request: req });
+            } else if (!seen.has(req.batchId)) {
+                seen.add(req.batchId);
+                const spells = requests.filter(r => r.batchId === req.batchId)
+                    .sort((a, b) => (a.batchSpellIndex ?? 0) - (b.batchSpellIndex ?? 0));
+                grouped.push({ isGroup: true, batchId: req.batchId, spells });
+            }
+        }
+        return grouped;
+    }
     // CSS for flashing animation
     const flashingRowStyle = `
   @keyframes flashRed {
@@ -321,6 +348,38 @@ useEffect(() => {
   setSelectedRequests(new Set());
 }, [activeTab]);
 
+// When a target date is passed via ?date=, auto-switch to the first tab
+// that contains a request on or after that date, then scroll to it.
+useEffect(() => {
+  if (!targetDate || !data) return;
+  const target = new Date(targetDate);
+  target.setHours(0, 0, 0, 0);
+  const matchesDate = (r: UserRequest) => {
+    const d = new Date(r.date);
+    d.setHours(0, 0, 0, 0);
+    return d >= target;
+  };
+  if (pendingRequests.filter(r => r.corridorType === "Urgent Block").some(matchesDate)) {
+    setActiveTab("urgent");
+  } else if (pendingCorridorRequests.some(matchesDate)) {
+    setActiveTab("corridor");
+  } else if (pendingNonCorridorRequests.some(matchesDate)) {
+    setActiveTab("non-corridor");
+  } else if (pendingDisconnectionRequests.some(matchesDate)) {
+    setActiveTab("disconnections");
+  } else if (pendingMultiLineRequests.some(matchesDate)) {
+    setActiveTab("multi-line");
+  }
+}, [targetDate, data]);
+
+// Scroll to the tab content area after auto-switching tabs for target date
+useEffect(() => {
+  if (!targetDate) return;
+  setTimeout(() => {
+    const el = document.getElementById("pending-tab-content");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, 200);
+}, [targetDate, activeTab]);
 
     const handleSelectRequest = (id: string) => {
         const newSelected = new Set(selectedRequests);
@@ -852,7 +911,7 @@ useEffect(() => {
 </div>
 
 {activeTab === 'urgent' && (
-    <div className="mx-4 mt-6 overflow-x-auto">
+    <div id="pending-tab-content" className="mx-4 mt-6 overflow-x-auto">
         <div className={`rounded-xl overflow-hidden border-2 border-black bg-[#F5E7B2] min-w-[700px] ${showRejectModal || showSuccessModal ? 'invisible' : ''}`}>
             <div className="bg-[#FF6B6B] text-white font-bold py-2 text-center">
                 Urgent Block Requests
@@ -879,85 +938,93 @@ useEffect(() => {
                         </tr>
                     </thead>
                     <tbody>
-                        {pendingRequests.filter((request: UserRequest) => request.corridorType === "Urgent Block").map((request: UserRequest) => (
-                            <tr key={request.id} className="hover:bg-[#FFF86B] text-black bg-white">
-                                <td className="border border-black px-2 py-1 text-center align-middle">
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedRequests.has(request.id)}
-                                        onChange={() => handleSelectRequest(request.id)}
-                                        className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]"
-                                    />
-                                </td>
-                                <td className="border border-black px-2 py-1 text-center align-middle">{formatDate(request.date)}</td>
-                                <td className="border border-black px-2 py-1 text-center align-middle">
-                                    <Link href={`/manage/view-request/${request.id}`} className="text-[#13529e] hover:underline font-semibold">
-                                        {request.divisionId || request.id}
-                                    </Link>
-                                </td>
-                                <td className="border border-black px-2 py-1 align-middle">{request.missionBlock}</td>
-                                <td className="border border-black px-2 py-1 text-center align-middle">
-                                    {(() => {
-                                        const section = request.processedLineSections?.[0];
-                                        if (!section) return 'N/A';
-                                        
-                                        const { lineName, road, otherLines, otherRoads } = section;
-                                        
-                                        const allValues = [
-                                            lineName,
-                                            road,
-                                            ...(otherLines ? otherLines.split(',').map(item => item.trim()) : []),
-                                            ...(otherRoads ? otherRoads.split(',').map(item => item.trim()) : [])
-                                        ].filter(item => item && item !== '');
-                                        
-                                        return allValues.join(', ') || 'N/A';
-                                    })()}
-                                </td>
-                                <td className="border border-black px-2 py-1 text-center align-middle">
-                                  {request.batchId && request.spellDurationMinutes
-                                    ? <span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span>
-                                    : <>{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</>
-                                  }
-                                </td>
-                                <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
-                                <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-[#E6E6FA] text-center align-middle w-32">
-                                    <div className="flex gap-2 justify-center flex-col md:flex-row">
-                                          {(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // reset time
-    const requestDate = new Date(request.date);
-    requestDate.setHours(0, 0, 0, 0);
-
-    return requestDate >= today;
-  })() && (
-    <>
-                                        <button
-                                            onClick={() => handleEditClick(request)}
-                                            disabled={isAccepting || isRejecting || isEditing}
-                                            className="px-2 py-1 text-xs md:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 font-bold"
-                                        >
-                                            E
-                                        </button>
-                                        <button
-                                            onClick={() => handleAccept(request.id, request.date, request.corridorType)}
-                                            disabled={isAccepting || isRejecting}
-                                            className="px-2 py-1 text-xs md:text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 font-bold"
-                                        >
-                                            {isAccepting ? "Accepting..." : "F"}
-                                        </button>
-                                        </>
-                                         )}
-                                        <button
-                                            onClick={() => handleReject(request.id)}
-                                            disabled={isAccepting || isRejecting}
-                                            className="px-2 py-1 text-xs md:text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-bold"
-                                        >
-                                            {isRejecting ? "Rejecting..." : "R"}
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
+                        {groupByBatch(pendingRequests.filter((r: UserRequest) => r.corridorType === "Urgent Block")).flatMap((item) => {
+                            if (!item.isGroup) {
+                                const request = item.request;
+                                const isFuture = (() => { const t = new Date(); t.setHours(0,0,0,0); const d = new Date(request.date); d.setHours(0,0,0,0); return d >= t; })();
+                                return [(
+                                    <tr key={request.id} className="hover:bg-[#FFF86B] text-black bg-white">
+                                        <td className="border border-black px-2 py-1 text-center align-middle">
+                                            <input type="checkbox" checked={selectedRequests.has(request.id)} onChange={() => handleSelectRequest(request.id)} className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]" />
+                                        </td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle">{formatDate(request.date)}</td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle">
+                                            <Link href={`/manage/view-request/${request.id}`} className="text-[#13529e] hover:underline font-semibold">{request.divisionId || request.id}</Link>
+                                        </td>
+                                        <td className="border border-black px-2 py-1 align-middle">{request.missionBlock}</td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle">
+                                            {(() => { const s = request.processedLineSections?.[0]; if (!s) return 'N/A'; return [s.lineName, s.road, ...(s.otherLines ? s.otherLines.split(',').map((i: string) => i.trim()) : []), ...(s.otherRoads ? s.otherRoads.split(',').map((i: string) => i.trim()) : [])].filter(Boolean).join(', ') || 'N/A'; })()}
+                                        </td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
+                                        <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
+                                        <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-[#E6E6FA] text-center align-middle w-32">
+                                            <div className="flex gap-2 justify-center flex-col md:flex-row">
+                                                {isFuture && (<><button onClick={() => handleEditClick(request)} disabled={isAccepting || isRejecting || isEditing} className="px-2 py-1 text-xs md:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 font-bold">E</button><button onClick={() => handleAccept(request.id, request.date, request.corridorType)} disabled={isAccepting || isRejecting} className="px-2 py-1 text-xs md:text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 font-bold">{isAccepting ? "Accepting..." : "F"}</button></>)}
+                                                <button onClick={() => handleReject(request.id)} disabled={isAccepting || isRejecting} className="px-2 py-1 text-xs md:text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-bold">{isRejecting ? "Rejecting..." : "R"}</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )];
+                            } else {
+                                const firstSpell = item.spells[0];
+                                const isExpanded = expandedBatches.has(item.batchId);
+                                const isFuture = (() => { const t = new Date(); t.setHours(0,0,0,0); const d = new Date(firstSpell.date); d.setHours(0,0,0,0); return d >= t; })();
+                                const rows: any[] = [
+                                    <tr key={`batch-${item.batchId}`} className="hover:bg-[#FFF86B] text-black bg-white">
+                                        <td className="border border-black px-2 py-1 text-center align-middle">
+                                            <input type="checkbox" checked={selectedRequests.has(firstSpell.id)} onChange={() => handleSelectRequest(firstSpell.id)} className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]" />
+                                        </td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle">{formatDate(firstSpell.date)}</td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle">
+                                            <div className="flex flex-col items-center gap-0.5">
+                                                <Link href={`/manage/view-request/${firstSpell.id}`} className="text-[#13529e] hover:underline font-semibold">{firstSpell.divisionId || firstSpell.id}</Link>
+                                                <span className="inline-flex items-center px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-bold border border-purple-300 whitespace-nowrap">&#8635; {item.spells.length} Spells</span>
+                                                <button onClick={() => toggleBatch(item.batchId)} className="text-xs px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded border border-indigo-300 hover:bg-indigo-200">{isExpanded ? "▲ Hide" : "▼ Show"}</button>
+                                            </div>
+                                        </td>
+                                        <td className="border border-black px-2 py-1 align-middle">{firstSpell.missionBlock}</td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle">
+                                            {(() => { const s = firstSpell.processedLineSections?.[0]; if (!s) return 'N/A'; return [s.lineName, s.road, ...(s.otherLines ? s.otherLines.split(',').map((i: string) => i.trim()) : []), ...(s.otherRoads ? s.otherRoads.split(',').map((i: string) => i.trim()) : [])].filter(Boolean).join(', ') || 'N/A'; })()}
+                                        </td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle text-xs text-gray-500 italic">Multiple time slots</td>
+                                        <td className="border border-black px-2 py-1 align-middle">{firstSpell.activity}</td>
+                                        <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-[#E6E6FA] text-center align-middle w-32">
+                                            <div className="flex gap-2 justify-center flex-col md:flex-row">
+                                                {isFuture && (<><button onClick={() => handleEditClick(firstSpell)} disabled={isAccepting || isRejecting || isEditing} className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 font-bold">E</button><button onClick={() => handleAccept(firstSpell.id, firstSpell.date, firstSpell.corridorType)} disabled={isAccepting || isRejecting} className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 font-bold">F</button></>)}
+                                                <button onClick={() => handleReject(firstSpell.id)} disabled={isAccepting || isRejecting} className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-bold">R</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ];
+                                if (isExpanded) {
+                                    item.spells.forEach((spell: UserRequest, si: number) => {
+                                        const sIsFuture = (() => { const t = new Date(); t.setHours(0,0,0,0); const d = new Date(spell.date); d.setHours(0,0,0,0); return d >= t; })();
+                                        rows.push(
+                                            <tr key={spell.id} className="bg-purple-50 text-black">
+                                                <td className="border border-black px-2 py-1 text-center align-middle">
+                                                    <input type="checkbox" checked={selectedRequests.has(spell.id)} onChange={() => handleSelectRequest(spell.id)} className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]" />
+                                                </td>
+                                                <td className="border border-black px-2 py-1 text-center align-middle text-purple-700 text-sm font-bold">Spell {spell.batchSpellIndex || (si + 1)}</td>
+                                                <td className="border border-black px-2 py-1 text-center align-middle">
+                                                    <Link href={`/manage/view-request/${spell.id}`} className="text-[#13529e] hover:underline text-sm">{spell.divisionId || spell.id}</Link>
+                                                </td>
+                                                <td className="border border-black px-2 py-1 align-middle text-gray-400 text-sm">—</td>
+                                                <td className="border border-black px-2 py-1 text-center align-middle text-gray-400 text-sm">—</td>
+                                                <td className="border border-black px-2 py-1 text-center align-middle text-sm">{formatTime(spell.demandTimeFrom)} - {formatTime(spell.demandTimeTo)}</td>
+                                                <td className="border border-black px-2 py-1 align-middle text-gray-400 text-sm">—</td>
+                                                <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-purple-50 text-center align-middle w-32">
+                                                    <div className="flex gap-1 justify-center flex-col md:flex-row">
+                                                        {sIsFuture && (<><button onClick={() => handleEditClick(spell)} disabled={isAccepting || isRejecting || isEditing} className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 font-bold">E</button><button onClick={() => handleAccept(spell.id, spell.date, spell.corridorType)} disabled={isAccepting || isRejecting} className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 font-bold">F</button></>)}
+                                                        <button onClick={() => handleReject(spell.id)} disabled={isAccepting || isRejecting} className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-bold">R</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    });
+                                }
+                                return rows;
+                            }
+                        })}
                     </tbody>
                 </table>
             ) : (
@@ -969,7 +1036,7 @@ useEffect(() => {
     </div>
 )}
 {activeTab === 'disconnections' && (
-    <div className="mx-4 mt-6 overflow-x-auto">
+    <div id="pending-tab-content" className="mx-4 mt-6 overflow-x-auto">
         <div className={`rounded-xl overflow-hidden border-2 border-black bg-[#F5E7B2] min-w-[700px] ${showRejectModal || showSuccessModal ? 'invisible' : ''}`}>
             <div className="bg-[#FF6B6B] text-white font-bold py-2 text-center">
                 Job Pending With SSE Requests
@@ -1017,12 +1084,7 @@ useEffect(() => {
                                 <td className="border border-black px-2 py-1 text-center align-middle">
                                     {request.workType || 'N/A'}
                                 </td>
-                                <td className="border border-black px-2 py-1 text-center align-middle">
-                                  {request.batchId && request.spellDurationMinutes
-                                    ? <span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span>
-                                    : <>{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</>
-                                  }
-                                </td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
                                 <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
                                 <td className="border border-black px-2 py-1 align-middle">{request.user?.name || 'N/A'}</td>
                             </tr>
@@ -1038,7 +1100,7 @@ useEffect(() => {
     </div>
 )}
 {activeTab === 'corridor' && (
-    <div className="mx-4 mt-6 overflow-x-auto">
+    <div id="pending-tab-content" className="mx-4 mt-6 overflow-x-auto">
         <div className={`rounded-xl overflow-hidden border-2 border-black bg-[#F5E7B2] min-w-[700px] ${showRejectModal || showSuccessModal ? 'invisible' : ''}`}>
             <div className="bg-[#4ECDC4] text-white font-bold py-2 text-center">
                 Corridor Requests
@@ -1065,84 +1127,79 @@ useEffect(() => {
                         </tr>
                     </thead>
                     <tbody>
-                        {pendingCorridorRequests.map((request: UserRequest) => (
-                            <tr key={request.id} className={`hover:bg-[#FFF86B] text-black ${request.corridorType === "Urgent Block" ? "urgent-block-row" : "bg-white"}`}>
-                                <td className="border border-black px-2 py-1 text-center align-middle">
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedRequests.has(request.id)}
-                                        onChange={() => handleSelectRequest(request.id)}
-                                        className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]"
-                                    />
-                                </td>
-                                <td className="border border-black px-2 py-1 text-center align-middle">{formatDate(request.date)}</td>
-                                <td className="border border-black px-2 py-1 text-center align-middle">
-                                    <Link href={`/manage/view-request/${request.id}`} className="text-[#13529e] hover:underline font-semibold">
-                                        {request.divisionId || request.id}
-                                    </Link>
-                                </td>
-                                <td className="border border-black px-2 py-1 align-middle">{request.missionBlock}</td>
-                                <td className="border border-black px-2 py-1 text-center align-middle">
-                                    {(() => {
-                                        const section = request.processedLineSections?.[0];
-                                        if (!section) return 'N/A';
-                                        
-                                        const { lineName, road, otherLines, otherRoads } = section;
-                                        
-                                        const allValues = [
-                                            lineName,
-                                            road,
-                                            ...(otherLines ? otherLines.split(',').map(item => item.trim()) : []),
-                                            ...(otherRoads ? otherRoads.split(',').map(item => item.trim()) : [])
-                                        ].filter(item => item && item !== '');
-                                        
-                                        return allValues.join(', ') || 'N/A';
-                                    })()}
-                                </td>
-                                <td className="border border-black px-2 py-1 text-center align-middle">
-                                  {request.batchId && request.spellDurationMinutes
-                                    ? <span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span>
-                                    : <>{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</>
-                                  }
-                                </td>
-                                <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
-                                <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-[#E6E6FA] text-center align-middle w-32">
-                                    <div className="flex gap-2 justify-center flex-col md:flex-row">
-                                                                                  {(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // reset time
-    const requestDate = new Date(request.date);
-    requestDate.setHours(0, 0, 0, 0);
-
-    return requestDate >= today;
-  })() && (
-    <>
-                                        <button
-                                            onClick={() => handleEditClick(request)}
-                                            disabled={isAccepting || isRejecting || isEditing}
-                                            className="px-2 py-1 text-xs md:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 font-bold"
-                                        >
-                                            E
-                                        </button>
-                                        <button
-                                            onClick={() => handleAccept(request.id, request.date, request.corridorType)}
-                                            disabled={isAccepting || isRejecting}
-                                            className="px-2 py-1 text-xs md:text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 font-bold"
-                                        >
-                                            {isAccepting ? "Accepting..." : "F"}
-                                        </button>
-                                        </>)}
-                                        <button
-                                            onClick={() => handleReject(request.id)}
-                                            disabled={isAccepting || isRejecting}
-                                            className="px-2 py-1 text-xs md:text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-bold"
-                                        >
-                                            {isRejecting ? "Rejecting..." : "R"}
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
+                        {groupByBatch(pendingCorridorRequests).flatMap((item) => {
+                            if (!item.isGroup) {
+                                const request = item.request;
+                                const isFuture = (() => { const t = new Date(); t.setHours(0,0,0,0); const d = new Date(request.date); d.setHours(0,0,0,0); return d >= t; })();
+                                return [(
+                                    <tr key={request.id} className={`hover:bg-[#FFF86B] text-black ${request.corridorType === "Urgent Block" ? "urgent-block-row" : "bg-white"}`}>
+                                        <td className="border border-black px-2 py-1 text-center align-middle"><input type="checkbox" checked={selectedRequests.has(request.id)} onChange={() => handleSelectRequest(request.id)} className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]" /></td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle">{formatDate(request.date)}</td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle"><Link href={`/manage/view-request/${request.id}`} className="text-[#13529e] hover:underline font-semibold">{request.divisionId || request.id}</Link></td>
+                                        <td className="border border-black px-2 py-1 align-middle">{request.missionBlock}</td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle">{(() => { const s = request.processedLineSections?.[0]; if (!s) return 'N/A'; return [s.lineName, s.road, ...(s.otherLines ? s.otherLines.split(',').map((i: string) => i.trim()) : []), ...(s.otherRoads ? s.otherRoads.split(',').map((i: string) => i.trim()) : [])].filter(Boolean).join(', ') || 'N/A'; })()}</td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
+                                        <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
+                                        <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-[#E6E6FA] text-center align-middle w-32">
+                                            <div className="flex gap-2 justify-center flex-col md:flex-row">
+                                                {isFuture && (<><button onClick={() => handleEditClick(request)} disabled={isAccepting || isRejecting || isEditing} className="px-2 py-1 text-xs md:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 font-bold">E</button><button onClick={() => handleAccept(request.id, request.date, request.corridorType)} disabled={isAccepting || isRejecting} className="px-2 py-1 text-xs md:text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 font-bold">{isAccepting ? "Accepting..." : "F"}</button></>)}
+                                                <button onClick={() => handleReject(request.id)} disabled={isAccepting || isRejecting} className="px-2 py-1 text-xs md:text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-bold">{isRejecting ? "Rejecting..." : "R"}</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )];
+                            } else {
+                                const firstSpell = item.spells[0];
+                                const isExpanded = expandedBatches.has(item.batchId);
+                                const isFuture = (() => { const t = new Date(); t.setHours(0,0,0,0); const d = new Date(firstSpell.date); d.setHours(0,0,0,0); return d >= t; })();
+                                const rows: any[] = [
+                                    <tr key={`batch-${item.batchId}`} className="hover:bg-[#FFF86B] text-black bg-white">
+                                        <td className="border border-black px-2 py-1 text-center align-middle"><input type="checkbox" checked={selectedRequests.has(firstSpell.id)} onChange={() => handleSelectRequest(firstSpell.id)} className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]" /></td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle">{formatDate(firstSpell.date)}</td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle">
+                                            <div className="flex flex-col items-center gap-0.5">
+                                                <Link href={`/manage/view-request/${firstSpell.id}`} className="text-[#13529e] hover:underline font-semibold">{firstSpell.divisionId || firstSpell.id}</Link>
+                                                <span className="inline-flex items-center px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-bold border border-purple-300 whitespace-nowrap">&#8635; {item.spells.length} Spells</span>
+                                                <button onClick={() => toggleBatch(item.batchId)} className="text-xs px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded border border-indigo-300 hover:bg-indigo-200">{isExpanded ? "▲ Hide" : "▼ Show"}</button>
+                                            </div>
+                                        </td>
+                                        <td className="border border-black px-2 py-1 align-middle">{firstSpell.missionBlock}</td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle">{(() => { const s = firstSpell.processedLineSections?.[0]; if (!s) return 'N/A'; return [s.lineName, s.road, ...(s.otherLines ? s.otherLines.split(',').map((i: string) => i.trim()) : []), ...(s.otherRoads ? s.otherRoads.split(',').map((i: string) => i.trim()) : [])].filter(Boolean).join(', ') || 'N/A'; })()}</td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle text-xs text-gray-500 italic">Multiple time slots</td>
+                                        <td className="border border-black px-2 py-1 align-middle">{firstSpell.activity}</td>
+                                        <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-[#E6E6FA] text-center align-middle w-32">
+                                            <div className="flex gap-2 justify-center flex-col md:flex-row">
+                                                {isFuture && (<><button onClick={() => handleEditClick(firstSpell)} disabled={isAccepting || isRejecting || isEditing} className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 font-bold">E</button><button onClick={() => handleAccept(firstSpell.id, firstSpell.date, firstSpell.corridorType)} disabled={isAccepting || isRejecting} className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 font-bold">F</button></>)}
+                                                <button onClick={() => handleReject(firstSpell.id)} disabled={isAccepting || isRejecting} className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-bold">R</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ];
+                                if (isExpanded) {
+                                    item.spells.forEach((spell: UserRequest, si: number) => {
+                                        const sIsFuture = (() => { const t = new Date(); t.setHours(0,0,0,0); const d = new Date(spell.date); d.setHours(0,0,0,0); return d >= t; })();
+                                        rows.push(
+                                            <tr key={spell.id} className="bg-purple-50 text-black">
+                                                <td className="border border-black px-2 py-1 text-center align-middle"><input type="checkbox" checked={selectedRequests.has(spell.id)} onChange={() => handleSelectRequest(spell.id)} className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]" /></td>
+                                                <td className="border border-black px-2 py-1 text-center align-middle text-purple-700 text-sm font-bold">Spell {spell.batchSpellIndex || (si + 1)}</td>
+                                                <td className="border border-black px-2 py-1 text-center align-middle"><Link href={`/manage/view-request/${spell.id}`} className="text-[#13529e] hover:underline text-sm">{spell.divisionId || spell.id}</Link></td>
+                                                <td className="border border-black px-2 py-1 text-sm text-gray-400">—</td>
+                                                <td className="border border-black px-2 py-1 text-center text-sm text-gray-400">—</td>
+                                                <td className="border border-black px-2 py-1 text-center align-middle text-sm">{formatTime(spell.demandTimeFrom)} - {formatTime(spell.demandTimeTo)}</td>
+                                                <td className="border border-black px-2 py-1 text-sm text-gray-400">—</td>
+                                                <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-purple-50 text-center align-middle w-32">
+                                                    <div className="flex gap-1 justify-center flex-col md:flex-row">
+                                                        {sIsFuture && (<><button onClick={() => handleEditClick(spell)} disabled={isAccepting || isRejecting || isEditing} className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 font-bold">E</button><button onClick={() => handleAccept(spell.id, spell.date, spell.corridorType)} disabled={isAccepting || isRejecting} className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 font-bold">F</button></>)}
+                                                        <button onClick={() => handleReject(spell.id)} disabled={isAccepting || isRejecting} className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-bold">R</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    });
+                                }
+                                return rows;
+                            }
+                        })}
                     </tbody>
                 </table>
             ) : (
@@ -1155,7 +1212,7 @@ useEffect(() => {
 )}
 
 {activeTab === 'non-corridor' && (
-    <div className="mx-4 mt-6 overflow-x-auto">
+    <div id="pending-tab-content" className="mx-4 mt-6 overflow-x-auto">
         <div className={`rounded-xl overflow-hidden border-2 border-black bg-[#F5E7B2] min-w-[700px] ${showRejectModal || showSuccessModal ? 'invisible' : ''}`}>
             <div className="bg-[#45B7D1] text-white font-bold py-2 text-center">
                 Non-Corridor Requests
@@ -1182,84 +1239,79 @@ useEffect(() => {
                         </tr>
                     </thead>
                     <tbody>
-                        {pendingNonCorridorRequests.map((request: UserRequest) => (
-                            <tr key={request.id} className={`hover:bg-[#FFF86B] text-black ${request.corridorType === "Urgent Block" ? "urgent-block-row" : "bg-white"}`}>
-                                <td className="border border-black px-2 py-1 text-center align-middle">
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedRequests.has(request.id)}
-                                        onChange={() => handleSelectRequest(request.id)}
-                                        className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]"
-                                    />
-                                </td>
-                                <td className="border border-black px-2 py-1 text-center align-middle">{formatDate(request.date)}</td>
-                                <td className="border border-black px-2 py-1 text-center align-middle">
-                                    <Link href={`/manage/view-request/${request.id}`} className="text-[#13529e] hover:underline font-semibold">
-                                        {request.divisionId || request.id}
-                                    </Link>
-                                </td>
-                                <td className="border border-black px-2 py-1 align-middle">{request.missionBlock}</td>
-                                <td className="border border-black px-2 py-1 text-center align-middle">
-                                    {(() => {
-                                        const section = request.processedLineSections?.[0];
-                                        if (!section) return 'N/A';
-                                        
-                                        const { lineName, road, otherLines, otherRoads } = section;
-                                        
-                                        const allValues = [
-                                            lineName,
-                                            road,
-                                            ...(otherLines ? otherLines.split(',').map(item => item.trim()) : []),
-                                            ...(otherRoads ? otherRoads.split(',').map(item => item.trim()) : [])
-                                        ].filter(item => item && item !== '');
-                                        
-                                        return allValues.join(', ') || 'N/A';
-                                    })()}
-                                </td>
-                                <td className="border border-black px-2 py-1 text-center align-middle">
-                                  {request.batchId && request.spellDurationMinutes
-                                    ? <span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span>
-                                    : <>{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</>
-                                  }
-                                </td>
-                                <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
-                                <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-[#E6E6FA] text-center align-middle w-32">
-                                    <div className="flex gap-2 justify-center flex-col md:flex-row">
-                                                                                                                          {(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // reset time
-    const requestDate = new Date(request.date);
-    requestDate.setHours(0, 0, 0, 0);
-
-    return requestDate >= today;
-  })() && (
-    <>
-                                        <button
-                                            onClick={() => handleEditClick(request)}
-                                            disabled={isAccepting || isRejecting || isEditing}
-                                            className="px-2 py-1 text-xs md:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 font-bold"
-                                        >
-                                            E
-                                        </button>
-                                        <button
-                                            onClick={() => handleAccept(request.id, request.date, request.corridorType)}
-                                            disabled={isAccepting || isRejecting}
-                                            className="px-2 py-1 text-xs md:text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 font-bold"
-                                        >
-                                            {isAccepting ? "Accepting..." : "F"}
-                                        </button>
-                                        </>)}
-                                        <button
-                                            onClick={() => handleReject(request.id)}
-                                            disabled={isAccepting || isRejecting}
-                                            className="px-2 py-1 text-xs md:text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-bold"
-                                        >
-                                            {isRejecting ? "Rejecting..." : "R"}
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
+                        {groupByBatch(pendingNonCorridorRequests).flatMap((item) => {
+                            if (!item.isGroup) {
+                                const request = item.request;
+                                const isFuture = (() => { const t = new Date(); t.setHours(0,0,0,0); const d = new Date(request.date); d.setHours(0,0,0,0); return d >= t; })();
+                                return [(
+                                    <tr key={request.id} className={`hover:bg-[#FFF86B] text-black ${request.corridorType === "Urgent Block" ? "urgent-block-row" : "bg-white"}`}>
+                                        <td className="border border-black px-2 py-1 text-center align-middle"><input type="checkbox" checked={selectedRequests.has(request.id)} onChange={() => handleSelectRequest(request.id)} className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]" /></td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle">{formatDate(request.date)}</td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle"><Link href={`/manage/view-request/${request.id}`} className="text-[#13529e] hover:underline font-semibold">{request.divisionId || request.id}</Link></td>
+                                        <td className="border border-black px-2 py-1 align-middle">{request.missionBlock}</td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle">{(() => { const s = request.processedLineSections?.[0]; if (!s) return 'N/A'; return [s.lineName, s.road, ...(s.otherLines ? s.otherLines.split(',').map((i: string) => i.trim()) : []), ...(s.otherRoads ? s.otherRoads.split(',').map((i: string) => i.trim()) : [])].filter(Boolean).join(', ') || 'N/A'; })()}</td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
+                                        <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
+                                        <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-[#E6E6FA] text-center align-middle w-32">
+                                            <div className="flex gap-2 justify-center flex-col md:flex-row">
+                                                {isFuture && (<><button onClick={() => handleEditClick(request)} disabled={isAccepting || isRejecting || isEditing} className="px-2 py-1 text-xs md:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 font-bold">E</button><button onClick={() => handleAccept(request.id, request.date, request.corridorType)} disabled={isAccepting || isRejecting} className="px-2 py-1 text-xs md:text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 font-bold">{isAccepting ? "Accepting..." : "F"}</button></>)}
+                                                <button onClick={() => handleReject(request.id)} disabled={isAccepting || isRejecting} className="px-2 py-1 text-xs md:text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-bold">{isRejecting ? "Rejecting..." : "R"}</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )];
+                            } else {
+                                const firstSpell = item.spells[0];
+                                const isExpanded = expandedBatches.has(item.batchId);
+                                const isFuture = (() => { const t = new Date(); t.setHours(0,0,0,0); const d = new Date(firstSpell.date); d.setHours(0,0,0,0); return d >= t; })();
+                                const rows: any[] = [
+                                    <tr key={`batch-${item.batchId}`} className="hover:bg-[#FFF86B] text-black bg-white">
+                                        <td className="border border-black px-2 py-1 text-center align-middle"><input type="checkbox" checked={selectedRequests.has(firstSpell.id)} onChange={() => handleSelectRequest(firstSpell.id)} className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]" /></td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle">{formatDate(firstSpell.date)}</td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle">
+                                            <div className="flex flex-col items-center gap-0.5">
+                                                <Link href={`/manage/view-request/${firstSpell.id}`} className="text-[#13529e] hover:underline font-semibold">{firstSpell.divisionId || firstSpell.id}</Link>
+                                                <span className="inline-flex items-center px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-bold border border-purple-300 whitespace-nowrap">&#8635; {item.spells.length} Spells</span>
+                                                <button onClick={() => toggleBatch(item.batchId)} className="text-xs px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded border border-indigo-300 hover:bg-indigo-200">{isExpanded ? "▲ Hide" : "▼ Show"}</button>
+                                            </div>
+                                        </td>
+                                        <td className="border border-black px-2 py-1 align-middle">{firstSpell.missionBlock}</td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle">{(() => { const s = firstSpell.processedLineSections?.[0]; if (!s) return 'N/A'; return [s.lineName, s.road, ...(s.otherLines ? s.otherLines.split(',').map((i: string) => i.trim()) : []), ...(s.otherRoads ? s.otherRoads.split(',').map((i: string) => i.trim()) : [])].filter(Boolean).join(', ') || 'N/A'; })()}</td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle text-xs text-gray-500 italic">Multiple time slots</td>
+                                        <td className="border border-black px-2 py-1 align-middle">{firstSpell.activity}</td>
+                                        <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-[#E6E6FA] text-center align-middle w-32">
+                                            <div className="flex gap-2 justify-center flex-col md:flex-row">
+                                                {isFuture && (<><button onClick={() => handleEditClick(firstSpell)} disabled={isAccepting || isRejecting || isEditing} className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 font-bold">E</button><button onClick={() => handleAccept(firstSpell.id, firstSpell.date, firstSpell.corridorType)} disabled={isAccepting || isRejecting} className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 font-bold">F</button></>)}
+                                                <button onClick={() => handleReject(firstSpell.id)} disabled={isAccepting || isRejecting} className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-bold">R</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ];
+                                if (isExpanded) {
+                                    item.spells.forEach((spell: UserRequest, si: number) => {
+                                        const sIsFuture = (() => { const t = new Date(); t.setHours(0,0,0,0); const d = new Date(spell.date); d.setHours(0,0,0,0); return d >= t; })();
+                                        rows.push(
+                                            <tr key={spell.id} className="bg-purple-50 text-black">
+                                                <td className="border border-black px-2 py-1 text-center align-middle"><input type="checkbox" checked={selectedRequests.has(spell.id)} onChange={() => handleSelectRequest(spell.id)} className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]" /></td>
+                                                <td className="border border-black px-2 py-1 text-center align-middle text-purple-700 text-sm font-bold">Spell {spell.batchSpellIndex || (si + 1)}</td>
+                                                <td className="border border-black px-2 py-1 text-center align-middle"><Link href={`/manage/view-request/${spell.id}`} className="text-[#13529e] hover:underline text-sm">{spell.divisionId || spell.id}</Link></td>
+                                                <td className="border border-black px-2 py-1 text-sm text-gray-400">—</td>
+                                                <td className="border border-black px-2 py-1 text-center text-sm text-gray-400">—</td>
+                                                <td className="border border-black px-2 py-1 text-center align-middle text-sm">{formatTime(spell.demandTimeFrom)} - {formatTime(spell.demandTimeTo)}</td>
+                                                <td className="border border-black px-2 py-1 text-sm text-gray-400">—</td>
+                                                <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-purple-50 text-center align-middle w-32">
+                                                    <div className="flex gap-1 justify-center flex-col md:flex-row">
+                                                        {sIsFuture && (<><button onClick={() => handleEditClick(spell)} disabled={isAccepting || isRejecting || isEditing} className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 font-bold">E</button><button onClick={() => handleAccept(spell.id, spell.date, spell.corridorType)} disabled={isAccepting || isRejecting} className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 font-bold">F</button></>)}
+                                                        <button onClick={() => handleReject(spell.id)} disabled={isAccepting || isRejecting} className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-bold">R</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    });
+                                }
+                                return rows;
+                            }
+                        })}
                     </tbody>
                 </table>
             ) : (
@@ -1272,7 +1324,7 @@ useEffect(() => {
 )}
 
 {activeTab === 'multi-line' && (
-    <div className="mx-4 mt-6 overflow-x-auto">
+    <div id="pending-tab-content" className="mx-4 mt-6 overflow-x-auto">
         <div className={`rounded-xl overflow-hidden border-2 border-black bg-[#F5E7B2] min-w-[700px] ${showRejectModal || showSuccessModal ? 'invisible' : ''}`}>
             <div className="bg-[#96CEB4] text-white font-bold py-2 text-center">
                 Multiple Line Requests
@@ -1299,84 +1351,79 @@ useEffect(() => {
                         </tr>
                     </thead>
                     <tbody>
-                        {pendingMultiLineRequests.map((request: UserRequest) => (
-                            <tr key={request.id} className={`hover:bg-[#FFF86B] text-black ${request.corridorType === "Urgent Block" ? "urgent-block-row" : "bg-white"}`}>
-                                <td className="border border-black px-2 py-1 text-center align-middle">
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedRequests.has(request.id)}
-                                        onChange={() => handleSelectRequest(request.id)}
-                                        className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]"
-                                    />
-                                </td>
-                                <td className="border border-black px-2 py-1 text-center align-middle">{formatDate(request.date)}</td>
-                                <td className="border border-black px-2 py-1 text-center align-middle">
-                                    <Link href={`/manage/view-request/${request.id}`} className="text-[#13529e] hover:underline font-semibold">
-                                        {request.divisionId || request.id}
-                                    </Link>
-                                </td>
-                                <td className="border border-black px-2 py-1 align-middle">{request.missionBlock}</td>
-                                <td className="border border-black px-2 py-1 text-center align-middle">
-                                    {(() => {
-                                        const section = request.processedLineSections?.[0];
-                                        if (!section) return 'N/A';
-                                        
-                                        const { lineName, road, otherLines, otherRoads } = section;
-                                        
-                                        const allValues = [
-                                            lineName,
-                                            road,
-                                            ...(otherLines ? otherLines.split(',').map(item => item.trim()) : []),
-                                            ...(otherRoads ? otherRoads.split(',').map(item => item.trim()) : [])
-                                        ].filter(item => item && item !== '');
-                                        
-                                        return allValues.join(', ') || 'N/A';
-                                    })()}
-                                </td>
-                                <td className="border border-black px-2 py-1 text-center align-middle">
-                                  {request.batchId && request.spellDurationMinutes
-                                    ? <span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span>
-                                    : <>{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</>
-                                  }
-                                </td>
-                                <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
-                                <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-[#E6E6FA] text-center align-middle w-32">
-                                    <div className="flex gap-2 justify-center flex-col md:flex-row">
-                                                                                                                          {(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // reset time
-    const requestDate = new Date(request.date);
-    requestDate.setHours(0, 0, 0, 0);
-
-    return requestDate >= today;
-  })() && (
-    <>
-                                        <button
-                                            onClick={() => handleEditClick(request)}
-                                            disabled={isAccepting || isRejecting || isEditing}
-                                            className="px-2 py-1 text-xs md:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 font-bold"
-                                        >
-                                            E
-                                        </button>
-                                        <button
-                                            onClick={() => handleAccept(request.id, request.date, request.corridorType)}
-                                            disabled={isAccepting || isRejecting}
-                                            className="px-2 py-1 text-xs md:text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 font-bold"
-                                        >
-                                            {isAccepting ? "Accepting..." : "F"}
-                                        </button>
-                                        </>)}
-                                        <button
-                                            onClick={() => handleReject(request.id)}
-                                            disabled={isAccepting || isRejecting}
-                                            className="px-2 py-1 text-xs md:text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-bold"
-                                        >
-                                            {isRejecting ? "Rejecting..." : "R"}
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
+                        {groupByBatch(pendingMultiLineRequests).flatMap((item) => {
+                            if (!item.isGroup) {
+                                const request = item.request;
+                                const isFuture = (() => { const t = new Date(); t.setHours(0,0,0,0); const d = new Date(request.date); d.setHours(0,0,0,0); return d >= t; })();
+                                return [(
+                                    <tr key={request.id} className={`hover:bg-[#FFF86B] text-black ${request.corridorType === "Urgent Block" ? "urgent-block-row" : "bg-white"}`}>
+                                        <td className="border border-black px-2 py-1 text-center align-middle"><input type="checkbox" checked={selectedRequests.has(request.id)} onChange={() => handleSelectRequest(request.id)} className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]" /></td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle">{formatDate(request.date)}</td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle"><Link href={`/manage/view-request/${request.id}`} className="text-[#13529e] hover:underline font-semibold">{request.divisionId || request.id}</Link></td>
+                                        <td className="border border-black px-2 py-1 align-middle">{request.missionBlock}</td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle">{(() => { const s = request.processedLineSections?.[0]; if (!s) return 'N/A'; return [s.lineName, s.road, ...(s.otherLines ? s.otherLines.split(',').map((i: string) => i.trim()) : []), ...(s.otherRoads ? s.otherRoads.split(',').map((i: string) => i.trim()) : [])].filter(Boolean).join(', ') || 'N/A'; })()}</td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
+                                        <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
+                                        <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-[#E6E6FA] text-center align-middle w-32">
+                                            <div className="flex gap-2 justify-center flex-col md:flex-row">
+                                                {isFuture && (<><button onClick={() => handleEditClick(request)} disabled={isAccepting || isRejecting || isEditing} className="px-2 py-1 text-xs md:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 font-bold">E</button><button onClick={() => handleAccept(request.id, request.date, request.corridorType)} disabled={isAccepting || isRejecting} className="px-2 py-1 text-xs md:text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 font-bold">{isAccepting ? "Accepting..." : "F"}</button></>)}
+                                                <button onClick={() => handleReject(request.id)} disabled={isAccepting || isRejecting} className="px-2 py-1 text-xs md:text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-bold">{isRejecting ? "Rejecting..." : "R"}</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )];
+                            } else {
+                                const firstSpell = item.spells[0];
+                                const isExpanded = expandedBatches.has(item.batchId);
+                                const isFuture = (() => { const t = new Date(); t.setHours(0,0,0,0); const d = new Date(firstSpell.date); d.setHours(0,0,0,0); return d >= t; })();
+                                const rows: any[] = [
+                                    <tr key={`batch-${item.batchId}`} className="hover:bg-[#FFF86B] text-black bg-white">
+                                        <td className="border border-black px-2 py-1 text-center align-middle"><input type="checkbox" checked={selectedRequests.has(firstSpell.id)} onChange={() => handleSelectRequest(firstSpell.id)} className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]" /></td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle">{formatDate(firstSpell.date)}</td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle">
+                                            <div className="flex flex-col items-center gap-0.5">
+                                                <Link href={`/manage/view-request/${firstSpell.id}`} className="text-[#13529e] hover:underline font-semibold">{firstSpell.divisionId || firstSpell.id}</Link>
+                                                <span className="inline-flex items-center px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-bold border border-purple-300 whitespace-nowrap">&#8635; {item.spells.length} Spells</span>
+                                                <button onClick={() => toggleBatch(item.batchId)} className="text-xs px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded border border-indigo-300 hover:bg-indigo-200">{isExpanded ? "▲ Hide" : "▼ Show"}</button>
+                                            </div>
+                                        </td>
+                                        <td className="border border-black px-2 py-1 align-middle">{firstSpell.missionBlock}</td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle">{(() => { const s = firstSpell.processedLineSections?.[0]; if (!s) return 'N/A'; return [s.lineName, s.road, ...(s.otherLines ? s.otherLines.split(',').map((i: string) => i.trim()) : []), ...(s.otherRoads ? s.otherRoads.split(',').map((i: string) => i.trim()) : [])].filter(Boolean).join(', ') || 'N/A'; })()}</td>
+                                        <td className="border border-black px-2 py-1 text-center align-middle text-xs text-gray-500 italic">Multiple time slots</td>
+                                        <td className="border border-black px-2 py-1 align-middle">{firstSpell.activity}</td>
+                                        <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-[#E6E6FA] text-center align-middle w-32">
+                                            <div className="flex gap-2 justify-center flex-col md:flex-row">
+                                                {isFuture && (<><button onClick={() => handleEditClick(firstSpell)} disabled={isAccepting || isRejecting || isEditing} className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 font-bold">E</button><button onClick={() => handleAccept(firstSpell.id, firstSpell.date, firstSpell.corridorType)} disabled={isAccepting || isRejecting} className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 font-bold">F</button></>)}
+                                                <button onClick={() => handleReject(firstSpell.id)} disabled={isAccepting || isRejecting} className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-bold">R</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ];
+                                if (isExpanded) {
+                                    item.spells.forEach((spell: UserRequest, si: number) => {
+                                        const sIsFuture = (() => { const t = new Date(); t.setHours(0,0,0,0); const d = new Date(spell.date); d.setHours(0,0,0,0); return d >= t; })();
+                                        rows.push(
+                                            <tr key={spell.id} className="bg-purple-50 text-black">
+                                                <td className="border border-black px-2 py-1 text-center align-middle"><input type="checkbox" checked={selectedRequests.has(spell.id)} onChange={() => handleSelectRequest(spell.id)} className="w-4 h-4 text-[#13529e] border-gray-300 rounded focus:ring-[#13529e]" /></td>
+                                                <td className="border border-black px-2 py-1 text-center align-middle text-purple-700 text-sm font-bold">Spell {spell.batchSpellIndex || (si + 1)}</td>
+                                                <td className="border border-black px-2 py-1 text-center align-middle"><Link href={`/manage/view-request/${spell.id}`} className="text-[#13529e] hover:underline text-sm">{spell.divisionId || spell.id}</Link></td>
+                                                <td className="border border-black px-2 py-1 text-sm text-gray-400">—</td>
+                                                <td className="border border-black px-2 py-1 text-center text-sm text-gray-400">—</td>
+                                                <td className="border border-black px-2 py-1 text-center align-middle text-sm">{formatTime(spell.demandTimeFrom)} - {formatTime(spell.demandTimeTo)}</td>
+                                                <td className="border border-black px-2 py-1 text-sm text-gray-400">—</td>
+                                                <td className="border border-black px-2 py-1 sticky right-0 z-10 bg-purple-50 text-center align-middle w-32">
+                                                    <div className="flex gap-1 justify-center flex-col md:flex-row">
+                                                        {sIsFuture && (<><button onClick={() => handleEditClick(spell)} disabled={isAccepting || isRejecting || isEditing} className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 font-bold">E</button><button onClick={() => handleAccept(spell.id, spell.date, spell.corridorType)} disabled={isAccepting || isRejecting} className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 font-bold">F</button></>)}
+                                                        <button onClick={() => handleReject(spell.id)} disabled={isAccepting || isRejecting} className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 font-bold">R</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    });
+                                }
+                                return rows;
+                            }
+                        })}
                     </tbody>
                 </table>
             ) : (
@@ -1391,7 +1438,7 @@ useEffect(() => {
 
 
 {activeTab === 'rejected' && (
-    <div className="mx-4 mt-6 overflow-x-auto">
+    <div id="pending-tab-content" className="mx-4 mt-6 overflow-x-auto">
         <div className={`rounded-xl overflow-hidden border-2 border-black bg-[#F5E7B2] min-w-[900px] ${showRejectModal || showSuccessModal ? 'invisible' : ''}`}>
             <div className="bg-[#FFA07A] text-white font-bold py-2 text-center">
                 Rejected Requests
@@ -1438,12 +1485,7 @@ useEffect(() => {
                                         return allValues.join(', ') || 'N/A';
                                     })()}
                                 </td>
-                                <td className="border border-black px-2 py-1 text-center align-middle">
-                                  {request.batchId && request.spellDurationMinutes
-                                    ? <span style={{ fontWeight: 700 }}>{request.spellDurationMinutes} mins</span>
-                                    : <>{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</>
-                                  }
-                                </td>
+                                <td className="border border-black px-2 py-1 text-center align-middle">{formatTime(request.demandTimeFrom)} - {formatTime(request.demandTimeTo)}</td>
                                 <td className="border border-black px-2 py-1 align-middle">{request.activity}</td>
                                 <td className="border border-black px-2 py-1 align-middle">{request.overAllStatus}</td>
                                 <td className="border border-black px-2 py-1 align-middle">

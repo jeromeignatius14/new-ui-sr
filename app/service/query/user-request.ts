@@ -52,6 +52,7 @@ export interface RequestItem {
   stationID: string | null;
   missionBlock: string;
   workType: string;
+  workNature?: string | null;
   activity: string;
   selectedStream: string | null;
   selectedStreams?: any;
@@ -156,6 +157,9 @@ export interface RequestItem {
   rejectedBy: User | null;
   AvailedTimeFrom: string | null;
   AvailedTimeTo: string | null;
+  batchId?: string | null;
+  batchSpellIndex?: number | null;
+  batchTotalSpells?: number | null;
 }
 
 export type User = {

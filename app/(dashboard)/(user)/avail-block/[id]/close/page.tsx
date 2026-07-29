@@ -408,6 +408,34 @@ export default function ClosurePage({ params }: { params: Promise<{ id: string }
           </div>
         </div>
 
+        {/* Block details */}
+        <div style={{ ...card, padding: "16px" }}>
+          <p style={{ fontWeight: 800, fontSize: "13px", color: "#7c3aed", textTransform: "uppercase", letterSpacing: "0.8px", margin: "0 0 10px" }}>Block Details</p>
+          {[
+            { label: "Department",        value: block.selectedDepartment },
+            { label: "Depot",             value: block.selectedDepo },
+            { label: "Line / Road",       value: block.missionBlock },
+            { label: "Activity",          value: block.activity },
+            { label: "Work Type",         value: block.workType },
+            { label: "Work Nature",       value: block.workNature },
+            { label: "Block Type",        value: block.corridorType },
+            { label: "Work Location",     value: block.workLocationFrom && block.workLocationTo ? `${block.workLocationFrom} → ${block.workLocationTo}` : (block.workLocationFrom ?? null) },
+            { label: "Elementary Section", value: block.elementarySection ? (block.elementarySectionTo ? `${block.elementarySection} → ${block.elementarySectionTo}` : block.elementarySection) : null },
+            { label: "OHE Section",       value: block.oheMasFrom ? (block.oheMasTo ? `${block.oheMasFrom} → ${block.oheMasTo}` : block.oheMasFrom) : null },
+            { label: "Power Block Required", value: block.powerBlockRequired ? "Yes" : null },
+            { label: "Signal Disconnection", value: block.sigDisconnection ? "Yes" : null },
+            { label: "Demanded Time",     value: block.demandTimeFrom ? `${fmtDt(block.demandTimeFrom)} → ${fmtDt(block.demandTimeTo)}` : null },
+            { label: "Sanctioned Time",   value: block.sanctionedTimeFrom ? `${fmtDt(block.sanctionedTimeFrom)} → ${fmtDt(block.sanctionedTimeTo)}` : null },
+            { label: "Applied Time",      value: block.requestedTimeFrom ? `${fmtDt(block.requestedTimeFrom)} → ${fmtDt(block.requestedTimeTo)}` : null },
+            { label: "SM Approved Time",  value: block.smApprovedTimeFrom ? `${fmtDt(block.smApprovedTimeFrom)} → ${fmtDt(block.smApprovedTimeTo)}` : null },
+          ].filter(r => r.value).map(({ label, value }) => (
+            <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #f3f4f6", gap: "12px" }}>
+              <span style={{ fontSize: "13px", color: "#6b7280", fontWeight: 600, flexShrink: 0 }}>{label}</span>
+              <span style={{ fontSize: "13px", color: "#1a1a2e", fontWeight: 700, textAlign: "right" }}>{value}</span>
+            </div>
+          ))}
+        </div>
+
         {/* Closure details table */}
         <div style={{ ...card, padding: "0", overflow: "hidden" }}>
           <div style={{ overflowX: "auto" }}>

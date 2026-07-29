@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { useCreateUserRequest, useCreateBatchRequest } from "@/app/service/mutation/user-request";
+import { useCreateUserRequest } from "@/app/service/mutation/user-request";
 import { useSession, signOut } from "next-auth/react";
 import { ToastContainer, toast } from "react-toastify";
 import {
@@ -1157,6 +1157,7 @@ interface FormData {
   selectedSection: string;
   missionBlock: string;
   workType: string;
+  workNature: string;
   activity: string;
   corridorTypeSelection:
   | "Corridor"
@@ -1228,6 +1229,7 @@ export default function CreateBlockRequestPage() {
     selectedSection: "",
     missionBlock: "",
     workType: "",
+    workNature: "",
     activity: "",
     corridorTypeSelection: null,
     corridorType: null,
@@ -1298,6 +1300,9 @@ export default function CreateBlockRequestPage() {
   };
 
   const [formData, setFormData] = useState<FormData>(initialFormData);
+
+  // State for TRD multi-select major sections
+  const [selectedSections, setSelectedSections] = useState<string[]>([]);
 
   // State for multi-select depots
   const [selectedSTDepots, setSelectedSTDepots] = React.useState<string[]>([]);
@@ -1502,12 +1507,6 @@ const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
   }, [selectedSTDepots, selectedTRDDepots,selectedENGDepots]);
 
   const mutation = useCreateUserRequest();
-  const batchMutation = useCreateBatchRequest();
-
-  // Spell / batch state
-  const [spellCount, setSpellCount] = useState<number>(1);
-  const [spellDurations, setSpellDurations] = useState<number[]>([]);
-
   const userLocation = session?.user.location;
   // const majorSectionOptions =
   //   userLocation && MajorSection[userLocation as keyof typeof MajorSection]
@@ -1549,6 +1548,12 @@ const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
   }, [dbMasters, userDepot, userDept]);
 
   const majorSectionOptions: string[] = dbMajorOptions ?? [];
+
+  // For TRD users — all major sections regardless of depot assignment
+  const trdAllMajorOptions = useMemo(() => {
+    if (dbMasters.majors.length === 0) return majorSectionOptions;
+    return dbMasters.majors.sort((a, b) => a.sort - b.sort).map((m) => m.code);
+  }, [dbMasters, majorSectionOptions]);
 
   const selectedMajorSection = formData.selectedSection;
 
@@ -2366,6 +2371,13 @@ const findCutoffThursday = () => {
 
     // ─── 1. Review‑mode guard ──────────────────────────────────────────────
     if (!reviewMode) {
+      // Check for pending unresolved blocks first
+      const pending = getPendingActionBlocks();
+      if (pending.length > 0) {
+        setPendingActionBlocks(pending);
+        setShowPendingModal(true);
+        return;
+      }
       setShowReviewModal(true);
       return;
     }
@@ -2541,34 +2553,16 @@ const findCutoffThursday = () => {
       };
 
       // ─── 7. Submit to backend ────────────────────────────────────────────
-      let response: any;
-      const isBatch = spellCount > 1 && spellDurations.length === spellCount && spellDurations.every(d => d > 0);
-
-      if (isBatch) {
-        // Batch submit: batchTimeFrom/To = the overall demand window; spells have auto-computed times
-        response = await batchMutation.mutateAsync({
-          ...submitData,
-          spells: spellDurations.map(d => ({ durationMinutes: d })),
-          batchTimeFrom: submitData.demandTimeFrom,
-          batchTimeTo: submitData.demandTimeTo,
-        });
-      } else {
-        response = await mutation.mutateAsync(submitData);
-      }
-
+      const response = await mutation.mutateAsync(submitData);
       if (response) {
-        toast.success(isBatch
-          ? `${spellCount} spell requests created successfully!`
-          : "Block request submitted successfully!");
+        toast.success("Block request submitted successfully!");
         setSubmittedSummary({
           date: submitData.date,
-          id: isBatch
-            ? response.data?.requests?.[0]?.divisionId || response.data?.batchId
-            : response.data?.divisionId || response.data?.id,
+          id: response.data?.divisionId || response.data?.id,
           blockSection: submitData.missionBlock || "-",
           lineOrRoad:
             submitData.processedLineSections
-              ?.map((s: any) => s.lineName || s.road)
+              ?.map((s) => s.lineName || s.road)
               .join(", ") || "-",
           duration:
             getDurationFromTimes(
@@ -2583,9 +2577,8 @@ const findCutoffThursday = () => {
         setProcessedLineSections([]);
         setSelectedActivities([]);
         setCustomActivity("");
+        setSelectedSections([]);
         setErrors({});
-        setSpellCount(1);
-        setSpellDurations([]);
         setIsShadowBlock(false);
         setShadowParentId("");
         setShadowListExpanded(true);
@@ -4686,7 +4679,7 @@ useEffect(() => {
                               } as any)
                             }
                           >
-                            FTCP
+                            F
                           </button>
                         </div>
                       )
@@ -4705,7 +4698,7 @@ useEffect(() => {
             </div>
             {/* If not Corridor Block, show reason box (compact) */}
             {formData.corridorTypeSelection &&
-              !["Corridor Block", "Corridor", "FTCP"].includes(
+              !["Corridor Block", "Corridor"].includes(
                 formData.corridorTypeSelection
               ) && (
                 <div className="w-full">
@@ -4723,32 +4716,93 @@ useEffect(() => {
               )}
             {/* Major Section Dropdown - compact, no label */}
             <div className="flex flex-row items-center gap-4 w-full ">
-              <select
-                id="major-section"
-                name="selectedSection"
-                value={formData.selectedSection || ""}
-                onChange={handleInputChange}
-                className="border-2 border-black rounded-xl px-8 py-4 text-[24px] font-bold bg-[#e6f7c6] text-black shadow-md focus:outline-none focus:ring-2 focus:ring-[#b6e6c6] min-w-[240px] max-w-[320px]"
-                aria-required="true"
-                aria-label="Select major section"
-                required
-                style={{
-                  appearance: "none",
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9L12 15L18 9' stroke='%23000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-                  backgroundRepeat: "no-repeat",
-                  backgroundPosition: "right 0.5rem center",
-                  backgroundSize: "1.2rem",
-                }}
-              >
-                <option value="" disabled>
-                  Select Major Section
-                </option>
-                {majorSectionOptions.map((section: string) => (
-                  <option key={section} value={section} className="text-[24px]">
-                    {section}
+              {userDepartment === "TRD" ? (
+                /* TRD: multi-select major sections */
+                <Select
+                  isMulti
+                  inputId="major-section"
+                  aria-label="Select major sections"
+                  options={trdAllMajorOptions.map((s: string) => ({ value: s, label: s }))}
+                  value={selectedSections.map((s) => ({ value: s, label: s }))}
+                  onChange={(selected) => {
+                    const vals = (selected || []).map((o: any) => o.value);
+                    setSelectedSections(vals);
+                    setFormData((prev) => ({
+                      ...prev,
+                      selectedSection: vals.join(","),
+                    }));
+                  }}
+                  classNamePrefix="react-select"
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      borderWidth: 2,
+                      borderColor: "#000",
+                      borderRadius: 12,
+                      backgroundColor: "#e6f7c6",
+                      minHeight: "56px",
+                      fontWeight: "bold",
+                      fontSize: "22px",
+                      minWidth: "300px",
+                    }),
+                    option: (base, state) => ({
+                      ...base,
+                      backgroundColor: state.isSelected ? "#b6e6c6" : state.isFocused ? "#e6f7c6" : "white",
+                      color: "black",
+                      fontWeight: "bold",
+                      fontSize: "20px",
+                    }),
+                    multiValue: (base) => ({
+                      ...base,
+                      backgroundColor: "#b6e6c6",
+                      borderRadius: 6,
+                    }),
+                    multiValueLabel: (base) => ({
+                      ...base,
+                      color: "black",
+                      fontWeight: "bold",
+                      fontSize: "18px",
+                    }),
+                    multiValueRemove: (base) => ({
+                      ...base,
+                      color: "#e07a5f",
+                      ":hover": { backgroundColor: "#fee2e2", color: "#b91c1c" },
+                    }),
+                    menu: (base) => ({ ...base, zIndex: 9999 }),
+                  }}
+                  placeholder="Select Major Sections"
+                  closeMenuOnSelect={false}
+                  required
+                />
+              ) : (
+                /* Non-TRD: single-select */
+                <select
+                  id="major-section"
+                  name="selectedSection"
+                  value={formData.selectedSection || ""}
+                  onChange={handleInputChange}
+                  className="border-2 border-black rounded-xl px-8 py-4 text-[24px] font-bold bg-[#e6f7c6] text-black shadow-md focus:outline-none focus:ring-2 focus:ring-[#b6e6c6] min-w-[240px] max-w-[320px]"
+                  aria-required="true"
+                  aria-label="Select major section"
+                  required
+                  style={{
+                    appearance: "none",
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9L12 15L18 9' stroke='%23000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                    backgroundRepeat: "no-repeat",
+                    backgroundPosition: "right 0.5rem center",
+                    backgroundSize: "1.2rem",
+                  }}
+                >
+                  <option value="" disabled>
+                    Select Major Section
                   </option>
-                ))}
-              </select>
+                  {majorSectionOptions.map((section: string) => (
+                    <option key={section} value={section} className="text-[24px]">
+                      {section}
+                    </option>
+                  ))}
+                </select>
+              )}
               {errors.selectedSection && (
                 <span className="text-[24px] text-[#e07a5f] font-medium mt-2 block">
                   {errors.selectedSection}
@@ -5231,110 +5285,6 @@ useEffect(() => {
                   ) || "--"}
                 </span>
               </div>
-
-              {/* ─── SPELLS SECTION ─────────────────────────────────────────── */}
-              {!isShadowBlock && formData.demandTimeFrom && formData.demandTimeTo && (
-                <div style={{
-                  background: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)",
-                  border: "2px solid #3b82f6",
-                  borderRadius: "16px",
-                  padding: "20px 16px",
-                  marginTop: "12px",
-                  width: "100%",
-                }}>
-                  <div style={{ textAlign: "center", marginBottom: "14px" }}>
-                    <span style={{ fontSize: "20px", fontWeight: 800, color: "#1e40af", letterSpacing: "0.5px" }}>
-                      ⚡ Spells
-                    </span>
-                    <p style={{ fontSize: "13px", color: "#3b82f6", fontWeight: 600, margin: "4px 0 0" }}>
-                      Split this demand window into multiple spells (individual block requests grouped together)
-                    </p>
-                  </div>
-
-                  {/* Spell count selector */}
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", marginBottom: "16px" }}>
-                    <span style={{ fontWeight: 700, fontSize: "16px", color: "#1e3a8a" }}>Number of Spells:</span>
-                    <div style={{ display: "flex", gap: "8px" }}>
-                      {[1,2,3,4,5,6,7,8].map(n => (
-                        <button
-                          key={n}
-                          type="button"
-                          onClick={() => {
-                            setSpellCount(n);
-                            setSpellDurations(prev => {
-                              const next = [...prev];
-                              while (next.length < n) next.push(0);
-                              return next.slice(0, n);
-                            });
-                          }}
-                          style={{
-                            width: "36px", height: "36px", borderRadius: "50%",
-                            background: spellCount === n ? "#1d4ed8" : "#ffffff",
-                            color: spellCount === n ? "#ffffff" : "#1d4ed8",
-                            border: "2px solid #1d4ed8",
-                            fontWeight: 800, fontSize: "15px", cursor: "pointer",
-                          }}
-                        >
-                          {n}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Duration inputs for each spell */}
-                  {spellCount > 1 && (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                      {Array.from({ length: spellCount }, (_, i) => {
-                        return (
-                            <div key={i} style={{
-                              display: "flex", alignItems: "center", gap: "10px",
-                              background: "#ffffff", borderRadius: "10px",
-                              padding: "10px 14px", border: "1.5px solid #93c5fd",
-                            }}>
-                              <span style={{ fontWeight: 800, fontSize: "14px", color: "#1e40af", minWidth: "60px" }}>
-                                Spell {i + 1}
-                              </span>
-                              <input
-                                type="number"
-                                min={1}
-                                max={600}
-                                placeholder="mins"
-                                value={spellDurations[i] || ""}
-                                onChange={(e) => {
-                                  const val = parseInt(e.target.value) || 0;
-                                  setSpellDurations(prev => {
-                                    const next = [...prev];
-                                    next[i] = val;
-                                    return next;
-                                  });
-                                }}
-                                style={{
-                                  width: "70px", padding: "6px 8px", border: "1.5px solid #3b82f6",
-                                  borderRadius: "8px", fontSize: "15px", fontWeight: 700,
-                                  textAlign: "center", color: "#1e3a8a",
-                                }}
-                              />
-                              <span style={{ fontSize: "13px", color: "#64748b", fontWeight: 600 }}>mins</span>
-                            </div>
-                          );
-                        })}
-                      {spellDurations.slice(0, spellCount).every(d => d > 0) && (
-                        <div style={{
-                          marginTop: "8px", padding: "10px 14px",
-                          background: "#fef3c7", border: "1.5px solid #f59e0b",
-                          borderRadius: "10px", fontSize: "13px", fontWeight: 700, color: "#92400e",
-                          textAlign: "center",
-                        }}>
-                          ✅ {spellCount} individual block requests will be created under one batch
-                          &nbsp;({formData.demandTimeFrom} – {formData.demandTimeTo})
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-              {/* ─── END SPELLS ─────────────────────────────────────────────── */}
-
               {/* Site Location row */}
               {getDisplayInfo(blockSectionValue[0])?.text === 'Corridor for this section' &&(
  <div className="flex flex-row items-center gap-4 w-full pl-1">
@@ -5890,6 +5840,45 @@ useEffect(() => {
     )}
   </div>
 </div>
+
+{/* Machine Type selector — visible only for ENGG dept when workType includes Machine */}
+{userDepartment === "ENGG" && formData.workType.split(",").map(t => t.trim()).includes("Machine") && (
+  <div className="w-full flex flex-row items-center bg-[#e6f7c6] rounded-2xl p-3 mb-8 border-2 border-[#b6e6c6] shadow">
+    <div className="flex-1">
+      <label className="block text-[24px] text-nowrap font-bold text-black mb-2">
+        Machine Type
+      </label>
+      <select
+        id="workNature"
+        name="workNature"
+        value={formData.workNature || ""}
+        onChange={handleInputChange}
+        className="w-full border-2 border-[#b7cbe8] rounded-xl px-4 pr-8 py-3 text-[24px] font-bold bg-white text-[#3a506b] focus:outline-none focus:ring-2 focus:ring-[#b7cbe8] appearance-none"
+        style={{
+          appearance: "none",
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9L12 15L18 9' stroke='%23000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "right 8px center",
+          backgroundSize: "1.2rem",
+        }}
+        required
+      >
+        <option value="" disabled>Select Machine Type</option>
+        {(Activity["Machine"] || []).map((machine: string) => (
+          <option key={machine} value={machine.trim()} className="text-[24px]">
+            {machine.trim()}
+          </option>
+        ))}
+      </select>
+      {errors.workNature && (
+        <span className="text-[24px] text-[#e07a5f] font-medium mt-2 block">
+          {errors.workNature}
+        </span>
+      )}
+    </div>
+  </div>
+)}
+
           {/*Coaching*/}
           <div className="w-full flex flex-row  items-center bg-[#e6f7c6] rounded-2xl p-3 mb-8 border-2 border-[#b6e6c6] shadow">
             {/* Type of Work dropdown */}

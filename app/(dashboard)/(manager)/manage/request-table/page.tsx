@@ -124,6 +124,7 @@ export default function ManagerRequestTablePage() {
     { label: "Non-corridor(NC)", value: "Outside Corridor" },
     { label: "Emergency (E)", value: "Urgent Block" },
     { label: "Mega Block (M)", value: "MEGA_BLOCK" },
+    { label: "FTCP", value: "FTCP" },
   ];
 
   // Format date
@@ -296,9 +297,19 @@ const updateQueryParams = (updates: Record<string, string | string[] | null>) =>
     });
   }
   // Calculate pending with me count
-  const pendingWithMeCountNoChange = filteredRequestsNoChange.filter(
+  const pendingWithMeRequests = filteredRequestsNoChange.filter(
     (r: UserRequest) => r.status === "PENDING" && r.managerAcceptance === false
-  ).length;
+  );
+  const pendingWithMeCountNoChange = pendingWithMeRequests.length;
+  // Compute the earliest pending date to pass as a query param when navigating
+  const minPendingDate = pendingWithMeRequests.length > 0
+    ? pendingWithMeRequests.reduce((min: UserRequest, r: UserRequest) =>
+        new Date(r.date) < new Date(min.date) ? r : min
+      ).date
+    : "";
+  const minPendingDateStr = minPendingDate
+    ? new Date(minPendingDate).toISOString().slice(0, 10)
+    : "";
   
   // Calculate pending with me count
   const pendingWithMeCount = filteredRequests.filter(
@@ -541,8 +552,8 @@ const handleDownloadExcel = async () => {
     
     {/* Button */}
     <div className="flex justify-center py-4">
-      <Link 
-        href="/manage/pending-requests" 
+      <Link
+        href={`/manage/pending-requests${minPendingDateStr ? `?date=${minPendingDateStr}` : ""}`}
         className="mx-auto w-fit flex items-center gap-2 bg-[#FF8989] text-white font-bold px-8 py-3 mb-6 rounded-[50%] shadow hover:shadow-xl hover:scale-105 transition-all duration-300 text-[22px]"
       >
         Click To View
