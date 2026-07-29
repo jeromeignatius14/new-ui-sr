@@ -1157,13 +1157,15 @@ interface FormData {
   selectedSection: string;
   missionBlock: string;
   workType: string;
+  workNature: string;
   activity: string;
   corridorTypeSelection:
   | "Corridor"
   | "Outside Corridor"
   | "Urgent Block"
+  | "FTCP"
   | null;
-  corridorType: "Corridor" | "Outside Corridor" | "Urgent Block" | null;
+  corridorType: "Corridor" | "Outside Corridor" | "Urgent Block" | "FTCP" | null;
   selectedStream: string;
   selectedRoad: string;
   selectedRoads: string[];
@@ -1227,6 +1229,7 @@ export default function CreateBlockRequestPage() {
     selectedSection: "",
     missionBlock: "",
     workType: "",
+    workNature: "",
     activity: "",
     corridorTypeSelection: null,
     corridorType: null,
@@ -1297,6 +1300,9 @@ export default function CreateBlockRequestPage() {
   };
 
   const [formData, setFormData] = useState<FormData>(initialFormData);
+
+  // State for TRD multi-select major sections
+  const [selectedSections, setSelectedSections] = useState<string[]>([]);
 
   // State for multi-select depots
   const [selectedSTDepots, setSelectedSTDepots] = React.useState<string[]>([]);
@@ -1542,6 +1548,12 @@ const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
   }, [dbMasters, userDepot, userDept]);
 
   const majorSectionOptions: string[] = dbMajorOptions ?? [];
+
+  // For TRD users — all major sections regardless of depot assignment
+  const trdAllMajorOptions = useMemo(() => {
+    if (dbMasters.majors.length === 0) return majorSectionOptions;
+    return dbMasters.majors.sort((a, b) => a.sort - b.sort).map((m) => m.code);
+  }, [dbMasters, majorSectionOptions]);
 
   const selectedMajorSection = formData.selectedSection;
 
@@ -2565,6 +2577,7 @@ const findCutoffThursday = () => {
         setProcessedLineSections([]);
         setSelectedActivities([]);
         setCustomActivity("");
+        setSelectedSections([]);
         setErrors({});
         setIsShadowBlock(false);
         setShadowParentId("");
@@ -4651,6 +4664,23 @@ useEffect(() => {
                           >
                             NC
                           </button>
+                          <button
+                            type="button"
+                            className={`px-5 py-2 rounded-lg border-2 text-[24px] font-extrabold shadow-sm focus:outline-none transition-all ${formData.corridorTypeSelection === "FTCP"
+                              ? "bg-[#dbeafe] border-black text-black"
+                              : "bg-white border-[#93c5fd] text-[#888]"
+                              }`}
+                            onClick={() =>
+                              handleInputChange({
+                                target: {
+                                  name: "corridorTypeSelection",
+                                  value: "FTCP",
+                                },
+                              } as any)
+                            }
+                          >
+                            F
+                          </button>
                         </div>
                       )
                     ) : null}
@@ -4686,32 +4716,93 @@ useEffect(() => {
               )}
             {/* Major Section Dropdown - compact, no label */}
             <div className="flex flex-row items-center gap-4 w-full ">
-              <select
-                id="major-section"
-                name="selectedSection"
-                value={formData.selectedSection || ""}
-                onChange={handleInputChange}
-                className="border-2 border-black rounded-xl px-8 py-4 text-[24px] font-bold bg-[#e6f7c6] text-black shadow-md focus:outline-none focus:ring-2 focus:ring-[#b6e6c6] min-w-[240px] max-w-[320px]"
-                aria-required="true"
-                aria-label="Select major section"
-                required
-                style={{
-                  appearance: "none",
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9L12 15L18 9' stroke='%23000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-                  backgroundRepeat: "no-repeat",
-                  backgroundPosition: "right 0.5rem center",
-                  backgroundSize: "1.2rem",
-                }}
-              >
-                <option value="" disabled>
-                  Select Major Section
-                </option>
-                {majorSectionOptions.map((section: string) => (
-                  <option key={section} value={section} className="text-[24px]">
-                    {section}
+              {userDepartment === "TRD" ? (
+                /* TRD: multi-select major sections */
+                <Select
+                  isMulti
+                  inputId="major-section"
+                  aria-label="Select major sections"
+                  options={trdAllMajorOptions.map((s: string) => ({ value: s, label: s }))}
+                  value={selectedSections.map((s) => ({ value: s, label: s }))}
+                  onChange={(selected) => {
+                    const vals = (selected || []).map((o: any) => o.value);
+                    setSelectedSections(vals);
+                    setFormData((prev) => ({
+                      ...prev,
+                      selectedSection: vals.join(","),
+                    }));
+                  }}
+                  classNamePrefix="react-select"
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      borderWidth: 2,
+                      borderColor: "#000",
+                      borderRadius: 12,
+                      backgroundColor: "#e6f7c6",
+                      minHeight: "56px",
+                      fontWeight: "bold",
+                      fontSize: "22px",
+                      minWidth: "300px",
+                    }),
+                    option: (base, state) => ({
+                      ...base,
+                      backgroundColor: state.isSelected ? "#b6e6c6" : state.isFocused ? "#e6f7c6" : "white",
+                      color: "black",
+                      fontWeight: "bold",
+                      fontSize: "20px",
+                    }),
+                    multiValue: (base) => ({
+                      ...base,
+                      backgroundColor: "#b6e6c6",
+                      borderRadius: 6,
+                    }),
+                    multiValueLabel: (base) => ({
+                      ...base,
+                      color: "black",
+                      fontWeight: "bold",
+                      fontSize: "18px",
+                    }),
+                    multiValueRemove: (base) => ({
+                      ...base,
+                      color: "#e07a5f",
+                      ":hover": { backgroundColor: "#fee2e2", color: "#b91c1c" },
+                    }),
+                    menu: (base) => ({ ...base, zIndex: 9999 }),
+                  }}
+                  placeholder="Select Major Sections"
+                  closeMenuOnSelect={false}
+                  required
+                />
+              ) : (
+                /* Non-TRD: single-select */
+                <select
+                  id="major-section"
+                  name="selectedSection"
+                  value={formData.selectedSection || ""}
+                  onChange={handleInputChange}
+                  className="border-2 border-black rounded-xl px-8 py-4 text-[24px] font-bold bg-[#e6f7c6] text-black shadow-md focus:outline-none focus:ring-2 focus:ring-[#b6e6c6] min-w-[240px] max-w-[320px]"
+                  aria-required="true"
+                  aria-label="Select major section"
+                  required
+                  style={{
+                    appearance: "none",
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9L12 15L18 9' stroke='%23000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                    backgroundRepeat: "no-repeat",
+                    backgroundPosition: "right 0.5rem center",
+                    backgroundSize: "1.2rem",
+                  }}
+                >
+                  <option value="" disabled>
+                    Select Major Section
                   </option>
-                ))}
-              </select>
+                  {majorSectionOptions.map((section: string) => (
+                    <option key={section} value={section} className="text-[24px]">
+                      {section}
+                    </option>
+                  ))}
+                </select>
+              )}
               {errors.selectedSection && (
                 <span className="text-[24px] text-[#e07a5f] font-medium mt-2 block">
                   {errors.selectedSection}
@@ -5749,6 +5840,45 @@ useEffect(() => {
     )}
   </div>
 </div>
+
+{/* Machine Type selector — visible only for ENGG dept when workType includes Machine */}
+{userDepartment === "ENGG" && formData.workType.split(",").map(t => t.trim()).includes("Machine") && (
+  <div className="w-full flex flex-row items-center bg-[#e6f7c6] rounded-2xl p-3 mb-8 border-2 border-[#b6e6c6] shadow">
+    <div className="flex-1">
+      <label className="block text-[24px] text-nowrap font-bold text-black mb-2">
+        Machine Type
+      </label>
+      <select
+        id="workNature"
+        name="workNature"
+        value={formData.workNature || ""}
+        onChange={handleInputChange}
+        className="w-full border-2 border-[#b7cbe8] rounded-xl px-4 pr-8 py-3 text-[24px] font-bold bg-white text-[#3a506b] focus:outline-none focus:ring-2 focus:ring-[#b7cbe8] appearance-none"
+        style={{
+          appearance: "none",
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9L12 15L18 9' stroke='%23000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "right 8px center",
+          backgroundSize: "1.2rem",
+        }}
+        required
+      >
+        <option value="" disabled>Select Machine Type</option>
+        {(Activity["Machine"] || []).map((machine: string) => (
+          <option key={machine} value={machine.trim()} className="text-[24px]">
+            {machine.trim()}
+          </option>
+        ))}
+      </select>
+      {errors.workNature && (
+        <span className="text-[24px] text-[#e07a5f] font-medium mt-2 block">
+          {errors.workNature}
+        </span>
+      )}
+    </div>
+  </div>
+)}
+
           {/*Coaching*/}
           <div className="w-full flex flex-row  items-center bg-[#e6f7c6] rounded-2xl p-3 mb-8 border-2 border-[#b6e6c6] shadow">
             {/* Type of Work dropdown */}

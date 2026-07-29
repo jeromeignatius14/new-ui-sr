@@ -362,6 +362,14 @@ export default function RequestTablePage() {
     endDate: addDays(new Date(), 9),
   });
   const [isDownloading, setIsDownloading] = useState(false);
+  const [expandedBatches, setExpandedBatches] = useState<Set<string>>(new Set());
+  const toggleBatch = (batchId: string) => {
+    setExpandedBatches(prev => {
+      const next = new Set(prev);
+      if (next.has(batchId)) next.delete(batchId); else next.add(batchId);
+      return next;
+    });
+  };
   const today = new Date(); // Current date
   const endDate = addDays(today, 10); // Today + 10 days
 
@@ -1073,155 +1081,200 @@ export default function RequestTablePage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredRequests.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map((request: any, idx: number) => (
-                  <tr
-                    key={request.id}
-                    className={idx % 2 === 0 ? "bg-[#FFF86B]" : "bg-[#E6E6FA]"}
-                  >
-                    <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
-                      {dayjs(request.date).format("DD-MM-YY")}
-                    </td>
-                    <td className="border border-black px-2 py-1 whitespace-nowrap text-center">
-                      <Link
-                        href={`/view-request/${request.id}?from=request-table`}
-                        className="text-black hover:underline"
-                      >
-                        {request.divisionId || request.id.slice(-4)}
-                      </Link>
-                    </td>
-                    <td className="border border-black px-2 py-1 text-black">
-                      {request.missionBlock}
-                    </td>
-                    <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
-                      {request.processedLineSections[0].lineName || request.processedLineSections[0].road || "N/A"}
-                    </td>
-                    <td className="border border-black px-2 py-1 text-black">
-                      {request.activity}
-                    </td>
-                    <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
-                      {formatTime(request.demandTimeFrom)} -{" "}
-                      {formatTime(request.demandTimeTo)}
-                    </td>
-                    <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
-                      {request.isSanctioned === true ? (
-                        <>
-                          {request.sanctionedTimeFrom === null || request.sanctionedTimeTo === null ? (
-                            <span className="text-gray-500"> {formatTime(request.optimisedTimeFrom)} -{" "}
-                              {formatTime(request.optimisedTimeTo)}</span>
-                          ) : (
-                            <>
-                              {formatTime(request.sanctionedTimeFrom)} -{" "}
-                              {formatTime(request.sanctionedTimeTo)}
-                            </>
-                          )}
-                        </>
-                      ) : (
-                        <span className="text-gray-500">N/A</span>
-                      )}
-                    </td>
-                    <td className="border border-black px-2 py-1 text-center whitespace-nowrap text-black">
-                      {request.isSanctioned === true ? "Y" : "N"}
-                    </td>
-                    <td className="border border-black px-2 py-1 text-center whitespace-nowrap text-black">
-                      <div className="flex flex-col items-center">
-                        <span>{request.user?.name || "Unknown"}</span>
-                        {request.user?.role && (
-                          <span className="text-xs text-gray-600">{request.user?.role}</span>
-                        )}
-                      </div>
-                    </td>
-
-                    <td className="border border-black px-2 py-1 bg-[#E6E6FA] text-center align-middle w-32">
-                      {(request.isSanctioned === true&&(request.userResponse===null||request.userResponse==="ACCEPTED")) ? (
-                        <>
-                          {
-                            request.userAcceptanceForSanction===true ? (
-                              <div className="px-2 py-1 bg-green-100 text-green-800 mx-auto">
-                                {request.overAllStatus}
-                              </div>
+                {(() => {
+                  const sorted = [...filteredRequests].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                  // Group spell batches — non-spell blocks become their own single-item group
+                  type GroupedItem = { isGroup: false; request: any } | { isGroup: true; batchId: string; spells: any[] };
+                  const grouped: GroupedItem[] = [];
+                  const seenBatchIds = new Set<string>();
+                  for (const req of sorted) {
+                    if (!req.batchId) {
+                      grouped.push({ isGroup: false, request: req });
+                    } else if (!seenBatchIds.has(req.batchId)) {
+                      seenBatchIds.add(req.batchId);
+                      const spells = sorted.filter((r: any) => r.batchId === req.batchId)
+                        .sort((a: any, b: any) => (a.batchSpellIndex ?? 0) - (b.batchSpellIndex ?? 0));
+                      grouped.push({ isGroup: true, batchId: req.batchId, spells });
+                    }
+                  }
+                  let rowIdx = 0;
+                  return grouped.flatMap((item) => {
+                    if (!item.isGroup) {
+                      const request = item.request;
+                      const idx = rowIdx++;
+                      return [(
+                        <tr key={request.id} className={idx % 2 === 0 ? "bg-[#FFF86B]" : "bg-[#E6E6FA]"}>
+                          <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                            {dayjs(request.date).format("DD-MM-YY")}
+                          </td>
+                          <td className="border border-black px-2 py-1 whitespace-nowrap text-center">
+                            <Link href={`/view-request/${request.id}?from=request-table`} className="text-black hover:underline">
+                              {request.divisionId || request.id.slice(-4)}
+                            </Link>
+                          </td>
+                          <td className="border border-black px-2 py-1 text-black">{request.missionBlock}</td>
+                          <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                            {request.processedLineSections[0].lineName || request.processedLineSections[0].road || "N/A"}
+                          </td>
+                          <td className="border border-black px-2 py-1 text-black">{request.activity}</td>
+                          <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                            {formatTime(request.demandTimeFrom)} -{" "}{formatTime(request.demandTimeTo)}
+                          </td>
+                          <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                            {request.isSanctioned === true ? (
+                              <>
+                                {request.sanctionedTimeFrom === null || request.sanctionedTimeTo === null ? (
+                                  <span className="text-gray-500"> {formatTime(request.optimisedTimeFrom)} -{" "}{formatTime(request.optimisedTimeTo)}</span>
+                                ) : (
+                                  <>{formatTime(request.sanctionedTimeFrom)} -{" "}{formatTime(request.sanctionedTimeTo)}</>
+                                )}
+                              </>
                             ) : (
-                              // Only show Accept/Reject buttons if the request belongs to current user
-                              request.userId === session?.user?.id ?
-                                AcceptOrRejectButton(request) :
-                                <span className="text-gray-500">{request.overAllStatus === "Sanctioned Pending with SSE" ? "Sanctioned, Pending for Acceptance" : request.overAllStatus || "Pending"}</span>
+                              <span className="text-gray-500">N/A</span>
                             )}
-                        </>
-                      ) : (
-                        <>
-                          <span className="text-gray-500">
-                            {(request.overAllStatus==="Sanctioned and Rejected by SSE")?"Sanctioned and rejected by user":request.overAllStatus}
-                          </span>
-                          {/* {(() => {
-    if (request.managerAcceptance === false&&request.remarkByManager===null ) {
-      return <span className="text-gray-500">with Dept controller</span>;
-    } 
-
-    else if (request.managerAcceptance === false&&request.remarkByManager!==null) {
-      return <span className="text-gray-500">return to applicant by Dept controller</span>;
-    }
-    else if (request.managerAcceptance === true && request.sigActionsNeeded === false&&request.sigResponse===""&&request.oheResponse===""&&request.trdActionsNeeded===false&&request.DisconnAcceptance!=="ACCEPTED"&&request.sntDisconnectionRequired===true&&request.powerBlockRequired===true) {
-      return <span className="text-gray-500">with s&t dsiconnection and with trd disconnection</span>;
-    } 
-      
-    else if (request.managerAcceptance === true && request.sigActionsNeeded === false&&request.sigResponse===""&&request.sntDisconnectionRequired===true) {
-      return <span className="text-gray-500">with s&t for disconnection</span>;
-    }
-    else if (request.managerAcceptance === true &&request.oheResponse===""&&request.trdActionsNeeded===false&&request.powerBlockRequired===true) {
-      return <span className="text-gray-500">with trd for disconnection</span>;
-    }
-    
-    else if (request.managerAcceptance === true &&request.sigActionsNeeded === true&&request.isSanctioned===false&&request.optimizeStatus===false) {
-      return <span className="text-green-500">with optg</span>;
-    }
-
-
-     else if (request.managerAcceptance === true &&request.trdActionsNeeded === true&&request.isSanctioned===false&&request.optimizeStatus===false) {
-      return <span className="text-green-500">with optg</span>;
-    }
-
-     else if (request.managerAcceptance === true &&request.trdActionsNeeded === true&&request.sigActionsNeeded === true&&request.isSanctioned===false&&request.optimizeStatus===false) {
-      return <span className="text-green-500">with optg</span>;
-    }
-
-
-
-
- else if (request.managerAcceptance === true && request.sigActionsNeeded === false&&request.sigResponse!==""&&request.sntDisconnectionRequired===true) {
-      return <span className="text-gray-500">return to applicant by s&t</span>;
-    }<th className="border border-black px-2 py-1 whitespace-nowrap w-[10%]">
-                    Accept the offer timings
-                  </th>
-
-
-
- else if (request.managerAcceptance === false && request.sigActionsNeeded === false&&request.sigResponse!==""&&request.sntDisconnectionRequired===true) {
-      return <span className="text-gray-500">return to applicant by s&t</span>;
-    }
-
-    else if (request.managerAcceptance === true &&request.oheResponse!==""&&request.trdActionsNeeded===false&&request.powerBlockRequired===true) {
-      return <span className="text-gray-500">return to applicant by s&t</span>;
-    }
-
-
-      else if (request.managerAcceptance === false &&request.oheResponse!==""&&request.trdActionsNeeded===false&&request.powerBlockRequired===true) {
-      return <span className="text-gray-500">return to applicant by s&t</span>;
-    }
-
-     else if (request.managerAcceptance === false && request.sigActionsNeeded === false&&request.sigResponse!==""&&request.oheResponse!==""&&request.trdActionsNeeded===false) {
-      return <span className="text-gray-500">{request.sigActionsNeeded === false&&request.sigResponse!==""?"return to applicant by s&t":"return to applicant by trd"}</span>;
-    }
-    else if(request.adminRequestStatus==="REJECTED"){
-      return <span className="text-green-500">return to applicant by optg</span>;
-    }
-    //   else if(request.userResponse!=="ACCEPTED"&&request.userResponse!==""){
-    //   return <span className="text-red-400">return to optg by remarks</span>;
-    // }
-  })()} */}
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                          </td>
+                          <td className="border border-black px-2 py-1 text-center whitespace-nowrap text-black">
+                            {request.isSanctioned === true ? "Y" : "N"}
+                          </td>
+                          <td className="border border-black px-2 py-1 text-center whitespace-nowrap text-black">
+                            <div className="flex flex-col items-center">
+                              <span>{request.user?.name || "Unknown"}</span>
+                              {request.user?.role && <span className="text-xs text-gray-600">{request.user?.role}</span>}
+                            </div>
+                          </td>
+                          <td className="border border-black px-2 py-1 bg-[#E6E6FA] text-center align-middle w-32">
+                            {(request.isSanctioned === true && (request.userResponse === null || request.userResponse === "ACCEPTED")) ? (
+                              <>
+                                {request.userAcceptanceForSanction === true ? (
+                                  <div className="px-2 py-1 bg-green-100 text-green-800 mx-auto">{request.overAllStatus}</div>
+                                ) : (
+                                  request.userId === session?.user?.id
+                                    ? AcceptOrRejectButton(request)
+                                    : <span className="text-gray-500">{request.overAllStatus === "Sanctioned Pending with SSE" ? "Sanctioned, Pending for Acceptance" : request.overAllStatus || "Pending"}</span>
+                                )}
+                              </>
+                            ) : (
+                              <span className="text-gray-500">
+                                {request.overAllStatus === "Sanctioned and Rejected by SSE" ? "Sanctioned and rejected by user" : request.overAllStatus}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      )];
+                    } else {
+                      // Spell batch group
+                      const idx = rowIdx++;
+                      const firstSpell = item.spells[0];
+                      const isExpanded = expandedBatches.has(item.batchId);
+                      const bgClass = idx % 2 === 0 ? "bg-[#FFF86B]" : "bg-[#E6E6FA]";
+                      const rows: any[] = [
+                        <tr key={`batch-${item.batchId}`} className={bgClass}>
+                          <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                            {dayjs(firstSpell.date).format("DD-MM-YY")}
+                          </td>
+                          <td className="border border-black px-2 py-1 whitespace-nowrap text-center">
+                            <div className="flex flex-col items-center gap-0.5">
+                              <Link href={`/view-request/${firstSpell.id}?from=request-table`} className="text-black hover:underline">
+                                {firstSpell.divisionId || firstSpell.id.slice(-4)}
+                              </Link>
+                              <span className="inline-flex items-center px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-bold border border-purple-300 whitespace-nowrap">
+                                &#8635; {item.spells.length} Spells
+                              </span>
+                            </div>
+                          </td>
+                          <td className="border border-black px-2 py-1 text-black">{firstSpell.missionBlock}</td>
+                          <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                            {firstSpell.processedLineSections[0].lineName || firstSpell.processedLineSections[0].road || "N/A"}
+                          </td>
+                          <td className="border border-black px-2 py-1 text-black">{firstSpell.activity}</td>
+                          <td className="border border-black px-2 py-1 text-center text-black">
+                            <div className="flex flex-col items-center gap-1">
+                              <span className="text-xs text-gray-500 italic">Multiple time slots</span>
+                              <button
+                                onClick={() => toggleBatch(item.batchId)}
+                                className="text-xs px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded border border-indigo-300 hover:bg-indigo-200 transition-colors"
+                              >
+                                {isExpanded ? "▲ Hide" : "▼ Show all"}
+                              </button>
+                            </div>
+                          </td>
+                          <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
+                            {firstSpell.isSanctioned === true ? (
+                              firstSpell.sanctionedTimeFrom === null || firstSpell.sanctionedTimeTo === null
+                                ? <span className="text-gray-500">{formatTime(firstSpell.optimisedTimeFrom)} - {formatTime(firstSpell.optimisedTimeTo)}</span>
+                                : <>{formatTime(firstSpell.sanctionedTimeFrom)} - {formatTime(firstSpell.sanctionedTimeTo)}</>
+                            ) : <span className="text-gray-500">N/A</span>}
+                          </td>
+                          <td className="border border-black px-2 py-1 text-center whitespace-nowrap text-black">
+                            {firstSpell.isSanctioned === true ? "Y" : "N"}
+                          </td>
+                          <td className="border border-black px-2 py-1 text-center whitespace-nowrap text-black">
+                            <div className="flex flex-col items-center">
+                              <span>{firstSpell.user?.name || "Unknown"}</span>
+                              {firstSpell.user?.role && <span className="text-xs text-gray-600">{firstSpell.user?.role}</span>}
+                            </div>
+                          </td>
+                          <td className="border border-black px-2 py-1 bg-[#E6E6FA] text-center align-middle w-32">
+                            <span className="text-gray-500 text-xs">{firstSpell.overAllStatus || "Pending"}</span>
+                          </td>
+                        </tr>
+                      ];
+                      if (isExpanded) {
+                        item.spells.forEach((spell: any, si: number) => {
+                          rows.push(
+                            <tr key={spell.id} className="bg-purple-50">
+                              <td className="border border-black px-2 py-1 text-center text-purple-700 text-sm font-bold whitespace-nowrap pl-3">
+                                Spell {spell.batchSpellIndex || (si + 1)}
+                              </td>
+                              <td className="border border-black px-2 py-1 whitespace-nowrap text-center">
+                                <Link href={`/view-request/${spell.id}?from=request-table`} className="text-black hover:underline text-sm">
+                                  {spell.divisionId || spell.id.slice(-4)}
+                                </Link>
+                              </td>
+                              <td className="border border-black px-2 py-1 text-gray-400 text-sm text-center">—</td>
+                              <td className="border border-black px-2 py-1 text-gray-400 text-sm text-center">—</td>
+                              <td className="border border-black px-2 py-1 text-gray-400 text-sm text-center">—</td>
+                              <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black text-sm">
+                                {formatTime(spell.demandTimeFrom)} - {formatTime(spell.demandTimeTo)}
+                              </td>
+                              <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black text-sm">
+                                {spell.isSanctioned === true ? (
+                                  spell.sanctionedTimeFrom === null || spell.sanctionedTimeTo === null
+                                    ? <span className="text-gray-500">{formatTime(spell.optimisedTimeFrom)} - {formatTime(spell.optimisedTimeTo)}</span>
+                                    : <>{formatTime(spell.sanctionedTimeFrom)} - {formatTime(spell.sanctionedTimeTo)}</>
+                                ) : <span className="text-gray-500">N/A</span>}
+                              </td>
+                              <td className="border border-black px-2 py-1 text-center whitespace-nowrap text-black text-sm">
+                                {spell.isSanctioned === true ? "Y" : "N"}
+                              </td>
+                              <td className="border border-black px-2 py-1 text-center whitespace-nowrap text-black text-sm">
+                                {spell.user?.name || "Unknown"}
+                              </td>
+                              <td className="border border-black px-2 py-1 bg-purple-50 text-center align-middle w-32">
+                                {(spell.isSanctioned === true && (spell.userResponse === null || spell.userResponse === "ACCEPTED")) ? (
+                                  <>
+                                    {spell.userAcceptanceForSanction === true ? (
+                                      <div className="px-1 py-0.5 bg-green-100 text-green-800 text-xs mx-auto">{spell.overAllStatus}</div>
+                                    ) : (
+                                      spell.userId === session?.user?.id
+                                        ? AcceptOrRejectButton(spell)
+                                        : <span className="text-gray-500 text-xs">{spell.overAllStatus || "Pending"}</span>
+                                    )}
+                                  </>
+                                ) : (
+                                  <span className="text-gray-500 text-xs">
+                                    {spell.overAllStatus === "Sanctioned and Rejected by SSE" ? "Rejected by user" : spell.overAllStatus}
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        });
+                      }
+                      return rows;
+                    }
+                  });
+                })()}
               </tbody>
             </table>
           </div>

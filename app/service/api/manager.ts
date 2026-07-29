@@ -138,6 +138,9 @@ export interface UserRequest {
         depot: string;
         department: string;
     };
+    batchId?: string | null;
+    batchSpellIndex?: number | null;
+    batchTotalSpells?: number | null;
 }
 
 export interface UserRequestsResponse {

@@ -486,6 +486,12 @@ block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance"
                 <td className="py-1 font-medium">Work Type:</td>
                 <td className="py-1">{request.workType}</td>
               </tr>
+              {request.workNature && (
+                <tr>
+                  <td className="py-1 font-medium">Work Nature:</td>
+                  <td className="py-1">{request.workNature}</td>
+                </tr>
+              )}
               <tr>
                 <td className="py-1 font-medium">Activity:</td>
                 <td className="py-1">{request.activity}</td>
@@ -589,10 +595,24 @@ block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance"
                 </tr>
               ) : null}
 
-              {request.elementarySection && request.selectedDepartment === "TRD" && (
+              {request.elementarySection && (
                 <tr>
                   <td className="py-1 font-medium">Elementary Section:</td>
-                  <td className="py-1">{request.elementarySection}</td>
+                  <td className="py-1">
+                    {request.elementarySectionTo
+                      ? `${request.elementarySection} → ${request.elementarySectionTo}`
+                      : request.elementarySection}
+                  </td>
+                </tr>
+              )}
+              {request.oheMasFrom && (
+                <tr>
+                  <td className="py-1 font-medium">OHE Section:</td>
+                  <td className="py-1">
+                    {request.oheMasTo
+                      ? `${request.oheMasFrom} → ${request.oheMasTo}`
+                      : request.oheMasFrom}
+                  </td>
                 </tr>
               )}
             </tbody>
@@ -805,23 +825,18 @@ block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance"
                     </tr>
                   )}
 
-                {/* <tr>
-                <td className="py-1 font-medium">Caution Required :</td>
-                <td className="py-1">
-                  {request.sigDisconnection ? "Yes" : "No"}
-                </td>
-              </tr> */}
-                {/* {request.sigDisconnection &&
-                request.sigDisconnectionRequirements && (
+                <tr>
+                  <td className="py-1 font-medium">Signal Disconnection Required:</td>
+                  <td className="py-1">
+                    {request.sigDisconnection ? "Yes" : "No"}
+                  </td>
+                </tr>
+                {request.sigDisconnection && request.sigDisconnectionRequirements && (
                   <tr>
-                    <td className="py-1 font-medium">
-                      Caution Details:
-                    </td>
-                    <td className="py-1">
-                      {request.sigDisconnectionRequirements || "N/A"}
-                    </td>
+                    <td className="py-1 font-medium">Signal Disconnection Details:</td>
+                    <td className="py-1">{request.sigDisconnectionRequirements || "N/A"}</td>
                   </tr>
-                )} */}
+                )}
                   <tr>
                   <td className="py-1 font-medium">
                     ENGG Disconnection Required:

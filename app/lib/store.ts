@@ -137,7 +137,7 @@ export let workType = {
     "Maintenance", "Directed Maintenance", "Special Works",  "Replacement/Renewals", "Others(Custom)",
   ],
   'ENGG': ['Machine', 'Non-Machine'],
-  'TRD': ['Tw', 'Lt'],
+  'TRD': ['Tw', 'Lt', 'Line Block'],
 };
 
 

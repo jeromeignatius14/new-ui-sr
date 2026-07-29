@@ -372,7 +372,7 @@ export default function SmPendingAvailsPage() {
 
   function submitReject() {
     if (!activeReq) return;
-    if (!rejectRmk.trim()) { toast.error("Remarks required"); return; }
+    if (!rejectRmk.trim()) { toast.error("Please enter rejection remarks before rejecting."); return; }
     setSyncing(true);
     setModalType(null);
     approveMutation.mutate({
