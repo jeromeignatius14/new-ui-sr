@@ -74,6 +74,8 @@ export interface RequestItem {
   sigDisconnection: boolean;
   elementarySection: string | null;
   elementarySectionTo: string | null;
+  oheMasFrom?: string | null;
+  oheMasTo?: string | null;
   sigElementarySectionFrom: string | null;
   sigElementarySectionTo: string | null;
   repercussions: string | null;
