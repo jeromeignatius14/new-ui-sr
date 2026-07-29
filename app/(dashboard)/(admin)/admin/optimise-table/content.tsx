@@ -329,8 +329,8 @@ useEffect(() => {
   const [showDateValidationAlert, setShowDateValidationAlert] = useState(false);
   const [deptFilter, setDeptFilter] = useState<string>(() => {
     const deptParam = searchParams.get("dept");
-    // Check if deptParam exists and matches one of our department options
-    return deptParam && ['ENGG', 'S&T', 'TRD'].includes(decodeURIComponent(deptParam)) ? decodeURIComponent(deptParam) : 'ALL';
+    const decoded = deptParam === 'SNT' ? 'S&T' : deptParam ? decodeURIComponent(deptParam) : null;
+    return decoded && ['ENGG', 'S&T', 'TRD'].includes(decoded) ? decoded : 'ALL';
   });
   const [workTypeFilter, setWorkTypeFilter] = useState<string>('ALL');
   const [activityFilter, setActivityFilter] = useState<string>('ALL');
@@ -359,7 +359,7 @@ const [selectedRequestsForSanction, setSelectedRequestsForSanction] = useState<U
     // Only update URL if dept filter changes to something other than ALL
     if (deptFilter !== 'ALL') {
       const params = new URLSearchParams(searchParams.toString());
-      params.set("dept", deptFilter);
+      params.set("dept", deptFilter === 'S&T' ? 'SNT' : deptFilter);
       router.push(`${pathname}?${params.toString()}`, { scroll: false });
     }
   }, []);
@@ -1499,7 +1499,7 @@ const handleOptimize = async () => {
                       
                       if (dept !== 'ALL') {
                         const params = new URLSearchParams(searchParams.toString());
-                        params.set("dept", dept);
+                        params.set("dept", dept === 'S&T' ? 'SNT' : dept);
                         router.push(`${pathname}?${params.toString()}`, { scroll: false });
                       } else {
 
