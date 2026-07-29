@@ -699,7 +699,10 @@ if (activeSummaryFilters.searchId) {
                 className="flex items-center justify-between w-fit bg-gradient-to-r from-[#FFB3B3] to-[#FFD5D5] text-[#B22222] font-bold py-2 px-0.5 rounded-xl border-2 border-[#FF6B6B] text-[22px] shadow-md hover:shadow-lg transition-all"
                 onClick={() => {
                   const minDate = getMinPendingDate(item.label);
-                  router.push(`/admin/optimise-table?dept=${encodeURIComponent(item.label)}${minDate ? `&date=${minDate}` : ""}`);
+                  const todayStr = new Date().toISOString().split("T")[0];
+                  const dateStr = minDate || todayStr;
+                  const dept = item.label === "S&T" ? "SNT" : item.label;
+                  router.push(`/admin/optimise-table?dept=${dept}&date=${dateStr}`);
                 }}
               >
                 <span>{item.label}</span>
@@ -713,7 +716,9 @@ if (activeSummaryFilters.searchId) {
           <button
             onClick={() => {
               const minDate = getMinPendingDate();
-              router.push(`/admin/optimise-table${minDate ? `?date=${minDate}` : ""}`);
+              const todayStr = new Date().toISOString().split("T")[0];
+              const dateStr = minDate || todayStr;
+              router.push(`/admin/optimise-table?date=${dateStr}`);
             }}
             className="mx-auto w-fit flex items-center gap-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF8989] text-white font-bold px-8 py-3 mb-6 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-[22px]"
           >
