@@ -1869,6 +1869,8 @@ const isPastThursdayCutoff = () => {
   //   return { urgentOnly, urgentAllowed, message, corridorTypeAllowed };
   // };
 const getCorridorTypeRestrictions = (dateString: string) => {
+  // TVC exception: no date-based restrictions on block creation
+  return { urgentOnly: false, urgentAllowed: true, message: "", corridorTypeAllowed: true };
   console.log("=== DEBUG getCorridorTypeRestrictions ===");
   console.log("Selected date:", dateString);
   
