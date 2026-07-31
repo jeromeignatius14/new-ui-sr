@@ -491,35 +491,6 @@ export default function RequestTablePage() {
     corridorType: string
   ) => {
     if (accept) {
-      // Apply the same restrictions for accept actions
-      const now = new Date();
-      const requestDate = new Date(requestDateStr);
-
-      const today = now.getDay(); // 5 = Friday
-      const hour = now.getHours();
-      const minute = now.getMinutes();
-
-      const isUrgent = corridorType === "Urgent Block";
-      const isFridayAfterNoon = today === 5 && (hour > 12 || (hour === 12 && minute >= 0));
-
-      if (!isUrgent && isFridayAfterNoon) {
-        // Define block start = tomorrow (Saturday)
-        const blockStart = new Date(now);
-        blockStart.setDate(now.getDate() + 1); // Saturday
-        blockStart.setHours(0, 0, 0, 0);
-
-        // Define block end = Sunday next week
-        const blockEnd = new Date(blockStart);
-        blockEnd.setDate(blockStart.getDate() + 8); // Sunday next week
-        blockEnd.setHours(23, 59, 59, 999);
-
-        // Block requests within [Saturday ... next Sunday]
-        if (requestDate >= blockStart && requestDate <= blockEnd) {
-          alert("You cannot accept requests from tomorrow to next Sunday on Friday after 12 PM.");
-          return;
-        }
-      }
-
       // If all checks pass, proceed with acceptance
       // updateOtherRequest(
       //   {
