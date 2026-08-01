@@ -1868,6 +1868,33 @@ const isPastThursdayCutoff = () => {
 
   //   return { urgentOnly, urgentAllowed, message, corridorTypeAllowed };
   // };
+const isDateInNextWeekModule = (dateString: string): boolean => {
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  const targetDate = new Date(dateString + "T00:00:00Z");
+  targetDate.setUTCHours(0, 0, 0, 0);
+  const daysUntilSunday = today.getUTCDay() === 0 ? 0 : 7 - today.getUTCDay();
+  const currentWeekSunday = new Date(today);
+  currentWeekSunday.setUTCDate(today.getUTCDate() + daysUntilSunday);
+  const nextWeekMonday = new Date(currentWeekSunday);
+  nextWeekMonday.setUTCDate(currentWeekSunday.getUTCDate() + 1);
+  const nextWeekSunday = new Date(nextWeekMonday);
+  nextWeekSunday.setUTCDate(nextWeekMonday.getUTCDate() + 6);
+  return targetDate >= nextWeekMonday && targetDate <= nextWeekSunday;
+};
+
+const isWithinNextTwoDaysModule = (dateString: string): boolean => {
+  const now = new Date();
+  const indiaOffset = 5.5 * 60 * 60 * 1000;
+  const todayIndia = new Date(now.getTime() + indiaOffset);
+  todayIndia.setUTCHours(0, 0, 0, 0);
+  const targetIndia = new Date(new Date(dateString + "T00:00:00Z").getTime() + indiaOffset);
+  targetIndia.setUTCHours(0, 0, 0, 0);
+  const twoDaysFromNow = new Date(todayIndia);
+  twoDaysFromNow.setUTCDate(todayIndia.getUTCDate() + 2);
+  return targetIndia >= todayIndia && targetIndia <= twoDaysFromNow;
+};
+
 const getCorridorTypeRestrictions = (dateString: string): {
   urgentOnly: boolean;
   urgentAllowed: boolean;
@@ -1878,8 +1905,8 @@ const getCorridorTypeRestrictions = (dateString: string): {
     return { urgentOnly: false, urgentAllowed: false, message: "", corridorTypeAllowed: false };
   }
 
-  const isUrgentTimeframe = isWithinNextTwoDays(dateString);
-  const isNextWeek = isDateInNextWeek(dateString);
+  const isUrgentTimeframe = isWithinNextTwoDaysModule(dateString);
+  const isNextWeek = isDateInNextWeekModule(dateString);
   const pastThursdayCutoff = isPastThursdayCutoff();
   const urgentOnly = isUrgentTimeframe;
   const urgentAllowed = isUrgentTimeframe;
