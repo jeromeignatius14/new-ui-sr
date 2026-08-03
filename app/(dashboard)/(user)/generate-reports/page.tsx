@@ -24,7 +24,7 @@ import formatTime from "@/app/utils/formatTime";
 import * as XLSX from "xlsx";
 import dayjs from "dayjs";
 
-const DIVISION_CODE = process.env.NEXT_PUBLIC_DIVISION_CODE || "MDU";
+const DIVISION_CODE = process.env.NEXT_PUBLIC_DIVISION_CODE || "PGT";
 
 interface OptionType {
   value: string;
