@@ -2560,7 +2560,10 @@ const findCutoffThursday = () => {
           blockSection: submitData.missionBlock || "-",
           lineOrRoad:
             submitData.processedLineSections
-              ?.map((s) => s.lineName || s.road)
+              ?.map((s) => {
+                const lines = [s.lineName, s.otherLines].filter(Boolean).join(" & ");
+                return lines || s.road || "-";
+              })
               .join(", ") || "-",
           duration:
             getDurationFromTimes(
