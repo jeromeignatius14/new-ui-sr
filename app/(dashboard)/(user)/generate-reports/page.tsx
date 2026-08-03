@@ -692,23 +692,21 @@ const clearGlobalFilters = () => {
             .reduce((sum, item) => sum + (item.Granted || 0), 0)
             .toFixed(2)
         ),
-        "% Granted":
-          String(
-            pastBlockSummary
-              .reduce((sum, item) => sum + (item.PercentGranted || 0), 0)
-              .toFixed(2)
-          ) + "%",
+        "% Granted": (() => {
+          const totalApplied = pastBlockSummary.reduce((sum, item) => sum + (item.AppliedCount || 0), 0);
+          const totalGranted = pastBlockSummary.reduce((sum, item) => sum + (item.GrantedCount || 0), 0);
+          return totalApplied > 0 ? ((totalGranted / totalApplied) * 100).toFixed(2) + "%" : "0.00%";
+        })(),
         Availed: String(
           pastBlockSummary
             .reduce((sum, item) => sum + (item.Availed || 0), 0)
             .toFixed(2)
         ),
-        "% Availed":
-          String(
-            pastBlockSummary
-              .reduce((sum, item) => sum + (item.PercentAvailed || 0), 0)
-              .toFixed(2)
-          ) + "%",
+        "% Availed": (() => {
+          const totalGranted = pastBlockSummary.reduce((sum, item) => sum + (item.GrantedCount || 0), 0);
+          const totalAvailed = pastBlockSummary.reduce((sum, item) => sum + (item.AvailedCount || 0), 0);
+          return totalGranted > 0 ? ((totalAvailed / totalGranted) * 100).toFixed(2) + "%" : "0.00%";
+        })(),
       });
 
       const workbook = XLSX.utils.book_new();
