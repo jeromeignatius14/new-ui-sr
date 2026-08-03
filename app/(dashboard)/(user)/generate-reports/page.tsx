@@ -654,6 +654,13 @@ const clearGlobalFilters = () => {
   const [sectionDropdownOpenB, setSectionDropdownOpenB] = useState(false);
   const sectionDropdownRefB = useRef<HTMLDivElement>(null);
 
+  const hoursToHHMM = (hours: number): string => {
+    const totalMins = Math.round(hours * 60);
+    const h = Math.floor(totalMins / 60);
+    const m = totalMins % 60;
+    return `${String(h).padStart(2, "0")}h ${String(m).padStart(2, "0")}m`;
+  };
+
   // Function to download block summary table as XLSX
   const handleDownloadSummary = () => {
     try {
@@ -664,14 +671,14 @@ const clearGlobalFilters = () => {
 
       const excelData = pastBlockSummary.map((summary: any) => ({
         Section: summary.Department || summary.Section || "", // Using the fixed value as in the table
-        Demanded: summary.Demanded?.toFixed(2) || "0.00",
-        Approved: summary.Approved?.toFixed(2) || "0.00",
-        Granted: summary.Granted?.toFixed(2) || "0.00",
+        Demanded: hoursToHHMM(summary.Demanded || 0),
+        Approved: hoursToHHMM(summary.Approved || 0),
+        Granted: hoursToHHMM(summary.Granted || 0),
         "% Granted":
           summary.PercentGranted !== undefined
             ? summary.PercentGranted.toFixed(2) + "%"
             : "",
-        Availed: summary.Availed.toFixed(2) || "0.00",
+        Availed: hoursToHHMM(summary.Availed || 0),
         "% Availed":
           summary.PercentAvailed !== undefined
             ? summary.PercentAvailed.toFixed(2) + "%"
@@ -681,27 +688,15 @@ const clearGlobalFilters = () => {
       // Add total row
       excelData.push({
         Section: "Total",
-        Demanded: pastBlockSummary
-          .reduce((sum, item) => sum + (item.Demanded || 0), 0)
-          .toFixed(2),
-        Approved: pastBlockSummary
-          .reduce((sum, item) => sum + (item.Approved || 0), 0)
-          .toFixed(2),
-        Granted: String(
-          pastBlockSummary
-            .reduce((sum, item) => sum + (item.Granted || 0), 0)
-            .toFixed(2)
-        ),
+        Demanded: hoursToHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Demanded || 0), 0)),
+        Approved: hoursToHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Approved || 0), 0)),
+        Granted: hoursToHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Granted || 0), 0)),
         "% Granted": (() => {
           const totalApplied = pastBlockSummary.reduce((sum, item) => sum + (item.AppliedCount || 0), 0);
           const totalGranted = pastBlockSummary.reduce((sum, item) => sum + (item.GrantedCount || 0), 0);
           return totalApplied > 0 ? ((totalGranted / totalApplied) * 100).toFixed(2) + "%" : "0.00%";
         })(),
-        Availed: String(
-          pastBlockSummary
-            .reduce((sum, item) => sum + (item.Availed || 0), 0)
-            .toFixed(2)
-        ),
+        Availed: hoursToHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Availed || 0), 0)),
         "% Availed": (() => {
           const totalGranted = pastBlockSummary.reduce((sum, item) => sum + (item.GrantedCount || 0), 0);
           const totalAvailed = pastBlockSummary.reduce((sum, item) => sum + (item.AvailedCount || 0), 0);
@@ -721,7 +716,7 @@ const clearGlobalFilters = () => {
               watch("startDate")
             )} to ${formatDisplayDate(watch("endDate"))}`,
           ],
-          [`Department: ${selectedDepartments.join(", ")} (in Hrs)`],
+          [`Department: ${selectedDepartments.join(", ")} (in HH:MM)`],
           [], // Empty row for spacing
         ],
         { origin: "A1" }
