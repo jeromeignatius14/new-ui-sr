@@ -85,8 +85,9 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
             );
           }
         } else {
-          if (section.lineName) {
-            lines.push(`Line ${section.lineName} in block ${section.block}`);
+          const lineLabel = [section.lineName, section.otherLines].filter(Boolean).join(" & ");
+          if (lineLabel) {
+            lines.push(`Line ${lineLabel} in block ${section.block}`);
           }
         }
       });
@@ -105,13 +106,6 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
           const roads = section.otherRoads.split(",").filter(Boolean);
           if (roads.length > 0) {
             lines.push(`Roads ${roads.join(", ")} in yard ${section.block}`);
-          }
-        } else if (section.otherLines) {
-          const otherLines = section.otherLines.split(",").filter(Boolean);
-          if (otherLines.length > 0) {
-            lines.push(
-              `Lines ${otherLines.join(", ")} in block ${section.block}`
-            );
           }
         }
       });

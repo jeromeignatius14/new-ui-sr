@@ -984,9 +984,11 @@ if (activeSummaryFilters.searchId) {
                                 {request.corridorType}
                               </td>
                               <td className="border border-black p-1 text-center">
-                                {request.processedLineSections?.[0]?.lineName ||
-                                  request.processedLineSections?.[0]?.road ||
-                                  "N/A"}
+                                {(() => {
+                                  const s = request.processedLineSections?.[0];
+                                  if (!s) return "N/A";
+                                  return [s.lineName, s.otherLines].filter(Boolean).join(" & ") || s.road || "N/A";
+                                })()}
                               </td>
                               <td className="border border-black p-1">
                                 {request.activity}

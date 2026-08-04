@@ -670,22 +670,7 @@ block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance"
                   <h3 className="font-medium text-[#13529e]">
                     {section.block}
                   </h3>
-                  {section.type === "line" ? (
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <span className="text-xs font-medium">Line:</span>
-                        <div className="py-1">{section.lineName || "N/A"}</div>
-                      </div>
-                      {section.otherLines && (
-                        <div>
-                          <span className="text-xs font-medium">
-                            Other Lines Affected:
-                          </span>
-                          <div className="py-1">{section.otherLines}</div>
-                        </div>
-                      )}
-                    </div>
-                  ) : (section.type === "yard"||section.type==="road") ? (
+                  {(section.type === "yard" || section.type === "road") ? (
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <span className="text-xs font-medium">Road:</span>
@@ -704,16 +689,10 @@ block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance"
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <span className="text-xs font-medium">Line:</span>
-                        <div className="py-1">{section.lineName || "N/A"}</div>
-                      </div>
-                      {section.otherLines && (
-                        <div>
-                          <span className="text-xs font-medium">
-                            Other Lines Affected:
-                          </span>
-                          <div className="py-1">{section.otherLines}</div>
+                        <div className="py-1">
+                          {[section.lineName, section.otherLines].filter(Boolean).join(" & ") || "N/A"}
                         </div>
-                      )}
+                      </div>
                     </div>
                   )}
                 </div>

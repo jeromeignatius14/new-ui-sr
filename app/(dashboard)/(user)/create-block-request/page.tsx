@@ -1572,14 +1572,16 @@ const [selectedENGDepots, setSelectedENGDepots] = React.useState<string[]>([]);
 
 const getActivityOptions = () => {
   if (!formData.workType) return [];
-  
-  // Handle both single and multiple work types
+
   const workTypes = formData.workType.split(',').map(type => type.trim()).filter(type => type !== '');
-  
-  // Get all unique activities from all selected work types
+
+  // If ALL selected work types are "Others", return empty so only the hardcoded "Others" option shows
+  if (workTypes.every(t => t === 'Others')) return [];
+
   const allActivities = new Set<string>();
-  
+
   workTypes.forEach(workType => {
+    if (workType === 'Others') return; // skip Others — it's always in the dropdown
     const activitiesForType = Activity[workType as keyof typeof Activity] || [];
     activitiesForType.forEach(activity => {
       if (activity && activity.trim() !== '') {
@@ -1587,7 +1589,7 @@ const getActivityOptions = () => {
       }
     });
   });
-  
+
   return Array.from(allActivities);
 };
 

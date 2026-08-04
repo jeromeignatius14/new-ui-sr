@@ -82,7 +82,7 @@ function getLineLabel(req: any): string {
   const sections = req.processedLineSections;
   if (Array.isArray(sections) && sections.length > 0) {
     const labels = [...new Set(
-      sections.map((s: any) => s.lineName || s.road).filter(Boolean)
+      sections.map((s: any) => [s.lineName, s.otherLines].filter(Boolean).join(" & ") || s.road).filter(Boolean)
     )] as string[];
     if (labels.length > 0) return labels.join(" / ");
   }

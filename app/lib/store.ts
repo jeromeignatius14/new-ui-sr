@@ -320,7 +320,7 @@ export let blockSection = {
 export let workType = {
   'S&T': ['Gear'],
   'ENGG': ['Machine', 'Non-Machine'],
-  'TRD': ['Tw', 'Lt'],
+  'TRD': ['Tw', 'Lt', 'Others'],
 };
 
 export let Activity = {
