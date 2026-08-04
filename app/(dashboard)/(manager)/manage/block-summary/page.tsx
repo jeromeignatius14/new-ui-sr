@@ -3216,6 +3216,7 @@ if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false
   const [sectionDropdownOpenB, setSectionDropdownOpenB] = useState(false);
   const sectionDropdownRefB = useRef<HTMLDivElement>(null);
 
+
   const hoursToHHMM = (hours: number): string => {
     const totalMins = Math.round(hours * 60);
     const h = Math.floor(totalMins / 60);
