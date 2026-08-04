@@ -2346,7 +2346,7 @@ import dayjs from "dayjs";
 import formatTime from "@/app/utils/formatTime";
 import * as XLSX from "xlsx";
 
-const DIVISION_CODE = process.env.NEXT_PUBLIC_DIVISION_CODE || "MDU";
+const DIVISION_CODE = process.env.NEXT_PUBLIC_DIVISION_CODE || "PGT";
 
 // === LOCALSTORAGE HELPERS ===
 const STORAGE_KEY = 'report-data';
@@ -3216,6 +3216,13 @@ if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false
   const [sectionDropdownOpenB, setSectionDropdownOpenB] = useState(false);
   const sectionDropdownRefB = useRef<HTMLDivElement>(null);
 
+  const hoursToHHMM = (hours: number): string => {
+    const totalMins = Math.round(hours * 60);
+    const h = Math.floor(totalMins / 60);
+    const m = totalMins % 60;
+    return `${String(h).padStart(2, "0")}h ${String(m).padStart(2, "0")}m`;
+  };
+
   // Function to download block summary table as XLSX
   const handleDownloadSummary = () => {
     try {
@@ -3225,15 +3232,15 @@ if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false
       }
 
       const excelData = pastBlockSummary.map((summary: any) => ({
-        Section: summary.Department || summary.Section || "", // Using the fixed value as in the table
-        Demanded: summary.Demanded?.toFixed(2) || "0.00",
-        Approved: summary.Approved?.toFixed(2) || "0.00",
-        Granted: summary.Granted?.toFixed(2) || "0.00",
+        Section: summary.Department || summary.Section || "",
+        Demanded: hoursToHHMM(summary.Demanded || 0),
+        Approved: hoursToHHMM(summary.Approved || 0),
+        Granted: hoursToHHMM(summary.Granted || 0),
         "% Granted":
           summary.PercentGranted !== undefined
             ? summary.PercentGranted.toFixed(2) + "%"
             : "",
-        Availed: summary.Availed.toFixed(2) || "0.00",
+        Availed: hoursToHHMM(summary.Availed || 0),
         "% Availed":
           summary.PercentAvailed !== undefined
             ? summary.PercentAvailed.toFixed(2) + "%"
@@ -3243,32 +3250,20 @@ if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false
       // Add total row
       excelData.push({
         Section: "Total",
-        Demanded: pastBlockSummary
-          .reduce((sum, item) => sum + (item.Demanded || 0), 0)
-          .toFixed(2),
-        Approved: pastBlockSummary
-          .reduce((sum, item) => sum + (item.Approved || 0), 0)
-          .toFixed(2),
-        Granted: String(
-          pastBlockSummary.reduce((sum, item) => sum + (item.Granted || 0), 0).toFixed(2)
-        ),
-        "% Granted":
-          String(
-            pastBlockSummary.reduce(
-              (sum, item) => sum + (item.PercentGranted || 0),
-              0
-            ).toFixed(2)
-          ) + "%",
-        Availed: String(
-          pastBlockSummary.reduce((sum, item) => sum + (item.Availed || 0), 0).toFixed(2)
-        ),
-        "% Availed":
-          String(
-            pastBlockSummary.reduce(
-              (sum, item) => sum + (item.PercentAvailed || 0),
-              0
-            ).toFixed(2)
-          ) + "%",
+        Demanded: hoursToHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Demanded || 0), 0)),
+        Approved: hoursToHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Approved || 0), 0)),
+        Granted: hoursToHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Granted || 0), 0)),
+        "% Granted": (() => {
+          const totalApplied = pastBlockSummary.reduce((sum, item) => sum + (item.AppliedCount || 0), 0);
+          const totalGranted = pastBlockSummary.reduce((sum, item) => sum + (item.GrantedCount || 0), 0);
+          return totalApplied > 0 ? ((totalGranted / totalApplied) * 100).toFixed(2) + "%" : "0.00%";
+        })(),
+        Availed: hoursToHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Availed || 0), 0)),
+        "% Availed": (() => {
+          const totalGranted = pastBlockSummary.reduce((sum, item) => sum + (item.GrantedCount || 0), 0);
+          const totalAvailed = pastBlockSummary.reduce((sum, item) => sum + (item.AvailedCount || 0), 0);
+          return totalGranted > 0 ? ((totalAvailed / totalGranted) * 100).toFixed(2) + "%" : "0.00%";
+        })(),
       });
 
       const workbook = XLSX.utils.book_new();
@@ -3283,7 +3278,7 @@ if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false
               watch("startDate")
             )} to ${formatDisplayDate(watch("endDate"))}`,
           ],
-          [`Department: ${selectedDepartments.join(", ")} (in Hrs)`],
+          [`Department: ${selectedDepartments.join(", ")} (in HH:MM)`],
           [], // Empty row for spacing
         ],
         { origin: "A1" }
