@@ -2591,8 +2591,14 @@ export default function GenerateReportPage() {
     const params = new URLSearchParams(searchParams);
     return params.get('sseFilter') || "All";
   });
-  
   const [sseDropdownOpen, setSseDropdownOpen] = useState(false);
+
+  // Depot filter — used for TRD department blocks in place of SSE filter
+  const [depotFilter, setDepotFilter] = useState(() => {
+    const params = new URLSearchParams(searchParams);
+    return params.get('depotFilter') || "All";
+  });
+  const [depotDropdownOpen, setDepotDropdownOpen] = useState(false);
   
   // Add after your existing state variables
   const [globalWorkTypeFilter, setGlobalWorkTypeFilter] = useState<string>(() => {
@@ -2632,7 +2638,8 @@ export default function GenerateReportPage() {
   const globalWorkTypeDropdownRef = useRef<HTMLDivElement>(null);
   const globalActivityDropdownRef = useRef<HTMLDivElement>(null);
   const sseDropdownRef = useRef<HTMLDivElement>(null);
-  
+  const depotDropdownRef = useRef<HTMLDivElement>(null);
+
   const router = useRouter();
   
   // Add scroll function
@@ -2745,7 +2752,10 @@ export default function GenerateReportPage() {
     if (sseFilter && sseFilter !== "All") {
       params.set('sseFilter', sseFilter);
     }
-    
+    if (depotFilter && depotFilter !== "All") {
+      params.set('depotFilter', depotFilter);
+    }
+
     if (departmentCountFilter) {
       params.set('deptFilter', JSON.stringify(departmentCountFilter));
     }
@@ -2767,6 +2777,7 @@ export default function GenerateReportPage() {
     upcomingSectionFilter,
     upcomingDivisionIdSearch,
     sseFilter,
+    depotFilter,
     departmentCountFilter,
     pcInstalledStation
   ]);
@@ -2829,6 +2840,9 @@ const handleClickOutside = (event: MouseEvent) => {
   }
   if (sseDropdownRef.current && !sseDropdownRef.current.contains(event.target as Node)) {
     setSseDropdownOpen(false);
+  }
+  if (depotDropdownRef.current && !depotDropdownRef.current.contains(event.target as Node)) {
+    setDepotDropdownOpen(false);
   }
   if (sectionDropdownRefB.current && !sectionDropdownRefB.current.contains(event.target as Node)) {
     setSectionDropdownOpenB(false);
@@ -3098,14 +3112,23 @@ const filteredUpcomingBlocks: DetailedData[] = (
     }
   }
   
-  // SSE filter
-  if (sseFilter !== "All") {
+  // SSE filter (non-TRD departments)
+  const isTrdBlock = block.selectedDepartment === "TRD";
+  if (!isTrdBlock && sseFilter !== "All") {
     const userName = block.userName || "";
     if (userName !== sseFilter) {
       return false;
     }
   }
-  
+
+  // Depot filter (TRD department blocks)
+  if (isTrdBlock && depotFilter !== "All") {
+    const blockDepot = block.selectedDepo || "";
+    if (blockDepot !== depotFilter) {
+      return false;
+    }
+  }
+
   return true;
 });
 
@@ -3496,11 +3519,20 @@ const handleDownloadUpcomingBlocks = () => {
     toast.error("Failed to download Excel file. Please try again.");
   }
 };
-  // Get unique SSE names from your data
+  // Get unique SSE names from your data (non-TRD departments)
 const sseOptions = [...new Set(
   detailedData
-    ?.map((item: any) => item.userName)
-    .filter(Boolean) // Remove null/undefined
+    ?.filter((item: any) => item.selectedDepartment !== "TRD")
+    .map((item: any) => item.userName)
+    .filter(Boolean)
+)].sort();
+
+// Get unique depot codes from TRD blocks
+const depotOptions = [...new Set(
+  detailedData
+    ?.filter((item: any) => item.selectedDepartment === "TRD")
+    .map((item: any) => item.selectedDepo)
+    .filter(Boolean)
 )].sort();
 
 const handleDownloadDepartmentCount = () => {
@@ -6076,6 +6108,8 @@ const handleDownloadDepartmentCount = () => {
                 )}
               </div>
             </div>
+              {/* SSE filter — shown for non-TRD departments */}
+              {!selectedDepartments.includes("TRD") && (
               <div className="relative inline-block" ref={sseDropdownRef}>
       <button
         onClick={() => setSseDropdownOpen((v) => !v)}
@@ -6084,8 +6118,6 @@ const handleDownloadDepartmentCount = () => {
         {sseFilter === "All" ? "All SSE" : sseFilter}
         <span className="ml-1">▼</span>
       </button>
-      {/* {sseDropdownOpen && (
-        <div className="absolute z-10 mt-2 w-32 md:w-40 bg-white border-2 border-black rounded shadow-lg max-h-60 overflow-y-auto"> */}
               {sseDropdownOpen && (
   <div className="absolute z-10 mt-2 w-40 md:w-48 bg-white border-2 border-black rounded shadow-lg max-h-60 overflow-y-auto right-0">
           <div
@@ -6111,8 +6143,46 @@ const handleDownloadDepartmentCount = () => {
           ))}
         </div>
       )}
- 
 </div>
+              )}
+
+              {/* Depot filter — shown for TRD department */}
+              {selectedDepartments.includes("TRD") && (
+              <div className="relative inline-block" ref={depotDropdownRef}>
+      <button
+        onClick={() => setDepotDropdownOpen((v) => !v)}
+        className="bg-[#B2F3F5] px-3 py-1 rounded-full border-2 border-black font-semibold text-black flex items-center gap-2 text-[12px] md:text-base min-w-[80px] md:min-w-[100px]"
+      >
+        {depotFilter === "All" ? "All Depots" : depotFilter}
+        <span className="ml-1">▼</span>
+      </button>
+              {depotDropdownOpen && (
+  <div className="absolute z-10 mt-2 w-40 md:w-48 bg-white border-2 border-black rounded shadow-lg max-h-60 overflow-y-auto right-0">
+          <div
+            className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-[12px] md:text-base"
+            onClick={() => {
+              setDepotFilter("All");
+              setDepotDropdownOpen(false);
+            }}
+          >
+            All Depots
+          </div>
+          {depotOptions.map((depot: string) => (
+            <div
+              key={depot}
+              className="flex items-center px-3 py-2 cursor-pointer hover:bg-[#D6F3FF] text-black text-[14px] md:text-[24px]"
+              onClick={() => {
+                setDepotFilter(depot);
+                setDepotDropdownOpen(false);
+              }}
+            >
+              {depot}
+            </div>
+          ))}
+        </div>
+      )}
+</div>
+              )}
           </div>
 
           {/* <div className="w-full mt-4 overflow-x-auto" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
