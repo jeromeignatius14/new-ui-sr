@@ -3221,7 +3221,7 @@ if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false
     const totalMins = Math.round(hours * 60);
     const h = Math.floor(totalMins / 60);
     const m = totalMins % 60;
-    return `${String(h).padStart(2, "0")}h ${String(m).padStart(2, "0")}m`;
+    return `${h}:${String(m).padStart(2, "0")}`;
   };
 
   // Function to download block summary table as XLSX
@@ -3232,77 +3232,57 @@ if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false
         return;
       }
 
-      const excelData = pastBlockSummary.map((summary: any) => ({
-        Section: summary.Department || summary.Section || "",
-        Demanded: hoursToHHMM(summary.Demanded || 0),
-        Approved: hoursToHHMM(summary.Approved || 0),
-        Granted: hoursToHHMM(summary.Granted || 0),
-        "% Granted":
-          summary.PercentGranted !== undefined
-            ? summary.PercentGranted.toFixed(2) + "%"
-            : "",
-        Availed: hoursToHHMM(summary.Availed || 0),
-        "% Availed":
-          summary.PercentAvailed !== undefined
-            ? summary.PercentAvailed.toFixed(2) + "%"
-            : "",
-      }));
+      const totalApplied = pastBlockSummary.reduce((sum, item) => sum + (item.AppliedCount || 0), 0);
+      const totalGrantedCount = pastBlockSummary.reduce((sum, item) => sum + (item.GrantedCount || 0), 0);
+      const totalAvailedCount = pastBlockSummary.reduce((sum, item) => sum + (item.AvailedCount || 0), 0);
 
-      // Add total row
-      excelData.push({
-        Section: "Total",
-        Demanded: hoursToHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Demanded || 0), 0)),
-        Approved: hoursToHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Approved || 0), 0)),
-        Granted: hoursToHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Granted || 0), 0)),
-        "% Granted": (() => {
-          const totalApplied = pastBlockSummary.reduce((sum, item) => sum + (item.AppliedCount || 0), 0);
-          const totalGranted = pastBlockSummary.reduce((sum, item) => sum + (item.GrantedCount || 0), 0);
-          return totalApplied > 0 ? ((totalGranted / totalApplied) * 100).toFixed(2) + "%" : "0.00%";
-        })(),
-        Availed: hoursToHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Availed || 0), 0)),
-        "% Availed": (() => {
-          const totalGranted = pastBlockSummary.reduce((sum, item) => sum + (item.GrantedCount || 0), 0);
-          const totalAvailed = pastBlockSummary.reduce((sum, item) => sum + (item.AvailedCount || 0), 0);
-          return totalGranted > 0 ? ((totalAvailed / totalGranted) * 100).toFixed(2) + "%" : "0.00%";
-        })(),
-      });
+      // Title rows — built first so data rows appear below them without overwriting
+      const titleRows: any[][] = [
+        [`(A) Block Summary: ${formatDisplayDate(watch("startDate"))} to ${formatDisplayDate(watch("endDate"))}`],
+        [`Department: ${selectedDepartments.join(", ")} (in HH:MM)`],
+        [], // spacer
+        ["Section / Depot", "Demanded", "Approved", "Granted", "% Granted", "Availed", "% Availed"],
+      ];
+
+      // Per-depot/section data rows
+      const dataRows: any[][] = pastBlockSummary.map((summary: any) => [
+        summary.Department || summary.Section || "",
+        hoursToHHMM(summary.Demanded || 0),
+        hoursToHHMM(summary.Approved || 0),
+        hoursToHHMM(summary.Granted || 0),
+        summary.PercentGranted !== undefined ? summary.PercentGranted.toFixed(2) + "%" : "",
+        hoursToHHMM(summary.Availed || 0),
+        summary.PercentAvailed !== undefined ? summary.PercentAvailed.toFixed(2) + "%" : "",
+      ]);
+
+      // Total row
+      dataRows.push([
+        "Total",
+        hoursToHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Demanded || 0), 0)),
+        hoursToHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Approved || 0), 0)),
+        hoursToHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Granted || 0), 0)),
+        totalApplied > 0 ? ((totalGrantedCount / totalApplied) * 100).toFixed(2) + "%" : "0.00%",
+        hoursToHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Availed || 0), 0)),
+        totalGrantedCount > 0 ? ((totalAvailedCount / totalGrantedCount) * 100).toFixed(2) + "%" : "0.00%",
+      ]);
+
+      const allRows = [...titleRows, ...dataRows];
+      const worksheet = XLSX.utils.aoa_to_sheet(allRows);
+
+      worksheet["!cols"] = [
+        { wch: 18 }, // Section / Depot
+        { wch: 12 }, // Demanded
+        { wch: 12 }, // Approved
+        { wch: 12 }, // Granted
+        { wch: 12 }, // % Granted
+        { wch: 12 }, // Availed
+        { wch: 12 }, // % Availed
+      ];
 
       const workbook = XLSX.utils.book_new();
-      const worksheet = XLSX.utils.json_to_sheet(excelData);
-
-      // Add title before the data
-      XLSX.utils.sheet_add_aoa(
-        worksheet,
-        [
-          [
-            `(A) Block Summary: ${formatDisplayDate(
-              watch("startDate")
-            )} to ${formatDisplayDate(watch("endDate"))}`,
-          ],
-          [`Department: ${selectedDepartments.join(", ")} (in HH:MM)`],
-          [], // Empty row for spacing
-        ],
-        { origin: "A1" }
-      );
-
-      // Adjust column widths
-      const colWidths = [
-        { wch: 15 }, // Section
-        { wch: 10 }, // Demanded
-        { wch: 10 }, // Approved
-        { wch: 10 }, // Granted
-        { wch: 10 }, // % Granted
-        { wch: 10 }, // Availed
-        { wch: 10 }, // % Availed
-      ];
-      worksheet["!cols"] = colWidths;
-
       XLSX.utils.book_append_sheet(workbook, worksheet, "Block Summary");
 
-      const excelBuffer = XLSX.write(workbook, {
-        bookType: "xlsx",
-        type: "array",
-      });
+      const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
       const blob = new Blob([excelBuffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
@@ -3434,6 +3414,17 @@ const handleDownloadUpcomingBlocks = () => {
         statusLabel = block.overAllStatus || block.Status;
       }
 
+      // Compute avail duration as HH:MM if availed
+      let availDuration = "N/A";
+      if (block.AvailedTimeFrom && block.AvailedTimeTo) {
+        let diffHrs = (new Date(block.AvailedTimeTo).getTime() - new Date(block.AvailedTimeFrom).getTime()) / (1000 * 60 * 60);
+        if (diffHrs < 0) diffHrs += 24;
+        const totalMins = Math.round(diffHrs * 60);
+        const h = Math.floor(totalMins / 60);
+        const m = totalMins % 60;
+        availDuration = `${h}:${String(m).padStart(2, "0")}`;
+      }
+
       return {
         "Request ID": block.DivisionId || "N/A",
         "Date": block.Date ? dayjs(block.Date).format("DD-MM-YY") : "N/A",
@@ -3451,7 +3442,13 @@ const handleDownloadUpcomingBlocks = () => {
         "Availed Time": block.AvailedTimeFrom && block.AvailedTimeTo
           ? `${formatTime(block.AvailedTimeFrom)} to ${formatTime(block.AvailedTimeTo)}`
           : "Not Available",
+        "Avail Duration (HH:MM)": availDuration,
         "Status": statusLabel,
+        "SM Remarks / Rejection": block.smRemarks || "N/A",
+        "TPC Remarks": block.tpcRemarks || "N/A",
+        "Exit Without Availing Reason": block.availExitReason || "N/A",
+        "Rejection Remarks": block.rejectionRemarks || "N/A",
+        "Availed Remarks": block.availedRemarks || "N/A",
         "Station ID": block.stationId || "N/A",
         "Duration": block.Duration || "N/A",
         "Section": block.Section || "N/A",
