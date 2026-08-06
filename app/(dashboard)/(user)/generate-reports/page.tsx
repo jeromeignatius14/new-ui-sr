@@ -795,6 +795,12 @@ const clearGlobalFilters = () => {
                   block.SanctionedTimeTo
                 )}`
               : "Not Optimized Yet",
+          "Granted Time":
+            block.GrantedTimeFrom && block.GrantedTimeTo
+              ? `${formatTime(block.GrantedTimeFrom)} to ${formatTime(
+                  block.GrantedTimeTo
+                )}`
+              : "Not Granted",
           "Availed Time":
             block.AvailedTimeFrom && block.AvailedTimeTo
               ? `${formatTime(block.AvailedTimeFrom)} to ${formatTime(
@@ -828,6 +834,7 @@ const clearGlobalFilters = () => {
         { wch: 30 }, // Activity
         { wch: 20 }, // Demand Time
         { wch: 20 }, // Sanctioned Time
+        { wch: 20 }, // Granted Time
         { wch: 20 }, // Availed Time
         { wch: 20 }, // Status
       ];
