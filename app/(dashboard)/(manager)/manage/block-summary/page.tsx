@@ -3461,7 +3461,15 @@ const handleDownloadUpcomingBlocks = () => {
         "Department": block.selectedDepartment || "N/A",
         "Block Section": block.MissionBlock || "N/A",
         "Depo": block.selectedDepo || "N/A",
-        "Type": block.Type || "N/A",
+        "Line": (() => {
+          const secs = block.processedLineSections;
+          if (secs && secs.length > 0) {
+            return secs.map((s: any) =>
+              [s.lineName, s.otherLines].filter(Boolean).join(" & ") || s.road || ""
+            ).filter(Boolean).join(", ") || block.Type || "N/A";
+          }
+          return block.Type || "N/A";
+        })(),
         "Activity": block.Activity || "N/A",
         "Demanded Time": block.DemandedTimeFrom && block.DemandedTimeTo
           ? `${formatTime(block.DemandedTimeFrom)} to ${formatTime(block.DemandedTimeTo)}`
@@ -3469,6 +3477,9 @@ const handleDownloadUpcomingBlocks = () => {
         "Sanctioned Time": block.SanctionedTimeFrom && block.SanctionedTimeTo
           ? `${formatTime(block.SanctionedTimeFrom)} to ${formatTime(block.SanctionedTimeTo)}`
           : "Not Available",
+        "Granted Time": block.GrantedTimeFrom && block.GrantedTimeTo
+          ? `${formatTime(block.GrantedTimeFrom)} to ${formatTime(block.GrantedTimeTo)}`
+          : "Not Granted",
         "Availed Time": block.AvailedTimeFrom && block.AvailedTimeTo
           ? `${formatTime(block.AvailedTimeFrom)} to ${formatTime(block.AvailedTimeTo)}`
           : "Not Available",
@@ -6198,7 +6209,7 @@ const handleDownloadDepartmentCount = () => {
                   <th className="border-2 border-black px-1 md:px-2 py-2">Department</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Block Section</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Depo</th>
-                  <th className="border-2 border-black px-1 md:px-2 py-2">Type</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Line</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Activity</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Demanded time</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Sanctioned time</th>
@@ -6262,7 +6273,16 @@ const handleDownloadDepartmentCount = () => {
                           {block.selectedDepo}
                         </td>
                         <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
-                          {block.Type}
+                          {(() => {
+                            const secs = block.processedLineSections;
+                            if (secs && secs.length > 0) {
+                              const label = secs.map((s: any) =>
+                                [s.lineName, s.otherLines].filter(Boolean).join(" & ") || s.road || ""
+                              ).filter(Boolean).join(", ");
+                              return label || block.Type || "—";
+                            }
+                            return block.Type || "—";
+                          })()}
                         </td>
                         <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
                           {block.Activity}

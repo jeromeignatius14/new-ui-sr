@@ -111,6 +111,7 @@ export default function TpcDashboard() {
                                 <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-black border-r whitespace-nowrap">Date</th>
                                 <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-black border-r whitespace-nowrap">Block Section</th>
                                 <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-black border-r whitespace-nowrap">Sanctioned Time</th>
+                                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-black border-r whitespace-nowrap">Line</th>
                                 <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-black border-r whitespace-nowrap">Work Type</th>
                                 <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-black border-r whitespace-nowrap">Activity</th>
                                 <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-black border-r whitespace-nowrap">Status</th>
@@ -137,6 +138,18 @@ export default function TpcDashboard() {
                                                     ? `${formatTime(req.sanctionedTimeFrom)} - ${formatTime(req.sanctionedTimeTo)}`
                                                     : 'N/A'}
                                             </td>
+                                            <td className="px-4 py-2 text-sm text-black border-black border-r truncate">
+                                              {(() => {
+                                                const secs = req.processedLineSections;
+                                                if (secs && Array.isArray(secs) && secs.length > 0) {
+                                                  const label = secs.map((s: any) =>
+                                                    [s.lineName, s.otherLines].filter(Boolean).join(" & ") || s.road || ""
+                                                  ).filter(Boolean).join(", ");
+                                                  return label || req.corridorType || '-';
+                                                }
+                                                return req.corridorType || '-';
+                                              })()}
+                                            </td>
                                             <td className="px-4 py-2 text-sm text-black border-black border-r truncate">{req.workType || '-'}</td>
                                             <td className="px-4 py-2 text-sm text-black border-black border-r truncate">{req.activity || '-'}</td>
                                             <td className="px-4 py-2 text-sm text-black border-black border-r truncate">{req.overAllStatus || '-'}</td>
@@ -154,6 +167,7 @@ export default function TpcDashboard() {
                                 }) :
                                 [...Array(1)].map((_, idx) => (
                                     <tr key={`empty-${sectionKey}-${lineType}-${idx}`} className="h-12 hover:bg-gray-50">
+                                        <td className="px-4 py-2 text-sm text-black border-black border-r">&nbsp;</td>
                                         <td className="px-4 py-2 text-sm text-black border-black border-r">&nbsp;</td>
                                         <td className="px-4 py-2 text-sm text-black border-black border-r">&nbsp;</td>
                                         <td className="px-4 py-2 text-sm text-black border-black border-r">&nbsp;</td>
