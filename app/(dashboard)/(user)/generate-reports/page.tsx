@@ -645,7 +645,18 @@ const clearGlobalFilters = () => {
         return false;
     }
 }
-        if (activeSection && block.Section !== activeSection) return false;
+        // Match on SummaryGroup — the key the summary was actually grouped by
+        // (major section normally, user depot for TRD). Matching Section alone
+        // made TRD depot rows filter to nothing. (letter §6)
+        if (activeSection && activeSection !== "All Sections" && activeSection !== "Total") {
+          const b = block as any;
+          const matchesRow =
+            b.SummaryGroup === activeSection ||
+            b.Section === activeSection ||
+            b.selectedDepo === activeSection ||
+            b.Depo === activeSection;
+          if (!matchesRow) return false;
+        }
     if (!filterBlocksByDepartmentCount(block)) return false;
 
     return true;
@@ -669,10 +680,14 @@ const clearGlobalFilters = () => {
         return;
       }
 
+      // TrD/PGT letter TPC/PGT/II/FTCB-RBP dt.10.08.2026 §3:
+      //  - "Applied" duration column added (it was missing entirely)
+      //  - % Granted / % Availed are computed from DURATION, not block counts
       const excelData = pastBlockSummary.map((summary: any) => ({
         Section: summary.Department || summary.Section || "", // Using the fixed value as in the table
         Demanded: hoursToHHMM(summary.Demanded || 0),
         Approved: hoursToHHMM(summary.Approved || 0),
+        Applied: hoursToHHMM(summary.Applied || 0),
         Granted: hoursToHHMM(summary.Granted || 0),
         "% Granted":
           summary.PercentGranted !== undefined
@@ -685,23 +700,26 @@ const clearGlobalFilters = () => {
             : "",
       }));
 
-      // Add total row
+      // Add total row — percentages from summed DURATIONS, matching the columns
+      const sumOf = (key: string) =>
+        pastBlockSummary.reduce((sum: number, item: any) => sum + (item[key] || 0), 0);
+      const grandDemanded = sumOf("Demanded");
+      const grandApproved = sumOf("Approved");
+      const grandApplied = sumOf("Applied");
+      const grandGranted = sumOf("Granted");
+      const grandAvailed = sumOf("Availed");
+      const pct = (num: number, den: number) =>
+        den > 0 ? ((num / den) * 100).toFixed(2) + "%" : "0.00%";
+
       excelData.push({
         Section: "Total",
-        Demanded: hoursToHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Demanded || 0), 0)),
-        Approved: hoursToHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Approved || 0), 0)),
-        Granted: hoursToHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Granted || 0), 0)),
-        "% Granted": (() => {
-          const totalApplied = pastBlockSummary.reduce((sum, item) => sum + (item.AppliedCount || 0), 0);
-          const totalGranted = pastBlockSummary.reduce((sum, item) => sum + (item.GrantedCount || 0), 0);
-          return totalApplied > 0 ? ((totalGranted / totalApplied) * 100).toFixed(2) + "%" : "0.00%";
-        })(),
-        Availed: hoursToHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Availed || 0), 0)),
-        "% Availed": (() => {
-          const totalGranted = pastBlockSummary.reduce((sum, item) => sum + (item.GrantedCount || 0), 0);
-          const totalAvailed = pastBlockSummary.reduce((sum, item) => sum + (item.AvailedCount || 0), 0);
-          return totalGranted > 0 ? ((totalAvailed / totalGranted) * 100).toFixed(2) + "%" : "0.00%";
-        })(),
+        Demanded: hoursToHHMM(grandDemanded),
+        Approved: hoursToHHMM(grandApproved),
+        Applied: hoursToHHMM(grandApplied),
+        Granted: hoursToHHMM(grandGranted),
+        "% Granted": pct(grandGranted, grandApplied),
+        Availed: hoursToHHMM(grandAvailed),
+        "% Availed": pct(grandAvailed, grandGranted),
       });
 
       const workbook = XLSX.utils.book_new();
@@ -727,6 +745,7 @@ const clearGlobalFilters = () => {
         { wch: 15 }, // Section
         { wch: 10 }, // Demanded
         { wch: 10 }, // Approved
+        { wch: 10 }, // Applied
         { wch: 10 }, // Granted
         { wch: 10 }, // % Granted
         { wch: 10 }, // Availed

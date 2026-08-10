@@ -3190,8 +3190,20 @@ if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false
         return false;
     }
 }
-  // Filter by selected section
-  if (activeSection && block.Section !== activeSection) return false;
+  // Filter by the clicked summary row. (§6)
+  // Match on SummaryGroup — the key the backend actually grouped the summary by
+  // (major section normally, user depot for TRD). Matching on Section alone made
+  // every TRD depot row filter to nothing, so the hyperlinks looked dead.
+  // Section/Depo are kept as fallbacks for older cached responses.
+  if (activeSection && activeSection !== "All Sections" && activeSection !== "Total") {
+    const b = block as any;
+    const matchesRow =
+      b.SummaryGroup === activeSection ||
+      b.Section === activeSection ||
+      b.selectedDepo === activeSection ||
+      b.Depo === activeSection;
+    if (!matchesRow) return false;
+  }
     if (!filterBlocksByDepartmentCount(block)) return false;
   return true;
 });
