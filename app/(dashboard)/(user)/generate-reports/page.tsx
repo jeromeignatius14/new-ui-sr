@@ -1806,12 +1806,13 @@ const clearGlobalFilters = () => {
                     </td>
 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
   {(() => {
+    // Duration-based, matching the columns beside it (letter §3)
     const totalApproved = pastBlockSummary.reduce(
-      (sum, item) => sum + (item.ApprovedCount || 0),
+      (sum, item) => sum + (item.Approved || 0),
       0
     );
     const totalDemanded = pastBlockSummary.reduce(
-      (sum, item) => sum + (item.DemandsCount || 0),
+      (sum, item) => sum + (item.Demanded || 0),
       0
     );
     return totalDemanded > 0 
@@ -1852,11 +1853,11 @@ const clearGlobalFilters = () => {
                                          <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                                                                    {(() => {
     const totalApplied = pastBlockSummary.reduce(
-      (sum, item) => sum + (item.AppliedCount || 0),
+      (sum, item) => sum + (item.Applied || 0),
       0
     );
     const totalGranted = pastBlockSummary.reduce(
-      (sum, item) => sum + (item.GrantedCount || 0),
+      (sum, item) => sum + (item.Granted || 0),
       0
     );
     return totalApplied > 0 
@@ -1883,14 +1884,14 @@ const clearGlobalFilters = () => {
                                                              <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                                                                                         {(() => {
     const totalAvailed = pastBlockSummary.reduce(
-      (sum, item) => sum + (item.AvailedCount || 0),
+      (sum, item) => sum + (item.Availed || 0),
       0
     );
     const totalGranted = pastBlockSummary.reduce(
-      (sum, item) => sum + (item.GrantedCount || 0),
+      (sum, item) => sum + (item.Granted || 0),
       0
     );
-    return totalAvailed > 0 
+    return totalGranted > 0 
       ? ((totalAvailed / totalGranted) * 100).toFixed(2)
       : "0.00";
   })()}%
