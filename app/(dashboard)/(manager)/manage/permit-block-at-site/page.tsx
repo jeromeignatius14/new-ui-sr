@@ -7,6 +7,7 @@ import { Toaster, toast } from "react-hot-toast";
 import { useGetTrdPending } from "@/app/service/query/avail";
 import { useTrdPermitAvail, useTrdApproveExtension, useTrdAcknowledgeClosure } from "@/app/service/mutation/avail";
 import { LoadingBar } from "@/app/components/ui/LoadingBar";
+import { formatBlockedLines } from "@/app/utils/blockLines";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function toDatetimeLocal(iso?: string | null): string {
@@ -111,10 +112,9 @@ const tdSt: React.CSSProperties = {
 function getLineLabel(req: any): string {
   const sections = req.processedLineSections;
   if (Array.isArray(sections) && sections.length > 0) {
-    const labels = [...new Set(
-      sections.map((s: any) => s.lineName || s.road).filter(Boolean)
-    )] as string[];
-    if (labels.length > 0) return labels.join(" / ");
+    // Combined blocks (e.g. UP & DN) must show every line, not just the first.
+    const label = formatBlockedLines(sections, "");
+    if (label) return label;
   }
   return req.corridorType ?? "—";
 }

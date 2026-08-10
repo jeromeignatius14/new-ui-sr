@@ -34,6 +34,7 @@ import roadData from "../../../../public/roadData.json";
 import { createSiteLocationChangeHandler, validateSiteLocationPair, getAllAvailableDepots, getAutoAssignedDepots } from './features/siteLocation';
 import axiosInstance from "@/app/utils/axiosInstance";
 import MasterQuickAddModal from "@/app/components/ui/MasterQuickAddModal";
+import { formatBlockedLines } from "@/app/utils/blockLines";
 
 
 type Department = "TRD" | "S&T" | "ENGG";
@@ -2561,12 +2562,7 @@ const findCutoffThursday = () => {
           id: response.data?.divisionId || response.data?.id,
           blockSection: submitData.missionBlock || "-",
           lineOrRoad:
-            submitData.processedLineSections
-              ?.map((s) => {
-                const lines = [s.lineName, s.otherLines].filter(Boolean).join(" & ");
-                return lines || s.road || "-";
-              })
-              .join(", ") || "-",
+            formatBlockedLines(submitData.processedLineSections, "-"),
           duration:
             getDurationFromTimes(
               formData.demandTimeFrom || "",

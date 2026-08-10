@@ -6,6 +6,7 @@ import { Toaster, toast } from "react-hot-toast";
 import { useGetSmPending } from "@/app/service/query/avail";
 import { useSmApproveAvail, useSmAcknowledgeClosure, useSmApproveExtension } from "@/app/service/mutation/avail";
 import { LoadingBar } from "@/app/components/ui/LoadingBar";
+import { formatBlockedLines } from "@/app/utils/blockLines";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function fmtDt(iso?: string | null) {
@@ -81,10 +82,9 @@ const tdSt: React.CSSProperties = {
 function getLineLabel(req: any): string {
   const sections = req.processedLineSections;
   if (Array.isArray(sections) && sections.length > 0) {
-    const labels = [...new Set(
-      sections.map((s: any) => [s.lineName, s.otherLines].filter(Boolean).join(" & ") || s.road).filter(Boolean)
-    )] as string[];
-    if (labels.length > 0) return labels.join(" / ");
+    // Combined blocks (e.g. UP & DN) must list every line and road.
+    const label = formatBlockedLines(sections, "");
+    if (label) return label;
   }
   return req.corridorType ?? "—";
 }

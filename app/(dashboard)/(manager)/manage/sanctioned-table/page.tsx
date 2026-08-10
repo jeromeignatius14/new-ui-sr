@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminService } from "@/app/service/api/admin";
+import { formatBlockedLines } from "@/app/utils/blockLines";
 import { addDays, endOfWeek, format, parseISO, startOfWeek, subDays } from "date-fns";
 import { WeeklySwitcher } from "@/app/components/ui/WeeklySwitcher";
 import { useUrgentMode } from "@/app/context/UrgentModeContext";
@@ -284,7 +285,7 @@ export default function OptimiseTablePage() {
                     {request.missionBlock || "N/A"}
                   </td>
                   <td className="border border-black p-1 text-sm">
-                    {request.processedLineSections?.[0]?.lineName || "N/A"}
+                    {formatBlockedLines(request.processedLineSections)}
                   </td>
                   <td className="border border-black p-1 text-sm">
                     {request.sanctionedTimeFrom && request.sanctionedTimeTo

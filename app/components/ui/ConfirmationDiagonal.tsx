@@ -1,4 +1,5 @@
 import React from "react";
+import { formatSectionBlockedLines } from "@/app/utils/blockLines";
 
 interface FormData {
   date?: string;
@@ -72,41 +73,24 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
     }
   };
 
-  // Format selected lines/roads
+  // Format selected lines/roads.
+  // Every line/road of a section belongs to the block — a combined UP & DN
+  // block must read "UP & DN", not just "UP". See app/utils/blockLines.ts.
   const formatSelectedLines = (): string => {
     const lines: string[] = [];
 
     if (formData.processedLineSections) {
       formData.processedLineSections.forEach((section) => {
+        const label = formatSectionBlockedLines(section, "");
+        if (!label) return;
         if (section.type === "yard") {
-          if (section.stream && section.road) {
-            lines.push(
-              `Road ${section.road} (${section.stream}) in yard ${section.block}`
-            );
-          }
+          lines.push(
+            section.stream
+              ? `Road ${label} (${section.stream}) in yard ${section.block}`
+              : `Road ${label} in yard ${section.block}`
+          );
         } else {
-          const lineLabel = [section.lineName, section.otherLines].filter(Boolean).join(" & ");
-          if (lineLabel) {
-            lines.push(`Line ${lineLabel} in block ${section.block}`);
-          }
-        }
-      });
-    }
-
-    return lines.length > 0 ? lines.join(", ") : "None";
-  };
-
-  // Format other affected lines/roads
-  const formatOtherAffectedLines = (): string => {
-    const lines: string[] = [];
-
-    if (formData.processedLineSections) {
-      formData.processedLineSections.forEach((section) => {
-        if (section.type === "yard" && section.otherRoads) {
-          const roads = section.otherRoads.split(",").filter(Boolean);
-          if (roads.length > 0) {
-            lines.push(`Roads ${roads.join(", ")} in yard ${section.block}`);
-          }
+          lines.push(`Line ${label} in block ${section.block}`);
         }
       });
     }
@@ -194,11 +178,6 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
           <div>
             <h3 className="font-semibold">Selected Lines/Roads</h3>
             <p className="text-sm">{formatSelectedLines()}</p>
-
-            <div className="mt-2">
-              <h4 className="font-medium">Other Affected Lines/Roads:</h4>
-              <p className="text-sm">{formatOtherAffectedLines()}</p>
-            </div>
           </div>
         </div>
 
