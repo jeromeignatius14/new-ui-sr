@@ -610,7 +610,7 @@
 //           summary.PercentGranted !== undefined
 //             ? summary.PercentGranted.toFixed(2) + "%"
 //             : "",
-//         Availed: summary.Availed.toFixed(2) || "0.00",
+//         Availed: formatHoursHHMM(summary.Availed) || "0.00",
 //         "% Availed":
 //           summary.PercentAvailed !== undefined
 //             ? summary.PercentAvailed.toFixed(2) + "%"
@@ -627,7 +627,7 @@
 //           .reduce((sum, item) => sum + (item.Approved || 0), 0)
 //           .toFixed(2),
 //         Granted: String(
-//           pastBlockSummary.reduce((sum, item) => sum + (item.Granted || 0), 0).toFixed(2)
+//           formatHoursHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Granted || 0), 0))
 //         ),
 //         "% Granted":
 //           String(
@@ -637,7 +637,7 @@
 //             ).toFixed(2)
 //           ) + "%",
 //         Availed: String(
-//           pastBlockSummary.reduce((sum, item) => sum + (item.Availed || 0), 0).toFixed(2)
+//           formatHoursHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Availed || 0), 0))
 //         ),
 //         "% Availed":
 //           String(
@@ -1394,7 +1394,7 @@
 //     setActiveSection(summary.Department || summary.Section);
 //   }}
 //                       >
-//                         {summary.Demanded.toFixed(2)} / {summary.DemandsCount}
+//                         {formatHoursHHMM(summary.Demanded)} / {summary.DemandsCount}
 //                       </td>
 //                       <td
 //                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
@@ -1403,7 +1403,7 @@
 //                           setActiveSection(summary.Department || summary.Section);
 //                         }}
 //                       >
-//                         {summary.Approved.toFixed(2)} / {summary.ApprovedCount}
+//                         {formatHoursHHMM(summary.Approved)} / {summary.ApprovedCount}
 //                       </td>
 //                       <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
 //                          onClick={() => {
@@ -1411,7 +1411,7 @@
 //                           setActiveSection(summary.Department || summary.Section);
 //                         }}
 //                       >
-//                         {summary.Applied.toFixed(2)} /{summary.AppliedCount}
+//                         {formatHoursHHMM(summary.Applied)} /{summary.AppliedCount}
 //                       </td>
 //                       <td
 //                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
@@ -1420,7 +1420,7 @@
 //                           setActiveSection(summary.Department || summary.Section);
 //                         }}
 //                       >
-//                         {summary.Granted.toFixed(2)} /{summary.GrantedCount}
+//                         {formatHoursHHMM(summary.Granted)} /{summary.GrantedCount}
 //                       </td>
                     
 //                       <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
@@ -1435,7 +1435,7 @@
 //                           setActiveSection(summary.Department || summary.Section);
 //                         }}
 //                       >
-//                         {summary.Availed.toFixed(2)} / {summary.AvailedCount}
+//                         {formatHoursHHMM(summary.Availed)} / {summary.AvailedCount}
 //                       </td>
 //                       <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
 //                         {summary.PercentAvailed !== undefined
@@ -2345,6 +2345,7 @@ import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import formatTime from "@/app/utils/formatTime";
 import * as XLSX from "xlsx";
+import { formatHoursHHMM } from "@/app/utils/duration";
 
 const DIVISION_CODE = process.env.NEXT_PUBLIC_DIVISION_CODE || "PGT";
 
@@ -3229,12 +3230,7 @@ if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false
   const sectionDropdownRefB = useRef<HTMLDivElement>(null);
 
 
-  const hoursToHHMM = (hours: number): string => {
-    const totalMins = Math.round(hours * 60);
-    const h = Math.floor(totalMins / 60);
-    const m = totalMins % 60;
-    return `${h}:${String(m).padStart(2, "0")}`;
-  };
+  const hoursToHHMM = (hours: number): string => formatHoursHHMM(hours);
 
   // Function to download block summary table as XLSX
   const handleDownloadSummary = () => {
@@ -3244,16 +3240,23 @@ if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false
         return;
       }
 
-      const totalApplied = pastBlockSummary.reduce((sum, item) => sum + (item.AppliedCount || 0), 0);
-      const totalGrantedCount = pastBlockSummary.reduce((sum, item) => sum + (item.GrantedCount || 0), 0);
-      const totalAvailedCount = pastBlockSummary.reduce((sum, item) => sum + (item.AvailedCount || 0), 0);
+      // Totals from summed DURATIONS, matching the columns (letter §3)
+      const sumOf = (key: string) =>
+        pastBlockSummary.reduce((sum: number, item: any) => sum + (item[key] || 0), 0);
+      const grandDemanded = sumOf("Demanded");
+      const grandApproved = sumOf("Approved");
+      const grandApplied = sumOf("Applied");
+      const grandGranted = sumOf("Granted");
+      const grandAvailed = sumOf("Availed");
+      const pct = (num: number, den: number) =>
+        den > 0 ? ((num / den) * 100).toFixed(2) + "%" : "0.00%";
 
       // Title rows — built first so data rows appear below them without overwriting
       const titleRows: any[][] = [
         [`(A) Block Summary: ${formatDisplayDate(watch("startDate"))} to ${formatDisplayDate(watch("endDate"))}`],
         [`Department: ${selectedDepartments.join(", ")} (in HH:MM)`],
         [], // spacer
-        ["Section / Depot", "Demanded", "Approved", "Granted", "% Granted", "Availed", "% Availed"],
+        ["Section / Depot", "Demanded", "Approved", "Applied", "Granted", "% Granted", "Availed", "% Availed"],
       ];
 
       // Per-depot/section data rows
@@ -3261,6 +3264,7 @@ if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false
         summary.Department || summary.Section || "",
         hoursToHHMM(summary.Demanded || 0),
         hoursToHHMM(summary.Approved || 0),
+        hoursToHHMM(summary.Applied || 0),
         hoursToHHMM(summary.Granted || 0),
         summary.PercentGranted !== undefined ? summary.PercentGranted.toFixed(2) + "%" : "",
         hoursToHHMM(summary.Availed || 0),
@@ -3270,12 +3274,13 @@ if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false
       // Total row
       dataRows.push([
         "Total",
-        hoursToHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Demanded || 0), 0)),
-        hoursToHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Approved || 0), 0)),
-        hoursToHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Granted || 0), 0)),
-        totalApplied > 0 ? ((totalGrantedCount / totalApplied) * 100).toFixed(2) + "%" : "0.00%",
-        hoursToHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Availed || 0), 0)),
-        totalGrantedCount > 0 ? ((totalAvailedCount / totalGrantedCount) * 100).toFixed(2) + "%" : "0.00%",
+        hoursToHHMM(grandDemanded),
+        hoursToHHMM(grandApproved),
+        hoursToHHMM(grandApplied),
+        hoursToHHMM(grandGranted),
+        pct(grandGranted, grandApplied),
+        hoursToHHMM(grandAvailed),
+        pct(grandAvailed, grandGranted),
       ]);
 
       const allRows = [...titleRows, ...dataRows];
@@ -3285,6 +3290,7 @@ if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false
         { wch: 18 }, // Section / Depot
         { wch: 12 }, // Demanded
         { wch: 12 }, // Approved
+        { wch: 12 }, // Applied
         { wch: 12 }, // Granted
         { wch: 12 }, // % Granted
         { wch: 12 }, // Availed
@@ -4433,7 +4439,7 @@ const handleDownloadDepartmentCount = () => {
     scrollToUpcomingBlocks(); 
   }}
                       >
-                        {summary.Demanded.toFixed(2)} / {summary.DemandsCount}
+                        {formatHoursHHMM(summary.Demanded)} / {summary.DemandsCount}
                       </td>
                       <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
@@ -4444,7 +4450,7 @@ const handleDownloadDepartmentCount = () => {
                           scrollToUpcomingBlocks();
                         }}
                       >
-                        {summary.Approved.toFixed(2)} / {summary.ApprovedCount}
+                        {formatHoursHHMM(summary.Approved)} / {summary.ApprovedCount}
                       </td>
                       <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
                          onClick={() => {
@@ -4454,7 +4460,7 @@ const handleDownloadDepartmentCount = () => {
                           scrollToUpcomingBlocks();
                         }}
                       >
-                        {summary.Applied.toFixed(2)} /{summary.AppliedCount}
+                        {formatHoursHHMM(summary.Applied)} /{summary.AppliedCount}
                       </td>
                       <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
@@ -4465,7 +4471,7 @@ const handleDownloadDepartmentCount = () => {
                           scrollToUpcomingBlocks();
                         }}
                       >
-                        {summary.Granted.toFixed(2)} /{summary.GrantedCount}
+                        {formatHoursHHMM(summary.Granted)} /{summary.GrantedCount}
                       </td>
                     
                       <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
@@ -4482,7 +4488,7 @@ const handleDownloadDepartmentCount = () => {
                           scrollToUpcomingBlocks();
                         }}
                       >
-                        {summary.Availed.toFixed(2)} / {summary.AvailedCount}
+                        {formatHoursHHMM(summary.Availed)} / {summary.AvailedCount}
                       </td>
                       <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                         {summary.PercentAvailed !== undefined
@@ -4530,9 +4536,7 @@ const handleDownloadDepartmentCount = () => {
         scrollToUpcomingBlocks();
       }}
                     >
-                      {pastBlockSummary
-                        .reduce((sum, item) => sum + (item.Demanded || 0), 0)
-                        .toFixed(2)}{" "}
+                      {formatHoursHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Demanded || 0), 0))}{" "}
                       /{" "}
                       {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.DemandsCount || 0),
@@ -4546,9 +4550,7 @@ const handleDownloadDepartmentCount = () => {
         setDepartmentCountFilter(null);
         scrollToUpcomingBlocks();
       }}>
-                      {pastBlockSummary
-                        .reduce((sum, item) => sum + (item.Approved || 0), 0)
-                        .toFixed(2)}{" "}
+                      {formatHoursHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Approved || 0), 0))}{" "}
                       /{" "}
                       {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.ApprovedCount || 0),
@@ -4562,10 +4564,7 @@ const handleDownloadDepartmentCount = () => {
         setDepartmentCountFilter(null);
         scrollToUpcomingBlocks();
       }}>
-                      {pastBlockSummary.reduce(
-                        (sum, item) => sum + (item.Applied || 0),
-                        0
-                      ).toFixed(2)} /{" "}
+                      {formatHoursHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Applied || 0), 0))} /{" "}
                       {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.AppliedCount || 0),
                         0
@@ -4578,10 +4577,7 @@ const handleDownloadDepartmentCount = () => {
         setDepartmentCountFilter(null);
         scrollToUpcomingBlocks();
       }}>
-                      {pastBlockSummary.reduce(
-                        (sum, item) => sum + (item.Granted || 0),
-                        0
-                      ).toFixed(2)} /{" "}
+                      {formatHoursHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Granted || 0), 0))} /{" "}
                       {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.GrantedCount || 0),
                         0
@@ -4601,10 +4597,7 @@ const handleDownloadDepartmentCount = () => {
         setDepartmentCountFilter(null);
         scrollToUpcomingBlocks();
       }}>
-                      {pastBlockSummary.reduce(
-                        (sum, item) => sum + (item.Availed || 0),
-                        0
-                      ).toFixed(2)}{" "}
+                      {formatHoursHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Availed || 0), 0))}{" "}
                       /{" "}
                       {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.AvailedCount || 0),
@@ -4677,7 +4670,7 @@ const handleDownloadDepartmentCount = () => {
                           );
                         }}
                       >
-                        {summary.Demanded.toFixed(2)} / {summary.DemandsCount}
+                        {formatHoursHHMM(summary.Demanded)} / {summary.DemandsCount}
                       </td>
                       <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
@@ -4690,7 +4683,7 @@ const handleDownloadDepartmentCount = () => {
                           );
                         }}
                       >
-                        {summary.Approved.toFixed(2)} / {summary.ApprovedCount}
+                        {formatHoursHHMM(summary.Approved)} / {summary.ApprovedCount}
                       </td>
                           <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
@@ -4710,7 +4703,7 @@ const handleDownloadDepartmentCount = () => {
                           );
                         }}
                       >
-                        {summary.Applied.toFixed(2)} /{summary.AppliedCount}
+                        {formatHoursHHMM(summary.Applied)} /{summary.AppliedCount}
                       </td>
                       <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
@@ -4723,7 +4716,7 @@ const handleDownloadDepartmentCount = () => {
                           );
                         }}
                       >
-                        {summary.Granted.toFixed(2)} /{summary.GrantedCount}
+                        {formatHoursHHMM(summary.Granted)} /{summary.GrantedCount}
                       </td>
 
                       <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
@@ -4742,7 +4735,7 @@ const handleDownloadDepartmentCount = () => {
                           );
                         }}
                       >
-                        {summary.Availed.toFixed(2)} / {summary.AvailedCount}
+                        {formatHoursHHMM(summary.Availed)} / {summary.AvailedCount}
                       </td>
                       <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                         {summary.PercentAvailed !== undefined
@@ -4816,9 +4809,7 @@ const handleDownloadDepartmentCount = () => {
         scrollToUpcomingBlocks();
       }}
                     >
-                      {pastBlockSummary
-                        .reduce((sum, item) => sum + (item.Demanded || 0), 0)
-                        .toFixed(2)}{" "}
+                      {formatHoursHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Demanded || 0), 0))}{" "}
                       /{" "}
                       {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.DemandsCount || 0),
@@ -4832,9 +4823,7 @@ const handleDownloadDepartmentCount = () => {
         setDepartmentCountFilter(null);
         scrollToUpcomingBlocks();
       }}>
-                      {pastBlockSummary
-                        .reduce((sum, item) => sum + (item.Approved || 0), 0)
-                        .toFixed(2)}{" "}
+                      {formatHoursHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Approved || 0), 0))}{" "}
                       /{" "}
                       {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.ApprovedCount || 0),
@@ -4864,9 +4853,7 @@ const handleDownloadDepartmentCount = () => {
         setDepartmentCountFilter(null);
         scrollToUpcomingBlocks();
       }}>
-                      {pastBlockSummary
-                        .reduce((sum, item) => sum + (item.Applied || 0), 0)
-                        .toFixed(2)}{" "}
+                      {formatHoursHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Applied || 0), 0))}{" "}
                       /{" "}
                       {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.AppliedCount || 0),
@@ -4880,9 +4867,7 @@ const handleDownloadDepartmentCount = () => {
         setDepartmentCountFilter(null);
         scrollToUpcomingBlocks();
       }}>
-                      {pastBlockSummary
-                        .reduce((sum, item) => sum + (item.Granted || 0), 0)
-                        .toFixed(2)}{" "}
+                      {formatHoursHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Granted || 0), 0))}{" "}
                       /{" "}
                       {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.GrantedCount || 0),
@@ -4912,9 +4897,7 @@ const handleDownloadDepartmentCount = () => {
         setDepartmentCountFilter(null);
         scrollToUpcomingBlocks();
       }}>
-                      {pastBlockSummary
-                        .reduce((sum, item) => sum + (item.Availed || 0), 0)
-                        .toFixed(2)}{" "}
+                      {formatHoursHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Availed || 0), 0))}{" "}
                       /{" "}
                       {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.AvailedCount || 0),
