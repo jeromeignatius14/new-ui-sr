@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
+import { formatBlockedLines } from "@/app/utils/blockLines";
 
 export default function AdminRequestTablePage() {
   const router = useRouter();
@@ -984,11 +985,7 @@ if (activeSummaryFilters.searchId) {
                                 {request.corridorType}
                               </td>
                               <td className="border border-black p-1 text-center">
-                                {(() => {
-                                  const s = request.processedLineSections?.[0];
-                                  if (!s) return "N/A";
-                                  return [s.lineName, s.otherLines].filter(Boolean).join(" & ") || s.road || "N/A";
-                                })()}
+                                {formatBlockedLines(request.processedLineSections)}
                               </td>
                               <td className="border border-black p-1">
                                 {request.activity}

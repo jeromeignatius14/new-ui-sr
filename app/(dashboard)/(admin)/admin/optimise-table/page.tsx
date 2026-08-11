@@ -296,14 +296,51 @@ export default function OptimiseTablePage() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   };
 
+  /**
+   * Turn a spell's HH:MM pair into absolute datetimes inside the parent block's
+   * window.
+   *
+   * Both the spell start and end used to be pinned to the parent's calendar
+   * date, so an overnight block (e.g. 23:00 to 04:00 next day) could not be
+   * split: a spell of 23:00-01:00 produced an end 22 hours BEFORE its start,
+   * and a spell of 02:00-04:00 was placed on the wrong day entirely. The spell
+   * inputs are time-only, so the date has to be derived here.
+   *
+   * Times are wall-clock and stored with a Z suffix, matching how the rest of
+   * the app persists demandTimeFrom/To (the previous batch handler converted
+   * through local time instead, shifting every spell by the UTC offset).
+   */
+  const buildSpellWindow = (request: UserRequest, from: string, to: string) => {
+    const dateStr = request.date.split("T")[0];
+    const at = (time: string, dayOffset: number) => {
+      const d = new Date(`${dateStr}T${time}:00.000Z`);
+      d.setUTCDate(d.getUTCDate() + dayOffset);
+      return d;
+    };
+
+    const parentStart = new Date(request.demandTimeFrom);
+
+    // A spell starting earlier in the day than the block itself belongs to the
+    // following day (block 23:00 -> spell 02:00 means 02:00 tomorrow).
+    let start = at(from, 0);
+    if (start.getTime() < parentStart.getTime()) start = at(from, 1);
+
+    // An end at or before its own start has crossed midnight.
+    let end = at(to, 0);
+    while (end.getTime() <= start.getTime()) {
+      end = new Date(end.getTime() + 24 * 60 * 60 * 1000);
+    }
+
+    return { fromDt: start.toISOString(), toDt: end.toISOString() };
+  };
+
   const handleBatchSpellAction = (request: UserRequest, isSanctioned: boolean) => {
     const incomplete = spellInputs.some(s => !s.from || !s.to);
     if (incomplete) { toast.error("Please fill in all spell times"); return; }
-    const localDate = getLocalDateStr(request.date);
-    const spells = spellInputs.map(s => ({
-      demandTimeFrom: new Date(`${localDate}T${s.from}`).toISOString(),
-      demandTimeTo: new Date(`${localDate}T${s.to}`).toISOString(),
-    }));
+    const spells = spellInputs.map(s => {
+      const { fromDt, toDt } = buildSpellWindow(request, s.from, s.to);
+      return { demandTimeFrom: fromDt, demandTimeTo: toDt };
+    });
     batchSpellMutation.mutate({ requestId: request.id, spells, isSanctioned });
   };
 
@@ -408,9 +445,7 @@ const [spellExpandedId, setSpellExpandedId] = useState<string | null>(null);
   const handleSpellAction = (request: UserRequest, spellIndex: number, isSanctioned: boolean) => {
     const spell = spellInputs[spellIndex];
     if (!spell.from || !spell.to) { toast.error("Please enter spell times"); return; }
-    const dateStr = request.date.split("T")[0];
-    const fromDt = `${dateStr}T${spell.from}:00.000Z`;
-    const toDt = `${dateStr}T${spell.to}:00.000Z`;
+    const { fromDt, toDt } = buildSpellWindow(request, spell.from, spell.to);
     singleSpellMutation.mutate({ parentId: request.id, spellIndex, demandTimeFrom: fromDt, demandTimeTo: toDt, isSanctioned });
   };
 

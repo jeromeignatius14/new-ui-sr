@@ -14,6 +14,7 @@ import {
 import { useUrgentMode } from "@/app/context/UrgentModeContext";
 import { WeeklySwitcher } from "@/app/components/ui/WeeklySwitcher";
 import { useRouter } from "next/navigation";
+import { formatBlockedLines } from "@/app/utils/blockLines";
 
 // Header icons for tables
 const HeaderIcon = ({ type }: { type: string }) => {
@@ -312,7 +313,7 @@ export default function OptimiseTablePage() {
                     <td className="border border-black p-1 text-sm">{request.selectedSection || "N/A"}</td>
                     <td className="border border-black p-1 text-sm">{request.selectedDepo || "N/A"}</td>
                     <td className="border border-black p-1 text-sm">{request.missionBlock || "N/A"}</td>
-                    <td className="border border-black p-1 text-sm">{request.processedLineSections?.[0]?.lineName || "N/A"}</td>
+                    <td className="border border-black p-1 text-sm">{formatBlockedLines(request.processedLineSections)}</td>
                     {/* <td className="border border-black p-1 text-sm">
                       {request.optimizeTimeFrom && request.optimizeTimeTo
                         ? `${formatTime(request.optimizeTimeFrom)} - ${formatTime(request.optimizeTimeTo)}`

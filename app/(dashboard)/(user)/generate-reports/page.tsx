@@ -23,6 +23,7 @@ import { useUserGenerateReport } from "@/app/service/query/user-generate-report"
 import formatTime from "@/app/utils/formatTime";
 import * as XLSX from "xlsx";
 import dayjs from "dayjs";
+import { formatHoursHHMM } from "@/app/utils/duration";
 
 const DIVISION_CODE = process.env.NEXT_PUBLIC_DIVISION_CODE || "PGT";
 
@@ -645,7 +646,18 @@ const clearGlobalFilters = () => {
         return false;
     }
 }
-        if (activeSection && block.Section !== activeSection) return false;
+        // Match on SummaryGroup — the key the summary was actually grouped by
+        // (major section normally, user depot for TRD). Matching Section alone
+        // made TRD depot rows filter to nothing. (letter §6)
+        if (activeSection && activeSection !== "All Sections" && activeSection !== "Total") {
+          const b = block as any;
+          const matchesRow =
+            b.SummaryGroup === activeSection ||
+            b.Section === activeSection ||
+            b.selectedDepo === activeSection ||
+            b.Depo === activeSection;
+          if (!matchesRow) return false;
+        }
     if (!filterBlocksByDepartmentCount(block)) return false;
 
     return true;
@@ -654,12 +666,7 @@ const clearGlobalFilters = () => {
   const [sectionDropdownOpenB, setSectionDropdownOpenB] = useState(false);
   const sectionDropdownRefB = useRef<HTMLDivElement>(null);
 
-  const hoursToHHMM = (hours: number): string => {
-    const totalMins = Math.round(hours * 60);
-    const h = Math.floor(totalMins / 60);
-    const m = totalMins % 60;
-    return `${String(h).padStart(2, "0")}h ${String(m).padStart(2, "0")}m`;
-  };
+  const hoursToHHMM = (hours: number): string => formatHoursHHMM(hours);
 
   // Function to download block summary table as XLSX
   const handleDownloadSummary = () => {
@@ -669,10 +676,14 @@ const clearGlobalFilters = () => {
         return;
       }
 
+      // TrD/PGT letter TPC/PGT/II/FTCB-RBP dt.10.08.2026 §3:
+      //  - "Applied" duration column added (it was missing entirely)
+      //  - % Granted / % Availed are computed from DURATION, not block counts
       const excelData = pastBlockSummary.map((summary: any) => ({
         Section: summary.Department || summary.Section || "", // Using the fixed value as in the table
         Demanded: hoursToHHMM(summary.Demanded || 0),
         Approved: hoursToHHMM(summary.Approved || 0),
+        Applied: hoursToHHMM(summary.Applied || 0),
         Granted: hoursToHHMM(summary.Granted || 0),
         "% Granted":
           summary.PercentGranted !== undefined
@@ -685,23 +696,26 @@ const clearGlobalFilters = () => {
             : "",
       }));
 
-      // Add total row
+      // Add total row — percentages from summed DURATIONS, matching the columns
+      const sumOf = (key: string) =>
+        pastBlockSummary.reduce((sum: number, item: any) => sum + (item[key] || 0), 0);
+      const grandDemanded = sumOf("Demanded");
+      const grandApproved = sumOf("Approved");
+      const grandApplied = sumOf("Applied");
+      const grandGranted = sumOf("Granted");
+      const grandAvailed = sumOf("Availed");
+      const pct = (num: number, den: number) =>
+        den > 0 ? ((num / den) * 100).toFixed(2) + "%" : "0.00%";
+
       excelData.push({
         Section: "Total",
-        Demanded: hoursToHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Demanded || 0), 0)),
-        Approved: hoursToHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Approved || 0), 0)),
-        Granted: hoursToHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Granted || 0), 0)),
-        "% Granted": (() => {
-          const totalApplied = pastBlockSummary.reduce((sum, item) => sum + (item.AppliedCount || 0), 0);
-          const totalGranted = pastBlockSummary.reduce((sum, item) => sum + (item.GrantedCount || 0), 0);
-          return totalApplied > 0 ? ((totalGranted / totalApplied) * 100).toFixed(2) + "%" : "0.00%";
-        })(),
-        Availed: hoursToHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Availed || 0), 0)),
-        "% Availed": (() => {
-          const totalGranted = pastBlockSummary.reduce((sum, item) => sum + (item.GrantedCount || 0), 0);
-          const totalAvailed = pastBlockSummary.reduce((sum, item) => sum + (item.AvailedCount || 0), 0);
-          return totalGranted > 0 ? ((totalAvailed / totalGranted) * 100).toFixed(2) + "%" : "0.00%";
-        })(),
+        Demanded: hoursToHHMM(grandDemanded),
+        Approved: hoursToHHMM(grandApproved),
+        Applied: hoursToHHMM(grandApplied),
+        Granted: hoursToHHMM(grandGranted),
+        "% Granted": pct(grandGranted, grandApplied),
+        Availed: hoursToHHMM(grandAvailed),
+        "% Availed": pct(grandAvailed, grandGranted),
       });
 
       const workbook = XLSX.utils.book_new();
@@ -727,6 +741,7 @@ const clearGlobalFilters = () => {
         { wch: 15 }, // Section
         { wch: 10 }, // Demanded
         { wch: 10 }, // Approved
+        { wch: 10 }, // Applied
         { wch: 10 }, // Granted
         { wch: 10 }, // % Granted
         { wch: 10 }, // Availed
@@ -1616,7 +1631,7 @@ const clearGlobalFilters = () => {
                           );
                         }}
                       >
-                        {summary.Demanded.toFixed(2)} / {summary.DemandsCount}
+                        {formatHoursHHMM(summary.Demanded)} / {summary.DemandsCount}
                       </td>
                       <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
@@ -1628,7 +1643,7 @@ const clearGlobalFilters = () => {
                           );
                         }}
                       >
-                        {summary.Approved.toFixed(2)} / {summary.ApprovedCount}
+                        {formatHoursHHMM(summary.Approved)} / {summary.ApprovedCount}
                       </td>
                           <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
@@ -1654,7 +1669,7 @@ const clearGlobalFilters = () => {
                           );
                         }}
                       >
-                        {summary.Applied.toFixed(2)} /{summary.AppliedCount}
+                        {formatHoursHHMM(summary.Applied)} /{summary.AppliedCount}
                       </td>
                       <td
                         className="border-2 border-black px-1 md:px-2 py-2 text-center text-blue-600 underline cursor-pointer text-[12px] md:text-[16px]"
@@ -1667,7 +1682,7 @@ const clearGlobalFilters = () => {
                           );
                         }}
                       >
-                        {summary.Granted.toFixed(2)} /{summary.GrantedCount}
+                        {formatHoursHHMM(summary.Granted)} /{summary.GrantedCount}
                       </td>
 
                       <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
@@ -1686,7 +1701,7 @@ const clearGlobalFilters = () => {
                           );
                         }}
                       >
-                        {summary.Availed.toFixed(2)} / {summary.AvailedCount}
+                        {formatHoursHHMM(summary.Availed)} / {summary.AvailedCount}
                       </td>
                       <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                         {summary.PercentAvailed !== undefined
@@ -1761,9 +1776,7 @@ const clearGlobalFilters = () => {
         setDepartmentCountFilter(null);
       }}
                     >
-                      {pastBlockSummary
-                        .reduce((sum, item) => sum + (item.Demanded || 0), 0)
-                        .toFixed(2)}{" "}
+                      {formatHoursHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Demanded || 0), 0))}{" "}
                       /{" "}
                       {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.DemandsCount || 0),
@@ -1776,9 +1789,7 @@ const clearGlobalFilters = () => {
         setActiveSection(null);
         setDepartmentCountFilter(null);
       }}>
-                      {pastBlockSummary
-                        .reduce((sum, item) => sum + (item.Approved || 0), 0)
-                        .toFixed(2)}{" "}
+                      {formatHoursHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Approved || 0), 0))}{" "}
                       /{" "}
                       {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.ApprovedCount || 0),
@@ -1787,12 +1798,13 @@ const clearGlobalFilters = () => {
                     </td>
 <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
   {(() => {
+    // Duration-based, matching the columns beside it (letter §3)
     const totalApproved = pastBlockSummary.reduce(
-      (sum, item) => sum + (item.ApprovedCount || 0),
+      (sum, item) => sum + (item.Approved || 0),
       0
     );
     const totalDemanded = pastBlockSummary.reduce(
-      (sum, item) => sum + (item.DemandsCount || 0),
+      (sum, item) => sum + (item.Demanded || 0),
       0
     );
     return totalDemanded > 0 
@@ -1806,9 +1818,7 @@ const clearGlobalFilters = () => {
         setActiveSection(null);
         setDepartmentCountFilter(null);
       }}>
-                      {pastBlockSummary
-                        .reduce((sum, item) => sum + (item.Applied || 0), 0)
-                        .toFixed(2)}{" "}
+                      {formatHoursHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Applied || 0), 0))}{" "}
                       /{" "}
                       {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.AppliedCount || 0),
@@ -1821,9 +1831,7 @@ const clearGlobalFilters = () => {
         setActiveSection(null);
         setDepartmentCountFilter(null);
       }}>
-                      {pastBlockSummary
-                        .reduce((sum, item) => sum + (item.Granted || 0), 0)
-                        .toFixed(2)}{" "}
+                      {formatHoursHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Granted || 0), 0))}{" "}
                       /{" "}
                       {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.GrantedCount || 0),
@@ -1833,11 +1841,11 @@ const clearGlobalFilters = () => {
                                          <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                                                                    {(() => {
     const totalApplied = pastBlockSummary.reduce(
-      (sum, item) => sum + (item.AppliedCount || 0),
+      (sum, item) => sum + (item.Applied || 0),
       0
     );
     const totalGranted = pastBlockSummary.reduce(
-      (sum, item) => sum + (item.GrantedCount || 0),
+      (sum, item) => sum + (item.Granted || 0),
       0
     );
     return totalApplied > 0 
@@ -1852,9 +1860,7 @@ const clearGlobalFilters = () => {
         setActiveSection(null);
         setDepartmentCountFilter(null);
       }}>
-                      {pastBlockSummary
-                        .reduce((sum, item) => sum + (item.Availed || 0), 0)
-                        .toFixed(2)}{" "}
+                      {formatHoursHHMM(pastBlockSummary.reduce((sum, item) => sum + (item.Availed || 0), 0))}{" "}
                       /{" "}
                       {pastBlockSummary.reduce(
                         (sum, item) => sum + (item.AvailedCount || 0),
@@ -1864,14 +1870,14 @@ const clearGlobalFilters = () => {
                                                              <td className="border-2 border-black px-1 md:px-2 py-2 text-center text-black text-[12px] md:text-[16px]">
                                                                                         {(() => {
     const totalAvailed = pastBlockSummary.reduce(
-      (sum, item) => sum + (item.AvailedCount || 0),
+      (sum, item) => sum + (item.Availed || 0),
       0
     );
     const totalGranted = pastBlockSummary.reduce(
-      (sum, item) => sum + (item.GrantedCount || 0),
+      (sum, item) => sum + (item.Granted || 0),
       0
     );
-    return totalAvailed > 0 
+    return totalGranted > 0 
       ? ((totalAvailed / totalGranted) * 100).toFixed(2)
       : "0.00";
   })()}%

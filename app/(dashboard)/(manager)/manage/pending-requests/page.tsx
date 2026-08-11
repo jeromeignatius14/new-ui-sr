@@ -9,6 +9,7 @@ import { managerService, UserRequest } from "@/app/service/api/manager";
 import { useBulkAcceptRequests, useBulkRejectRequests, useEditUserRequest } from "@/app/service/mutation/manager";
 import { toast } from "react-hot-toast";
 import { notFound } from "next/navigation";
+import { formatBlockedLines } from "@/app/utils/blockLines";
 
 export default function PendingRequestsPage() {
     const { data: session } = useSession();
@@ -700,8 +701,7 @@ useEffect(() => {
                     formatDate(request.date),
                     request.divisionId || request.id,
                     request.missionBlock,
-                    request.processedLineSections?.[0]?.road ||
-                    request.processedLineSections?.[0]?.lineName,
+                    formatBlockedLines(request.processedLineSections),
                     request.activity,
                     request.status || "N/A", // Added status which was in headers but missing in rows
                     getExactTime(request.demandTimeFrom),

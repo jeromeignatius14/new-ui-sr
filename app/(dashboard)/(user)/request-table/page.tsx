@@ -35,6 +35,7 @@ import { managerService } from "@/app/service/api/manager";
 import dayjs from "dayjs";
 import formatTime from "@/app/utils/formatTime";
 import { depot } from "@/app/lib/store";
+import { formatBlockedLines } from "@/app/utils/blockLines";
 
 // Components
 const Pagination = ({
@@ -815,7 +816,7 @@ export default function RequestTablePage() {
       const excelData = filteredRequests.map((request: any) => ({
         "Date": formatDate(request.date),
         "Block Section": request.missionBlock || "N/A",
-        "UP/DN/SL/Rpad No.": request.processedLineSections[0].lineName || request.processedLineSections[0].road || "N/A",
+        "UP/DN/SL/Rpad No.": formatBlockedLines(request.processedLineSections),
         "Activity": request.activity || "N/A",
         "Duration": formatDuration(request.demandTimeFrom, request.demandTimeTo),
         "Status": request.adminRequestStatus === "ACCEPTED" ? "Y" : "N",
@@ -1090,7 +1091,7 @@ export default function RequestTablePage() {
                       {request.missionBlock}
                     </td>
                     <td className="border border-black px-2 py-1 whitespace-nowrap text-center text-black">
-                      {request.processedLineSections?.[0]?.lineName || request.processedLineSections?.[0]?.road || "N/A"}
+                      {formatBlockedLines(request.processedLineSections)}
                     </td>
                     <td className="border border-black px-2 py-1 text-black">
                       {request.activity}
