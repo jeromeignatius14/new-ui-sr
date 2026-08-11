@@ -31,5 +31,12 @@ export default withAuth(
 );
 
 export const config = {
-  matcher: ["/((?!_next|api/auth|favicon.ico|maintenance).*)"],
+  // Static assets in public/ must be excluded. Without this, an asset requested
+  // by a logged-out user was redirected to /auth/login: the Indian Railways
+  // logo on the login page never loaded, and firebase-messaging-sw.js could not
+  // register ("script resource is behind a redirect"), so push notifications
+  // did not work at all. (issue PGT-1)
+  matcher: [
+    "/((?!_next|api/auth|favicon.ico|maintenance|firebase-messaging-sw\\.js|manifest\\.json|sw\\.js|workbox-.*|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp|avif|json|txt|xml|woff|woff2|ttf|otf|mp4|webm)$).*)",
+  ],
 };
