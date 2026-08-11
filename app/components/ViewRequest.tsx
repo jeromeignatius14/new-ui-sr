@@ -510,9 +510,10 @@ block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance"
                 <tr>
                   <td className="py-1 font-medium">PGT Spell Requirements:</td>
                   <td className="py-1 text-[#2c3e50] font-semibold">
-                    {request.pgtMinDuration ? `Min. ${request.pgtMinDuration}h total` : ""}
+                    {/* Stored in MINUTES — the form asks for "(mins)". */}
+                    {request.pgtMinDuration ? `Min. ${request.pgtMinDuration} min total` : ""}
                     {request.pgtMinDuration && request.pgtMinSpellDuration ? " · " : ""}
-                    {request.pgtMinSpellDuration ? `Min. ${request.pgtMinSpellDuration}h per spell` : ""}
+                    {request.pgtMinSpellDuration ? `Min. ${request.pgtMinSpellDuration} min per spell` : ""}
                     {request.pgtSpellsCreated ? " ✔ Spells Created" : ""}
                   </td>
                 </tr>
