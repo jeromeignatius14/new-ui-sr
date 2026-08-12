@@ -168,6 +168,28 @@ const getOperatorSymbol = (operator: string): string => {
   };
   return operatorMap[operator] || operator;
 };
+
+/**
+ * The remark explaining a block's current state — why it was rejected,
+ * cancelled or modified. The backend sends several remark fields depending on
+ * who acted, so they are tried in the order the block would have moved through.
+ * These were previously absent from every download, leaving Remarks blank.
+ */
+const blockRemark = (block: any): string =>
+  block?.rejectionRemarks ||
+  block?.disconnectionRequestRejectRemarks ||
+  block?.smRemarks ||
+  block?.sanctionedRemarks ||
+  block?.sntAcceptRemarks ||
+  block?.trdAcceptRemarks ||
+  block?.remarkByManager ||
+  block?.availedRemarks ||
+  block?.tpcRemarks ||
+  block?.emergencyBlockRemarks ||
+  block?.requestremarks ||
+  "";
+
+
 export default function GenerateReportPage() {
    const [durationFilter, setDurationFilter] = useState({
     operator: "ALL", // "ALL", ">", ">=", "=", "<", "<="
@@ -816,6 +838,7 @@ const clearGlobalFilters = () => {
                 )}`
               : "Not Available",
           Status: block.overAllStatus,
+          Remarks: blockRemark(block),
         };
       });
 
