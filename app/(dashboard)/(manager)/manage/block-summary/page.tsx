@@ -6261,7 +6261,11 @@ const handleDownloadDepartmentCount = () => {
                           {statusLabel}
                         </td>
                         <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
-                          {block.requestremarks || "-"}
+                          {/* Show why the block ended where it did — the SM's
+                              rejection reason for a rejected block, and so on.
+                              This used to print only the SSE's original request
+                              remark, so every rejected/cancelled row read "-". */}
+                          {blockRemark(block) || "-"}
                         </td>
                       </tr>
                     );
