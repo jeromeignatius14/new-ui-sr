@@ -1771,34 +1771,11 @@ const activityOptions = getActivityOptions();
   // };
 const isPastThursdayCutoff = () => {
   const now = new Date();
-  
-  // Find the most recent Thursday 10 PM
-  const findMostRecentThursday10PM = () => {
-    const thursday = new Date(now);
-    const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
-    
-    let daysSinceThursday;
-    if (dayOfWeek === 4) { // Thursday
-      daysSinceThursday = 0;
-    } else if (dayOfWeek < 4) { // Sun-Wed
-      daysSinceThursday = dayOfWeek + 3;
-    } else { // Fri-Sat
-      daysSinceThursday = dayOfWeek - 4;
-    }
-    
-    thursday.setDate(now.getDate() - daysSinceThursday);
-    thursday.setHours(22, 0, 0, 0);
-    
-    // If we're before this Thursday 10 PM, use previous Thursday
-    if (now < thursday) {
-      thursday.setDate(thursday.getDate() - 7);
-    }
-    
-    return thursday;
-  };
-  
-  const cutoffThursday = findMostRecentThursday10PM();
-  return now > cutoffThursday;
+  const day = now.getDay();   // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+  const hour = now.getHours(); // local time hours
+  // Restricted only: Thursday at or after 10 PM, Friday, or Saturday
+  // Mon–Thu before 10 PM: allowed
+  return (day === 4 && hour >= 22) || day === 5 || day === 6;
 };
 
   // const getCorridorTypeRestrictions = (
