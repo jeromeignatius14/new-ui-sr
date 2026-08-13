@@ -191,6 +191,31 @@ const clearReportDataFromStorage = () => {
     localStorage.removeItem(STORAGE_KEY);
   }
 }
+
+/**
+ * The remark explaining a block's current state — the SM's reason for a
+ * rejected block, the manager's note for a returned one, and so on.
+ *
+ * These screens used to print block.requestremarks, which is the SSE's original
+ * note when raising the block. On a rejected or cancelled block that field is
+ * empty, so the Remarks column always read "-" even though the real reason was
+ * stored all along. Resolved in the order the block moves through.
+ */
+const blockRemark = (block: any): string =>
+  block?.rejectionRemarks ||
+  block?.disconnectionRequestRejectRemarks ||
+  block?.smRemarks ||
+  block?.sanctionedRemarks ||
+  block?.sntAcceptRemarks ||
+  block?.trdAcceptRemarks ||
+  block?.remarkByManager ||
+  block?.availedRemarks ||
+  block?.tpcRemarks ||
+  block?.emergencyBlockRemarks ||
+  block?.requestremarks ||
+  "";
+
+
 export default function GenerateReportPage() {
   const searchParams = useSearchParams(); // ADDED
   // const router = useRouter();
@@ -1019,6 +1044,7 @@ const handleDownloadUpcomingBlocks = () => {
           : "Not Available",
         "Work Type": (block as any).WorkType || "N/A",
         "Status": statusLabel,
+        "Remarks": blockRemark(block) || "N/A",
         "Station ID": block.stationId || "N/A",
         "Duration": block.Duration || "N/A",
         "Section": block.Section || "N/A",
@@ -3278,7 +3304,7 @@ const handleDownloadDepartmentCount = () => {
                           {statusLabel}
                         </td>
                         <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
-                          {block.requestremarks || "-"}
+                          {blockRemark(block) || "-"}
                         </td>
                       </tr>
                     );
