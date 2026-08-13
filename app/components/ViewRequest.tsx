@@ -322,7 +322,7 @@ const getSanctionStatus = (block:any) => {
   if (
 block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance"
   ) {
-    return "Sanctioned, Pending with SSE For Acceptance";
+    return "Sanctioned and Pending with Applicant for Acceptance";
   }
 
   // 2) Accepted by SSE
@@ -1163,14 +1163,26 @@ block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance"
         </div>
       )}
 
-       {request.isSanctioned && request.userResponse && (
-        <div className="border border-black p-3 mb-4">
-          <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
-            User Reject Remarks
-          </h2>
-          <p className="text-sm">{request.userResponse}</p>
-        </div>
-      )}
+       {(() => {
+        // `userResponse` doubles as a system flag: avail closure writes "availed" into
+        // it, and the accept/reject endpoint writes "ACCEPTED"/"REJECTED". Those are
+        // not remarks, so heading them "User Reject Remarks" was misleading on every
+        // block that was simply availed and closed at site.
+        const response = String(request.userResponse ?? "").trim();
+        const SYSTEM_FLAGS = ["availed", "accepted", "rejected", "true", "false"];
+        if (!request.isSanctioned || !response) return null;
+        if (SYSTEM_FLAGS.includes(response.toLowerCase())) return null;
+
+        const rejected = request.userAcceptanceForSanction === false;
+        return (
+          <div className="border border-black p-3 mb-4">
+            <h2 className="text-md font-bold text-[#13529e] mb-2 border-b border-gray-200 pb-1">
+              {rejected ? "Applicant's Rejection Remarks" : "Applicant's Remarks"}
+            </h2>
+            <p className="text-sm">{response}</p>
+          </div>
+        );
+      })()}
 
       <div className="text-[10px] text-gray-600 mt-2 border-t border-black pt-1">
         © {new Date().getFullYear()} Indian Railways. All Rights Reserved.

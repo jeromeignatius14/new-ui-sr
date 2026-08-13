@@ -1058,7 +1058,7 @@ Department: {selectedDepartments.join(", ")}
                               {formatTime(block.DemandedTimeTo)}
                             </>
                           ) : (
-                            "Not Availed Yet"
+                            "Not Demanded Yet"
                           )}
 
                     </td>
@@ -1069,7 +1069,7 @@ Department: {selectedDepartments.join(", ")}
                               {formatTime(block.SanctionedTimeTo)}
                             </>
                           ) : (
-                            "Not Availed Yet"
+                            "Not Sanctioned Yet"
                           )}
 
                     </td>

@@ -16,7 +16,7 @@ import dayjs from "dayjs";
 import formatTime from "@/app/utils/formatTime";
 import * as XLSX from "xlsx";
 
-const DIVISION_CODE = process.env.NEXT_PUBLIC_DIVISION_CODE || "MDU";
+const DIVISION_CODE = process.env.NEXT_PUBLIC_DIVISION_CODE || "SA";
 
 // === LOCALSTORAGE HELPERS ===
 const STORAGE_KEY = 'report-data';
@@ -1013,7 +1013,7 @@ const handleDownloadUpcomingBlocks = () => {
     const excelData = dataToDownload.map((block: any) => {
       let statusLabel = "";
       if (block.overAllStatus === "Sanctioned, Pending with SSE For Acceptance") {
-        statusLabel = "Sanctioned, Pending with SSE For Acceptance";
+        statusLabel = "Sanctioned and Pending with Applicant for Acceptance";
       } else if (block.overAllStatus === "Sanctioned and Accepted by SSE") {
         statusLabel = "Sanctioned and Acknowledged by SSE";
       } else if (block.overAllStatus === "Sanctioned and Rejected by SSE") {
@@ -3220,7 +3220,7 @@ const handleDownloadDepartmentCount = () => {
                     let statusLabel = "";
                   let statusStyle = { background: "#fff", color: "#222" };
                     if (block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance") {
-                      statusLabel = "Sanctioned, Pending with SSE For Acceptance";
+                      statusLabel = "Sanctioned and Pending with Applicant for Acceptance";
                       statusStyle = { background: "#fff86b", color: "#222" };
                     }  else if (block.overAllStatus==="Sanctioned and Accepted by SSE") {
                       statusLabel = "Sanctioned and Acknowledged by SSE";
@@ -3274,7 +3274,7 @@ const handleDownloadDepartmentCount = () => {
                                                       {formatTime(block.DemandedTimeTo)}
                                                     </>
                                                   ) : (
-                                                    "Not Availed Yet"
+                                                    "Not Demanded Yet"
                                                   )}
                                                 </td> 
                                                           <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
@@ -3284,7 +3284,7 @@ const handleDownloadDepartmentCount = () => {
                                                       {formatTime(block.SanctionedTimeTo)}
                                                     </>
                                                   ) : (
-                                                    "Not Availed Yet"
+                                                    "Not Sanctioned Yet"
                                                   )}
                                                 </td> 
                         <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">

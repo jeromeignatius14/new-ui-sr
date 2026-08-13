@@ -24,7 +24,7 @@ import formatTime from "@/app/utils/formatTime";
 import * as XLSX from "xlsx";
 import dayjs from "dayjs";
 
-const DIVISION_CODE = process.env.NEXT_PUBLIC_DIVISION_CODE || "MDU";
+const DIVISION_CODE = process.env.NEXT_PUBLIC_DIVISION_CODE || "SA";
 
 interface OptionType {
   value: string;
@@ -2942,7 +2942,7 @@ const clearGlobalFilters = () => {
                       let statusLabel = "";
                    let statusStyle = { background: "#fff", color: "#222" };
                     if (block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance") {
-                      statusLabel = "Sanctioned, Pending with SSE For Acceptance";
+                      statusLabel = "Sanctioned and Pending with Applicant for Acceptance";
                       statusStyle = { background: "#fff86b", color: "#222" };
                     }  else if (block.overAllStatus==="Sanctioned and Accepted by SSE") {
                       statusLabel = "Sanctioned and Acknowledged by SSE";
@@ -2999,7 +2999,7 @@ const clearGlobalFilters = () => {
                                                         {formatTime(block.DemandedTimeTo)}
                                                       </>
                                                     ) : (
-                                                      "Not Availed Yet"
+                                                      "Not Demanded Yet"
                                                     )}
                                                   </td> 
                                                             <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
@@ -3009,7 +3009,7 @@ const clearGlobalFilters = () => {
                                                         {formatTime(block.SanctionedTimeTo)}
                                                       </>
                                                     ) : (
-                                                      "Not Availed Yet"
+                                                      "Not Sanctioned Yet"
                                                     )}
                                                   </td>
                                                   <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">

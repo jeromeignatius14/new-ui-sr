@@ -1114,7 +1114,7 @@ export default function RequestTablePage() {
                               // Only show Accept/Reject buttons if the request belongs to current user
                               request.userId === session?.user?.id ?
                                 AcceptOrRejectButton(request) :
-                                <span className="text-gray-500">{request.overAllStatus === "Sanctioned Pending with SSE" ? "Sanctioned, Pending for Acceptance" : request.overAllStatus || "Pending"}</span>
+                                <span className="text-gray-500">{request.overAllStatus === "Sanctioned Pending with SSE" || request.overAllStatus === "Sanctioned, Pending with SSE For Acceptance" ? "Sanctioned and Pending with Applicant for Acceptance" : request.overAllStatus || "Pending"}</span>
                             )}
                         </>
                       ) : (
@@ -1352,7 +1352,7 @@ export default function RequestTablePage() {
                                 {request.overAllStatus}
                               </div>
                             ) : (<span className="bg-gray-100 p-2 text-gray-600 rounded">
-                              Sanctioned and Pending for Acceptance
+                              Sanctioned and Pending with Applicant for Acceptance
                             </span>)
                           ) :
                             // Both JE and USER roles: check conditions for showing disconnection buttons
@@ -1417,7 +1417,7 @@ export default function RequestTablePage() {
                             )
                               : (
                                 <span className="bg-green-100 p-2 text-green-600">
-                                  {request.overAllStatus === "Sanctioned Pending with SSE" ? "Sanctioned, Pending for Acceptance" : request.overAllStatus || "Pending"}
+                                  {request.overAllStatus === "Sanctioned Pending with SSE" || request.overAllStatus === "Sanctioned, Pending with SSE For Acceptance" ? "Sanctioned and Pending with Applicant for Acceptance" : request.overAllStatus || "Pending"}
                                 </span>
                               )
                           }
@@ -1589,7 +1589,7 @@ export default function RequestTablePage() {
                                 {request.overAllStatus}
                               </div>
                             ) : (<span className="bg-gray-100 p-2 text-gray-600 rounded">
-                              Sanctioned and Pending for Acceptance
+                              Sanctioned and Pending with Applicant for Acceptance
                             </span>)
                           ) :
                             // Both JE and USER roles: check conditions for showing disconnection buttons
@@ -1653,7 +1653,7 @@ export default function RequestTablePage() {
                             )
                               : (
                                 <span className="bg-green-100 p-2 text-green-600">
-                                  {request.overAllStatus === "Sanctioned Pending with SSE" ? "Sanctioned, Pending for Acceptance" : request.overAllStatus || "Pending"}
+                                  {request.overAllStatus === "Sanctioned Pending with SSE" || request.overAllStatus === "Sanctioned, Pending with SSE For Acceptance" ? "Sanctioned and Pending with Applicant for Acceptance" : request.overAllStatus || "Pending"}
                                 </span>
                               )
                           }

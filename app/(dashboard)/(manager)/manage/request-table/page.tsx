@@ -207,7 +207,7 @@ const updateQueryParams = (updates: Record<string, string | string[] | null>) =>
     // Sanctioned (light green)
     if (request.overAllStatus==="Sanctioned, Pending with SSE For Acceptance") {
       return {
-        label: "Sanctioned, Pending with SSE For Acceptance",
+        label: "Sanctioned and Pending with Applicant for Acceptance",
         style: { background:   "#fff86b", color: "#11332b" },
       };
     }

@@ -37,7 +37,7 @@ const STATUS_LABEL: Record<string, { label: string; severity: "red" | "amber" | 
   "Sanctioned and Rejected by SSE":               { label: "Admin sanctioned, but SSE rejected — block stuck here",        severity: "red"   },
 
   // ── Sanctioned / SSE
-  "Sanctioned, Pending with SSE For Acceptance":  { label: "Sanctioned by admin — SSE hasn't acknowledged it yet",             severity: "amber" },
+  "Sanctioned, Pending with SSE For Acceptance":  { label: "Sanctioned by admin — the applicant hasn't acknowledged it yet",  severity: "amber" },
   "Sanctioned":                                   { label: "Sanctioned — nobody has applied for availing yet",             severity: "amber" },
   "Sanctioned And Accepted By SSE":               { label: "SSE acknowledged — but nobody applied for block availing",         severity: "amber" },
   "Sanctioned and Accepted by SSE":               { label: "SSE acknowledged — but nobody applied for block availing",         severity: "amber" },
