@@ -1769,13 +1769,30 @@ const activityOptions = getActivityOptions();
 
   //   return (dayOfWeek === 4 && hour >= 22) || dayOfWeek > 4
   // };
-const isPastThursdayCutoff = () => {
-  const now = new Date();
-  const day = now.getDay();   // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
-  const hour = now.getHours(); // local time hours
-  // Restricted only: Thursday at or after 10 PM, Friday, or Saturday
-  // Mon–Thu before 10 PM: allowed
-  return (day === 4 && hour >= 22) || day === 5 || day === 6;
+// ── Planned-block cutoff ─────────────────────────────────────────────────────
+// A block dated in NEXT week must be raised before Thursday 22:00. The window
+// then stays shut for the rest of the week (Fri/Sat/Sun) and reopens on Monday
+// for the week after.
+//
+// The previous version looked for the most recent Thursday 22:00 that had
+// ALREADY passed and asked "are we past it?" — true by construction on every
+// day of the week, so planned next-week blocks were permanently blocked.
+//
+// Evaluated on Indian Standard Time, not the device clock, so a phone left on
+// the wrong timezone cannot change what a user is allowed to raise.
+const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+
+// Date whose getUTC* accessors read as IST wall-clock.
+const nowInIST = () => new Date(Date.now() + IST_OFFSET_MS);
+
+const isPastThursdayCutoff = (): boolean => {
+  const ist = nowInIST();
+  const day = ist.getUTCDay();    // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+  const hour = ist.getUTCHours();
+
+  if (day === 4) return hour >= 22;             // Thursday — shut only from 22:00
+  return day === 5 || day === 6 || day === 0;   // Fri, Sat, Sun — shut
+  // Mon, Tue, Wed, and Thu before 22:00 — open
 };
 
   // const getCorridorTypeRestrictions = (
@@ -1846,15 +1863,16 @@ const isPastThursdayCutoff = () => {
   //   return { urgentOnly, urgentAllowed, message, corridorTypeAllowed };
   // };
 const isDateInNextWeekModule = (dateString: string): boolean => {
-  const today = new Date();
-  today.setUTCHours(0, 0, 0, 0);
+  // Week boundaries are read in IST too — using UTC here made the week roll over
+  // 5h30m late, so between 00:00 and 05:30 IST the wrong week was compared.
+  const ist = nowInIST();
+  const today = new Date(
+    Date.UTC(ist.getUTCFullYear(), ist.getUTCMonth(), ist.getUTCDate())
+  );
   const targetDate = new Date(dateString + "T00:00:00Z");
-  targetDate.setUTCHours(0, 0, 0, 0);
   const daysUntilSunday = today.getUTCDay() === 0 ? 0 : 7 - today.getUTCDay();
-  const currentWeekSunday = new Date(today);
-  currentWeekSunday.setUTCDate(today.getUTCDate() + daysUntilSunday);
-  const nextWeekMonday = new Date(currentWeekSunday);
-  nextWeekMonday.setUTCDate(currentWeekSunday.getUTCDate() + 1);
+  const nextWeekMonday = new Date(today);
+  nextWeekMonday.setUTCDate(today.getUTCDate() + daysUntilSunday + 1);
   const nextWeekSunday = new Date(nextWeekMonday);
   nextWeekSunday.setUTCDate(nextWeekMonday.getUTCDate() + 6);
   return targetDate >= nextWeekMonday && targetDate <= nextWeekSunday;
@@ -2014,28 +2032,9 @@ const getCorridorTypeRestrictions = (dateString: string): {
     if (dayDiff === 0 || dayDiff === 1 || dayDiff === 2) {
       return true;
     }
-    const isDateInNextWeek = (dateString: string): boolean => {
-      const today = new Date();
-      today.setUTCHours(0, 0, 0, 0);
-      const targetDate = new Date(dateString + "T00:00:00Z");
-      targetDate.setUTCHours(0, 0, 0, 0);
-      const currentWeekSunday = new Date(today);
-      const daysUntilSunday =
-        today.getUTCDay() === 0 ? 0 : 7 - today.getUTCDay();
-      currentWeekSunday.setUTCDate(today.getUTCDate() + daysUntilSunday);
-      const nextWeekMonday = new Date(currentWeekSunday);
-      nextWeekMonday.setUTCDate(currentWeekSunday.getUTCDate() + 1);
-      const nextWeekSunday = new Date(nextWeekMonday);
-      nextWeekSunday.setUTCDate(nextWeekMonday.getUTCDate() + 6);
-      return targetDate >= nextWeekMonday && targetDate <= nextWeekSunday;
-    };
-    const isPastThursdayCutoff = (): boolean => {
-      const now = new Date();
-      const dayOfWeek = now.getUTCDay();
-      const hour = now.getUTCHours();
-      return (dayOfWeek === 4 && hour >= 22) || dayOfWeek > 4;
-    };
-    return isDateInNextWeek(formData.date) && isPastThursdayCutoff();
+    // Same rule as the banner above — use the shared helpers so the two can
+    // never drift apart again.
+    return isDateInNextWeekModule(formData.date) && isPastThursdayCutoff();
   })();
 
   useEffect(() => {
