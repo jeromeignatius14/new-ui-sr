@@ -31,7 +31,7 @@ function fmtDt(dt?: string | null) {
 // Derive station codes from missionBlock (e.g. "TVC-NCJ" or "TVC-NCJ,NCJ-TEN")
 // "TVC-NCJ" → ["TVC", "NCJ"]
 // "TVC-NCJ,NCJ-TEN" → ["TVC", "NCJ", "TEN"]
-function getStationsFromBlock(block: any): string[] {
+function getStationsFromBlock(block: any, validStations?: string[]): string[] {
   // Use missionBlock — it holds the exact sub-sections the work is on
   const sectionStr = (block.missionBlock ?? block.selectedSection ?? "").trim();
   if (!sectionStr) return [];
@@ -46,7 +46,15 @@ function getStationsFromBlock(block: any): string[] {
       parts.forEach((p) => { const t = p.trim(); if (t) seen.add(t); });
     }
   });
-  return [...seen].filter(s => s.toUpperCase() !== "YD");
+  const derived = [...seen].filter((s) => s.toUpperCase() !== "YD");
+
+  // Splitting a yard name like "KKDI Jn-YD" yields "KKDI Jn", which is not a
+  // station any SM logs in as — the block then matches nobody and disappears.
+  // Keep only codes that correspond to a real SM station. If the station list
+  // has not loaded yet, fall back to the derived list rather than show nothing.
+  if (!validStations || validStations.length === 0) return derived;
+  const valid = new Set(validStations.map((c) => c.trim().toUpperCase()));
+  return derived.filter((s) => valid.has(s.trim().toUpperCase()));
 }
 
 const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000; // +5:30
@@ -894,7 +902,7 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
       {/* ── Modals ── */}
       {modal === "apply" && (() => {
         const isTrdBlock = block.selectedDepartment === "TRD";
-        const stationOptions = getStationsFromBlock(block);
+        const stationOptions = getStationsFromBlock(block, smStations.map((s: any) => s.code));
         const canApply = !!selectedStation;
         return (
           <Modal title="Apply for Availing" onClose={() => { setModal(null); setSelectedStation(""); setStationInput(""); setStationDropdownOpen(false); setApplyTimeFrom(""); setApplyTimeTo(""); }}>
