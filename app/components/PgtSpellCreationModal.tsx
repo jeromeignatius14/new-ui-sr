@@ -51,6 +51,18 @@ export default function PgtSpellCreationModal({ request, onClose }: Props) {
   }, 0);
   const totalHours = (totalMinutes / 60).toFixed(1);
 
+  // Spells (by letter) that fall short of the per-spell minimum, which is also
+  // held in minutes. Previously nothing checked this at all.
+  const shortSpells = spells
+    .map((s, i) => {
+      if (!s.demandTimeFrom || !s.demandTimeTo) return null;
+      const mins = (new Date(s.demandTimeTo).getTime() - new Date(s.demandTimeFrom).getTime()) / 60000;
+      return request.pgtMinSpellDuration && mins > 0 && mins < request.pgtMinSpellDuration
+        ? "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[i]
+        : null;
+    })
+    .filter(Boolean) as string[];
+
   const dateStr = request.date ? new Date(request.date).toISOString().slice(0, 10) : "";
 
   return (
@@ -59,8 +71,10 @@ export default function PgtSpellCreationModal({ request, onClose }: Props) {
         <h2 className="text-xl font-bold text-[#2c3e50] mb-1">Create Spells</h2>
         <p className="text-sm text-gray-500 mb-4">
           Block <span className="font-semibold">{request.divisionId}</span>
-          {request.pgtMinDuration ? ` · Min ${request.pgtMinDuration}h total` : ""}
-          {request.pgtMinSpellDuration ? ` · Min ${request.pgtMinSpellDuration}h/spell` : ""}
+          {/* These are stored in MINUTES — the request form asks for
+              "Min. Total Duration (mins)". They were being labelled as hours. */}
+          {request.pgtMinDuration ? ` · Min ${request.pgtMinDuration} min total` : ""}
+          {request.pgtMinSpellDuration ? ` · Min ${request.pgtMinSpellDuration} min/spell` : ""}
         </p>
 
         <div className="space-y-3 mb-4">
@@ -100,9 +114,17 @@ export default function PgtSpellCreationModal({ request, onClose }: Props) {
         </button>
 
         <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 mb-4 text-sm">
-          <span className="font-semibold">Total duration: </span>{totalHours}h
-          {request.pgtMinDuration && Number(totalHours) < request.pgtMinDuration && (
-            <span className="text-red-500 ml-2">(minimum {request.pgtMinDuration}h required)</span>
+          <span className="font-semibold">Total duration: </span>{totalHours}h ({totalMinutes} min)
+          {/* Compare minutes with minutes. This previously compared the total in
+              HOURS against a minimum held in MINUTES, so a 60-minute minimum
+              demanded 60 hours of spells and could never be satisfied. */}
+          {request.pgtMinDuration && totalMinutes < request.pgtMinDuration && (
+            <span className="text-red-500 ml-2">(minimum {request.pgtMinDuration} min required)</span>
+          )}
+          {request.pgtMinSpellDuration && shortSpells.length > 0 && (
+            <span className="text-red-500 ml-2">
+              (spell {shortSpells.join(", ")} shorter than {request.pgtMinSpellDuration} min)
+            </span>
           )}
         </div>
 

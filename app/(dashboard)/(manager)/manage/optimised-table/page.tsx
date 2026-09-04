@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { adminService } from "@/app/service/api/admin";
+import { formatBlockedLines } from "@/app/utils/blockLines";
 import {
   addDays,
   endOfWeek,
@@ -236,7 +237,7 @@ export default function OptimiseTablePage() {
                     <td className="border border-black p-1 text-sm">{request.selectedSection || "N/A"}</td>
                     <td className="border border-black p-1 text-sm">{request.selectedDepo || "N/A"}</td>
                     <td className="border border-black p-1 text-sm">{request.missionBlock || "N/A"}</td>
-                    <td className="border border-black p-1 text-sm">{request.processedLineSections?.[0]?.lineName || "N/A"}</td>
+                    <td className="border border-black p-1 text-sm">{formatBlockedLines(request.processedLineSections)}</td>
                     <td className="border border-black p-1 text-sm">
                       {request.optimizeTimeFrom && request.optimizeTimeTo
                         ? `${new Date(request.optimizeTimeFrom).toISOString().substring(11, 16)} - ${new Date(request.optimizeTimeTo).toISOString().substring(11, 16)}`

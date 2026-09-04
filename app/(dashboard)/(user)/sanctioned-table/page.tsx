@@ -7,6 +7,7 @@ import { addDays, endOfWeek, format, parseISO, startOfWeek, subDays } from "date
 import { WeeklySwitcher } from "@/app/components/ui/WeeklySwitcher";
 import { useUrgentMode } from "@/app/context/UrgentModeContext";
 import { useRouter } from "next/navigation";
+import { formatBlockedLines } from "@/app/utils/blockLines";
 
 // Header icons for tables
 const HeaderIcon = ({ type }: { type: string }) => {
@@ -330,7 +331,7 @@ export default function OptimiseTablePage() {
                     {request.missionBlock || "N/A"}
                   </td>
                   <td className="border border-black p-1 text-sm">
-                    {request.processedLineSections?.[0]?.lineName || "N/A"}
+                    {formatBlockedLines(request.processedLineSections)}
                   </td>
                   {/* <td className="border border-black p-1 text-sm">
                     {request.sanctionedTimeFrom && request.sanctionedTimeTo

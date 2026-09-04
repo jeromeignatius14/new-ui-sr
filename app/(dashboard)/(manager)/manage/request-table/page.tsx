@@ -24,6 +24,7 @@ import dayjs from "dayjs";
 import { request } from "http";
 import axiosInstance from "@/app/utils/axiosInstance";
 import toast from "react-hot-toast";
+import { formatBlockedLines } from "@/app/utils/blockLines";
 
 function LockedUsersPanel() {
   const [users, setUsers] = useState<any[]>([]);
@@ -524,8 +525,7 @@ const handleDownloadExcel = async () => {
         formatDate(request.date),
         request.divisionId || request.id,
         request.missionBlock,
-        request.processedLineSections?.[0]?.road ||
-          request.processedLineSections?.[0]?.lineName,
+        formatBlockedLines(request.processedLineSections),
         request.activity,
         getExactTime(request.demandTimeFrom),
         getExactTime(request.demandTimeTo),
@@ -892,11 +892,7 @@ const handleDownloadExcel = async () => {
               {request.selectedDepo}
             </td>
             <td className="border border-[#B57CF6] p-2 text-center">
-              {(() => {
-                const s = request.processedLineSections?.[0];
-                if (!s) return "N/A";
-                return [s.lineName, s.otherLines].filter(Boolean).join(" & ") || s.road || "N/A";
-              })()}
+              {formatBlockedLines(request.processedLineSections)}
             </td>
             <td className="border border-[#B57CF6] p-2 text-center">
               {formatTime(request.demandTimeFrom)} -{" "}

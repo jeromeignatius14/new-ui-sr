@@ -7,6 +7,7 @@ import { format, parseISO } from "date-fns";
 import Link from "next/link";
 import { useState } from "react";
 import { useSession } from "next-auth/react";
+import { formatSectionBlockedLines } from "@/app/utils/blockLines";
 export default function ViewRequest() {
   const params = useParams();
   const router = useRouter();
@@ -509,9 +510,10 @@ block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance"
                 <tr>
                   <td className="py-1 font-medium">PGT Spell Requirements:</td>
                   <td className="py-1 text-[#2c3e50] font-semibold">
-                    {request.pgtMinDuration ? `Min. ${request.pgtMinDuration}h total` : ""}
+                    {/* Stored in MINUTES — the form asks for "(mins)". */}
+                    {request.pgtMinDuration ? `Min. ${request.pgtMinDuration} min total` : ""}
                     {request.pgtMinDuration && request.pgtMinSpellDuration ? " · " : ""}
-                    {request.pgtMinSpellDuration ? `Min. ${request.pgtMinSpellDuration}h per spell` : ""}
+                    {request.pgtMinSpellDuration ? `Min. ${request.pgtMinSpellDuration} min per spell` : ""}
                     {request.pgtSpellsCreated ? " ✔ Spells Created" : ""}
                   </td>
                 </tr>
@@ -674,23 +676,17 @@ block.overAllStatus==="Sanctioned, Pending with SSE For Acceptance"
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <span className="text-xs font-medium">Road:</span>
-                        <div className="py-1">{section.road || "N/A"}</div>
-                      </div>
-                      {section.otherRoads && (
-                        <div className="col-span-2">
-                          <span className="text-xs font-medium">
-                            Other Roads Affected:
-                          </span>
-                          <div className="py-1">{section.otherRoads}</div>
+                        <div className="py-1">
+                          {formatSectionBlockedLines(section)}
                         </div>
-                      )}
+                      </div>
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <span className="text-xs font-medium">Line:</span>
                         <div className="py-1">
-                          {[section.lineName, section.otherLines].filter(Boolean).join(" & ") || "N/A"}
+                          {formatSectionBlockedLines(section)}
                         </div>
                       </div>
                     </div>

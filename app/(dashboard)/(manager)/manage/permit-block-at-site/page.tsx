@@ -7,6 +7,7 @@ import { Toaster, toast } from "react-hot-toast";
 import { useGetTrdPending } from "@/app/service/query/avail";
 import { useTrdPermitAvail, useTrdApproveExtension, useTrdAcknowledgeClosure } from "@/app/service/mutation/avail";
 import { LoadingBar } from "@/app/components/ui/LoadingBar";
+import { formatBlockedLines } from "@/app/utils/blockLines";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function toDatetimeLocal(iso?: string | null): string {
@@ -75,6 +76,12 @@ function getStatusLabel(req: any) {
   if (s === "Availing Active") return "In Progress";
   if (s === "SM Approved") return "Permitted\nAwaiting SSE Ack";
   if (s === "Pending TRD Controller Permit") return "Awaiting\nPermit";
+  // Two-stage TRD flow: this controller has permitted the power block and the
+  // Station Master has still to grant the line block. Spelling that out here is
+  // what stops the block looking like it has vanished.
+  if (s === "Pending SM Approval") return "Power Block Permitted\nWaiting for SM Grant";
+  if (s === "Pending Concurrences") return "Awaiting\nConcurrences";
+  if (s === "SM Rejected") return "Rejected by SM";
   if (s === "Availing Cancelled") return "Cancelled";
   return s;
 }
@@ -111,10 +118,9 @@ const tdSt: React.CSSProperties = {
 function getLineLabel(req: any): string {
   const sections = req.processedLineSections;
   if (Array.isArray(sections) && sections.length > 0) {
-    const labels = [...new Set(
-      sections.map((s: any) => s.lineName || s.road).filter(Boolean)
-    )] as string[];
-    if (labels.length > 0) return labels.join(" / ");
+    // Combined blocks (e.g. UP & DN) must show every line, not just the first.
+    const label = formatBlockedLines(sections, "");
+    if (label) return label;
   }
   return req.corridorType ?? "—";
 }
@@ -298,6 +304,8 @@ export default function PermitBlockAtSitePage() {
   const rawTrdApproved:          any[] = data?.data?.trdApproved          ?? [];
   const rawAlreadyAvailed:       any[] = data?.data?.alreadyAvailed       ?? [];
   const rawUpcomingSanctioned:   any[] = data?.data?.upcomingSanctioned   ?? [];
+  const rawAwaitingSmGrant:      any[] = data?.data?.awaitingSmGrant      ?? [];
+  const rawAwaitingConcurrences: any[] = data?.data?.awaitingConcurrences ?? [];
 
   // Only keep blocks whose date is today or in the future
   const todayStart = new Date();
@@ -315,6 +323,8 @@ export default function PermitBlockAtSitePage() {
   const trdApproved         = applyFilter(rawTrdApproved);
   const alreadyAvailed      = applyFilter(rawAlreadyAvailed);
   const upcomingSanctioned  = applyFilter(rawUpcomingSanctionedFiltered);
+  const awaitingSmGrant     = applyFilter(rawAwaitingSmGrant);
+  const awaitingConcurrences = applyFilter(rawAwaitingConcurrences);
 
   const pendingAction = [...pendingPermits, ...pendingExtensions, ...pendingClosures];
   const underProgress = [...inProgress, ...trdApproved];
@@ -506,6 +516,10 @@ export default function PermitBlockAtSitePage() {
       ) : (
         <div style={{ padding: "0 12px 16px" }}>
           <SectionTable title="TRD BLOCKS PENDING PERMIT / CANCELLATION" subtitle="(CLICK ID TO TAKE ACTION)" headerColor="#b45309" rows={pendingAction} blink onClickId={openModal} emptyMsg="No pending permits" />
+          <SectionTable title="PERMITTED — WAITING FOR SM TO GRANT LINE BLOCK" subtitle="(POWER BLOCK PERMITTED BY YOU · NO ACTION NEEDED HERE)" headerColor="#0e7490" rows={awaitingSmGrant} onClickId={openModal} emptyMsg="No blocks waiting with the Station Master" />
+          {awaitingConcurrences.length > 0 && (
+            <SectionTable title="AWAITING DEPARTMENT CONCURRENCES" subtitle="(WAITING ON S&T / ENGG BEFORE IT REACHES YOU)" headerColor="#a16207" rows={awaitingConcurrences} onClickId={openModal} emptyMsg="No blocks awaiting concurrences" />
+          )}
           <SectionTable title="BLOCKS UNDER PROGRESS" subtitle="(CLICK ID TO SEE DETAILS)" headerColor="#7c3aed" rows={underProgress} onClickId={openModal} emptyMsg="No blocks in progress" />
           <SectionTable title="UPCOMING SANCTIONED BLOCKS" subtitle="(CLICK ID TO SEE DETAILS)" headerColor="#2e7d32" rows={upcomingSanctioned} onClickId={openModal} emptyMsg="No upcoming sanctioned blocks" />
           <SectionTable title="BLOCKS ALREADY AVAILED" subtitle="(CLICK ID TO SEE DETAILS)" headerColor="#1565c0" rows={alreadyAvailed} onClickId={openModal} emptyMsg="No availed blocks in last 48 hrs" />
