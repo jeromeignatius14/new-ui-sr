@@ -2346,7 +2346,7 @@ import dayjs from "dayjs";
 import formatTime from "@/app/utils/formatTime";
 import * as XLSX from "xlsx";
 
-const DIVISION_CODE = process.env.NEXT_PUBLIC_DIVISION_CODE || "MDU";
+const DIVISION_CODE = process.env.NEXT_PUBLIC_DIVISION_CODE || "TVC";
 
 // === LOCALSTORAGE HELPERS ===
 const STORAGE_KEY = 'report-data';
