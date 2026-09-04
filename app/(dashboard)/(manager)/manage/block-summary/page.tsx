@@ -3187,8 +3187,14 @@ if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false
         return false;
     }
 }
-  // Filter by selected section
-  if (activeSection && block.Section !== activeSection) return false;
+  // Filter by selected section — for TRD blocks match by depot, for others match by major section
+  if (activeSection) {
+    if (block.selectedDepartment === "TRD") {
+      if (block.selectedDepo !== activeSection) return false;
+    } else {
+      if (block.Section !== activeSection) return false;
+    }
+  }
     if (!filterBlocksByDepartmentCount(block)) return false;
   return true;
 });
