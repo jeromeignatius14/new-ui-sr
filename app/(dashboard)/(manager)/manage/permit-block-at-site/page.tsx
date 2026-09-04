@@ -254,7 +254,9 @@ const TPC_BOARDS: { name: string; depots: string[] }[] = [
 
 function filterByBoard(arr: any[], boardDepots: string[]): any[] {
   return arr.filter((r: any) => {
-    const depot = r.appliedByDepot ?? r.selectedDepo ?? "";
+    // smStation is now a dropdown (structured code), so prefer it for routing.
+    // Fall back to appliedByDepot then selectedDepo for older records.
+    const depot = r.smStation ?? r.appliedByDepot ?? r.selectedDepo ?? "";
     return boardDepots.includes(depot);
   });
 }
