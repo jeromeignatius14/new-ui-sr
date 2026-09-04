@@ -2361,12 +2361,22 @@ const saveReportDataToStorage = (data: any) => {
   }
 };
 
+const CACHE_MAX_AGE_MS = 2 * 60 * 60 * 1000; // 2 hours
+
 const getReportDataFromStorage = () => {
   if (typeof window !== 'undefined') {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       try {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        // Discard cache if it is older than 2 hours — prevents stale
+        // section-wise TRD data from showing after the depot-wise fix.
+        const age = new Date().getTime() - (parsed.timestamp || 0);
+        if (age > CACHE_MAX_AGE_MS) {
+          localStorage.removeItem(STORAGE_KEY);
+          return null;
+        }
+        return parsed;
       } catch (error) {
         console.error("Error parsing stored data:", error);
       }
@@ -3190,8 +3200,15 @@ if (activeFilter === "demanded" && block.DemandedTimeFrom === null) return false
         return false;
     }
 }
-  // Filter by selected section
-  if (activeSection && block.Section !== activeSection) return false;
+  // Filter by selected section/depot.
+  // TRD blocks are grouped by depot (e.g. "CS") not by major section
+  // ("CLT-CAN"). The backend stamps SummaryGroup on each detail row so
+  // clicking a TRD depot row filters correctly. Fall back to Section for
+  // non-TRD blocks where SummaryGroup === Section.
+  if (activeSection) {
+    const blockKey = (block as any).SummaryGroup || block.Section;
+    if (blockKey !== activeSection) return false;
+  }
     if (!filterBlocksByDepartmentCount(block)) return false;
   return true;
 });
