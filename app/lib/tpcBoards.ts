@@ -44,10 +44,24 @@ export function depotCodesOf(r: {
     .filter(Boolean);
 }
 
-// A block belongs to a board if ANY depot it carries sits on that board. A block
-// spanning several depots therefore shows on every board it touches, which is
-// correct: each of those controllers holds part of it.
+// Which board a block belongs to.
+//
+// A TRD applicant now picks one depot from a dropdown, and that choice is stored
+// in smStation. When it is present it is AUTHORITATIVE and nothing else is
+// consulted: it is the applicant naming the board that should receive the block.
+//
+// This matters because appliedByDepot is copied from the applicant's own user
+// record, and a construction or senior TRD user carries every depot on the
+// division ("ALLP,CKI,CN,ERS,KTYM,…"). Reading that alongside the choice would
+// widen a deliberate single-board selection back out to all three boards and
+// make the dropdown pointless.
+//
+// Only when smStation holds something that is not a depot — an older block,
+// raised when the picker still offered station codes — do we fall back to the
+// depot fields, splitting comma lists so those blocks reach a board at all
+// rather than none.
 export function blockOnBoard(r: any, boardDepots: string[]): boolean {
-  const codes = depotCodesOf(r);
-  return codes.some((c) => boardDepots.includes(c));
+  const chosen = String(r?.smStation ?? "").trim().toUpperCase();
+  if (TPC_DEPOTS.includes(chosen)) return boardDepots.includes(chosen);
+  return depotCodesOf(r).some((c) => boardDepots.includes(c));
 }
