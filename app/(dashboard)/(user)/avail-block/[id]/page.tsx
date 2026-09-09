@@ -1,5 +1,7 @@
 "use client";
 
+import { TPC_BOARDS, TPC_DEPOTS, boardNameForDepot } from "@/app/lib/tpcBoards";
+
 import { use, useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -916,7 +918,7 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
               <div style={{ background: "#fff7ed", border: "2px solid #f59e0b", borderRadius: "10px", padding: "10px 14px", marginBottom: "12px" }}>
                 <div style={{ fontWeight: 800, fontSize: "13px", color: "#78350f", marginBottom: "2px" }}>⚡ TRD Department Block</div>
                 <div style={{ fontSize: "12px", color: "#92400e" }}>
-                  After applying, this block goes to the <strong>TRD Controller</strong> for permit. Select the depot / station code for this block below.
+                  This block goes to the <strong>TRD Controller</strong> for permit, not to a Station Master. Choose the <strong>depot</strong> you are working in — that is what decides which TPC board it reaches.
                 </div>
               </div>
             )}
@@ -924,11 +926,40 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
             {/* Station selection — block-section dropdown + DB search combobox */}
             <div style={{ marginBottom: "16px" }}>
               <label style={fieldLabel}>
-                {isTrdBlock ? "Select Depot / Station code" : "Select SM Station"}
+                {isTrdBlock ? "Select Depot (decides the TPC board)" : "Select SM Station"}
               </label>
 
+              {/* A TRD block is permitted by a control board, and a board is a set
+                  of depots. Offering station codes here meant the applicant chose
+                  something the board filter could not match, so the block reached
+                  no controller at all. These depots come from the same board map
+                  the controller's own screen filters on. */}
+              {isTrdBlock && (
+                <>
+                  <select
+                    value={TPC_DEPOTS.includes(selectedStation) ? selectedStation : ""}
+                    onChange={(e) => { setSelectedStation(e.target.value); setStationInput(""); setStationDropdownOpen(false); }}
+                    style={{ ...fieldInput, marginBottom: "8px",
+                             borderColor: TPC_DEPOTS.includes(selectedStation) ? "#16a34a" : "#d1d5db",
+                             background: TPC_DEPOTS.includes(selectedStation) ? "#f0fdf4" : "#fff" }}
+                  >
+                    <option value="">— Select depot —</option>
+                    {TPC_BOARDS.map((b) => (
+                      <optgroup key={b.name} label={b.name}>
+                        {b.depots.map((d) => <option key={d} value={d}>{d}</option>)}
+                      </optgroup>
+                    ))}
+                  </select>
+                  {selectedStation && boardNameForDepot(selectedStation) && (
+                    <div style={{ fontSize: "12px", color: "#16a34a", fontWeight: 700, marginBottom: "4px" }}>
+                      ✓ {selectedStation} — goes to {boardNameForDepot(selectedStation)}
+                    </div>
+                  )}
+                </>
+              )}
+
               {/* ── 1. Native dropdown from block sections (the "wheel") ── */}
-              {stationOptions.length > 0 && (
+              {!isTrdBlock && stationOptions.length > 0 && (
                 <select
                   value={stationOptions.includes(selectedStation) ? selectedStation : ""}
                   onChange={(e) => { setSelectedStation(e.target.value); setStationInput(""); setStationDropdownOpen(false); }}
@@ -942,12 +973,12 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
               )}
 
               {/* ── Divider ── */}
-              <p style={{ fontSize: "12px", color: "#6b7280", margin: "0 0 6px" }}>
+              {!isTrdBlock && <p style={{ fontSize: "12px", color: "#6b7280", margin: "0 0 6px" }}>
                 {stationOptions.length > 0 ? "Or search all SM stations by code / name:" : "Type to search SM station:"}
-              </p>
+              </p>}
 
               {/* ── 2. Combobox search from DB ── */}
-              <div style={{ position: "relative" }}>
+              <div style={{ position: "relative", display: isTrdBlock ? "none" : undefined }}>
                 <input
                   type="text"
                   placeholder="Type station code or name…"
@@ -975,7 +1006,7 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
                   </div>
                 )}
               </div>
-              {selectedStation && (
+              {selectedStation && !isTrdBlock && (
                 <div style={{ marginTop: "6px", fontSize: "12px", color: "#16a34a", fontWeight: 700 }}>✓ Selected: {selectedStation}</div>
               )}
             </div>

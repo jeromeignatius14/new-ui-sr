@@ -1,5 +1,7 @@
 "use client";
 
+import { TPC_BOARDS, blockOnBoard } from "@/app/lib/tpcBoards";
+
 import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -245,20 +247,11 @@ function Modal({ title, accent, children, onClose }: { title: string; accent?: s
   );
 }
 
-// ── TPC Board → Depot mapping ─────────────────────────────────────────────────
-const TPC_BOARDS: { name: string; depots: string[] }[] = [
-  { name: "TPC (SRR-VARD-STRL)", depots: ["TCR", "CKI", "ERS"] },
-  { name: "TPC (STRL-VARD-PVU/SP)", depots: ["KTYM", "ALLP", "KYJ", "QLN"] },
-  { name: "TPC (PVU/SP-MP/SP)", depots: ["KZK", "NCJ", "NNN"] },
-];
-
+// TPC boards and the block→board test now live in one shared module, so the
+// applicant's depot picker and this filter can never disagree.
+// See app/lib/tpcBoards.ts for why all three depot fields are read.
 function filterByBoard(arr: any[], boardDepots: string[]): any[] {
-  return arr.filter((r: any) => {
-    // smStation is now a dropdown (structured code), so prefer it for routing.
-    // Fall back to appliedByDepot then selectedDepo for older records.
-    const depot = r.smStation ?? r.appliedByDepot ?? r.selectedDepo ?? "";
-    return boardDepots.includes(depot);
-  });
+  return arr.filter((r: any) => blockOnBoard(r, boardDepots));
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
