@@ -101,9 +101,26 @@ function playBeep(freq = 880) {
   } catch { /* ignore */ }
 }
 
-// ── TRD blocks use "TPC" everywhere instead of "SM" ──────────────────────────
+// ── Which authority is this block actually with? ─────────────────────────────
+// Department is not the answer. A TRD block is permitted by the TPC only for the
+// power block; the line block is then granted by the Station Master, so a TRD
+// block sitting at "Pending SM Approval" is with the SM, not the TPC. Labelling
+// it "Pending TPC Approval" sends the SSE to chase the wrong person.
+function actingAuthority(block: any): "SM" | "TPC" {
+  // Recorded by the backend at the moment of the grant or rejection — the only
+  // reliable answer once a block has been acted on.
+  if (block.smApprovedByRole === "TPC") return "TPC";
+  if (block.smApprovedByRole === "SM") return "SM";
+  // Still waiting: the status says who is holding it.
+  if (block.overAllStatus === "Pending TRD Controller Permit") return "TPC";
+  // A TRD block past the TPC's power-block permit is with the Station Master.
+  if (block.trdRequiresSmGrant) return "SM";
+  // Blocks from before the two-stage flow keep the old behaviour.
+  return block.selectedDepartment === "TRD" ? "TPC" : "SM";
+}
+
 function smLabel(block: any, sm: string, tpc: string): string {
-  return block.selectedDepartment === "TRD" ? tpc : sm;
+  return actingAuthority(block) === "TPC" ? tpc : sm;
 }
 
 // ── Status helpers ─────────────────────────────────────────────────────────────
@@ -113,7 +130,12 @@ function shortStatus(block: any, myParticipant?: any): { text: string; color: st
   if (s === "Pending Concurrences") return { text: "Pending Concurrence", color: "#c2410c" };
   if (s === "Pending SM Approval") return { text: smLabel(block, "Pending SM Approval", "Pending TPC Approval"), color: "#9333ea" };
   if (s === "SM Approved") return { text: smLabel(block, "SM Approved ✔ — Auto-starting", "TPC Approved ✔ — Auto-starting"), color: "#047857" };
-  if (s === "SM Rejected") return { text: smLabel(block, "SM Rejected ✗ — No Work Today", "TPC Rejected ✗ — No Work Today"), color: "#dc2626" };
+  if (s === "SM Rejected") {
+    // Show the reason that was given rather than a fixed "No Work Today".
+    const why = String(block.smRemarks ?? "").trim();
+    const who = smLabel(block, "SM Rejected ✗", "TPC Rejected ✗");
+    return { text: why ? `${who} — ${why}` : `${who} — No Work Today`, color: "#dc2626" };
+  }
   if (s === "Availing Active") {
     if (myParticipant?.availStartedAt && !myParticipant?.closureSubmittedAt)
       return { text: "In Progress ▶", color: "#2563eb" };
@@ -133,7 +155,9 @@ function detailedStatus(block: any): string {
     ? `${block.appliedByName}${block.appliedByPhone ? ` (${block.appliedByPhone})` : ""} applied.`
     : "";
   const s = block.overAllStatus ?? "";
-  const isTrd = block.selectedDepartment === "TRD";
+  // Same question as the chip: who is the block actually with, not which
+  // department raised it.
+  const isTrd = actingAuthority(block) === "TPC";
 
   if (s === "Pending Concurrences") {
     const pending: string[] = [];
