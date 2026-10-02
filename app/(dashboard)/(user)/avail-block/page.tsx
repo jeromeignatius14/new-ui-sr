@@ -108,6 +108,21 @@ function smLabel(block: any, sm: string, tpc: string): string {
   return block.selectedDepartment === "TRD" ? tpc : sm;
 }
 
+// ── Line / road the work is on ────────────────────────────────────────────────
+// Asked for by SSE/BTC/TVC on safety grounds: with several blocks live in one
+// yard the list gave no way to tell which line each was on. Same helper and the
+// same wording as the Station Master's dashboard, so the two screens agree.
+function getLineLabel(block: any): string {
+  const sections = block?.processedLineSections;
+  if (Array.isArray(sections) && sections.length > 0) {
+    const labels = [...new Set(
+      sections.map((s: any) => s.lineName || s.road).filter(Boolean)
+    )] as string[];
+    if (labels.length > 0) return labels.join(" / ");
+  }
+  return block?.corridorType ?? "—";
+}
+
 // ── Status helpers ─────────────────────────────────────────────────────────────
 function shortStatus(block: any, myParticipant?: any): { text: string; color: string } {
   const s = block.overAllStatus ?? "";
@@ -231,6 +246,7 @@ function BlockRow({
         )}
       </td>
       <td style={td}>{block.selectedSection ?? block.missionBlock ?? "—"}</td>
+      <td style={{ ...td, fontWeight: 700 }}>{getLineLabel(block)}</td>
       <td style={{ ...td, whiteSpace: "pre-line" }}>{fmtDt(fromMs ? new Date(fromMs) : null)}</td>
       <td style={{ ...td, whiteSpace: "pre-line" }}>{fmtDt(toMs ? new Date(toMs) : null)}</td>
       <td style={td}>{getDuration(block)}</td>
@@ -549,6 +565,7 @@ export default function AvailBlockPage() {
                   <th style={th}>Date</th>
                   <th style={th}>Block ID</th>
                   <th style={th}>Section</th>
+                  <th style={th}>UP/DN/<br />Road No.</th>
                   <th style={th}>From</th>
                   <th style={th}>To</th>
                   <th style={th}>Duration</th>
@@ -561,7 +578,7 @@ export default function AvailBlockPage() {
               <tbody>
                 {isEmpty && (
                   <tr>
-                    <td colSpan={10} style={{ padding: "32px", textAlign: "center", color: "#6b7280", fontWeight: 700 }}>
+                    <td colSpan={11} style={{ padding: "32px", textAlign: "center", color: "#6b7280", fontWeight: 700 }}>
                       No sanctioned blocks found for your depot
                     </td>
                   </tr>
@@ -570,7 +587,7 @@ export default function AvailBlockPage() {
                 {/* ── Section 1: Currently In Progress ── */}
                 {buckets.inProgress.length > 0 && (
                   <tr>
-                    <td colSpan={10} style={{ background: "#dcfce7", borderTop: "2px solid #16a34a", borderBottom: "1px solid #16a34a", padding: "6px 12px", fontWeight: 900, fontSize: "13px", color: "#15803d", letterSpacing: "0.5px" }}>
+                    <td colSpan={11} style={{ background: "#dcfce7", borderTop: "2px solid #16a34a", borderBottom: "1px solid #16a34a", padding: "6px 12px", fontWeight: 900, fontSize: "13px", color: "#15803d", letterSpacing: "0.5px" }}>
                       ▶ CURRENTLY IN PROGRESS
                     </td>
                   </tr>
@@ -582,7 +599,7 @@ export default function AvailBlockPage() {
                 {/* ── Section 2: Attention Needed ── */}
                 {buckets.needsAction.length > 0 && (
                   <tr>
-                    <td colSpan={10} style={{ background: "#fef2f2", borderTop: "2px solid #dc2626", borderBottom: "1px solid #dc2626", padding: "6px 12px", fontWeight: 900, fontSize: "13px", color: "#b91c1c", letterSpacing: "0.5px" }}>
+                    <td colSpan={11} style={{ background: "#fef2f2", borderTop: "2px solid #dc2626", borderBottom: "1px solid #dc2626", padding: "6px 12px", fontWeight: 900, fontSize: "13px", color: "#b91c1c", letterSpacing: "0.5px" }}>
                       ⚡ ATTENTION — SM APPROVED / STARTING SOON / REJECTED
                     </td>
                   </tr>
@@ -594,7 +611,7 @@ export default function AvailBlockPage() {
                 {/* ── Section 3: Next 12 Hours ── */}
                 {buckets.next12h.length > 0 && (
                   <tr>
-                    <td colSpan={10} style={{ background: "#fefce8", borderTop: "2px solid #ca8a04", borderBottom: "1px solid #ca8a04", padding: "6px 12px", fontWeight: 900, fontSize: "13px", color: "#92400e", letterSpacing: "0.5px" }}>
+                    <td colSpan={11} style={{ background: "#fefce8", borderTop: "2px solid #ca8a04", borderBottom: "1px solid #ca8a04", padding: "6px 12px", fontWeight: 900, fontSize: "13px", color: "#92400e", letterSpacing: "0.5px" }}>
                       🕐 UPCOMING — NEXT 12 HOURS
                     </td>
                   </tr>
@@ -606,7 +623,7 @@ export default function AvailBlockPage() {
                 {/* ── Section 4: Previous 24 Hours — No Action ── */}
                 {buckets.prev24h.length > 0 && (
                   <tr>
-                    <td colSpan={10} style={{ background: "#f1f5f9", borderTop: "2px solid #64748b", borderBottom: "1px solid #64748b", padding: "6px 12px", fontWeight: 900, fontSize: "13px", color: "#475569", letterSpacing: "0.5px" }}>
+                    <td colSpan={11} style={{ background: "#f1f5f9", borderTop: "2px solid #64748b", borderBottom: "1px solid #64748b", padding: "6px 12px", fontWeight: 900, fontSize: "13px", color: "#475569", letterSpacing: "0.5px" }}>
                       ⏰ PREVIOUS 24 HOURS — NO ACTION TAKEN
                     </td>
                   </tr>

@@ -9,6 +9,21 @@ import { format, addDays, parseISO } from "date-fns";
 import { useBoardControllerRequests } from "@/app/service/query/boardController";
 import { toast, Toaster } from "react-hot-toast";
 
+// ── Line / road the work is on ────────────────────────────────────────────────
+// Asked for by SSE/BTC/TVC on safety grounds: with several blocks live in one
+// yard the board gave no way to tell which line each was on. Same helper and
+// wording as the Station Master's dashboard, so the screens agree.
+function getLineLabel(req: any): string {
+  const sections = req?.processedLineSections;
+  if (Array.isArray(sections) && sections.length > 0) {
+    const labels = [...new Set(
+      sections.map((s: any) => s.lineName || s.road).filter(Boolean)
+    )] as string[];
+    if (labels.length > 0) return labels.join(" / ");
+  }
+  return req?.corridorType ?? "—";
+}
+
 export default function TpcDashboard() {
     const { data: session, status } = useSession({
         required: true,
@@ -110,6 +125,7 @@ export default function TpcDashboard() {
                             <tr className="bg-gray-100">
                                 <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-black border-r whitespace-nowrap">Date</th>
                                 <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-black border-r whitespace-nowrap">Block Section</th>
+                                <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-black border-r whitespace-nowrap">UP/DN/Road No.</th>
                                 <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-black border-r whitespace-nowrap">Sanctioned Time</th>
                                 <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-black border-r whitespace-nowrap">Work Type</th>
                                 <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-black border-r whitespace-nowrap">Activity</th>
@@ -132,6 +148,7 @@ export default function TpcDashboard() {
                                         <tr key={key} className="hover:bg-gray-50">
                                             <td className="px-4 py-2 text-sm text-black border-black border-r truncate">{formatDate(req.date)}</td>
                                             <td className="px-4 py-2 text-sm text-black border-black border-r truncate">{req.missionBlock || '-'}</td>
+                                            <td className="px-4 py-2 text-sm text-black border-black border-r truncate font-semibold">{getLineLabel(req)}</td>
                                             <td className="px-4 py-2 text-sm text-black border-black border-r">
                                                 {req.sanctionedTimeFrom && req.sanctionedTimeTo
                                                     ? `${formatTime(req.sanctionedTimeFrom)} - ${formatTime(req.sanctionedTimeTo)}`
@@ -154,6 +171,7 @@ export default function TpcDashboard() {
                                 }) :
                                 [...Array(1)].map((_, idx) => (
                                     <tr key={`empty-${sectionKey}-${lineType}-${idx}`} className="h-12 hover:bg-gray-50">
+                                        <td className="px-4 py-2 text-sm text-black border-black border-r">&nbsp;</td>
                                         <td className="px-4 py-2 text-sm text-black border-black border-r">&nbsp;</td>
                                         <td className="px-4 py-2 text-sm text-black border-black border-r">&nbsp;</td>
                                         <td className="px-4 py-2 text-sm text-black border-black border-r">&nbsp;</td>

@@ -151,6 +151,21 @@ export function useTrdAcknowledgeClosure() {
   });
 }
 
+export function useCloseSpellAsWorkCompleted() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: { requestId: string; remarks?: string }) =>
+      availService.closeSpellAsWorkCompleted(p.requestId, p.remarks),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["avail-depot-blocks"] });
+      qc.invalidateQueries({ queryKey: ["avail-my-participations"] });
+      toast.success("Spell closed — work completed");
+    },
+    onError: (e: any) =>
+      toast.error(e?.response?.data?.message ?? "Could not close this spell"),
+  });
+}
+
 export function useExitWithoutAvailing() {
   const qc = useQueryClient();
   return useMutation({

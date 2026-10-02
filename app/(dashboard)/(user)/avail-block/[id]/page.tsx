@@ -13,6 +13,7 @@ import {
   useStartAvailing,
   useRequestExtension,
   useExitWithoutAvailing,
+  useCloseSpellAsWorkCompleted,
 } from "@/app/service/mutation/avail";
 import { AVAIL_STATUS } from "@/app/lib/store";
 import { LoadingBar } from "@/app/components/ui/LoadingBar";
@@ -269,7 +270,7 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
   const smStations: { code: string; smName: string }[] = Array.isArray(smStationsData?.data) ? smStationsData.data : [];
 
   const [syncing, setSyncing] = useState(false);
-  const [modal, setModal] = useState<"apply" | "concurrence" | "extend" | "exit" | null>(null);
+  const [modal, setModal] = useState<"apply" | "concurrence" | "extend" | "exit" | "earlyClose" | null>(null);
 
   const [selectedStation, setSelectedStation]       = useState("");
   const [stationInput, setStationInput]             = useState("");
@@ -345,10 +346,12 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
   const startMut       = useStartAvailing();
   const extensionMut   = useRequestExtension();
   const exitMut        = useExitWithoutAvailing();
+  const earlyCloseMut  = useCloseSpellAsWorkCompleted();
 
   const EXIT_REASONS = ["Caution not permitted", "Labour didn't turn up", "Machine not deployed", "Other"];
   const [exitReason, setExitReason] = useState("");
   const [exitOtherReason, setExitOtherReason] = useState("");
+  const [earlyCloseNote, setEarlyCloseNote] = useState("");
 
   if (isLoading) return (
     <div style={{ minHeight: "100vh", background: "#c8f0c8", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -843,6 +846,19 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
             </button>
           )}
 
+          {/* Work completed — close a leftover spell of a multi-spell block.
+              Offered only when another spell of the same block has actually been
+              availed and closed; the server enforces the same rule. */}
+          {block.earlyClosureEligible && (
+            <button
+              onClick={() => { setEarlyCloseNote(""); setModal("earlyClose"); }}
+              disabled={syncing}
+              style={{ background: "#fff", color: "#047857", border: "2px solid #047857", borderRadius: "50px", padding: "12px 34px", fontWeight: 800, fontSize: "15px", cursor: syncing ? "not-allowed" : "pointer", opacity: syncing ? 0.7 : 1 }}
+            >
+              Work completed — close this spell
+            </button>
+          )}
+
           {/* Give Concurrence */}
           {canConcur && (
             <button onClick={() => setModal("concurrence")} disabled={syncing} style={{ ...wideBtn("#4f46e5"), opacity: syncing ? 0.7 : 1 }}>
@@ -1115,6 +1131,41 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
 
           <button onClick={handleExtension} disabled={extensionMut.isPending} style={{ ...wideBtn(extensionIsEmergency ? "#dc2626" : "#f59e0b"), marginTop: "4px" }}>
             {extensionMut.isPending ? "Submitting..." : extensionIsEmergency ? "🚨 Submit Emergency Extension" : "Request Extension"}
+          </button>
+        </Modal>
+      )}
+
+      {/* ── Work completed — close a leftover spell ── */}
+      {modal === "earlyClose" && (
+        <Modal title="Work completed — close this spell" onClose={() => setModal(null)}>
+          <div style={{ background: "#ecfdf5", border: "1.5px solid #6ee7b7", borderRadius: "8px", padding: "12px 14px", marginBottom: "16px", fontSize: "13px", color: "#065f46", fontWeight: 700 }}>
+            The work for this block was already carried out under{" "}
+            <b>{block.workCarriedOutUnder}</b>. This spell will be closed as work
+            completed, not as an unavailed block.
+          </div>
+          <div style={{ fontSize: "12.5px", color: "#374151", marginBottom: "14px", lineHeight: 1.5 }}>
+            Use this only when the work is genuinely finished and the remaining
+            spell is no longer required. If the block was not worked at all, use
+            <b> Exit without availing</b> instead.
+          </div>
+          <label style={fieldLabel}>Remarks (optional)</label>
+          <textarea
+            style={{ ...fieldInput, height: "70px", resize: "vertical" }}
+            placeholder="Anything to record about the early completion..."
+            value={earlyCloseNote}
+            onChange={(e) => setEarlyCloseNote(e.target.value)}
+          />
+          <button
+            disabled={earlyCloseMut.isPending}
+            onClick={() => {
+              earlyCloseMut.mutate(
+                { requestId: id as string, remarks: earlyCloseNote.trim() || undefined },
+                { onSuccess: () => { setModal(null); router.push("/avail-block"); } },
+              );
+            }}
+            style={{ ...wideBtn("#047857"), marginTop: "16px", opacity: earlyCloseMut.isPending ? 0.6 : 1 }}
+          >
+            {earlyCloseMut.isPending ? "Closing..." : "Confirm — work completed"}
           </button>
         </Modal>
       )}

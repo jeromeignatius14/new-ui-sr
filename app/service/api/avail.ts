@@ -219,6 +219,15 @@ export const availService = {
     return response.data;
   },
 
+  // POST: Close a leftover spell of a multi-spell block — work finished early
+  closeSpellAsWorkCompleted: async (requestId: string, remarks?: string) => {
+    const response = await axiosInstance.post(
+      `/api/avail/close-spell-work-completed/${requestId}`,
+      { remarks },
+    );
+    return response.data;
+  },
+
   // GET: Sanctioned blocks eligible as shadow-block parents
   getSanctionedForShadow: async (depot: string, department: string) => {
     const params = new URLSearchParams({ depot, department });
