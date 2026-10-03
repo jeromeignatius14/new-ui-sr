@@ -2475,6 +2475,34 @@ export const siteLocationRanges: SiteLocationRanges = {
         "max": 133
       }
     },
+    "TDK-SVF": {
+      "S&T": {
+        "min": 67,
+        "max": 133
+      },
+      "TRD": {
+        "min": 86,
+        "max": 133
+      },
+      "ENGG": {
+        "min": 103,
+        "max": 133
+      }
+    },
+    "SVF-PUDI": {
+      "S&T": {
+        "min": 67,
+        "max": 133
+      },
+      "TRD": {
+        "min": 86,
+        "max": 133
+      },
+      "ENGG": {
+        "min": 103,
+        "max": 133
+      }
+    },
     "PUDI-RU": {
       "S&T": {
         "min": 67,
@@ -2602,6 +2630,20 @@ export const siteLocationRanges: SiteLocationRanges = {
       }
     },
     "TDK-YD": {
+      "S&T": {
+        "min": 67,
+        "max": 133
+      },
+      "TRD": {
+        "min": 86,
+        "max": 133
+      },
+      "ENGG": {
+        "min": 103,
+        "max": 133
+      }
+    },
+    "SVF-YD": {
       "S&T": {
         "min": 67,
         "max": 133
@@ -3501,6 +3543,16 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
       "TRD": "PUT",
       "ENGG": "PUT"
     },
+    "TDK-SVF": {
+      "S&T": "TRT",
+      "TRD": "PUT",
+      "ENGG": "PUT"
+    },
+    "SVF-PUDI": {
+      "S&T": "TRT",
+      "TRD": "PUT",
+      "ENGG": "PUT"
+    },
     "PUDI-RU": {
       "S&T": "TRT",
       "TRD": "PUT",
@@ -3548,6 +3600,11 @@ export const blockSectionDepotAssignment: BlockSectionDepotAssignment = {
       "ENGG": "PUT"
     },
     "TDK-YD": {
+      "S&T": "TRT",
+      "TRD": "PUT",
+      "ENGG": "PUT"
+    },
+    "SVF-YD": {
       "S&T": "TRT",
       "TRD": "PUT",
       "ENGG": "PUT"
@@ -7551,6 +7608,8 @@ export let blockSection = {
     //"EKM-VGA",
     "VGA-PUT",
     "PUT-TDK",
+    "TDK-SVF",
+    "SVF-PUDI",
     "TDK-PUDI",
     "PUDI-RU",
     "AJJ-YD",
@@ -7561,8 +7620,8 @@ export let blockSection = {
     "NG-YD",
     "VGA-YD",
     "PUT-YD",
-    //"SVF-YD",
     "TDK-YD",
+    "SVF-YD",
     "PUDI-YD",
     "RU-YD"
   ],
@@ -8359,6 +8418,8 @@ export let lineData = {
   'EKM-VGA': ['UP', 'DN'],
   'VGA-PUT': ['UP', 'DN'],
   'PUT-TDK': ['UP', 'DN'],
+  'TDK-SVF': ['UP', 'DN'],
+  'SVF-PUDI': ['UP', 'DN'],
   'TDK-PUDI': ['UP', 'DN'],
   'PUDI-RU': ['UP', 'DN'],
   'AJJ-YD': ['UP', 'DN'],
@@ -8370,6 +8431,7 @@ export let lineData = {
   'VGA-YD': ['UP', 'DN'],
   'PUT-YD': ['UP', 'DN'],
   'TDK-YD': ['UP', 'DN'],
+  'SVF-YD': ['UP', 'DN'],
   'PUDI-YD': ['UP', 'DN'],
   'RU-YD': ['UP', 'DN'],
 
@@ -8960,6 +9022,8 @@ export let data = {
         { block: "EKM-VGA", lines: ["UP", "DN"] },
         { block: "VGA-PUT", lines: ["UP", "DN"] },
         { block: "PUT-TDK", lines: ["UP", "DN"] },
+        { block: "TDK-SVF", lines: ["UP", "DN"] },
+        { block: "SVF-PUDI", lines: ["UP", "DN"] },
         { block: "TDK-PUDI", lines: ["UP", "DN"] },
         { block: "PUDI-RU", lines: ["UP", "DN"] },
       ],
@@ -8973,6 +9037,7 @@ export let data = {
         { block: "VGA-YD", lines: ["UP", "DN"] },
         { block: "PUT-YD", lines: ["UP", "DN"] },
         { block: "TDK-YD", lines: ["UP", "DN"] },
+        { block: "SVF-YD", lines: ["UP", "DN"] },
         { block: "PUDI-YD", lines: ["UP", "DN"] },
         { block: "RU-YD", lines: ["UP", "DN"] },
       ],
@@ -9484,6 +9549,8 @@ export let sectionData = {
       "EKM-VGA",
       "VGA-PUT",
       "PUT-TDK",
+      "TDK-SVF",
+      "SVF-PUDI",
       "TDK-PUDI",
       "PUDI-RU",
     ],
@@ -9497,6 +9564,7 @@ export let sectionData = {
       "VGA-YD",
       "PUT-YD",
       "TDK-YD",
+      "SVF-YD",
       "PUDI-YD",
       "RU-YD",
     ],
