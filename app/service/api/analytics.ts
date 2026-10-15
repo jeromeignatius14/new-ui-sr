@@ -26,6 +26,13 @@ export const analyticsService = {
         const r = await axiosInstance.get(`/api/analytics/defaulters${buildQuery(filters)}`);
         return r.data;
     },
+    // Every block in the period, with its whole journey. Called one month at a
+    // time by the full-flow download so no single request has to carry the
+    // entire period.
+    exportAll: async (filters: AnalyticsFilters = {}) => {
+        const r = await axiosInstance.get(`/api/analytics/export-all${buildQuery(filters)}`);
+        return r.data;
+    },
     exportGap: async (filters: AnalyticsFilters, gapKey: string, status: string) => {
         const params = new URLSearchParams();
         params.set("gapKey", gapKey);

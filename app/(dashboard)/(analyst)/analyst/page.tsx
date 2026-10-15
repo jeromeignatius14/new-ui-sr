@@ -69,6 +69,112 @@ function pct(num: number, den: number) {
   return den > 0 ? Math.round((num / den) * 100) : 0;
 }
 
+
+// ── Full-flow download ────────────────────────────────────────────────────────
+// Every block in the chosen period, one row each, carrying its whole journey.
+// Fetched one calendar month at a time: a single request for a long period
+// builds a very wide result set and can time out, and a partial sheet is worse
+// than a slow one. The sheet is checked against the figure on screen before it
+// is written, so it can never be quietly short.
+function monthChunks(startDate: string, endDate: string) {
+  const out: Array<{ from: string; to: string; label: string }> = [];
+  const iso = (d: Date) => d.toISOString().split("T")[0];
+  let cur = new Date(startDate + "T00:00:00Z");
+  const end = new Date(endDate + "T00:00:00Z");
+  while (cur <= end) {
+    const monthEnd = new Date(Date.UTC(cur.getUTCFullYear(), cur.getUTCMonth() + 1, 0));
+    const to = monthEnd > end ? end : monthEnd;
+    out.push({
+      from: iso(cur),
+      to: iso(to),
+      label: cur.toLocaleString("en-GB", { month: "short", year: "numeric", timeZone: "UTC" }),
+    });
+    cur = new Date(Date.UTC(cur.getUTCFullYear(), cur.getUTCMonth() + 1, 1));
+  }
+  return out;
+}
+
+async function downloadFullFlow(
+  filters: AnalyticsFilters,
+  expectedTotal: number | undefined,
+  onProgress: (msg: string) => void,
+) {
+  const chunks = monthChunks(filters.startDate!, filters.endDate!);
+  const all: Record<string, unknown>[] = [];
+
+  for (let i = 0; i < chunks.length; i++) {
+    const c = chunks[i];
+    onProgress(`Fetching ${c.label} (${i + 1} of ${chunks.length})…`);
+    const res = await analyticsService.exportAll({ ...filters, startDate: c.from, endDate: c.to });
+    all.push(...((res?.data ?? []) as Record<string, unknown>[]));
+  }
+
+  if (!all.length) { onProgress(""); alert("No blocks in this period."); return; }
+
+  onProgress("Building the workbook…");
+
+  // Every column that appears anywhere, so no column is lost if an early row
+  // happens to have nothing in it.
+  const columns: string[] = [];
+  for (const r of all) for (const k of Object.keys(r)) if (!columns.includes(k)) columns.push(k);
+  const normalised = all.map((r) => {
+    const o: Record<string, unknown> = {};
+    for (const c of columns) o[c] = r[c] ?? "";
+    return o;
+  });
+
+  const count = (key: string) => {
+    const m = new Map<string, number>();
+    for (const r of all) {
+      const v = String(r[key] ?? "—");
+      m.set(v, (m.get(v) ?? 0) + 1);
+    }
+    return [...m.entries()].sort((a, b) => b[1] - a[1]);
+  };
+
+  const complete = expectedTotal === undefined || expectedTotal === all.length;
+  const summary: Array<[string, string | number]> = [
+    ["RBMS — every block and what happened to it", ""],
+    ["", ""],
+    ["Period", `${filters.startDate} to ${filters.endDate}`],
+    ["Department", filters.department || "All departments"],
+    ["Blocks in this sheet", all.length],
+    ["Figure shown on the Analyse in Detail screen", expectedTotal ?? "—"],
+    ["Do they agree?", complete ? "Yes — the sheet is complete" : "NO — the sheet is short, please report this"],
+    ["Downloaded", new Date().toLocaleString("en-GB")],
+    ["", ""],
+    ["HOW FAR EACH BLOCK GOT", ""],
+    ...count("Stage Reached").map(([k, v]) => [k, v] as [string, number]),
+    ["", ""],
+    ["WHERE IT STOPPED", ""],
+    ...count("Where It Stopped").map(([k, v]) => [k, v] as [string, number]),
+    ["", ""],
+    ["CURRENT STATUS", ""],
+    ...count("Current Status").map(([k, v]) => [k, v] as [string, number]),
+  ];
+
+  const wb = XLSX.utils.book_new();
+  const wsSummary = XLSX.utils.aoa_to_sheet(summary);
+  wsSummary["!cols"] = [{ wch: 56 }, { wch: 16 }];
+  XLSX.utils.book_append_sheet(wb, wsSummary, "What happened");
+
+  const ws = XLSX.utils.json_to_sheet(normalised, { header: columns });
+  ws["!cols"] = columns.map((c) => ({ wch: Math.min(Math.max(c.length + 2, 12), 46) }));
+  ws["!autofilter"] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: normalised.length, c: columns.length - 1 } }) };
+  ws["!freeze"] = { xSplit: 1, ySplit: 1 };
+  XLSX.utils.book_append_sheet(wb, ws, "All blocks");
+
+  const dept = (filters.department || "AllDepts").replace(/[^A-Za-z]/g, "");
+  XLSX.writeFile(wb, `RBMS_full_flow_${dept}_${filters.startDate}_to_${filters.endDate}_${all.length}rows.xlsx`);
+  onProgress("");
+  if (!complete) {
+    alert(
+      `The sheet has ${all.length} blocks but the screen shows ${expectedTotal}. ` +
+      `Please report this — do not use the sheet as a complete record.`,
+    );
+  }
+}
+
 // ── Excel download helper ─────────────────────────────────────────────────────
 async function downloadGapExcel(
   filters: AnalyticsFilters,
@@ -246,8 +352,9 @@ export default function AnalystDashboard() {
   const today    = new Date();
   const APP_START = "2026-04-01"; // authorisation app went live on this date
 
-  // Open on the officer's own department, so this screen shows the same
-  // population the Block Summary Report would give him for the same dates.
+  // The officer's own department, so this screen opens on the same population
+  // the Block Summary Report would give him. "location" is deliberately not a
+  // filter here any more — see the note on the Depot control below.
   const sessionDept = (session?.user as { department?: string } | undefined)?.department ?? "";
 
   const [filters, setFilters] = useState({
@@ -265,6 +372,7 @@ export default function AnalystDashboard() {
   }, [sessionDept, deptInitialised]);
   const [activeGap,    setActiveGap]    = useState<string | null>(null);
   const [dateWarning,  setDateWarning]  = useState(false);
+  const [dlProgress,   setDlProgress]   = useState("");
 
   const { data: raw, isLoading, isError, refetch } = useAnalyticsSummary(filters);
   const d = raw?.data;
@@ -366,10 +474,25 @@ export default function AnalystDashboard() {
               className="px-5 py-2 rounded-lg bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-700 transition-colors">Apply</button>
             <button onClick={resetFilters}
               className="px-5 py-2 rounded-lg border border-gray-200 text-gray-600 font-bold text-sm hover:bg-gray-50 transition-colors">Reset</button>
+            <button
+              onClick={async () => {
+                if (dlProgress) return;
+                try {
+                  await downloadFullFlow(filters, f?.totalRequests, setDlProgress);
+                } catch (e) {
+                  setDlProgress("");
+                  alert("The download could not be completed. Please try a shorter period.");
+                  console.error(e);
+                }
+              }}
+              disabled={!!dlProgress || isLoading}
+              className="px-5 py-2 rounded-lg bg-emerald-600 text-white font-bold text-sm hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors">
+              {dlProgress ? dlProgress : "⬇ Download everything (Excel)"}
+            </button>
           </div>
 
-          {/* Say plainly what is on screen, so these figures can never be
-              compared against a Block Summary Report run for another period. */}
+          {/* Say plainly what is on screen, so this can never be compared
+              against a Block Summary Report run for a different period. */}
           <div className="mt-3 text-xs text-gray-600 font-semibold">
             Showing <span className="text-gray-900 font-extrabold">{filters.department || "all departments"}</span>
             {" · "}{filters.startDate} to {filters.endDate}
