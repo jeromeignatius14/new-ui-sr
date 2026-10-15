@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useAnalyticsSummary } from "@/app/service/query/analytics";
 import { analyticsService, AnalyticsFilters } from "@/app/service/api/analytics";
@@ -246,12 +246,23 @@ export default function AnalystDashboard() {
   const today    = new Date();
   const APP_START = "2026-04-01"; // authorisation app went live on this date
 
+  // Open on the officer's own department, so this screen shows the same
+  // population the Block Summary Report would give him for the same dates.
+  const sessionDept = (session?.user as { department?: string } | undefined)?.department ?? "";
+
   const [filters, setFilters] = useState({
     startDate: APP_START,
     endDate:   today.toISOString().split("T")[0],
-    department: "", location: "",
+    department: "",
   });
   const [draft,        setDraft]        = useState({ ...filters });
+  const [deptInitialised, setDeptInitialised] = useState(false);
+  useEffect(() => {
+    if (deptInitialised || !sessionDept) return;
+    setFilters((f) => ({ ...f, department: sessionDept }));
+    setDraft((d)  => ({ ...d, department: sessionDept }));
+    setDeptInitialised(true);
+  }, [sessionDept, deptInitialised]);
   const [activeGap,    setActiveGap]    = useState<string | null>(null);
   const [dateWarning,  setDateWarning]  = useState(false);
 
@@ -265,7 +276,7 @@ export default function AnalystDashboard() {
     setActiveGap(null);
   };
   const resetFilters = () => {
-    const r = { startDate: APP_START, endDate: today.toISOString().split("T")[0], department: "", location: "" };
+    const r = { startDate: APP_START, endDate: today.toISOString().split("T")[0], department: sessionDept };
     setDraft(r); setFilters(r); setActiveGap(null); setDateWarning(false);
   };
 
@@ -351,16 +362,21 @@ export default function AnalystDashboard() {
                 <option value="ENGG">ENGG</option>
               </select>
             </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500 font-semibold">Depot</label>
-              <input type="text" placeholder="e.g. TVC" value={draft.location}
-                onChange={(e) => setDraft((p) => ({ ...p, location: e.target.value }))}
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-300 w-28" />
-            </div>
             <button onClick={applyFilters}
               className="px-5 py-2 rounded-lg bg-indigo-600 text-white font-bold text-sm hover:bg-indigo-700 transition-colors">Apply</button>
             <button onClick={resetFilters}
               className="px-5 py-2 rounded-lg border border-gray-200 text-gray-600 font-bold text-sm hover:bg-gray-50 transition-colors">Reset</button>
+          </div>
+
+          {/* Say plainly what is on screen, so these figures can never be
+              compared against a Block Summary Report run for another period. */}
+          <div className="mt-3 text-xs text-gray-600 font-semibold">
+            Showing <span className="text-gray-900 font-extrabold">{filters.department || "all departments"}</span>
+            {" · "}{filters.startDate} to {filters.endDate}
+            {typeof f?.totalRequests === "number" && (
+              <> · <span className="text-gray-900 font-extrabold">{f.totalRequests.toLocaleString()}</span> blocks requested</>
+            )}
+            <span className="text-gray-400"> — set the Block Summary Report to the same period and department and the figures will agree.</span>
           </div>
         </div>
 
