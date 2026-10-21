@@ -440,7 +440,7 @@ export default function AvailBlockPage() {
   buckets.prev24h.sort((a, b) => (getEffectiveTimes(b.block).fromMs ?? 0) - (getEffectiveTimes(a.block).fromMs ?? 0));
   buckets.other.sort(byTime);
 
-  const isEmpty = buckets.inProgress.length === 0 && buckets.needsAction.length === 0 && buckets.next12h.length === 0 && buckets.prev24h.length === 0;
+  const isEmpty = buckets.inProgress.length === 0 && buckets.needsAction.length === 0 && buckets.next12h.length === 0 && buckets.prev24h.length === 0 && buckets.other.length === 0;
 
   const handleTransferSubmit = () => {
     if (!transferBlock || !selectedDepot) { toast.error("Please select a depot"); return; }
@@ -629,6 +629,17 @@ export default function AvailBlockPage() {
                   </tr>
                 )}
                 {buckets.prev24h.map(({ block, myParticipant, isConcurrence }) => (
+                  <BlockRow key={block.id} block={block} myParticipant={myParticipant} isConcurrence={isConcurrence} onNavigate={navigateToBlock} onNavigateConcurrence={navigateToConcurrence} onTransfer={setTransferBlock} />
+                ))}
+
+                {buckets.other.length > 0 && (
+                  <tr>
+                    <td colSpan={11} style={{ background: "#fef3c7", borderTop: "2px solid #b45309", borderBottom: "1px solid #b45309", padding: "6px 12px", fontWeight: 900, fontSize: "13px", color: "#92400e", letterSpacing: "0.5px" }}>
+                      ⚠ OLDER — STILL OPEN, PLEASE CLOSE
+                    </td>
+                  </tr>
+                )}
+                {buckets.other.map(({ block, myParticipant, isConcurrence }) => (
                   <BlockRow key={block.id} block={block} myParticipant={myParticipant} isConcurrence={isConcurrence} onNavigate={navigateToBlock} onNavigateConcurrence={navigateToConcurrence} onTransfer={setTransferBlock} />
                 ))}
 
