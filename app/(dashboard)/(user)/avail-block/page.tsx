@@ -285,7 +285,7 @@ function BlockRow({
 
 // ── Constants (module-level so they're never in TDZ when closures capture them) ─
 const TWELVE_HRS    = 12 * 60 * 60 * 1000;
-const TWENTYFOUR_HRS = 24 * 60 * 60 * 1000;
+const TWENTYFOUR_HRS = 48 * 60 * 60 * 1000;
 
 // ── Main page ──────────────────────────────────────────────────────────────────
 export default function AvailBlockPage() {
@@ -624,7 +624,7 @@ export default function AvailBlockPage() {
                 {buckets.prev24h.length > 0 && (
                   <tr>
                     <td colSpan={11} style={{ background: "#f1f5f9", borderTop: "2px solid #64748b", borderBottom: "1px solid #64748b", padding: "6px 12px", fontWeight: 900, fontSize: "13px", color: "#475569", letterSpacing: "0.5px" }}>
-                      ⏰ PREVIOUS 24 HOURS — NO ACTION TAKEN
+                      ⏰ PREVIOUS 48 HOURS — NO ACTION TAKEN
                     </td>
                   </tr>
                 )}
