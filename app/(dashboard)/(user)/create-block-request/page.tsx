@@ -2220,6 +2220,7 @@ const findCutoffThursday = () => {
     const POPUP_CUTOFF_MS = new Date("2026-05-21T00:00:00+05:30").getTime();
 
     const depotBlocks: any[] = depotBlocksData?.data?.blocks ?? [];
+    const mySseId = (depotBlocksData?.data as any)?.mySseId ?? null;
 
     depotBlocks.forEach((block: any) => {
       const s = block.overAllStatus ?? "";
@@ -2243,12 +2244,25 @@ const findCutoffThursday = () => {
       }
 
       // ── CONDITION 2: Accepted but not yet applied for availing / not exited ──
-      // Applies to everyone in the same depot + department as the block
-      if (
-        s === "Sanctioned and Accepted by SSE" &&
-        block.selectedDepo === myDepot &&
-        block.selectedDepartment === myDept
-      ) {
+      // Applies to everyone under the same SSE as the block.
+      //
+      // This used to group by depot + department. RBMS has only three
+      // departments — ENGG, S&T and TRD — and Bridges is not one of them, so a
+      // Bridges post is stored as ENGG exactly like P.Way. JE/Br/CAN and
+      // SSE/PW/KPQ therefore looked like one team, and a bridge block at
+      // KMQ-MJS stopped a P.Way request at KPQ yard. The SSE is the real team
+      // boundary, so the restriction follows that instead.
+      //
+      // If the backend has not yet been deployed, ownerSseId and mySseId are
+      // absent and the old depot + department rule still applies. Falling back
+      // to today's behaviour is deliberate: the alternative would be no
+      // restriction at all, which is the dangerous direction to fail in.
+      const sameTeam =
+        block.ownerSseId && mySseId
+          ? block.ownerSseId === mySseId
+          : block.selectedDepo === myDepot && block.selectedDepartment === myDept;
+
+      if (s === "Sanctioned and Accepted by SSE" && sameTeam) {
         const fromMs = block.sanctionedTimeFrom ? new Date(block.sanctionedTimeFrom).getTime() : null;
         const toMs   = block.sanctionedTimeTo   ? new Date(block.sanctionedTimeTo).getTime()   : null;
         if (fromMs === null) return;
