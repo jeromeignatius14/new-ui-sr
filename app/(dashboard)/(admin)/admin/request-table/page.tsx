@@ -187,23 +187,13 @@ export default function AdminRequestTablePage() {
   today.setHours(0, 0, 0, 0); // ignore time
   const allRequests = data?.data?.requests || [];
 
-  // Compute the earliest pending date (for all or per dept) to pass to optimise-table
-  // Floor: never go before 1st June 2026
-  const PENDING_FLOOR = new Date("2026-06-01T00:00:00.000Z");
-  const getMinPendingDate = (dept?: string): string => {
-    const pending = allRequests.filter((r: UserRequest) => {
-      if (!r.date) return false;
-      if (r.isSanctioned || r.Draft) return false;
-      if (r.overAllStatus !== "with optg." && r.overAllStatus !== "with optg") return false;
-      if (dept && r.selectedDepartment !== dept) return false;
-      if (new Date(r.date) < PENDING_FLOOR) return false;
-      return true;
-    });
-    if (!pending.length) return "";
-    const min = pending.reduce((m: UserRequest, r: UserRequest) =>
-      new Date(r.date) < new Date(m.date) ? r : m
-    );
-    return min.date ? new Date(min.date).toISOString().split("T")[0] : "";
+  // The pending view opens on TODAY. It used to jump to the oldest pending block
+  // (floored at 1st June 2026), which left the controller looking at a date months
+  // behind. Built from local date parts, not toISOString(), because IST is UTC+5:30
+  // and toISOString() would give yesterday before 05:30.
+  const todayParam = (): string => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   };
   // console.log(allRequests);
 
@@ -689,14 +679,11 @@ if (activeSummaryFilters.searchId) {
                 key={index}
                 className="flex items-center justify-between w-fit bg-gradient-to-r from-[#FFB3B3] to-[#FFD5D5] text-[#B22222] font-bold py-2 px-0.5 rounded-xl border-2 border-[#FF6B6B] text-[22px] shadow-md hover:shadow-lg transition-all"
                 onClick={() => {
-                  const minDate = getMinPendingDate(item.label);
+                  const today = todayParam();
                   // Pre-populate optimise-table's cache so it doesn't double-fetch
-                  if (minDate) {
-                    const cacheDate = new Date(minDate + "T00:00:00.000Z");
-                    queryClient.setQueryData(["approved-requests", cacheDate, false], { data: { requests: allRequests } });
-                  }
-                  const dateParam = minDate ? `&date=${minDate}` : "";
-                  router.push(`/admin/optimise-table?dept=${encodeURIComponent(item.label)}${dateParam}`);
+                  const cacheDate = new Date(today + "T00:00:00.000Z");
+                  queryClient.setQueryData(["approved-requests", cacheDate, false], { data: { requests: allRequests } });
+                  router.push(`/admin/optimise-table?dept=${encodeURIComponent(item.label)}&date=${today}`);
                 }}
               >
                 <span>{item.label}</span>
@@ -709,13 +696,10 @@ if (activeSummaryFilters.searchId) {
 
           <button
             onClick={() => {
-              const minDate = getMinPendingDate();
-              if (minDate) {
-                const cacheDate = new Date(minDate + "T00:00:00.000Z");
-                queryClient.setQueryData(["approved-requests", cacheDate, false], { data: { requests: allRequests } });
-              }
-              const dateParam = minDate ? `?date=${minDate}` : "";
-              router.push(`/admin/optimise-table${dateParam}`);
+              const today = todayParam();
+              const cacheDate = new Date(today + "T00:00:00.000Z");
+              queryClient.setQueryData(["approved-requests", cacheDate, false], { data: { requests: allRequests } });
+              router.push(`/admin/optimise-table?date=${today}`);
             }}
             className="mx-auto w-fit flex items-center gap-2 bg-gradient-to-r from-[#FF6B6B] to-[#FF8989] text-white font-bold px-8 py-3 mb-6 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-[22px]"
           >

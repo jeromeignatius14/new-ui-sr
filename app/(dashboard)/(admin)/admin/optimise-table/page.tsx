@@ -278,8 +278,6 @@ export default function OptimiseTablePage() {
   // Guard: date init from URL happens once on mount only.
   // Prevents dept-dropdown router.push from resetting the user's current date.
   const didInitializeDateRef = useRef(false);
-  // Guard: auto-jump happens once per dept-filter change, not on every data refetch.
-  const didAutoJumpRef = useRef(false);
 
 // Initialize currentWeekStart from URL parameter or default to current date
 const [currentWeekStart, setCurrentWeekStart] = useState(() => {
@@ -529,11 +527,15 @@ const finalWeekEnd = isUrgentMode ? currentWeekStart : weekEnd;
 
 
 const [selectedDate, setSelectedDate] = useState<Date>(() => {
-  // Try to get saved date from localStorage
+  // A saved date is only restored if it is today or later. It used to be restored
+  // whatever its age, which is how the controller ended up looking at a date from
+  // months back on opening the pending view.
   const savedDate = localStorage.getItem("urgentSelectedDate");
   if (savedDate) {
     const parsedDate = new Date(savedDate);
-    if (!isNaN(parsedDate.getTime())) {
+    const midnight = new Date();
+    midnight.setHours(0, 0, 0, 0);
+    if (!isNaN(parsedDate.getTime()) && parsedDate >= midnight) {
       return parsedDate;
     }
   }
@@ -553,35 +555,10 @@ const [selectedDate, setSelectedDate] = useState<Date>(() => {
     return true;
   });
 
-  // Reset auto-jump guard when dept filter changes so it re-jumps to that dept's earliest date
-  useEffect(() => {
-    didAutoJumpRef.current = false;
-  }, [deptFilter]);
-
-  // Auto-jump to earliest pending date — only once per dept change, not on every data refetch.
-  // Floor: never go before 1st June 2026
-  const PENDING_FLOOR = new Date("2026-06-01T00:00:00.000Z");
-  useEffect(() => {
-    if (didAutoJumpRef.current) return;         // already jumped for this dept
-    if (searchParams.get("date")) {             // URL already specifies exact date
-      didAutoJumpRef.current = true;
-      return;
-    }
-    if (!pendingRequests.length) return;
-    const filtered = (deptFilter !== "ALL"
-      ? pendingRequests.filter((r: UserRequest) => r.selectedDepartment === deptFilter)
-      : pendingRequests
-    ).filter((r: UserRequest) => new Date(r.date) >= PENDING_FLOOR);
-    if (!filtered.length) return;
-    const minDate = filtered.reduce((min: Date, r: UserRequest) => {
-      const d = new Date(r.date); d.setHours(0, 0, 0, 0);
-      return d < min ? d : min;
-    }, (() => { const d = new Date(filtered[0].date); d.setHours(0, 0, 0, 0); return d; })());
-    didAutoJumpRef.current = true;
-    if (isSameDay(selectedDate, minDate)) return;
-    setSelectedDate(minDate);
-    setCurrentWeekStart(minDate);
-  }, [data, deptFilter]);
+  // The view no longer jumps to the earliest pending date. It used to move the
+  // controller back to the oldest outstanding block — in practice 1st June 2026,
+  // the floor it was given — every time the department filter changed. The date
+  // now stays where the controller put it, and opens on today.
 
 
 
