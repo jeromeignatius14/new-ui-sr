@@ -131,6 +131,8 @@ interface DetailedData {
   isSanctioned?: boolean;
   Date: string;
   Section: string;
+  requestremarks?: string;
+  smRemarks?: string;
   selectedDepo?: string;
   Duration: number;
   Type: string;
@@ -152,6 +154,9 @@ const blockTypeOptions: OptionType[] = [
   { value: "Non-corridor", label: "Outside corridor" },
   { value: "Emergency", label: "Emergency" },
   { value: "Mega", label: "Mega Block" },
+  // FTCP was offered on every other officer's report but had been left off this
+  // one, so the Traffic Controller alone could not isolate those blocks.
+  { value: "FTCP", label: "FTCP" },
 ];
 
 const departmentOptions: OptionType[] = [
@@ -1011,6 +1016,8 @@ const handleDownloadUpcomingBlocks = () => {
         "Power Block Required": block.powerBlockRequired ? "Yes" : "No",
         "S&T Disconnection Required": block.sntDisconnectionRequired ? "Yes" : "No",
         "Engg Disconnections Required": block.enggDisconnectionsRequired ? "Yes" : "No",
+        "Request Remarks": block.requestremarks || "",
+        "SM / Controller Remarks": block.smRemarks || "",
         "Is Sanctioned": block.isSanctioned ? "Yes" : "No",
         "Is Granted": block.isGranted ? "Yes" : "No",
         "Is Applied": block.isApplied ? "Yes" : "No",

@@ -62,6 +62,15 @@ function getStationsFromBlock(block: any, validStations?: string[]): string[] {
 
 const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000; // +5:30
 
+// A block may not run longer than 24 hours. The pickers are given a `max` as well
+// as a `min`, so a wrong year or month cannot be offered at all — reports were
+// being thrown out by windows of several years entered by a slip of the date wheel.
+const MAX_BLOCK_HOURS = 24;
+const dtLocal = (ms: number) => new Date(ms).toISOString().slice(0, 16);
+const nowIST = () => Date.now() + IST_OFFSET_MS;
+const plusHours = (base: string, hours: number) =>
+  dtLocal(new Date(base + ":00.000Z").getTime() + hours * 3600000);
+
 function secondsUntilStart(block: any): number {
   const startStr = block.smApprovedTimeFrom ?? block.grantedFromTime ?? block.sanctionedTimeFrom;
   if (!startStr) return 0;
@@ -407,6 +416,12 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
     // to must be after from (when both are entered)
     if (applyTimeFrom && applyTimeTo) {
       if (applyTimeTo <= applyTimeFrom) { toast.error("To time must be later than From time"); return; }
+      const hrs = (new Date(applyTimeTo + ":00.000Z").getTime()
+                 - new Date(applyTimeFrom + ":00.000Z").getTime()) / 3600000;
+      if (hrs > MAX_BLOCK_HOURS) {
+        toast.error(`A block cannot be longer than ${MAX_BLOCK_HOURS} hours. Please check the date.`);
+        return;
+      }
     }
     setSyncing(true);
     applyMut.mutate({
@@ -1044,7 +1059,8 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
               <input
                 type="datetime-local"
                 lang="en-GB"
-                min={new Date(Date.now() + IST_OFFSET_MS).toISOString().slice(0, 16)}
+                min={dtLocal(nowIST())}
+                max={dtLocal(nowIST() + 7 * 24 * 3600000)}
                 style={fieldInput}
                 value={applyTimeFrom}
                 onChange={(e) => setApplyTimeFrom(e.target.value)}
@@ -1053,7 +1069,10 @@ export default function AvailBlockDetailPage({ params }: { params: Promise<{ id:
               <input
                 type="datetime-local"
                 lang="en-GB"
-                min={applyTimeFrom || new Date(Date.now() + IST_OFFSET_MS).toISOString().slice(0, 16)}
+                min={applyTimeFrom || dtLocal(nowIST())}
+                max={applyTimeFrom
+                  ? plusHours(applyTimeFrom, MAX_BLOCK_HOURS)
+                  : dtLocal(nowIST() + (7 * 24 + MAX_BLOCK_HOURS) * 3600000)}
                 style={{ ...fieldInput, marginBottom: 0 }}
                 value={applyTimeTo}
                 onChange={(e) => setApplyTimeTo(e.target.value)}

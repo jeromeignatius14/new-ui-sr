@@ -89,6 +89,8 @@ export interface UserRequest {
     repercussions: string;
     trdWorkLocation: string;
     requestremarks: string;
+    // the Station Master's / Controller's reason for rejecting
+    smRemarks?: string;
     createdAt: string;
     status: string;
     selectedDepo: string;

@@ -419,7 +419,8 @@ const handlePendingSearchIdChange = (searchId: string) => {
         "Department",
         "SSE Name",
         "Work Location",
-        "Remarks",
+        "Request Remarks",
+        "SM / Controller Remarks",
         "OverAllStatus"
       ];
 
@@ -459,7 +460,12 @@ const handlePendingSearchIdChange = (searchId: string) => {
           request.user?.department || request.selectedDepartment || "N/A",
           request.user?.name || "N/A",
           request.workLocationFrom,
+          // The requester's own note, written when the block was raised.
           request.requestremarks,
+          // The Station Master's or Controller's reason for rejecting. It was being
+          // recorded all along but never exported, so the column read as blank and
+          // the remark was taken to have not been entered.
+          request.smRemarks || "",
           request.overAllStatus || "N/A"
         ];
       });

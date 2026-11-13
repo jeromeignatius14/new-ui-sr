@@ -314,6 +314,22 @@ export default function SmPendingAvailsPage() {
     return new Date(Date.now() + 5.5 * 60 * 60 * 1000).toISOString().slice(0, 16);
   }
 
+  // A block may not run longer than 24 hours, and a permit may not be written into
+  // the past or the far future. The pickers carry both a min and a max so that a
+  // wrong year or month cannot be offered — permits of several years had been
+  // stored from a slip of the date wheel, and they threw out the hour totals.
+  const MAX_BLOCK_HOURS = 24;
+  function shiftIST(ms: number): string {
+    return new Date(Date.now() + 5.5 * 60 * 60 * 1000 + ms).toISOString().slice(0, 16);
+  }
+  function plusHours(base: string, hours: number): string {
+    return new Date(new Date(base + ":00.000Z").getTime() + hours * 3600000)
+      .toISOString().slice(0, 16);
+  }
+  function hoursBetween(from: string, to: string): number {
+    return (new Date(to + ":00.000Z").getTime() - new Date(from + ":00.000Z").getTime()) / 3600000;
+  }
+
   function openModal(req: any) {
     setActiveReq(req);
     setRejectMode(false);
@@ -343,6 +359,10 @@ export default function SmPendingAvailsPage() {
     if (!smTimeFrom || !smTimeTo) { toast.error("Enter both times"); return; }
     // to must be after from
     if (smTimeTo <= smTimeFrom) { toast.error("To time must be later than From time"); return; }
+    if (hoursBetween(smTimeFrom, smTimeTo) > MAX_BLOCK_HOURS) {
+      toast.error(`A block cannot be longer than ${MAX_BLOCK_HOURS} hours. Please check the date.`);
+      return;
+    }
     setSyncing(true);
     setModalType(null);
     approveMutation.mutate({
@@ -592,6 +612,8 @@ export default function SmPendingAvailsPage() {
                     <input
                       type="datetime-local"
                       lang="en-GB"
+                      min={shiftIST(-24 * 3600000)}
+                      max={shiftIST(7 * 24 * 3600000)}
                       style={{ ...fldInput, border: "2px solid #f59e0b", fontSize: "14px" }}
                       value={smTimeFrom}
                       onChange={e => setSmTimeFrom(e.target.value)}
@@ -603,6 +625,9 @@ export default function SmPendingAvailsPage() {
                       type="datetime-local"
                       lang="en-GB"
                       min={smTimeFrom || nowISTDatetimeLocal()}
+                      max={smTimeFrom
+                        ? plusHours(smTimeFrom, MAX_BLOCK_HOURS)
+                        : shiftIST((7 * 24 + MAX_BLOCK_HOURS) * 3600000)}
                       style={{ ...fldInput, border: "2px solid #f59e0b", fontSize: "14px" }}
                       value={smTimeTo}
                       onChange={e => setSmTimeTo(e.target.value)}

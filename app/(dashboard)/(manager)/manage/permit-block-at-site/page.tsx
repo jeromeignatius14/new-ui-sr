@@ -346,9 +346,29 @@ export default function PermitBlockAtSitePage() {
     }
   }
 
+  // This screen had no check of any kind beyond "both fields filled" — not even
+  // that the end was after the beginning. Permits of several years were being
+  // stored from a slip of the date wheel and were throwing out the hour totals.
+  const MAX_BLOCK_HOURS = 24;
+  function shiftIST(ms: number): string {
+    return new Date(Date.now() + 5.5 * 60 * 60 * 1000 + ms).toISOString().slice(0, 16);
+  }
+  function plusHoursLocal(base: string, hours: number): string {
+    return new Date(new Date(base + ":00.000Z").getTime() + hours * 3600000)
+      .toISOString().slice(0, 16);
+  }
+  function hoursBetweenLocal(from: string, to: string): number {
+    return (new Date(to + ":00.000Z").getTime() - new Date(from + ":00.000Z").getTime()) / 3600000;
+  }
+
   function submitPermit() {
     if (!activeReq) return;
     if (!trdTimeFrom || !trdTimeTo) { toast.error("Enter both times"); return; }
+    if (trdTimeTo <= trdTimeFrom) { toast.error("To time must be later than From time"); return; }
+    if (hoursBetweenLocal(trdTimeFrom, trdTimeTo) > MAX_BLOCK_HOURS) {
+      toast.error(`A block cannot be longer than ${MAX_BLOCK_HOURS} hours. Please check the date.`);
+      return;
+    }
     setSyncing(true); setModalType(null);
     permitMutation.mutate({
       requestId: activeReq.id,
@@ -577,11 +597,11 @@ export default function PermitBlockAtSitePage() {
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                   <div>
                     <label style={{ ...fldLabel, color: "#92400e", fontSize: "11px" }}>FROM *</label>
-                    <input type="datetime-local" style={{ ...fldInput, border: "2px solid #f59e0b", fontSize: "14px" }} value={trdTimeFrom} onChange={e => setTrdTimeFrom(e.target.value)} />
+                    <input type="datetime-local" lang="en-GB" min={shiftIST(-24 * 3600000)} max={shiftIST(7 * 24 * 3600000)} style={{ ...fldInput, border: "2px solid #f59e0b", fontSize: "14px" }} value={trdTimeFrom} onChange={e => setTrdTimeFrom(e.target.value)} />
                   </div>
                   <div>
                     <label style={{ ...fldLabel, color: "#92400e", fontSize: "11px" }}>TO *</label>
-                    <input type="datetime-local" style={{ ...fldInput, border: "2px solid #f59e0b", fontSize: "14px" }} value={trdTimeTo} onChange={e => setTrdTimeTo(e.target.value)} />
+                    <input type="datetime-local" lang="en-GB" min={trdTimeFrom || shiftIST(-24 * 3600000)} max={trdTimeFrom ? plusHoursLocal(trdTimeFrom, MAX_BLOCK_HOURS) : shiftIST((7 * 24 + MAX_BLOCK_HOURS) * 3600000)} style={{ ...fldInput, border: "2px solid #f59e0b", fontSize: "14px" }} value={trdTimeTo} onChange={e => setTrdTimeTo(e.target.value)} />
                   </div>
                 </div>
                 {trdTimeFrom && trdTimeTo && (
