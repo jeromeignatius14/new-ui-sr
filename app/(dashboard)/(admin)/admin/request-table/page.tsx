@@ -947,6 +947,9 @@ if (activeSummaryFilters.searchId) {
                         </th>
                         <th className="border-2 border-black p-1">Line/Road</th>
                         <th className="border-2 border-black p-1">Activity</th>
+                        {/* The Station Master's / Controller's own reason, shown on the
+                            screen itself so it need not be hunted for in the download. */}
+                        <th className="border-2 border-black p-1">SM / Controller Remarks</th>
                         <th className="border-2 border-black p-1 sticky right-0 z-10 bg-[#e49edd]">
                           Status
                         </th>
@@ -989,6 +992,7 @@ if (activeSummaryFilters.searchId) {
                                 <td className="border border-black p-1">{request.corridorType}</td>
                                 <td className="border border-black p-1 text-center">{request.processedLineSections?.[0]?.lineName || request.processedLineSections?.[0]?.road || "N/A"}</td>
                                 <td className="border border-black p-1">{request.activity}</td>
+                                <td className="border border-black p-1 text-sm">{request.smRemarks || "—"}</td>
                                 <td className="border border-black p-1 sticky right-0 z-10 text-center font-bold" style={status.style}>
                                   <span className="w-full block text-base">{status.label}</span>
                                 </td>
@@ -1016,6 +1020,7 @@ if (activeSummaryFilters.searchId) {
                                 <td className="border border-black p-1">{firstSpell.corridorType}</td>
                                 <td className="border border-black p-1 text-center">{firstSpell.processedLineSections?.[0]?.lineName || firstSpell.processedLineSections?.[0]?.road || "N/A"}</td>
                                 <td className="border border-black p-1">{firstSpell.activity}</td>
+                                <td className="border border-black p-1 text-sm">{firstSpell.smRemarks || "—"}</td>
                                 <td className="border border-black p-1 sticky right-0 z-10 text-center font-bold" style={status.style}>
                                   <span className="w-full block text-base">{status.label}</span>
                                 </td>
@@ -1036,6 +1041,7 @@ if (activeSummaryFilters.searchId) {
                                     <td className="border border-black p-1 text-sm text-gray-400">—</td>
                                     <td className="border border-black p-1 text-sm text-gray-400">—</td>
                                     <td className="border border-black p-1 text-sm text-gray-400">—</td>
+                                    <td className="border border-black p-1 text-sm">{spell.smRemarks || "—"}</td>
                                     <td className="border border-black p-1 sticky right-0 z-10 text-center font-bold bg-purple-50" style={spellStatus.style}>
                                       <span className="w-full block text-sm">{spellStatus.label}</span>
                                     </td>

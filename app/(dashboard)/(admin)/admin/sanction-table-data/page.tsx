@@ -3177,7 +3177,9 @@ const handleDownloadUpcomingBlocks = () => {
                   <th className="border-2 border-black px-1 md:px-2 py-2">Sanctioned time</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Availed time</th>
                   <th className="border-2 border-black px-1 md:px-2 py-2">Status</th>
-                  <th className="border-2 border-black px-1 md:px-2 py-2">Remarks</th>
+                  <th className="border-2 border-black px-1 md:px-2 py-2">Request Remarks</th>
+                  {/* The Station Master's / Controller's own reason, on the screen itself. */}
+                  <th className="border-2 border-black px-1 md:px-2 py-2">SM / Controller Remarks</th>
 
                 </tr>
               </thead>
@@ -3279,6 +3281,9 @@ const handleDownloadUpcomingBlocks = () => {
                         </td>
                         <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
                           {block.requestremarks || "-"}
+                        </td>
+                        <td className="border-2 border-black px-1 md:px-2 py-2 text-black text-[10px] md:text-[14px]">
+                          {block.smRemarks || "-"}
                         </td>
                       </tr>
                     );
