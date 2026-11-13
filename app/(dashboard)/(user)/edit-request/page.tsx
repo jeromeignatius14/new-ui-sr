@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react";
 import dayjs from "dayjs";
 import { useDeleteUserRequest } from "@/app/service/mutation/user-request";
 import formatTime from "@/app/utils/formatTime";
+import { isCancellableByRequester } from "@/app/lib/cancel-policy";
 
 export default function EditRequestsPage() {
     const router = useRouter();
@@ -45,20 +46,9 @@ export default function EditRequestsPage() {
     const allRequests = Array.isArray(requests?.data?.requests) ? requests.data.requests : [];
     const now = new Date();
      now.setHours(0, 0, 0, 0);
-    const POST_SANCTION_STATUSES = [
-        "Sanctioned",
-        "Sanctioned, Pending with SSE For Acceptance",
-        "Sanctioned and Accepted by SSE",
-        "Sanctioned and Rejected by SSE",
-        "Availing Active",
-        "Availing Cancelled",
-        "Block Closed",
-        "All Closures Submitted",
-        "SM Rejected",
-    ];
     let userRequests = allRequests.filter((req: any) => {
         const blockDate = new Date(req.date);
-        return (req.userId === userId) && (blockDate >= now) && !POST_SANCTION_STATUSES.includes(req.overAllStatus);
+        return (req.userId === userId) && (blockDate >= now) && isCancellableByRequester(req);
     });
     userRequests = userRequests.sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
@@ -172,7 +162,7 @@ export default function EditRequestsPage() {
                                                         onClick={() => {
                                                             if (isEditable(request.date)) {
                                                                 router.push(`/edit-request/${request.id}`);
-                                                            } else if (request.overAllStatus !== "Availing Active") {
+                                                            } else if (isCancellableByRequester(request)) {
                                                                 handleCancel(request.id);
                                                             }
                                                         }}
@@ -198,8 +188,10 @@ export default function EditRequestsPage() {
                                                         >
                                                             Edit
                                                         </button>
-                                                    ) : request.overAllStatus === "Availing Active" ? (
-                                                        <span className="text-orange-600 font-semibold text-[20px]">Active at Site</span>
+                                                    ) : !isCancellableByRequester(request) ? (
+                                                        <span className="text-orange-600 font-semibold text-[20px]">
+                                                            {request.overAllStatus === "Availing Active" ? "Active at Site" : "Sanctioned"}
+                                                        </span>
                                                     ) : (
                                                         <button
                                                             onClick={() => handleCancel(request.id)}

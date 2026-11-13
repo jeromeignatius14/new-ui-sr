@@ -10,6 +10,7 @@ import { format, parse, parseISO } from "date-fns";
 import { useDeleteUserRequest } from "@/app/service/mutation/user-request";
 import Select from "react-select";
 import { formatTimeToDatetime } from "@/app/lib/helper";
+import { isCancellableByRequester } from "@/app/lib/cancel-policy";
 
 interface FormData {
   isSanctioned: boolean;
@@ -83,6 +84,9 @@ export default function CreateBlockRequestPage() {
   const { data: session } = useSession({ required: true });
   const mutation = useUpdateUserRequest(params.id as string);
   const deleteMutation = useDeleteUserRequest();
+  // Once the division has sanctioned the block it is no longer the
+  // requester's to withdraw, so the button goes away altogether.
+  const canCancel = isCancellableByRequester(userDataById?.data ?? {});
   const [cancelModal, setCancelModal] = useState(false);
   const [cancelRemark, setCancelRemark] = useState("");
   const [cancelError, setCancelError] = useState("");
@@ -340,13 +344,22 @@ const handleDeleteSection = (indexToRemove: number) => {
                 (Permitted upto 3 days before)
               </span>
             </button>
-            <button
-              className="flex-1 max-w-[160px] rounded-xl bg-red-600 text-white font-bold text-[22px] py-3 border-2 border-gray-800 shadow-sm"
-              onClick={() => setCancelModal(true)}
-              type="button"
-            >
-              CANCEL
-            </button>
+            {canCancel ? (
+              <button
+                className="flex-1 max-w-[160px] rounded-xl bg-red-600 text-white font-bold text-[22px] py-3 border-2 border-gray-800 shadow-sm"
+                onClick={() => setCancelModal(true)}
+                type="button"
+              >
+                CANCEL
+              </button>
+            ) : (
+              <div className="flex-1 max-w-[220px] rounded-xl bg-gray-200 text-gray-700 text-[16px] py-3 px-2 border-2 border-gray-500 text-center leading-tight">
+                Sanctioned &mdash; cannot be cancelled
+                <span className="block text-xs italic mt-0.5">
+                  Use &ldquo;exit without availing&rdquo; if the work cannot be done
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Cancel Modal */}
